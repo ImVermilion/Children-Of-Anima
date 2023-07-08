@@ -1,0 +1,45 @@
+[
+  {
+    "title": "A Testing Guide",
+    "pages": [
+      { 
+        "pageNumber": 1,
+        "pageText": "This is the first page.\\TX[Dic-Anime]"
+      },  
+      { 
+        "pageNumber": 2,   
+        "pageText": "This is page 2 of the book."
+      }
+    ]
+  },
+  {
+    "title": "Guia del buen aventurero",
+    "pages": [
+      { 
+        "pageNumber": 1,
+        "pageText": "Todo buen aventurero sale de casa preparado, siempre es útil llevar algún brebaje de salud, comida y sobre todo alguna tienda de campaña o algo para dormir en cualquier sitio."
+      },  
+      { 
+        "pageNumber": 2,
+        "pageText": "Asegurate de llevar un registro de todas tus aventuras(¡Guarda con constancia!), nunca se sabe cuando puede resultarte útil lo que has ido aprendiendo a lo largo de tu aventura."
+      },
+      { 
+        "pageNumber": 3,
+        "pageText": "Dormir y alimentarse bien es importante, te sentirás mejor de salud y con más energía."
+      }
+    ]
+  },
+  {
+    "title": "Empty Book",
+    "pages": [
+      { 
+        "pageNumber": 1,
+        "pageText": "This is the first page."
+      },  
+      { 
+        "pageNumber": 2,   
+        "pageText": "This is page 2 of the book"
+      }
+    ]
+  }  
+]
