@@ -1,11 +1,8 @@
 [
 null,
-{"id":1,"battlerName":"Actor1_1","characterIndex":0,"characterName":"Actor1","classId":1,"equips":[37,1,0,0,0],"faceIndex":0,"faceName":"","traits":[],"initialLevel":1,"maxLevel":99,"name":"Reid","nickname":"","note":"","profile":""},
-{"id":2,"battlerName":"Actor1_1","characterIndex":5,"characterName":"!Flame","classId":2,"equips":[11,0,0,0,0],"faceIndex":0,"faceName":"Actor1","traits":[{"code":51,"dataId":2,"value":1},{"code":51,"dataId":6,"value":1}],"initialLevel":1,"maxLevel":99,"name":"Alma","nickname":"","note":"","profile":""},
+{"id":1,"battlerName":"","characterIndex":5,"characterName":"!Flame","classId":2,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Alma","nickname":"","note":"","profile":""},
+{"id":2,"battlerName":"","characterIndex":0,"characterName":"","classId":1,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"","traits":[],"initialLevel":1,"maxLevel":99,"name":"","nickname":"","note":"","profile":""},
 {"id":3,"battlerName":"","characterIndex":0,"characterName":"","classId":1,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"","traits":[],"initialLevel":1,"maxLevel":99,"name":"","nickname":"","note":"","profile":""},
-{"id":4,"battlerName":"chico_pelo_castaño_0","characterIndex":0,"characterName":"chico_pelo_castaño","classId":5,"equips":[0,0,0,0,0],"faceIndex":2,"faceName":"chico_pelo_castaño","traits":[],"initialLevel":1,"maxLevel":5,"name":"Héroe","nickname":"","note":"<pSkillPointsVarId:17>","profile":""},
-{"id":5,"battlerName":"","characterIndex":1,"characterName":"Numina","classId":1,"equips":[9,0,0,0,0],"faceIndex":1,"faceName":"Caras","traits":[],"initialLevel":1,"maxLevel":99,"name":"Numina","nickname":"","note":"","profile":""},
-{"id":6,"battlerName":"","characterIndex":0,"characterName":"","classId":1,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"","traits":[],"initialLevel":1,"maxLevel":99,"name":"","nickname":"","note":"","profile":""},
-{"id":7,"battlerName":"","characterIndex":0,"characterName":"","classId":1,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"","traits":[],"initialLevel":1,"maxLevel":99,"name":"","nickname":"","note":"","profile":""},
-{"id":8,"battlerName":"","characterIndex":0,"characterName":"","classId":1,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"","traits":[],"initialLevel":1,"maxLevel":99,"name":"","nickname":"","note":"","profile":""}
+{"id":4,"battlerName":"chico_pelo_castaño_0","characterIndex":0,"characterName":"chico_pelo_castaño","classId":2,"equips":[0,0,0,0,0],"faceIndex":2,"faceName":"chico_pelo_castaño","traits":[],"initialLevel":1,"maxLevel":5,"name":"Héroe","nickname":"","note":"<pSkillPointsVarId:17>","profile":""},
+{"id":5,"battlerName":"","characterIndex":1,"characterName":"Numina","classId":1,"equips":[9,0,0,0,0],"faceIndex":1,"faceName":"Caras","traits":[],"initialLevel":1,"maxLevel":99,"name":"Numina","nickname":"","note":"","profile":""}
 ]
