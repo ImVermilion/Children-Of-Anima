@@ -1,5 +1,5 @@
 /*:
- * @plugindesc (v.0.8.7)[PRO] Active Battle System
+ * @plugindesc (v.0.9.1)[PRO] Active Battle System
  * @author Pheonix KageDesu
  * @target MZ MV
  * @url https://kdworkshop.net/plugins/alpha-abs-z/
@@ -22,6 +22,7 @@
  *      -AABS_2.ttf
  *      -AABS_3.ttf
  * Images: img/Alpha/ *all files*
+ * Data: data/AABSZ/ *all files*
  *
  *
  * @param AABSZ @text @desc
@@ -31,6 +32,20 @@
  * @type struct<LInputSettings>
  * @default {"LMBMapTouchMode":"Default (move)","RMBMapTouchMode":"Turn","LMBTargetTouchMode":"Smart attack (Primary)","RMBTargetTouchMode":"Smart attack (Secondary)","moveType":"WASD and Arrows","isDiagonalMovement:b":"true","isStaticAtkRot:b":"true","keybingind":"","kbReload":"R","kbCommandMenu":"C","kbRotate":"Control"}
  * @desc Controls and keybingind settings
+ * 
+ * @param isAllowDodge:b
+ * @parent inputSettings:struct
+ * @text Is Allow Dodge?
+ * @type boolean
+ * @default true
+ * @desc Allow player make dodge action?
+ * 
+ * @param dodgeSettings:struct
+ * @parent isAllowDodge:b
+ * @text Configuration
+ * @type struct<LDodgeActionSettings>
+ * @default {"dodgeKey":"f","dodgeSwitch:i":"0","isInvincible:b":"true","stepsCount:i":"2","delayBetweenStepMS:i":"100","dodgeMoveSpeed:i":"5","dodgeRestTimerFrames:i":"30","dodgeRestVariable:i":"0"}
+ * @desc Dodge action configuration
  * 
  * @param spacer|abs @text‏‏‎ ‎@desc ===============================================
  * 
@@ -45,6 +60,13 @@
  * @min 0 
  * @max 99
  * @desc The higher the value, the easier it is to hit the target in close range combat
+ * 
+ * @param morePreciseProjAnim:b
+ * @parent absSettingsGroup
+ * @text More precise animations
+ * @type boolean
+ * @default true
+ * @desc Is use more precise locations for projectiles hit animations
  * 
  * @param spacer|network @text‏‏‎ ‎@desc ===============================================
  * 
@@ -116,6 +138,13 @@
  * @type struct<LDPUExp>
  * @default {"active:b":"true","styleId":"Experience","textFormat":"+%1 exp","aboveChar:b":"false","bindToChar:b":"false"}
  * @desc Settings for Experience Pop Up
+ * 
+ * @param popUpGoldSettings:struct
+ * @parent popUpDamageSettingsGroup
+ * @text Gold Pop Up
+ * @type struct<LDPUGold>
+ * @default {"popUpStyle:s":"{\"id\":\"gold\",\"randDX:int\":\"15\",\"randDY:int\":\"10\",\"stayTime:int\":\"12\",\"changeFontSize:int\":\"16\",\"noFlyUp:bool\":\"false\",\"noFadeOut:bool\":\"false\",\"text:struct\":\"{\\\"visible:bool\\\":\\\"true\\\",\\\"size:struct\\\":\\\"{\\\\\\\"w:int\\\\\\\":\\\\\\\"0\\\\\\\",\\\\\\\"h:int\\\\\\\":\\\\\\\"0\\\\\\\"}\\\",\\\"margins:struct\\\":\\\"{\\\\\\\"x:int\\\\\\\":\\\\\\\"0\\\\\\\",\\\\\\\"y:int\\\\\\\":\\\\\\\"0\\\\\\\"}\\\",\\\"alignment:str\\\":\\\"right\\\",\\\"outline:struct\\\":\\\"{\\\\\\\"color:css\\\\\\\":\\\\\\\"#000000\\\\\\\",\\\\\\\"width:int\\\\\\\":\\\\\\\"2\\\\\\\"}\\\",\\\"font:struct\\\":\\\"{\\\\\\\"face:str\\\\\\\":\\\\\\\"AABS_3\\\\\\\",\\\\\\\"size:int\\\\\\\":\\\\\\\"12\\\\\\\",\\\\\\\"italic:bool\\\\\\\":\\\\\\\"false\\\\\\\"}\\\",\\\"textColor:css\\\":\\\"#e6c42e\\\"}\",\"image:struct\":\"{\\\"name\\\":\\\"goldPopUpIcon\\\",\\\"margins:struct\\\":\\\"{\\\\\\\"x:int\\\\\\\":\\\\\\\"26\\\\\\\",\\\\\\\"y:int\\\\\\\":\\\\\\\"0\\\\\\\"}\\\",\\\"fadeInSpeed:int\\\":\\\"20\\\"}\"}","textFormat":" *1","bindToChar:b":"true"}
+ * @desc Settings for Gold Pop Up
  * 
  * @param popUpDamageTable:structA
  * @parent popUpDamageSettingsGroup
@@ -461,6 +490,13 @@
  * @default []
  * @desc The terrains tags (1-7) through which the enemies can not see. Global, for all enemies.
  * 
+ * @param enemies_afterDeathBonuses:structA
+ * @parent enemySettingsGroup
+ * @text Flying bonuses
+ * @type struct<FlyBonus>[]
+ * @default ["{\"image:str\":\"BonusGreen\",\"actionSE:str\":\"\",\"spawnSE:str\":\"\",\"startOffsetRadiusInPx:i\":\"16\",\"stayFrames:i\":\"12\",\"flySpeed:i\":\"8\",\"actionSA:str\":\"\",\"hpGainE\":\"25\",\"mpGainE\":\"0\",\"expGainE\":\"0\",\"goldGainE\":\"0\"}","{\"image:str\":\"BonusBlue\",\"actionSE:str\":\"\",\"spawnSE:str\":\"\",\"startOffsetRadiusInPx:i\":\"16\",\"stayFrames:i\":\"12\",\"flySpeed:i\":\"8\",\"actionSA:str\":\"\",\"hpGainE\":\"0\",\"mpGainE\":\"25\",\"expGainE\":\"0\",\"goldGainE\":\"0\"}","{\"image:str\":\"BonusYellow\",\"actionSE:str\":\"\",\"spawnSE:str\":\"\",\"startOffsetRadiusInPx:i\":\"16\",\"stayFrames:i\":\"12\",\"flySpeed:i\":\"8\",\"actionSA:str\":\"\",\"hpGainE\":\"0\",\"mpGainE\":\"0\",\"expGainE\":\"0\",\"goldGainE\":\"50\"}","{\"image:str\":\"BonusRed\",\"actionSE:str\":\"\",\"spawnSE:str\":\"\",\"startOffsetRadiusInPx:i\":\"16\",\"stayFrames:i\":\"12\",\"flySpeed:i\":\"8\",\"actionSA:str\":\"\",\"hpGainE\":\"0\",\"mpGainE\":\"0\",\"expGainE\":\"20\",\"goldGainE\":\"0\"}","{\"image:str\":\"BonusRed\",\"actionSE:str\":\"\",\"spawnSE:str\":\"\",\"startOffsetRadiusInPx:i\":\"16\",\"stayFrames:i\":\"12\",\"flySpeed:i\":\"8\",\"actionSA:str\":\"ba_1\",\"hpGainE\":\"0\",\"mpGainE\":\"0\",\"expGainE\":\"0\",\"goldGainE\":\"0\"}"]
+ * @desc Bonuses defenitions for bonusOnDeadIds ABS parameter
+ * 
  * @param enemiesSpawnSettingsGroup
  * @parent enemySettingsGroup
  * @text Spawning Settings
@@ -652,7 +688,7 @@
  * @default
  */
 /*:ru
- * @plugindesc (v.0.8.7)[PRO] Активная боевая система
+ * @plugindesc (v.0.9.1)[PRO] Активная боевая система
  * @author Pheonix KageDesu
  * @target MZ MV
  * @url https://kdworkshop.net/plugins/alpha-abs-z/
@@ -674,7 +710,8 @@
  *      -AABS_1.ttf
  *      -AABS_2.ttf
  *      -AABS_3.ttf
- * Изображения: img/Alpha/ *all files*
+ * Изображения: img/Alpha/ *все файлы*
+ * Данные (настройки): data/AABSZ/ *все файлы*
  *
  * Скопируйте эти файлы и папки в себе проект чтобы Alpha ABS Z работал корректно
  *
@@ -685,6 +722,20 @@
  * @type struct<LInputSettings>
  * @default {"LMBMapTouchMode":"Default (move)","RMBMapTouchMode":"Turn","LMBTargetTouchMode":"Smart attack (Primary)","RMBTargetTouchMode":"Smart attack (Secondary)","moveType":"WASD and Arrows","isDiagonalMovement:b":"true","isStaticAtkRot:b":"true","keybingind":"","kbReload":"R","kbCommandMenu":"C","kbRotate":"Control"}
  * @desc Настройки управления и привязки кнопок
+ * 
+ * @param isAllowDodge:b
+ * @parent inputSettings:struct
+ * @text Is Allow Dodge?
+ * @type boolean
+ * @default true
+ * @desc Может ли игрок совершать перекат?
+ * 
+ * @param dodgeSettings:struct
+ * @parent isAllowDodge:b
+ * @text Configuration
+ * @type struct<LDodgeActionSettings>
+ * @default {"dodgeKey":"f","dodgeSwitch:i":"0","isInvincible:b":"true","stepsCount:i":"2","delayBetweenStepMS:i":"100","dodgeMoveSpeed:i":"5","dodgeRestTimerFrames:i":"30","dodgeRestVariable:i":"0"}
+ * @desc Настройки переката
  * 
  * @param spacer|abs @text‏‏‎ ‎@desc ===============================================
  * 
@@ -699,6 +750,13 @@
  * @min 0
  * @max 99
  * @desc Чем выше значение, тем легче поразить (попасть по) цель в ближнем бою
+ * 
+ * @param morePreciseProjAnim:b
+ * @parent absSettingsGroup
+ * @text More precise animations
+ * @type boolean
+ * @default true
+ * @desc Анимации попадания всех снарядов (projectiles) будут более точными (без привязки к персонажам)
  * 
  * @param spacer|network @text‏‏‎ ‎@desc ===============================================
  * 
@@ -771,6 +829,13 @@
  * @type struct<LDPUExp>
  * @default {"active:b":"true","styleId":"Experience","textFormat":"+%1 exp","aboveChar:b":"false","bindToChar:b":"false"}
  * @desc Настройки всплывающего сообщения с опытом
+ * 
+ * @param popUpGoldSettings:struct
+ * @parent popUpDamageSettingsGroup
+ * @text Золото
+ * @type struct<LDPUGold>
+ * @default {"popUpStyle:s":"{\"id\":\"gold\",\"randDX:int\":\"15\",\"randDY:int\":\"10\",\"stayTime:int\":\"12\",\"changeFontSize:int\":\"16\",\"noFlyUp:bool\":\"false\",\"noFadeOut:bool\":\"false\",\"text:struct\":\"{\\\"visible:bool\\\":\\\"true\\\",\\\"size:struct\\\":\\\"{\\\\\\\"w:int\\\\\\\":\\\\\\\"0\\\\\\\",\\\\\\\"h:int\\\\\\\":\\\\\\\"0\\\\\\\"}\\\",\\\"margins:struct\\\":\\\"{\\\\\\\"x:int\\\\\\\":\\\\\\\"0\\\\\\\",\\\\\\\"y:int\\\\\\\":\\\\\\\"0\\\\\\\"}\\\",\\\"alignment:str\\\":\\\"right\\\",\\\"outline:struct\\\":\\\"{\\\\\\\"color:css\\\\\\\":\\\\\\\"#000000\\\\\\\",\\\\\\\"width:int\\\\\\\":\\\\\\\"2\\\\\\\"}\\\",\\\"font:struct\\\":\\\"{\\\\\\\"face:str\\\\\\\":\\\\\\\"AABS_3\\\\\\\",\\\\\\\"size:int\\\\\\\":\\\\\\\"12\\\\\\\",\\\\\\\"italic:bool\\\\\\\":\\\\\\\"false\\\\\\\"}\\\",\\\"textColor:css\\\":\\\"#e6c42e\\\"}\",\"image:struct\":\"{\\\"name\\\":\\\"goldPopUpIcon\\\",\\\"margins:struct\\\":\\\"{\\\\\\\"x:int\\\\\\\":\\\\\\\"26\\\\\\\",\\\\\\\"y:int\\\\\\\":\\\\\\\"0\\\\\\\"}\\\",\\\"fadeInSpeed:int\\\":\\\"20\\\"}\"}","textFormat":"%2%1","bindToChar:b":"true"}
+ * @desc Настройки всплывающего сообщения с золотом
  * 
  * @param popUpDamageTable:structA
  * @parent popUpDamageSettingsGroup
@@ -1115,6 +1180,13 @@
  * @max 7
  * @default []
  * @desc Тэги территорий (1-7) через которые враг НЕ видит. Глобальная настройка, для всех врагов.
+ * 
+ * @param enemies_afterDeathBonuses:structA
+ * @parent enemySettingsGroup
+ * @text Flying bonuses
+ * @type struct<FlyBonus>[]
+ * @default ["{\"image:str\":\"BonusGreen\",\"actionSE:str\":\"\",\"spawnSE:str\":\"\",\"startOffsetRadiusInPx:i\":\"16\",\"stayFrames:i\":\"12\",\"flySpeed:i\":\"8\",\"actionSA:str\":\"\",\"hpGainE\":\"25\",\"mpGainE\":\"0\",\"expGainE\":\"0\",\"goldGainE\":\"0\"}","{\"image:str\":\"BonusBlue\",\"actionSE:str\":\"\",\"spawnSE:str\":\"\",\"startOffsetRadiusInPx:i\":\"16\",\"stayFrames:i\":\"12\",\"flySpeed:i\":\"8\",\"actionSA:str\":\"\",\"hpGainE\":\"0\",\"mpGainE\":\"25\",\"expGainE\":\"0\",\"goldGainE\":\"0\"}","{\"image:str\":\"BonusYellow\",\"actionSE:str\":\"\",\"spawnSE:str\":\"\",\"startOffsetRadiusInPx:i\":\"16\",\"stayFrames:i\":\"12\",\"flySpeed:i\":\"8\",\"actionSA:str\":\"\",\"hpGainE\":\"0\",\"mpGainE\":\"0\",\"expGainE\":\"0\",\"goldGainE\":\"50\"}","{\"image:str\":\"BonusRed\",\"actionSE:str\":\"\",\"spawnSE:str\":\"\",\"startOffsetRadiusInPx:i\":\"16\",\"stayFrames:i\":\"12\",\"flySpeed:i\":\"8\",\"actionSA:str\":\"\",\"hpGainE\":\"0\",\"mpGainE\":\"0\",\"expGainE\":\"20\",\"goldGainE\":\"0\"}","{\"image:str\":\"BonusRed\",\"actionSE:str\":\"\",\"spawnSE:str\":\"\",\"startOffsetRadiusInPx:i\":\"16\",\"stayFrames:i\":\"12\",\"flySpeed:i\":\"8\",\"actionSA:str\":\"ba_1\",\"hpGainE\":\"0\",\"mpGainE\":\"0\",\"expGainE\":\"0\",\"goldGainE\":\"0\"}"]
+ * @desc Доп. бонусы из врагов для параметра bonusOnDeadIds (см. Wiki Flying Bonuses)
  * 
  * @param enemiesSpawnSettingsGroup
  * @parent enemySettingsGroup
@@ -1593,6 +1665,28 @@
     @desc Pop Up will stay above character or (if false) on screen (and moved with screen)
  */
 
+/*~struct~LDPUGold:
+
+    @param popUpStyle:s
+    @text Settings
+    @type struct<LDamagePopUpVisualSettings> 
+    @desc Pop Up Style settings
+    @default {}
+
+    @param textFormat
+    @text Text Format
+    @default %2%1
+    @desc Pop Up Text, %1 will be replaced to gold value, %2 with - or +
+
+    @param bindToChar:b
+    @text Bind to char?
+    @type boolean
+    @on Yes (stay above char)
+    @off No (stay on screen)
+    @default false
+    @desc Pop Up will stay above character or (if false) on screen (and moved with screen)
+ */
+
 
 /*~struct~LMiniHpGaugeSettings:
     @param active:b
@@ -1778,7 +1872,15 @@
     @default true
     @on Yes
     @off No
-    @desc Moving in 8 directions?
+    @desc Moving in 8 directions? (For Player and Allies)
+
+    @param isDiagonalMovementAI:b
+    @text Diagonal Movement for AI?
+    @type boolean
+    @default true
+    @on Yes
+    @off No
+    @desc Moving in 8 directions? (for Enemies (Events))
 
     @param isStaticAtkRot:b
     @text Attack when rotation?
@@ -2587,14 +2689,141 @@
  @desc Percentage of health at which the effect is activated
  */
 
+ /*~struct~FlyBonus:
+    @param image:str
+    @text Image
+    @type file
+    @dir img/pictures/
+    @require 1 
+    @desc Bonus image, supports animated
+    @default bonusGreen 
+
+    @param actionSE:str
+    @text Action SE
+    @type file
+    @dir audio/se
+    @require 1
+    @desc Sound effect when player got bonus
+    @default  
+
+    @param spawnSE:str
+    @text Appear SE
+    @type file
+    @dir audio/se
+    @require 1
+    @desc Sound effect when bonus is appears
+    @default  
+
+    @param startOffsetRadiusInPx:i
+    @text Offset
+    @type number 
+    @min 0
+    @max 48
+    @desc Appear position max offset in PX from start point
+    @default 16 
+
+    @param stayFrames:i
+    @text Delay
+    @type number 
+    @min 0
+    @desc Delay in frames! before bonus fly to the player
+    @default 12 
+
+    @param flySpeed:i
+    @text Speed
+    @type number 
+    @min 1
+    @max 100
+    @desc Fly speed (in PX)
+    @default 8
+
+    @param actionSA:str
+    @text SAction
+    @type text 
+    @desc Optional. SAction executed on player when received this bonuse.
+    @default
+
+    @param hpGainE
+    @text HP Gain
+    @desc Optional. How many HP this bonus gain to the player. EVal supported.
+    @default 25 
+
+    @param mpGainE
+    @text MP Gain
+    @desc Optional. How many MP this bonus gain to the player. EVal supported.
+    @default 0
+
+    @param expGainE
+    @text EXP Gain
+    @desc Optional. How many EXP this bonus gain to the player. EVal supported.
+    @default 0 
+
+    @param goldGainE
+    @text Gold Gain
+    @desc Optional. How many Gold this bonus gain to the player. EVal supported.
+    @default 0
+ */
+
+ /*~struct~LDodgeActionSettings:
+
+@param dodgeKey
+@text Keyboard key
+@default f
+
+@param dodgeSwitch:i
+@text Enable Switch
+@type switch
+@desc When this Switch is TRUE, player can do Dodge. 0 - always can
+
+@param isInvincible:b
+@text Is Invincible?
+@type boolean
+@desc If TRUE, player can't receive any damage while in Dodge motion
+
+@param stepsCount:i
+@text Move steps
+@type number
+@min 1
+@max 2
+@default 2
+@desc How far player will move while dodge (1 or 2)
+
+@param delayBetweenStepMS:i
+@text Delay MS
+@type number
+@min 0
+@default 100
+@desc Delay (in miliseconds) between every move step in dodge
+
+@param dodgeMoveSpeed:i
+@text Speed
+@type number
+@min 4
+@default 5
+@desc Player move speed in dodge action
+
+@param dodgeRestTimerFrames:i
+@text Recharge Time
+@type number
+@min 0
+@default 30
+@desc Dodge action recharge time (in FRAMES)
+
+@param dodgeRestVariable:i
+@parent dodgeRestTimerFrames:i
+@text Recharge Var
+@type variable
+@default 0
+@desc If > 0, then will be used recharge time (in FRAMES) from this Variable.
+ */
+
+
 
 var Imported = Imported || {};
 Imported.Alpha_ABSZ = true;
 
 // * ALPHA FAMILY PLUGINS GLOBAL DEFINITION
 var AA = AA || {};
-AA.Core = AA.Core || {};
-AA.Core.version = 0.43;
 
 AA.Utils = {};
 
@@ -2608,8 +2837,7 @@ AA.link = function (library) {
     this[library.name] = library;
 };
 
-
-AA.Version = 86;
+AA.Version = 91;
 
 //TODO: Задавать версию необходимого NET и проверять
 
@@ -2669,7 +2897,7 @@ AA.isPro = function() {
 // * LIBRARY WITH MZ AND MZ SUPPORT
 //! {OUTER FILE}
 
-//?rev 08.12.22
+//?rev 11.10.23
 var KDCore;
 
 window.Imported = window.Imported || {};
@@ -2680,7 +2908,7 @@ KDCore = KDCore || {};
 
 // * Двузначные числа нельзя в версии, сравнение идёт по первой цифре поулчается (3.43 - нельзя, можно 3.4.3)
 //%[МЕНЯТЬ ПРИ ИЗМЕНЕНИИ]
-KDCore._fileVersion = '3.2.2';
+KDCore._fileVersion = '3.2.9';
 
 // * Методы и библиотеки данной версии
 KDCore._loader = 'loader_' + KDCore._fileVersion;
@@ -2764,7 +2992,7 @@ KDCore.registerLibraryToLoad(function() {
     return this.getByField('id', id);
   };
   // * Ищет элемент, у которого поле FIELD (имя поля) == value
-  return Array.prototype.getByField = function(field, value) {
+  Array.prototype.getByField = function(field, value) {
     var e;
     try {
       return this.find(function(item) {
@@ -2776,6 +3004,39 @@ KDCore.registerLibraryToLoad(function() {
       return null;
     }
   };
+  Object.defineProperty(Array.prototype, "delete", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "max", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "min", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "sample", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "first", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "last", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "shuffle", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "count", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "isEmpty", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "getById", {
+    enumerable: false
+  });
+  return Object.defineProperty(Array.prototype, "getByField", {
+    enumerable: false
+  });
 });
 
 
@@ -3038,6 +3299,23 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
+  // * В MZ нету данной функции, а она часто используется в моих плагинах
+  if (!KDCore.isMZ()) {
+    return;
+  }
+  //?[NEW] (from MV)
+  return ImageManager.loadEmptyBitmap = function() {
+    if (this._emptyBitmap != null) {
+      return this._emptyBitmap;
+    } else {
+      return new Bitmap();
+    }
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
   var _input_onKeyDown, _input_onKeyUp, i, j, k, l;
   Input.KeyMapperPKD = {};
 //Numbers
@@ -3230,12 +3508,18 @@ KDCore.registerLibraryToLoad(function() {
         return false;
       }
     };
+    _.isMapScene = function() {
+      return this.isSceneMap();
+    };
     _.isSceneBattle = function() {
       try {
         return !SceneManager.isSceneChanging() && SceneManager._scene instanceof Scene_Battle;
       } catch (error) {
         return false;
       }
+    };
+    _.isBattleScene = function() {
+      return this.isSceneBattle();
     };
     _.getEventCommentValue = function(commentCode, list) {
       var comment, e, i, item;
@@ -3666,6 +3950,42 @@ KDCore.registerLibraryToLoad(function() {
         KDCore.warning(e);
       }
       return [];
+    };
+    //@[3.2.7] since
+    _.getIndexIn2DArrayByIJ = function(row, col, cols) {
+      return row * cols + col;
+    };
+    //@[3.2.7] since
+    // * row - строка
+    // * col - столбец
+    _.getIJByIndexIn2DArray = function(index, cols) {
+      var col, e, row;
+      try {
+        row = Math.floor(index / cols);
+        col = index % cols;
+        return [row, col];
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return [0, 0];
+      }
+    };
+    //@[3.2.7] since
+    _.isSwitchIsTRUE = function(switchId) {
+      var e;
+      if (switchId == null) {
+        return true;
+      }
+      if (switchId <= 0) {
+        return true;
+      }
+      try {
+        return $gameSwitches.value(switchId) === true;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return false;
     };
     //@[2.9.7] since
     // * Shrink number 100000 to "100k" and ect, returns STRING
@@ -5037,6 +5357,8 @@ KDCore.registerLibraryToLoad(function() {
           case "json":
           case "j":
             return this.parseJson(item);
+          case "jA":
+            return this.parseArray(item, 'json');
           default:
             return item;
         }
@@ -5270,6 +5592,10 @@ KDCore.registerLibraryToLoad(function() {
       return new Point(this[0], this[1]);
     };
 
+    Object.defineProperty(Array.prototype, "toPoint", {
+      enumerable: false
+    });
+
     Sprite.prototype.toPoint = function() {
       return new Point(this.x, this.y);
     };
@@ -5326,6 +5652,20 @@ KDCore.registerLibraryToLoad(function() {
         };
       }
 
+      moveWithAnimation(dx, dy, duration = 30, easingType = 2) {
+        var e;
+        try {
+          this._moveAnimationItem = new Game_Picture();
+          this._moveAnimationItem._x = this.x;
+          this._moveAnimationItem._y = this.y;
+          this._moveAnimationItem.move(0, this.x + dx, this.y + dy, 1, 1, 255, 0, duration, easingType);
+          this.updateMovingAnimation = this.updateMovingAnimationBody;
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+      }
+
       assignTooltip(content, params) {
         if (this._tooltip != null) {
           this.removeChild(this._tooltip);
@@ -5379,10 +5719,36 @@ KDCore.registerLibraryToLoad(function() {
         }
       }
 
+      //@[DYNAMIC]
+      updateMovingAnimation() {} // * EMPTY
+
+      updateMovingAnimationBody() {
+        var e;
+        try {
+          if (this._moveAnimationItem == null) {
+            return;
+          }
+          this._moveAnimationItem.update();
+          this.x = this._moveAnimationItem._x;
+          this.y = this._moveAnimationItem._y;
+          if (this._moveAnimationItem._duration <= 0) {
+            this._moveAnimationItem = null;
+            this.updateMovingAnimation = function() {};
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+          this.updateMovingAnimation = function() {};
+        }
+      }
+
       update() {
         super.update();
         this._updateOpChanger();
-        return this.updateTooltip();
+        this.updateTooltip();
+        if (this.updateMovingAnimation != null) {
+          this.updateMovingAnimation();
+        }
       }
 
       //@[DYNAMIC]
@@ -6843,7 +7209,7 @@ KDCore.registerLibraryToLoad(function() {
       if (this.isDisabled()) {
         return;
       }
-      if (TouchInput.isTriggered() && this.isMouseIn()) {
+      if (TouchInput.isTriggered() && this.isUnderMouse()) {
         this._isTriggered = true;
         this._setImageState(0);
       }
@@ -7006,6 +7372,10 @@ KDCore.registerLibraryToLoad(function() {
           this.filters[0].desaturate();
         }
 
+        clearFilters() {
+          return this.filters = [];
+        }
+
         // * Общий метод (можно ли редактировать визуально)
         isCanBeEdited() {
           return false;
@@ -7019,7 +7389,39 @@ KDCore.registerLibraryToLoad(function() {
         // * Общий метод (находится ли объект под мышкой)
         isUnderMouse() {
           var ref;
-          return (ref = this.zeroChild()) != null ? ref.isUnderMouse() : void 0;
+          return ((ref = this.zeroChild()) != null ? ref.isUnderMouse() : void 0) && this.isFullVisible();
+        }
+
+        // * Полностью ли виден объект? (включае всех его родителей)
+        isFullVisible() {
+          return this.visible === true && this.allParentsIsVisible();
+        }
+
+        // * Все ли родители объекта видимы
+        allParentsIsVisible() {
+          var e, p;
+          if (!this.visible) {
+            return false;
+          }
+          try {
+            if (this.parent != null) {
+              p = this.parent;
+              while (p != null) {
+                if (p.visible === true) {
+                  p = p.parent;
+                } else {
+                  return false;
+                }
+              }
+              return true;
+            } else {
+              return this.visible === true;
+            }
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+            return true;
+          }
         }
 
         // * Параметры первого элемента (если он есть)
@@ -7108,7 +7510,9 @@ KDCore.registerLibraryToLoad(function() {
       if (this.params == null) {
         this.params = this.defaultParams();
       }
-      return this.visible = this.params.visible;
+      if (this.params.visible != null) {
+        this.visible = this.params.visible;
+      }
     };
     // * Наследники создают свои элементы в этом методе
     _._createContent = function() {}; // * EMPTY
@@ -7121,10 +7525,18 @@ KDCore.registerLibraryToLoad(function() {
       }
       try {
         ({x, y} = this.params.position);
+        if (isFinite(x) && isFinite(y)) {
+          x = Number(x);
+          y = Number(y);
+        } else {
+          x = Number(eval(x));
+          y = Number(eval(y));
+        }
         this.move(x, y);
       } catch (error) {
         e = error;
         KDCore.warning(e);
+        this.move(0, 0);
       }
     };
   })();
@@ -9416,7 +9828,7 @@ if (KDCore._requireLoadLibrary === true) {
 // ==========================================================================
 // ==========================================================================
 
-//Plugin KDCore builded by PKD PluginBuilder 2.2 - 08.12.2022
+//Plugin KDCore builded by PKD PluginBuilder 2.2 - 11.10.2023
 
 // * Данный класс вынесен в .JS со старой реализацией, чтобы
 // * вызвать this.eventId = eventId перед родительским конструктором
@@ -9787,6 +10199,10 @@ AAEntity = class AAEntity {
 
   // * PROPERTIES
   // -----------------------------------------------------------------------
+  isHaveTeamId() {
+    return (this.battler() != null) && (this.battler().aaNetGetTeamId() != null);
+  }
+
   teamId() {
     return 0;
   }
@@ -9796,7 +10212,11 @@ AAEntity = class AAEntity {
   battler() {}
 
   sprite() {
-    return $gameMap.aaSpriteset().findTargetSprite(this.character());
+    if ($gameMap.aaSpriteset() != null) {
+      return $gameMap.aaSpriteset().findTargetSprite(this.character());
+    } else {
+      return null;
+    }
   }
 
   logic() {
@@ -9944,6 +10364,7 @@ AAEntity = class AAEntity {
 // Generated by CoffeeScript 2.6.1
 // * Глабольный менеджер расширений (кода совместимости)
 
+//rev 26.02.2022 (используется аналогичный в NETZ)
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ IMPLEMENTATION.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -9994,7 +10415,7 @@ AA.IKey = function() {};
   //@[DEFINES]
   _ = AA.Input;
   // * Коэффицент скорости перемещения по диагонали
-  _.diagonalSpeed = 0.8;
+  _.diagonalSpeed = 0.95;
   // * Клавишы навыков (ячеек) для левой и правой кнопок мыши
   _.primarySkillSymbol = function() {
     return this.skillPanelSymbols[0];
@@ -10021,6 +10442,12 @@ AA.IKey = function() {};
   _.init = function(settings1) {
     this.settings = settings1;
     _.IsDiagonal = this.settings.isDiagonalMovement;
+    // * Параметр был добавлен позже, поэтому проверка что он существует
+    if (this.settings.isDiagonalMovementAI == null) {
+      _.IsDiagonalForAI = _.IsDiagonal;
+    } else {
+      _.IsDiagonalForAI = this.settings.isDiagonalMovementAI;
+    }
     _.IsStaticAttackWhenRotating = this.settings.isStaticAtkRot;
     this._loadSkillPanelSymbols();
     this.applyInputSettings();
@@ -10175,12 +10602,12 @@ AA.IKey = function() {};
   // * Режим нажатия ЛЕВОЙ кнопкой мыши ПО ЦЕЛИ
   _._applyLMBTargetTouchMode = function() {
     var option;
-    _.LMBTargetTouchMode = 1; // * Default
+    _.LMBTargetTouchMode = 1; // * Default (Move)
     option = this.settings.LMBTargetTouchMode;
     if (option.contains("Smar")) {
       _.LMBTargetTouchMode = 2;
-    } else if (option.contains("atk")) {
-      _.LMBTargetTouchMode = 2;
+    } else if (option.contains("Primary")) {
+      _.LMBTargetTouchMode = 0;
     } else if (option.contains("Tur")) {
       _.LMBTargetTouchMode = 3;
     }
@@ -10272,6 +10699,12 @@ AA.Network = function() {};
   _ = AA.Network;
   //@[DEPRECATED]
   _.NETCmdPrefix = "aabsz:";
+  _.setPvPMode = function() {
+    return $gameSystem.aaIsPvPActive = true;
+  };
+  _.setPvEMode = function() {
+    return $gameSystem.aaIsPvPActive = false;
+  };
   _.isNetworkGame = function() {
     if (Imported.Alpha_NETZ === true) {
       return ANNetwork.isConnected();
@@ -10283,7 +10716,11 @@ AA.Network = function() {};
     }
   };
   _.isNetworkPvPGame = function() {
-    return this.isNetworkGame() && AA.PP.isNetworkPvPGame();
+    // * load default value
+    if ($gameSystem.aaIsPvPActive == null) {
+      $gameSystem.aaIsPvPActive = AA.PP.isNetworkPvPGame();
+    }
+    return this.isNetworkGame() && $gameSystem.aaIsPvPActive === true;
   };
   //TODO: Это скорее всего можно убрать, новый метод broadcast
   _.isShouldIgnoreServerCommand = function(servCommand) {
@@ -10367,6 +10804,22 @@ AA.Network = function() {};
     }
     return null;
   };
+  //TODO: вообще не вызывается?
+  _.refreshABSMembers = function() {
+    var char, e, i, len, ref, ref1, results;
+    try {
+      ref = $gameMap.netChars();
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        char = ref[i];
+        results.push((ref1 = char.AASprite()) != null ? ref1.initABS() : void 0);
+      }
+      return results;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
   return _.loadExtensions = function() {
     var __alias_ANGM_jdc, __alias_ANGM_orgm, __alias_ANPM_bar, _alias_GCB_fillNetworkObserver, _alias_SA_r, _alias_SA_tsp;
     if (Imported.Alpha_NETZ !== true) {
@@ -10400,6 +10853,7 @@ AA.Network = function() {};
       if (AA.Network.isNetworkPvPGame()) {
         AA.Utils.callDelayed(ANGameManager.aaRefreshGamePartyOnPvPMode.bind(ANGameManager), 10);
       }
+      AA.Network.refreshABSMembers();
     };
     //?[NEW]
     ANGameManager.aaRefreshGamePartyOnPvPMode = function() {
@@ -10480,7 +10934,7 @@ AA.SAaction = function() {};
   var _;
   //@[DEFINES]
   _ = AA.SAaction;
-  _.ACTIONS = ["ss", "sw", "vr", "ce", "ap", "ev", "an", "ef", "se", "ba", "es"];
+  _.ACTIONS = ["ss", "sw", "vr", "ce", "ap", "ev", "an", "ef", "se", "ba", "es", "ax", "as"];
   _.isProper = function(actionLine) {
     var cmd, e, parts;
     if (actionLine == null) {
@@ -10535,6 +10989,10 @@ AA.SAaction = function() {};
           return _.executeBallonIcon(action, char);
         case "es":
           return _.executeSkill(action, char);
+        case "ax":
+          return _.executeAnimaXAction(action, char);
+        case "as":
+          return _.executeAddState(action, char);
         default:
           return AA.w("Unknown script action: " + action);
       }
@@ -10854,6 +11312,63 @@ AA.SAaction = function() {};
       }
     }
   };
+  // * ax_name, ax_name_0 (0 - player, X - event ID)
+  _.executeAnimaXAction = function(action, char) {
+    var animationActionName, args, e;
+    try {
+      if (!Imported.PKD_AnimaX) {
+        return;
+      }
+      args = action.split("_");
+      if (args.length < 2) {
+        return;
+      }
+      animationActionName = args[1];
+      if (args[2] != null) {
+        char = this._getEventByArgId(args[2]);
+      }
+      if (char == null) {
+        return;
+      }
+      if (char.isAnimX()) {
+        return char.startAnimaXCustomAction(animationActionName, false, true);
+      } else {
+        return console.warn(action + " Character not have AnimaX controller on it, add XA: comment");
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  // * as_STATE, as_STATE_0 (0 - player, X - event ID)
+  // * works only for AAEntities
+  _.executeAddState = function(action, char) {
+    var args, e, stateId;
+    try {
+      args = action.split("_");
+      if (args.length < 2) {
+        return;
+      }
+      stateId = parseInt(args[1]);
+      if ($dataStates[stateId] == null) {
+        return;
+      }
+      if (args[2] != null) {
+        char = this._getEventByArgId(args[2]);
+      }
+      if (char == null) {
+        return;
+      }
+      if (char.isABS() && (char.AABattler != null)) {
+        return char.AABattler().addState(stateId);
+      } else {
+        return console.warn(action + " Character is not ABS support one");
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
 })();
 
 
@@ -10888,6 +11403,11 @@ AASkill2 = class AASkill2 {
     this._initOtherSettings();
     this._initAnimationSettings();
     return;
+  }
+
+  name() {
+    var ref;
+    return (ref = this.dbItem()) != null ? ref.name : void 0;
   }
 
   isItem() {
@@ -10952,12 +11472,20 @@ AASkill2 = class AASkill2 {
     return AA.Utils.getSafeEValue(this.multiProjectile, 0);
   }
 
+  getMultiProjectileModeCustomSet() {
+    return this.customProjDirs || [];
+  }
+
   isMultiProjectile() {
     return this.isProjectile() && this.isInPoint() && this.gMultiProjectileMode() > 0;
   }
 
   isHomingProjectile() {
     return this.isProjectile() && this.homingProjectile > 0;
+  }
+
+  isNoRotationImage() {
+    return this.isProjectile() && this.noRotationImage > 0;
   }
 
   gSpeed() {
@@ -11127,6 +11655,18 @@ AASkill2 = class AASkill2 {
     return AA.Utils.getSafeEValue(this.explosiveDmgSkill, 0);
   }
 
+  isSwing() {
+    return this.swing > 0 && this.getSwingKoef() > 0 && this.isSingleTargetArea();
+  }
+
+  getSwingKoef() {
+    return AA.Utils.getSafeEValue(this.swingKoef, 1);
+  }
+
+  isTeleport() {
+    return this.teleport > 0;
+  }
+
   isValidExplosiveSkill() {
     var id;
     id = this.getExplosiveDmgSkillId();
@@ -11241,7 +11781,7 @@ AASkill2 = class AASkill2 {
     this.impulse = 0; //@[EVal]
     this.impulseRandom = 0;
     this.impulseJump = 0;
-    this.impulseRevrsed = 0;
+    this.impulseReversed = 0;
     // * Только для Projectile
     this.pierce = 0; //@[EVal]
     // * Урон будет по одной и тойже цели наносится пока навык находится в её  области
@@ -11251,6 +11791,15 @@ AASkill2 = class AASkill2 {
     this.explosiveDmgSkill = 0; //@[Eval]
     this.multiProjectile = 0; //@[Eval]
     this.homingProjectile = 0;
+    this.customProjDirs = [];
+    // * Изображение Projectile не будет поворачивать по направлению полёта
+    this.noRotationImage = 0;
+    // * Урон по соседним (взмах)
+    this.swing = 0;
+    this.swingKoef = 1; //@[Eval]
+    this.teleport = 0;
+    this.teleportInAnim = 0;
+    this.teleportOutAnim = 0;
   };
   // * Настройки поведения на карте
   _._initOnMapSettings = function() {
@@ -11301,7 +11850,9 @@ AASkill2 = class AASkill2 {
     // * Когда запускаем (используем) навык (см. AABattleActionsManager.startAASkill)
     this.onStart = null; //SA
     // * Изображение для слота навыка
-    return this.ssImg = null;
+    this.ssImg = null;
+    // * Когда навык был выполнен
+    this.onDone = null; //SA
   };
   // * Настройки анимации xAnima
   _._initAnimationSettings = function() {
@@ -11314,6 +11865,7 @@ AASkill2 = class AASkill2 {
     // * Из строки 1,2,3 в массив [1,2,3]
     this.noPassRegions = AA.Utils.Parser.convertArrayFromParameter(this.noPassRegions);
     this.noPassTerrains = AA.Utils.Parser.convertArrayFromParameter(this.noPassTerrains);
+    this.customProjDirs = AA.Utils.Parser.convertArrayFromParameter(this.customProjDirs);
   };
 })();
 
@@ -11346,6 +11898,10 @@ AASkill2MapAction = class AASkill2MapAction {
 
   isHoming() {
     return this.aaSkill.isHomingProjectile();
+  }
+
+  isStaticAngle() {
+    return this.aaSkill.isNoRotationImage();
   }
 
   isHaveHomingTarget() {
@@ -11405,6 +11961,7 @@ AASkill2MapAction = class AASkill2MapAction {
     return AA.Network.isNetworkGame() && !ANGameManager.isMapMaster();
   }
 
+  //TODO: Нормальный метод обработки Direction Point Mouse!!
   setTargetPoint(point) {
     if (point instanceof Game_Character) {
       if (this.isHoming()) {
@@ -11837,7 +12394,7 @@ AA.System = function() {};
       }
       //"PAUSE ABS SESSION ON MAP".p()
       $gameSystem._isABS = false;
-      AA.EV.call("PauseABS");
+      AA.GlobalHandler.PauseABS();
     };
     _.isABSActive = function() {
       return $gameSystem._isABS === true && !$gameTemp._noABSPlayer;
@@ -11886,13 +12443,14 @@ AA.System = function() {};
       AA.Utils.Parser.processABSSkillsNotetags();
       AA.Utils.Parser.processABSEnemiesNotetags();
       AA.Utils.Parser.processABSStatesNotetags();
+      AA.Utils.Parser.processABSActorsNotetags();
+      AA.Utils.Parser.processABSWeaponsNotetags();
     };
     // * Сцена карты загрузилась (или попали на сцену из меню, или Transfer)
     _.onMapSceneLoaded = function() {
       AA.UI.init();
       this.startABS();
       AA.UI.refresh();
-      this.subscribeForSceneMapGEvents();
     };
     // * Сцена карты завершается (переключение сцены)
     _.onMapSceneStopped = function() {
@@ -11904,6 +12462,8 @@ AA.System = function() {};
     _.onTitleScreen = function() {};
     // * Новая карта (Data)
     _.onNewMapLoaded = function() {
+      // * Сброс всех предыдущих потоков АИ
+      $gameTemp.aaClearAllAILogicThreads();
       // * Ссылка на последнее событие, которое было динамически создано
       $gameTemp.aaLastSpawnedEvent = null;
       // * Очищаем флаг, что есть хоть одна точка спавна
@@ -11912,21 +12472,32 @@ AA.System = function() {};
       return $gameTemp.aaLocatorEventExistsOnMap = null;
     };
     // * Перед сохранением
-    _.onGameSave = function() {};
-    // * После сохранения
-    _.onGameSaved = function() {};
-    // * Перед загрузкой
-    _.onGameLoad = function() {};
+    _.onBeforeGameSave = function() {
+      var e;
+      try {
+        return $gameScreen.aaOnBeforeSave();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
     // * После загрузки
-    _.onGameLoaded = function() {};
+    _.onGameLoaded = function() {
+      var e;
+      try {
+        $gameScreen.onAfterLoad();
+        $gameMap.refreshABSMembers();
+        return $gamePlayer.aaAfterLoad();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
   })();
   (function() {    // -----------------------------------------------------------------------
 
     // * Глобальные события KDCore 2.9+
     // -----------------------------------------------------------------------
-    _.subscribeForSceneMapGEvents = function() {
-      $gamePlayer.subscribeForGEvents();
-    };
     // * Очищаем события которые существют только на сцене карты
     _.clearSceneMapGEvents = function() {
       AA.EV.clear('PlayerSkillSelector');
@@ -11940,7 +12511,6 @@ AA.System = function() {};
       //@[SHORTCUT]
       AA.EV = KDCore.GEventsManager;
       list = [
-        'PauseABS', // * Когда АБС ставиться на паузу
         'PlayerSkillSelector', // * Когда игрок начинает выбирать зону действия навыка
         // * Когда выполнился (закончился) навык Projectile на карте
         // * Запрашивает очистку кеша
@@ -12063,6 +12633,10 @@ AIFlowMachine = class AIFlowMachine {
     return this.char().AAModel();
   }
 
+  getStateFlow(stateId) {
+    return this._stateFlows[stateId];
+  }
+
   // * Сбросить состояние
   resetState() {
     return this.setState(0);
@@ -12140,6 +12714,39 @@ AIFlowMachine = class AIFlowMachine {
 })();
 
 // ■ END AIFlowMachine.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+// * Обработка глобальных команд системы АБС
+// (алтернатива KDCore.GEventsManager)
+AA.GlobalHandler = function() {};
+
+(function() {  //╒═════════════════════════════════════════════════════════════════════════╛
+  // ■ IMPLEMENTATION.coffee
+  //╒═════════════════════════════════════════════════════════════════════════╛
+  //---------------------------------------------------------------------------
+  var _;
+  //@[DEFINES]
+  _ = AA.GlobalHandler;
+  _.PauseABS = function() {
+    var e;
+    try {
+      $gamePlayer.gev_onABSPaused();
+      $gameMap.eventsAA().forEach(function(e) {
+        return e.gev_onABSPaused();
+      });
+      return $gameMap.followersAA().forEach(function(f) {
+        return f.gev_onABSPaused();
+      });
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+})();
+
+// ■ END IMPLEMENTATION.coffee
 //---------------------------------------------------------------------------
 
 
@@ -12477,14 +13084,22 @@ do ->
 var AADummyCharacter;
 
 AADummyCharacter = class AADummyCharacter extends Game_Character {
-  constructor(ownerId, teamId) {
+  constructor(ownerId, teamId, uId = null) {
     super();
     this.ownerId = ownerId;
     this.teamId = teamId;
-    this.generateId();
+    this.uId = uId;
+    if (this.uId == null) {
+      this.generateId();
+      AANetworkManager.sendDummyCharacterData(this.ownerId, this.teamId, this.uId);
+    }
     this.aaEntity = new AADummyEntity(this.ownerId, this.teamId, this.uId);
     $gameMap.aaRegisterGlobalSkill(this.uId, this);
     return;
+  }
+
+  setFromNetwork() {
+    return this._isFromNetwork = true;
   }
 
   AASprite() {
@@ -12504,6 +13119,10 @@ AADummyCharacter = class AADummyCharacter extends Game_Character {
   }
 
   dispose() {
+    // * Те, которые пришли от сервера, от него и уничтожаться
+    if (!this._isFromNetwork) {
+      AANetworkManager.sendDisposeDummyCharacter(this.uId);
+    }
     return $gameMap.aaDisposeGlobalSkill(this.uId);
   }
 
@@ -12670,6 +13289,10 @@ AAStatesSet = class AAStatesSet {
     return;
   }
 
+  isNotHaveBattler() {
+    return this._packedSubject == null;
+  }
+
   // * Значение для вывода на UI (оставшееся время или действия)
   getDisplayValueForState(stateId) {
     if (this._aaStateActionCounts[stateId] != null) {
@@ -12733,6 +13356,18 @@ AAStatesSet = class AAStatesSet {
     this._updateBuffs(battler);
   }
 
+  checkBattler(battler) {
+    var e;
+    try {
+      if (this._packedSubject == null) {
+        return this._packedSubject = AA.Utils.packAAEntity(battler.AACharacter());
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
   item(stateId) {
     return AA.Utils.getAAStateObject(stateId).AAState;
   }
@@ -12788,7 +13423,7 @@ AAStatesSet = class AAStatesSet {
   //@[DEFINES]
   _ = AAStatesSet.prototype;
   _._pushNewState = function(stateId) {
-    var aaState;
+    var aaState, ref, ref1;
     aaState = this.item(stateId);
     // * АБС состояние с onTick всё равно имеет таймер
     if (AA.SAaction.isProper(aaState.onTick)) {
@@ -12801,12 +13436,16 @@ AAStatesSet = class AAStatesSet {
     }
     if (aaState.isActionEndState()) {
       this._aaStateActionCounts[stateId] = aaState.getTurnsValue();
-      this.battler()._stateTurns[stateId] = this._aaStateActionCounts[stateId];
+      if ((ref = this.battler()) != null) {
+        ref._stateTurns[stateId] = this._aaStateActionCounts[stateId];
+      }
     } else if (aaState.isTimeEndState()) {
       // * Заменяем бесконечное время (-1) на TurnsValue
       this._aaStateTimers[stateId] = [0, aaState.getTurnsValue()];
       // * Возвращаем новое значение на Battler
-      this.battler()._stateTurns[stateId] = this._aaStateTimers[stateId][1];
+      if ((ref1 = this.battler()) != null) {
+        ref1._stateTurns[stateId] = this._aaStateTimers[stateId][1];
+      }
     }
   };
   _._deleteState = function(stateId) {
@@ -13226,7 +13865,7 @@ AASkillsSet = class AASkillsSet {
   }
 
   setupDefaultSkillsForActor() {
-    var attackSkillId, battler, e, i, len, ref, s;
+    var attackSkillId, battler, e, i, len, ref, s, secondarySkillId;
     try {
       this.setupActorAttackSkillInPrimarySlot();
       battler = $gameParty.leader();
@@ -13234,11 +13873,18 @@ AASkillsSet = class AASkillsSet {
         return;
       }
       attackSkillId = battler.attackSkillId();
-      ref = battler.getAASkills();
       // * Добавляем остальные навыки
+      secondarySkillId = battler.aaGetDefaultSecondarySkillId();
+      if (secondarySkillId > 0) {
+        this.setSkillInEmptySlot(secondarySkillId);
+      }
+      ref = battler.getAASkills();
       for (i = 0, len = ref.length; i < len; i++) {
         s = ref[i];
         if (s.idA === attackSkillId) {
+          continue;
+        }
+        if (s.idA === secondarySkillId) {
           continue;
         }
         this.setSkillInEmptySlot(s.idA);
@@ -13694,6 +14340,397 @@ AA.extend(function() {
 
 
 // Generated by CoffeeScript 2.6.1
+//TODO: Это можно будет убрать когда выйдет обновление 131
+
+//@[EXTENSION]
+AA.extend(function() {
+  // * Методы ниже даже не учитываются, если плагин не подключён
+  if (Imported.PKD_AnimaX !== true) {
+    return;
+  }
+  if (PKD_ANIMAX.version >= 131) {
+    return;
+  }
+  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ Sprite_Character.coffee
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    //---------------------------------------------------------------------------
+    var ALIAS__patternHeight, ALIAS__patternWidth, _;
+    
+    //@[DEFINES]
+    _ = Sprite_Character.prototype;
+    
+    //@[ALIAS]
+    ALIAS__patternWidth = _.patternWidth;
+    _.patternWidth = function() {
+      if (this.isAnimX()) {
+        if (this._character.getCurrentAnimX().isSpritesheet === true) {
+          return this._character.getCurrentAnimX().sheetFrameWidth;
+        } else {
+          return this.bitmap.width;
+        }
+      } else {
+        return ALIAS__patternWidth.call(this);
+      }
+    };
+    
+    //@[ALIAS]
+    ALIAS__patternHeight = _.patternHeight;
+    _.patternHeight = function() {
+      if (this.isAnimX()) {
+        if (this._character.getCurrentAnimX().isSpritesheet === true) {
+          return this._character.getCurrentAnimX().sheetFrameHeight;
+        } else {
+          return this.bitmap.height;
+        }
+      } else {
+        return ALIAS__patternHeight.call(this);
+      }
+    };
+  })();
+});
+
+// ■ END Sprite_Character.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+// * Данный класс используется для AAEntity врагов на карте
+var AAAllyEntity;
+
+AAAllyEntity = class AAAllyEntity extends AAEntity {
+  constructor(actorId) {
+    super();
+    this.actorId = actorId;
+    if (AA.Network.isNetworkGame()) {
+      this._setupForNetwork();
+    }
+  }
+
+  teamId() {
+    return 0;
+  }
+
+  character() {
+    return $gamePlayer.followers().aaGetFollowerByActorId(this.actorId);
+  }
+
+  battler() {
+    return $gameActors.actor(this.actorId);
+  }
+
+  isAlly() {
+    return true;
+  }
+
+  logic() {
+    return this.aaLogic;
+  }
+
+  // * Настройки и параметры
+  model() {
+    return this.aaModel;
+  }
+
+  initABS() {
+    if (this.model() == null) {
+      super.initABS();
+      // * Инициализация системы в первый раз
+      this.aaModel = new AAAllyModelData(this.actorId);
+      this.aaLogic = new AllyAI_FlowMachine(this.actorId);
+    } else {
+
+    }
+  }
+
+};
+
+// * Ничего
+// * Повторная инициализация (например после выхода из меню) не нужна
+
+
+// Generated by CoffeeScript 2.6.1
+// * Класс, который содержит все настройки и параметры AA сущности союзника на карте
+
+//@[STORABLE]
+//@[GLOBAL]
+var AAAllyModelData;
+
+AAAllyModelData = (function() {
+  class AAAllyModelData {
+    constructor(actorId) {
+      this.actorId = actorId;
+      this._initBaseParameters();
+      this._applyParametersFromDB();
+      this._convertParameters();
+    }
+
+    actor() {
+      return $gameActors.actor(this.actorId);
+    }
+
+    actorData() {
+      return this.actor().actor();
+    }
+
+    getBattleStartConditions() {
+      return this.activateWhen;
+    }
+
+    getBattleStartUserCondition() {
+      return this.extraActivateCond;
+    }
+
+    getCertainActionId() {
+      return this.activateActionId;
+    }
+
+    getBestTargetCondition(index) {
+      if (index < 4 && index > 0) {
+        return this['bestTarget' + index];
+      } else {
+        return null;
+      }
+    }
+
+    getBestSupportTargetCondition(index) {
+      if (index < 4 && index > 0) {
+        return this['bestHelp' + index];
+      } else {
+        return null;
+      }
+    }
+
+    getBestTargetGroupCondition() {
+      return this.bestTargetGroup;
+    }
+
+    getBestTargetUserCondition() {
+      return this.extraTargetCond;
+    }
+
+    getBestSupportTargetUserCondition() {
+      return this.helpCondition;
+    }
+
+    gNoMoveInBattle() {
+      return AA.Utils.getSafeEValue(this.noMoveInBattle, 0);
+    }
+
+    gNoApproach() {
+      return AA.Utils.getSafeEValue(this.noApproach, 0);
+    }
+
+    isHeavy() {
+      return AA.Utils.getSafeEValue(this.heavy, 0) > 0;
+    }
+
+    gViewRadius() {
+      return AA.Utils.getSafeEValue(this.viewRadius, 5);
+    }
+
+    gReturnRadius() {
+      return AA.Utils.getSafeEValue(this.returnRadius, 12);
+    }
+
+    getRefreshBattleTargetTimeMax() {
+      return this.bestTarRefreshTime;
+    }
+
+    isHaveSupportSkills() {
+      return (this.supportSkills != null) && this.supportSkills.length > 0;
+    }
+
+    getSupportSkillsList() {
+      if (this.isHaveSupportSkills()) {
+        return this.supportSkills;
+      } else {
+        return [];
+      }
+    }
+
+    getBattleSkillsPriorityList() {
+      if ((this.skillsPriority != null) && this.skillsPriority.length > 0) {
+        return this.skillsPriority;
+      } else {
+        return [];
+      }
+    }
+
+    isCanSupport() {
+      return String.any(this.getBestSupportTargetCondition(1)) && this.isHaveSupportSkills();
+    }
+
+    isSupportInPriority() {
+      return this.isCanSupport() && this.supportInPriority > 0;
+    }
+
+    isHaveOnDeathAction() {
+      return AA.SAaction.isProper(this.onDeath);
+    }
+
+    isHaveOnDeathVariable() {
+      return this.onDeathVar > 0;
+    }
+
+  };
+
+  (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ PRIVATE.coffee
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    //---------------------------------------------------------------------------
+    var _;
+    
+    //@[DEFINES]
+    _ = AAAllyModelData.prototype;
+    
+    // * Инициализация базовых настроек
+    _._initBaseParameters = function() {
+      this._initAI();
+      this._initMain();
+      this._initMovingSettings();
+      this._initOnMapSettings();
+      this._initOtherSettings();
+      this._initVisualSettings();
+      this._initAnimationSettings();
+    };
+    _._initAI = function() {
+      // seeEnemy - увидел врага (враг в области видимости)
+      // gotDamage - получил урон
+      // playerGotDamage - игрок получил урон
+      // playerInDanger - игрок является целью кого-либо
+      // playerAttacksSomeone - игрок нанёс урон по врагу
+      // playerAction - игрок просто выполнил действие (навык или атака) (без урона даже)
+      // condition - условие игрока (script)
+      this.activateWhen = 'seeEnemy'; // * можно писать через | или &
+      // можно исползовать a. (свой Battler) и b. (Battler игрока)
+      this.extraActivateCond = ""; // * Script условие перехода в режим боя
+      this.activateActionId = 0; // * Для playerAction -> 0 = любое действие игрока (X - номер навыка)
+      
+      // any - любой враг (случайный)
+      // condition - враг, который попадает под условие (script) игрока
+      // damaged - раненный враг
+      // full - враг с полным здоровьем
+      // playerTarget - враг, которого атаковал игрок
+      // playerOpponent - враг, который атакует игрока
+      // notMyOpponent - любой, кто не атакует меня
+      // myOpponent - любой, кто атакует меня
+      // none - не атакует никого
+      this.bestTarget1 = "any"; // * можно писать any|nearest|playerTarget (много, через | или &)
+      this.bestTarget2 = "";
+      this.bestTarget3 = "";
+      // nearest - ближний
+      // further - дальний
+      // weakest - слабый
+      // strongest - сильный
+      // lowHp - меньше всех здоровья
+      // highHp - больше всех здоровья
+      // nearestToPlayer - ближайший к игроку
+      // furtherFromPlayer - дальше от игрока
+      // * Только одно значение может быть
+      this.bestTargetGroup = "";
+      // можно исползовать a. (свой Battler) и b. (Battler игрока) и t. (Battler цели)
+      this.extraTargetCond = ""; // * Script условие выбора цели
+      // * Если нет цели, удовлетворяющей условию inBattleBestTarget, атаковать любую?
+      this.bestTarRefreshTime = 60; // * Менять цель каждые Х кадров (делать проверку условия)
+      this.skillsPriority = []; // * Номера навыков через запятую, от самого лучшего, до самого худшего
+      
+      // * Если есть лучшая цель для навыков Support, то выбираем её всегда первой
+      this.supportInPriority = 0;
+      // * Если пусто, то так же не поддерживает суппорт
+      this.supportSkills = []; // * номера навыков через запятую
+      //TODO: PARTY UPD : healInPriority
+      //@healInPriority = true # * Если true, то навык, который лечит - в приоритете
+      // none - не поддерживает суппорт
+      // any - любой союзник
+      // damaged - раненный
+      // full - здоровый
+      // player - игрок
+      // ally - союзник
+      // self - я (себя)
+      // other - любой, но НЕ я
+      // lowHp - мало здоровья
+      // partyMember - член партии
+      // condition - условие (скрипт) игрока
+      // * поддерживают | и &
+      this.bestHelp1 = "none";
+      this.bestHelp2 = "";
+      this.bestHelp3 = "";
+      // можно исползовать a. (свой Battler) и b. (Battler игрока) и t. (Battler цели)
+      this.helpCondition = "";
+    };
+    _._initMain = function() {
+      this.onDeath = 0; //AScript
+      this.viewRadius = 5; //@[EVal]
+      // * Как далеко может от игрока отойти
+      this.returnRadius = 8; //@[EVal]
+      //TODO: PARTY UPD this two not used now (maybe don't need at all)
+      this.noPassVisionRegions = [];
+      this.noPassVisionTerrains = [];
+    };
+    _._initMovingSettings = function() {
+      //@[EVal]
+      this.noMoveInBattle = 0; // * Если 1 - не будет двигаться в бою (вообще)
+      //@[EVal]
+      this.noApproach = 0; // * Не преследовать цель в бою (своё движение остаётся, например Random или отступать от игрока)
+      // Range (when start), Freq, Speed
+      this.approachMoveData = [3, 5, 3];
+      // Min dist, Freq, Speed, isRandomStep
+      this.inBattleMoveData = [1, 3, 3, 0];
+    };
+    _._initOnMapSettings = function() {
+      // * Нельзя сдвинуть импульсом
+      this.heavy = 1; //@[EVal]
+    };
+    _._initVisualSettings = function() {
+      //TODO: PARTY UPD : info??? as Enemy Info when under cursor?
+      //TODO: PARTY UPD some portrait config?
+      this.miniHpGaugeStyle = "";
+      this.miniHPGaugeOffset = [0, 0];
+    };
+    _._initOtherSettings = function() {
+      this.onSeeTarget = 0; //AScript
+      // * При получении урона (AABS навыка от кого либо)
+      this.onHit = 0; //AScript
+      // * Переменная для +1 когда этот юнит погибает
+      this.onDeathVar = 0;
+      // * Даные действия выполняются каждую секунд (каждую секунду в битве)
+      this.turnAction = 0; //AScript
+      this.turnActionInBattle = 0; //AScript
+      // * Когда был отброшен навыком с Impluse
+      //TODO:PARTY UPD реализовать выполенние
+      this.onKnocked = 0; //AScript
+    };
+    _._initAnimationSettings = function() {};
+    _._applyParametersFromDB = function() {
+      var i, len, p, params;
+      params = this.actorData().AAAllyChar;
+      if (params == null) {
+        return;
+      }
+      for (i = 0, len = params.length; i < len; i++) {
+        p = params[i];
+        this[p[0]] = p[1];
+      }
+    };
+    // * Преобразует некоторые параметры
+    _._convertParameters = function() {
+      this.supportSkills = AA.Utils.Parser.convertArrayFromParameter(this.supportSkills);
+      this.skillsPriority = AA.Utils.Parser.convertArrayFromParameter(this.skillsPriority);
+      this.approachMoveData = AA.Utils.Parser.convertArrayFromParameter(this.approachMoveData);
+      this.inBattleMoveData = AA.Utils.Parser.convertArrayFromParameter(this.inBattleMoveData);
+    };
+  })();
+
+  return AAAllyModelData;
+
+}).call(this);
+
+// ■ END PRIVATE
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
 // * Класс для Action для навыков ABS
 
 // * Большинство методов из Game_Action просто не используются
@@ -13918,8 +14955,10 @@ window.AABattleActionsManager = function() {};
         dirSetFinal = dirSetA;
       } else if (mode === 2) {
         dirSetFinal = dirSetB;
-      } else {
+      } else if (mode === 3) {
         dirSetFinal = dirSetA.concat(dirSetB);
+      } else if (mode === 4) {
+        dirSetFinal = aaSkill.getMultiProjectileModeCustomSet();
       }
       startPoint = subject.toPoint();
       points = [];
@@ -13966,25 +15005,27 @@ window.AABattleActionsManager = function() {};
   };
   // * Выполнение навыка (без учёта repeat)
   _._applySkillActionDirect = function(subject, target, absSkill) {
-    var animationId, e, targets, x, y;
+    var animationId, e, targets;
     try {
       animationId = this.getProperAnimationId(subject, absSkill);
       if (target instanceof Game_Character) {
-        if (absSkill.animationOnMap === 0) {
+        if (absSkill.animationOnMap === 0 && (target.__aaLastProjectileHitPoint == null)) {
           this.playAnimationOnCharacter(target, animationId);
         } else {
-          this.playAnimationOnMap(target.x, target.y, animationId);
+          this.playAnimationOnMapPrec(target, animationId);
         }
       } else {
         // * Если навык требует контакт, то нет никаких эффектов
         if (!absSkill.isNoContact()) {
           return;
         }
-        ({x, y} = target);
-        this.playAnimationOnMap(x, y, animationId);
+        this.playAnimationOnMapPrec(target, animationId);
       }
       if (absSkill.isHaveExtraAnimation()) {
         this.playExtraSkillAnimation(target.x, target.y, absSkill);
+      }
+      if (absSkill.isTeleport()) {
+        this._performTeleport(target, subject, absSkill);
       }
       targets = AATargetsManager.collectTargtesForSkill(subject, absSkill, target);
       // * Фильтр целей по доп. параметрам и условием навыка
@@ -14029,16 +15070,37 @@ window.AABattleActionsManager = function() {};
       KDCore.warning("playAnimationOnCharacter", e);
     }
   };
+  // * Дополнительный метод, чтобы извлеч доп. координаты экрана (для более точной анимации)
+  _.playAnimationOnMapPrec = function(target, animationId) {
+    var e, sx, sy, x, y;
+    try {
+      if (target == null) {
+        return;
+      }
+      sx = null;
+      sy = null;
+      if (target.__aaLastProjectileHitPoint != null) {
+        sx = target.__aaLastProjectileHitPoint.x;
+        sy = target.__aaLastProjectileHitPoint.y;
+      }
+      ({x, y} = target);
+      this.playAnimationOnMap(x, y, animationId, sx, sy);
+      return target.__aaLastProjectileHitPoint = null;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
   // * Воспроизвести анимацию в точке на карте
-  _.playAnimationOnMap = function(x, y, animationId) {
+  _.playAnimationOnMap = function(x, y, animationId, sx, sy) {
     var e;
     if (!KDCore.Utils.isSceneMap()) {
       return;
     }
     try {
       if ((animationId != null) && animationId > 0) {
-        AANetworkManager.playAnimationOnMap(x, y, animationId);
-        $gameMap.aaRequestMapAnimation(x, y, animationId);
+        AANetworkManager.playAnimationOnMap(x, y, animationId, sx, sy);
+        $gameMap.aaRequestMapAnimation(x, y, animationId, sx, sy);
       }
     } catch (error) {
       e = error;
@@ -14082,6 +15144,7 @@ window.AABattleActionsManager = function() {};
       }
       this._startAction(action, targets);
       this._endAction(action);
+      this._onSkillPerformed(skill, subject);
     } catch (error) {
       e = error;
       KDCore.warning("performBattleAction", e);
@@ -14136,6 +15199,9 @@ window.AABattleActionsManager = function() {};
         return;
       }
       if (target == null) {
+        return;
+      }
+      if (target.aaIsInvincible()) {
         return;
       }
       action.apply(target);
@@ -14351,6 +15417,51 @@ window.AABattleActionsManager = function() {};
       KDCore.warning("_endAction", e);
     }
   };
+  // * Когда навык выполнил своё действие (конец)
+  _._onSkillPerformed = function(skill, subject) {
+    var dbItem, e, skillId;
+    try {
+      if (skill == null) {
+        return;
+      }
+      try {
+        // * Выполняем SAction onDone
+        AA.SAaction.execute(skill.onDone, subject);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      // * (Снимаем Skill Extension, если он был)
+      dbItem = skill.dbItem();
+      if (dbItem.__aaDefCopy == null) {
+        return;
+      }
+      skillId = skill.databaseId();
+      $dataSkills[skillId].AASkill = $dataSkills[skillId].__aaDefCopy;
+      return $dataSkills[skillId].__aaDefCopy = null;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._performTeleport = function(point, char, skill) {
+    var e;
+    try {
+      if (point == null) {
+        return;
+      }
+      if (char == null) {
+        return;
+      }
+      if (skill == null) {
+        return;
+      }
+      return char.aaTeleport(point, skill.teleportInAnim, skill.teleportOutAnim);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
 })();
 
 // ■ END IMPLEMENTATION.coffee
@@ -14484,6 +15595,15 @@ window.AABattleActionsManager = function() {};
         ownerId = KDCore.Utils.getEValue(ownerId);
         x = KDCore.Utils.getEValue(x);
         y = KDCore.Utils.getEValue(y);
+        if (ownerId > 0) { // * Game Event ID, but we need battler
+          try {
+            ownerId = $gameMap.event(ownerId).AABattler().enemyId();
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+            ownerId = 1;
+          }
+        }
         subject = new AADummyCharacter(ownerId, teamId);
         try {
           if ((x != null) && (y != null)) {
@@ -14606,7 +15726,7 @@ window.AABattleActionsManager = function() {};
       }
     };
     // * Расчитать EVal для АБС параметра (безопасно,  в  случае чего возвращает стандартное  знчение)
-    return _.getSafeEValue = function(paramValue, defValue = 0) {
+    _.getSafeEValue = function(paramValue, defValue = 0) {
       var e, value;
       try {
         value = KDCore.Utils.getEValue(paramValue);
@@ -14620,6 +15740,33 @@ window.AABattleActionsManager = function() {};
         value = defValue;
       }
       return value;
+    };
+    return _.isAnyItemHaveNotetag = function(items, notetag) {
+      var e, i, item, len;
+      try {
+        if (items == null) {
+          return false;
+        }
+        if (items.length === 0) {
+          return false;
+        }
+        for (i = 0, len = items.length; i < len; i++) {
+          item = items[i];
+          if (item == null) {
+            continue;
+          }
+          if (item.meta == null) {
+            continue;
+          }
+          if (item.meta[notetag] != null) {
+            return true;
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return false;
     };
   })();
   (function() {    // * Методы распаковки и запаковки данных для хранения и сохранения игры
@@ -14654,6 +15801,12 @@ window.AABattleActionsManager = function() {};
       if (entity == null) {
         return null;
       }
+      if (entity instanceof AADummyCharacter) {
+        return {
+          type: 1000,
+          id: entity.uId
+        };
+      }
       // * Для сетевой игры отдельный метод с учётом NetCharacter
       if (AA.Network.isNetworkGame()) {
         return AA.Network.packMapChar(entity);
@@ -14668,25 +15821,22 @@ window.AABattleActionsManager = function() {};
             id: entity.eventId(),
             mapId: $gameMap.mapId()
           };
-        } else if (entity instanceof AADummyCharacter) {
+        // * PARTY MEMBER
+        } else if (entity instanceof Game_Follower) {
           return {
-            type: 1000,
-            id: entity.uId
-          };
-          return {
-            // * PARTY MEMBER
-            // < 0 ?
-            //    @subject = 1000 +
-            //TODO: party member pack
-            //$gamePlayer.followers().follower(index), from 0 to 3
-            type: 2
+            type: 2,
+            id: entity.actorId()
           };
         }
       }
+      return null;
     };
     return _.unpackAAEntity = function(data) {
       if (data == null) {
         return null;
+      }
+      if (data.type === 1000) {
+        return $gameMap.aaGetGlobalSkill(data.id);
       }
       // * Для сетевой игры отдельный метод с учётом NetCharacter
       if (AA.Network.isNetworkGame()) {
@@ -14702,11 +15852,8 @@ window.AABattleActionsManager = function() {};
               return null;
             }
             break;
-          case 1000:
-            return $gameMap.aaGetGlobalSkill(data.id);
           case 2:
-            //TODO: party member
-            return null;
+            return $gamePlayer.followers().aaGetFollowerByActorId(data.id);
         }
       }
       return null;
@@ -14793,6 +15940,27 @@ AADamagePopUpFactory = function() {};
     try {
       valueText = AA.PP.getExpPopUpSettings().textFormat.replace("%1", value);
       settings = AA.PP.getExpPopUpSettings().styleId;
+      return this._createFromSettings(settings, valueText);
+    } catch (error) {
+      e = error;
+      AA.w(e);
+      return null;
+    }
+  };
+  _.createGoldPopUpData = function(value, charToShowAbove) {
+    var e, settings, sign, textFormat, valueText;
+    try {
+      textFormat = AA.PP.getGoldPopUpSettings().textFormat;
+      valueText = textFormat.replace("%1", value);
+      if (value >= 0) {
+        sign = "+";
+      } else {
+        sign = "-";
+        // * Отрицательное число уже несёт в себе знак -, мы его удаляем
+        valueText = valueText.replace("-", "");
+      }
+      valueText = valueText.replace("%2", sign);
+      settings = "gold"; // * Зарезервированный стиль
       return this._createFromSettings(settings, valueText);
     } catch (error) {
       e = error;
@@ -15062,10 +16230,37 @@ AAEnemyModelData = (function() {
       return this.tVisor > 0; //@gTVisor() > 0
     }
 
+    isCanTeleportIn() {
+      return this.gTeleportDistIn() > 0;
+    }
+
+    isCanTeleportOut() {
+      return this.gTeleportDistOut() > 0;
+    }
+
+    gTeleportDistIn() {
+      return AA.Utils.getSafeEValue(this.teleportDistIn, 0);
+    }
+
+    gTeleportDistOut() {
+      return AA.Utils.getSafeEValue(this.teleportDistOut, 0);
+    }
+
+    gTeleportDelay() {
+      return AA.Utils.getSafeEValue(this.teleportDelay, 3);
+    }
+
+    gTeleportRate() {
+      return AA.Utils.getSafeEValue(this.teleportRate, 1);
+    }
+
+    isHaveAfterDeathBonus() {
+      return (this.bonusOnDeadIds != null) && this.bonusOnDeadIds.length > 0;
+    }
+
   };
 
-  (function() {    
-    //╒═════════════════════════════════════════════════════════════════════════╛
+  (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
     // ■ PRIVATE.coffee
     //╒═════════════════════════════════════════════════════════════════════════╛
     //---------------------------------------------------------------------------
@@ -15102,6 +16297,8 @@ AAEnemyModelData = (function() {
       this.lootDropOnDeath = 1;
       // * Врага нельзя сдвинуть импульсом
       this.heavy = 0; //@[EVal]
+      // * Система "летающих" бонусов
+      this.bonusOnDeadIds = [];
     };
     _._initVisualSettings = function() {
       this.faceName = ""; // имя файла в папке faces
@@ -15130,6 +16327,7 @@ AAEnemyModelData = (function() {
       // * Когда враг был отброшен навыком с Impluse
       //TODO: реализовать выполенние
       this.onKnocked = 0; //AScript
+      this.saveHp = 0;
     };
     _._initAnimationSettings = function() {
       this.hitAnimationId = 1; // ID анимации
@@ -15143,8 +16341,18 @@ AAEnemyModelData = (function() {
       this.approachMoveData = [3, 5, 4];
       // Min dist, Freq, Speed, isRandomStep
       this.inBattleMoveData = [1, 3, 3, 0];
+      //TODO: returnMoveData
+      //@[EVal]
+      this.teleportDistIn = 0;
+      //@[EVal]
+      this.teleportDistOut = 0;
+      //@[EVal]
+      this.teleportRate = 1;
+      //@[EVal]
+      this.teleportDelay = 3;
+      this.teleportStartAnim = 0;
+      this.teleportEndAnim = 0;
     };
-    //TODO: returnMoveData
     _._applyParametersFromDB = function() {
       var i, len, p, params;
       params = this.enemy().AAEnemy;
@@ -15176,6 +16384,7 @@ AAEnemyModelData = (function() {
       this.inBattleMoveData = AA.Utils.Parser.convertArrayFromParameter(this.inBattleMoveData);
       this.noPassVisionRegions = AA.Utils.Parser.convertArrayFromParameter(this.noPassVisionRegions);
       this.noPassVisionTerrains = AA.Utils.Parser.convertArrayFromParameter(this.noPassVisionTerrains);
+      this.bonusOnDeadIds = AA.Utils.Parser.convertArrayFromParameter(this.bonusOnDeadIds);
     };
   })();
 
@@ -15502,24 +16711,125 @@ AAMapEntitiesSet = class AAMapEntitiesSet {
 
 
 // Generated by CoffeeScript 2.6.1
+var AAMapFlyBonusInstance;
+
+AAMapFlyBonusInstance = class AAMapFlyBonusInstance {
+  constructor(mapX, mapY, settings) {
+    var anyPointWithOffset, point, r;
+    this.settings = settings;
+    this.x = this._convertPointValue(mapX);
+    this.y = this._convertPointValue(mapY);
+    r = this.settings.startOffsetRadiusInPx;
+    if (r > 1) {
+      anyPointWithOffset = AA.Utils.Math.getPointsInRadius(this.x, this.y, r);
+      point = anyPointWithOffset.sample();
+      if (point != null) {
+        this.x = point.x;
+        this.y = point.y;
+      }
+    }
+    return;
+  }
+
+  isPhantom() {
+    return false; //TODO: NETZ
+  }
+
+  image() {
+    return this.settings.image;
+  }
+
+  speed() {
+    return this.settings.flySpeed;
+  }
+
+  delay() {
+    return this.settings.stayFrames;
+  }
+
+  onHit() {
+    var e, value;
+    try {
+      //"BONUS POINT REACH".p()
+      KDCore.Utils.playSE(this.settings.actionSE);
+      if (String.any(this.settings.actionSA)) {
+        uAPI.scriptAction(this.settings.actionSA, $gamePlayer);
+      }
+      value = AA.Utils.getSafeEValue(this.settings.hpGainE, 0);
+      if ((value != null) && value !== 0) {
+        this._gainHp(value);
+      }
+      value = AA.Utils.getSafeEValue(this.settings.mpGainE, 0);
+      if ((value != null) && value !== 0) {
+        this._gainMp(value);
+      }
+      value = AA.Utils.getSafeEValue(this.settings.expGainE, 0);
+      if ((value != null) && value > 0) {
+        this._gainExp(value);
+      }
+      value = AA.Utils.getSafeEValue(this.settings.goldGainE, 0);
+      if ((value != null) && value !== 0) {
+        this._gainGold(value);
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+  }
+
+  _gainHp(value) {
+    return uAPI.gainHpForBattler(0, value, false);
+  }
+
+  _gainMp(value) {
+    return uAPI.gainMpForBattler(0, value, false);
+  }
+
+  _gainExp(value) {
+    return uAPI.gainExpForParty(value);
+  }
+
+  _gainGold(value) {
+    return uAPI.gainGoldForParty(value);
+  }
+
+  getTargetPoint() {
+    return {
+      x: this._convertPointValue($gamePlayer.x),
+      y: this._convertPointValue($gamePlayer.y)
+    };
+  }
+
+  _convertPointValue(value) {
+    var tw;
+    tw = $gameMap.tileWidth();
+    return Number(value * tw + tw / 2);
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
 var AANetworkCharEntity;
 
 AANetworkCharEntity = class AANetworkCharEntity extends AAEntity {
   constructor(netId) {
     super();
     this.netId = netId;
-    this._isAlly = !AA.Network.isNetworkPvPGame();
-    if (!this._isAlly) {
-      this._teamIdForNetwork = 100;
-    } else {
-      this._teamIdForNetwork = 0;
-    }
     return;
   }
 
   // * Номер команды игрока (и группы) всегда 0
   teamId() {
-    return this._teamIdForNetwork;
+    if (this.isHaveTeamId()) {
+      return this.battler().aaNetGetTeamId();
+    } else {
+      if (AA.Network.isNetworkPvPGame()) {
+        return 100;
+      } else {
+        return 0;
+      }
+    }
   }
 
   isNetChar() {
@@ -15527,7 +16837,11 @@ AANetworkCharEntity = class AANetworkCharEntity extends AAEntity {
   }
 
   isAlly() {
-    return this._isAlly;
+    if (this.isHaveTeamId()) {
+      return this.teamId() === $gamePlayer.AAEntity().teamId();
+    } else {
+      return !AA.Network.isNetworkPvPGame();
+    }
   }
 
   character() {
@@ -15574,7 +16888,55 @@ AANetworkManager = function() {};
     // * ======================================================================
     // -----------------------------------------------------------------------
     // * В этих методах всегда много проверок, чтобы не загружать лишний раз севрер
-
+    _.sendDummyCharacterData = function(ownerId, teamId, uId) {
+      var e;
+      try {
+        if (!AA.Network.isNetworkGame()) {
+          return;
+        }
+        return this.sendToServer("sendDummyCharacterData", {ownerId, teamId, uId});
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.sendDisposeDummyCharacter = function(uId) {
+      var e;
+      try {
+        if (!AA.Network.isNetworkGame()) {
+          return;
+        }
+        return this.sendToServer("sendDisposeDummyCharacter", uId);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.refreshPvPGameModeState = function() {
+      var e, newState;
+      try {
+        if (!AA.Network.isNetworkGame()) {
+          return;
+        }
+        newState = $gameSystem.aaIsPvPActive;
+        return this.sendToServer("refreshPvPGameModeState", newState);
+      } catch (error) {
+        e = error;
+        return AA.w(e);
+      }
+    };
+    _.setActorNetworkTeamId = function(actorId, teamId) {
+      var e;
+      try {
+        if (!AA.Network.isNetworkGame()) {
+          return;
+        }
+        return this.sendToServer("setActorNetworkTeamId", {actorId, teamId});
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
     //TODO: В MV другой метод немного
     _.playAnimationOnCharacter = function(character, animationId) {
       var e;
@@ -15595,7 +16957,7 @@ AANetworkManager = function() {};
         return AA.w(e);
       }
     };
-    _.playAnimationOnMap = function(x, y, animationId) {
+    _.playAnimationOnMap = function(x, y, animationId, sx, sy) {
       var e;
       try {
         if (!AA.Network.isNetworkGame()) {
@@ -15604,7 +16966,7 @@ AANetworkManager = function() {};
         if (animationId <= 0) {
           return;
         }
-        return this.sendToServer("playAnimationOnMap", {x, y, animationId});
+        return this.sendToServer("playAnimationOnMap", {x, y, animationId, sx, sy});
       } catch (error) {
         e = error;
         return AA.w(e);
@@ -15895,13 +17257,13 @@ AANetworkManager = function() {};
       }
     };
     _.playAnimationOnMap_RESP = function(response) {
-      var animationId, e, x, y;
+      var animationId, e, sx, sy, x, y;
       try {
         if (!AA.Network.isAvailableForVisual(response)) {
           return;
         }
-        ({x, y, animationId} = response.content);
-        return AABattleActionsManager.playAnimationOnMap(x, y, animationId);
+        ({x, y, animationId, sx, sy} = response.content);
+        return AABattleActionsManager.playAnimationOnMap(x, y, animationId, sx, sy);
       } catch (error) {
         e = error;
         return AA.w(e);
@@ -16025,7 +17387,7 @@ AANetworkManager = function() {};
         // * Self.Switch - своя обработка
         if (cmd === "ss") {
           // * Тут используется  запакованный персонаж (чтобы передать EVENT ID другой карты)
-          return AA.SAaction.executeSelfSwitchActionFromNetwork(action, character, mapId);
+          return AA.SAaction.executeSelfSwitchActionFromNetwork(action, character.id, mapId);
         } else {
           // * Проверки определённых действий (только на карте и на сцене)
           if (["an", "ef", "ba", "se", "ev", "ce"].contains(cmd)) {
@@ -16249,7 +17611,7 @@ AANetworkManager = function() {};
         return AA.w(e);
       }
     };
-    return _.spawnEnemy_RESP = function(response) {
+    _.spawnEnemy_RESP = function(response) {
       var e, id, x, y;
       try {
         if (!AA.Network.isOnSameMap(response)) {
@@ -16257,6 +17619,56 @@ AANetworkManager = function() {};
         }
         ({id, x, y} = response.content);
         return uAPI.spawnEnemyForced(id, x, y);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.refreshPvPGameModeState_RESP = function(response) {
+      var e, newState;
+      try {
+        newState = response.content;
+        // * Not using uAPI for not send to server again
+        if (newState === true) {
+          return AA.Network.setPvPMode();
+        } else {
+          return AA.Network.setPvEMode();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.setActorNetworkTeamId_RESP = function(response) {
+      var actorId, e, teamId;
+      try {
+        ({actorId, teamId} = response.content);
+        return uAPI.setTeamIdFor("actorId", actorId, teamId, true);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.sendDummyCharacterData_RESP = function(response) {
+      var dummyChar, e, ownerId, teamId, uId;
+      try {
+        if (!AA.Network.isOnSameMap(response)) {
+          return;
+        }
+        ({ownerId, teamId, uId} = response.content);
+        return dummyChar = new AADummyCharacter(ownerId, teamId, uId);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    return _.sendDisposeDummyCharacter_RESP = function(response) {
+      var e, uId;
+      try {
+        uId = response.content;
+        if (uId != null) {
+          return $gameMap.aaDisposeGlobalSkill(uId);
+        }
       } catch (error) {
         e = error;
         return KDCore.warning(e);
@@ -16270,9 +17682,7 @@ AANetworkManager = function() {};
     _.onServerCommand = function(cmd, response) {
       var e, method;
       try {
-        if (SceneManager.isSceneChanging()) {
-          return;
-        }
+        //return if SceneManager.isSceneChanging()
         if (AA.Network.isShouldIgnoreServerCommand(response)) {
           return;
         }
@@ -16342,7 +17752,11 @@ AAPlayerEntity = class AAPlayerEntity extends AAEntity {
 
   // * Номер команды игрока (и группы) всегда 0
   teamId() {
-    return 0;
+    if (AA.Network.isNetworkGame() && this.isHaveTeamId()) {
+      return this.battler().aaNetGetTeamId();
+    } else {
+      return 0;
+    }
   }
 
   isPlayer() {
@@ -16360,6 +17774,94 @@ AAPlayerEntity = class AAPlayerEntity extends AAEntity {
   setTarget(target) {
     super.setTarget(target);
     AA.EV.call("PlayerTarget");
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
+// * Это класс определяет настройки Extension у оружия
+
+//@[STORABLE]
+var AASkillExtensionDefinition;
+
+AASkillExtensionDefinition = class AASkillExtensionDefinition {
+  constructor(id) {
+    this.id = id;
+    this._initBase();
+  }
+
+  databaseId() {
+    return this.id;
+  }
+
+  dbItem() {
+    return $dataWeapons[this.id];
+  }
+
+  isValidDefinition() {
+    return (this.extensions != null) && this.extensions.length > 0;
+  }
+
+  isRequireExtensionItem() {
+    return this.extensionRequire > 0;
+  }
+
+  isConsumeExtensionItem() {
+    return this.extensionConsume > 0;
+  }
+
+  // * Установить набор параметров из Note (принимает массив пар: имя - значение)
+  setNoteParameters(params) {
+    var i, len, p;
+    for (i = 0, len = params.length; i < len; i++) {
+      p = params[i];
+      this[p[0]] = p[1];
+    }
+    this._convertParameters();
+  }
+
+  _initBase() {
+    this.extensions = [];
+    this.extensionRequire = 0;
+    return this.extensionConsume = 0;
+  }
+
+  // * Преобразует некоторые параметры
+  _convertParameters() {
+    return this.extensions = AA.Utils.Parser.convertArrayFromParameter(this.extensions);
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
+// * Этот класс хранит свойства Extension предмета
+
+//@[STORABLE]
+var AASkillExtensionItem;
+
+AASkillExtensionItem = class AASkillExtensionItem {
+  constructor(id) {
+    this.id = id;
+    this._params = {};
+  }
+
+  databaseId() {
+    return this.id;
+  }
+
+  dbItem() {
+    return $dataItems[this.id];
+  }
+
+  getParameters() {
+    return this._params;
+  }
+
+  // * Установить набор параметров из Note (принимает массив пар: имя - значение)
+  setNoteParameters(_params) {
+    this._params = _params;
   }
 
 };
@@ -16592,10 +18094,16 @@ window.AATargetsManager = function() {};
     var candidates, e, entity, k, l, len, len1, t;
     try {
       entity = subject.AAEntity();
+      if (entity == null) {
+        return [];
+      }
       candidates = [];
       if (aaSkill.isForEnemies()) {
         for (k = 0, len = targets.length; k < len; k++) {
           t = targets[k];
+          if (entity == null) {
+            continue;
+          }
           if (entity.isMyEnemy(t.AAEntity())) {
             candidates.push(t);
           }
@@ -16620,13 +18128,23 @@ window.AATargetsManager = function() {};
   //?[OUTER - used by AABattleActionsManager]
   //? Этот навык используется напрямую для выбора целей в битве
   _.collectTargtesForSkill = function(subject, absSkill, point) {
-    var targets;
+    var chance, extraTargets, k, len, t, targets;
     targets = [];
     // * Точные цели селектора, если мнгновенный навык (только для игрока)
     if (absSkill.isInstant() && subject === $gamePlayer && ($gameTemp._aaSkillSelectorTargets != null)) {
       targets = $gameTemp._aaSkillSelectorTargets;
     } else {
       targets = this.collectTargetsForSkillInMapPoint(absSkill, point);
+    }
+    if (absSkill.isSwing() && (subject.direction != null)) {
+      chance = absSkill.getSwingKoef();
+      extraTargets = this.collectTargetsForSwingAction(subject.direction(), point);
+      for (k = 0, len = extraTargets.length; k < len; k++) {
+        t = extraTargets[k];
+        if (KDCore.Utils.isChanceIsGood(chance)) {
+          targets.push(t);
+        }
+      }
     }
     // * Убираем НЕ АБС события
     targets = targets.filter(function(t) {
@@ -16659,6 +18177,24 @@ window.AATargetsManager = function() {};
       }
     }
     return targets;
+  };
+  // * Собрать цели для навыка с эффектом "взмаха"
+  _.collectTargetsForSwingAction = function(direction, point) {
+    var e, neibPoints;
+    try {
+      if (point == null) {
+        return [];
+      }
+      if (direction == null) {
+        return [];
+      }
+      neibPoints = AA.Utils.Math.getNeibPoints(point.x, point.y, direction);
+      return this._collectAllAAEntitiesInPoints(neibPoints);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return [];
   };
   // * Собирает все возможные цели для навыка в точке экрана
   // * (Используется для сбора событий в радиусе)
@@ -16739,16 +18275,20 @@ window.AATargetsManager = function() {};
     return events;
   };
   _._collectPartyMembersInPoints = function(points) {
-    var e, k, len, members, p;
+    var char, e, k, l, len, len1, members, p, partyMembers;
     members = [];
     try {
-    //TODO: followers
-    // * Сейчас только проверка на игрока
+      partyMembers = $gamePlayer.aaGetABSFollowers();
       for (k = 0, len = points.length; k < len; k++) {
         p = points[k];
         if ($gamePlayer.posExt(p.x, p.y)) {
           members.push($gamePlayer);
-          break;
+        }
+        for (l = 0, len1 = partyMembers.length; l < len1; l++) {
+          char = partyMembers[l];
+          if (char.posExt(p.x, p.y)) {
+            members.push(char);
+          }
         }
       }
     } catch (error) {
@@ -16777,7 +18317,7 @@ window.AATargetsManager = function() {};
     var aaEntities;
     aaEntities = [$gamePlayer];
     aaEntities.push(...$gameMap.eventsAA());
-    //TODO: party members
+    aaEntities.push(...$gamePlayer.aaGetABSFollowers());
     if (AA.Network.isNetworkGame()) {
       aaEntities.push(...$gameMap.netChars());
     }
@@ -16832,7 +18372,23 @@ window.AATargetsManager = function() {};
       // * forWho идёт как Point тоже
       candidates = this.collectAllABSEntitiesOnMap();
       candidates = candidates.filter(function(t) {
-        return forWho.isMyEnemy(t);
+        return (t != null) && forWho.isMyEnemy(t);
+      });
+      return this.getFilteredInRadius(forWho, radius, candidates);
+    } catch (error) {
+      e = error;
+      AA.w(e);
+      return [];
+    }
+  };
+  //? forWho - Game_Character (with ABS)
+  _.getAvailableAlliesInRadius = function(forWho, radius) {
+    var candidates, e;
+    try {
+      // * forWho идёт как Point тоже
+      candidates = this.collectAllABSEntitiesOnMap();
+      candidates = candidates.filter(function(t) {
+        return !forWho.isMyEnemy(t);
       });
       return this.getFilteredInRadius(forWho, radius, candidates);
     } catch (error) {
@@ -17465,6 +19021,1124 @@ AIFlow = class AIFlow extends AIFlowMachine {
 
 
 // Generated by CoffeeScript 2.6.1
+// * Состояние боя для АИ союзника
+var AllyAI_BattleFlow;
+
+AllyAI_BattleFlow = class AllyAI_BattleFlow extends AIFlow {
+  constructor() {
+    super(...arguments);
+    return;
+  }
+
+  char() {
+    return AllyAI_FlowMachine.prototype.char.call(this);
+  }
+
+  target() {
+    return this.entity().getTarget();
+  }
+
+  moveType() {
+    return this.model().getInBattleMoveType();
+  }
+
+  isCantMove() {
+    return this.moveType() === 'stay';
+  }
+
+  isSupportMode() {
+    return this._isBattleMode === false;
+  }
+
+  onStateStart() {
+    "START BATTLE STATE".p();
+    this.char().aaStoreHomePoint();
+    // * Таймер новой проверки цели (Best)
+    this._refreshTargetCheckThread = 0;
+    this._canFightNow = true;
+    this._isBattleMode = true;
+    if (!this.char().isMyEnemy(this.target())) {
+      this._isBattleMode = false;
+    }
+    // * Таймер следующей выборки действия
+    // * Когда действие было выбранно, идёт небольшая пауза
+    // * перед следующей выборкой действия
+    this._nextActionCheck = 0;
+    // * Сколько раз АИ не смог найти нужное действие
+    this._actionMakeAttempts = 0;
+    if (this.model().gNoMoveInBattle() === 1) {
+      this.char().aaSetMoveTypeStayStill();
+    }
+    console.log(this.target());
+  }
+
+  onStateEnd() {
+    this.char().aaResetHomePoint();
+    this.entity().resetBattle();
+  }
+
+  exitAILogic() {
+    this.onStateEnd();
+    this.logic().getStateFlow(0).exitAILogic();
+  }
+
+  // * Получить "другую" лучшую цель
+  tryGetAnotherBestTarget() {
+    return this.logic().switchToFreeState();
+  }
+
+};
+
+(function() {  //╒═════════════════════════════════════════════════════════════════════════╛
+  // ■ AllyAI_BattleFlow.coffee
+  //╒═════════════════════════════════════════════════════════════════════════╛
+  //---------------------------------------------------------------------------
+  var _;
+  //@[DEFINES]
+  _ = AllyAI_BattleFlow.prototype;
+  _._updateFlow = function() {
+    if (this._canFightNow === true) {
+      this._updateOutOfHomeFlow();
+      if (this._isBattleMode === true) {
+        this._updateMainBattleFlow();
+      } else {
+        this._updateMainSupportFlow();
+      }
+      this._updateRefreshTargetThread();
+    } else {
+      this._updateReturnToPlayerFlow();
+    }
+  };
+  _._setCurrentAction = function(_currentAction) {
+    this._currentAction = _currentAction;
+    this._resetNextActionCheck();
+  };
+  _._resetCurrentAction = function() {
+    this._currentAction = null;
+    this._resetNextActionCheck();
+  };
+  _._isActionIsExists = function() {
+    return this._currentAction != null;
+  };
+  // * Находится ли цель на расстроянии применения действия
+  // TODO: Это бы учитывать ещё при выборе действия
+  _._isActionInDistance = function() {
+    return EnemyAI_BattleFlow.prototype._isActionInDistance.call(this);
+  };
+  _._executeAction = function() {
+    return EnemyAI_BattleFlow.prototype._executeAction.call(this);
+  };
+  _._resetNextActionCheck = function() {
+    return this._nextActionCheck = 10;
+  };
+  // * MOVING ======================================================================
+  _._movingCloserToTarget = function() {
+    this._resetNextActionCheck();
+    if (!this.isSupportMode()) {
+      if (this.model().gNoApproach() === 1) {
+        return;
+      }
+    }
+    if (this.model().gNoMoveInBattle() === 1) {
+      return;
+    }
+    this.char().aaSetMoveTypeApproachTarget();
+  };
+  _._waitForAction = function() {
+    if (!this.isSupportMode()) {
+      if (!this.model().gNoMoveInBattle()) {
+        this.char().aaSetMoveTypeKeepBattleDistance();
+      }
+    }
+    this._actionMakeAttempts++;
+    if (this._actionMakeAttempts > 60) {
+      this.tryGetAnotherBestTarget();
+    }
+  };
+  // * Если отошёл слишком далеко от "дома", надо вернуться
+  _._updateOutOfHomeFlow = function() {
+    if (this._isTooFarFromHomePoint()) {
+      return this._canFightNow = false;
+    }
+  };
+  _._isTooFarFromHomePoint = function() {
+    var e;
+    try {
+      if (typeof $gamePlayer === "undefined" || $gamePlayer === null) {
+        return false;
+      }
+      return this.char().distTo($gamePlayer) > (this.model().gReturnRadius());
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return false;
+    }
+  };
+  _._updateReturnToPlayerFlow = function() {
+    if (this.char().distTo($gamePlayer) <= (this.model().gViewRadius() - 1)) {
+      this._canFightNow = true;
+      this._nextActionCheck = 120;
+    } else {
+      this.char().aaSetMoveTypeReturnToHomePoint();
+    }
+  };
+  _._updateRefreshTargetThread = function() {
+    this._refreshTargetCheckThread++;
+    if (this._refreshTargetCheckThread >= this.model().getRefreshBattleTargetTimeMax()) {
+      this._refreshTargetCheckThread = 0;
+      this.tryGetAnotherBestTarget();
+    }
+  };
+  // * BATTLE FLOW ==============================================================
+  _._updateMainBattleFlow = function() {
+    if (this._isTargetValid()) {
+      if (this.isSupportMode()) {
+        this._selectSupportActionToUse();
+      } else {
+        this._selectBattleActionToUse();
+      }
+      if (this._isActionIsExists()) {
+        this._actionMakeAttempts = 0;
+        if (this._isActionInDistance()) {
+          this._executeAction();
+          if (this.isSupportMode()) {
+            // * В режиме поддержки, после выполнения действия, надо сразу делать поиск другой цели
+            return this.tryGetAnotherBestTarget();
+          }
+        } else {
+          return this._movingCloserToTarget();
+        }
+      } else {
+        return this._waitForAction();
+      }
+    } else {
+      return this.tryGetAnotherBestTarget();
+    }
+  };
+  _._isTargetValid = function() {
+    return this._isTargetInViewRadius() && AATargetsManager.isValidTarget(this.target());
+  };
+  _._isTargetInViewRadius = function() {
+    return this.char().distTo(this.target()) <= (this.model().gViewRadius() + 1);
+  };
+  _._selectBattleActionToUse = function() {
+    var bestAction, skills;
+    this._nextActionCheck--;
+    if (this._nextActionCheck > 0) {
+      return;
+    }
+    skills = this._filterBattleSkills(this.battler().getUsableAASkills());
+    if (skills.length > 0) {
+      if (skills.length === 1) {
+        this._setCurrentAction(skills[0]);
+      } else {
+        bestAction = this._selectBetterBattleActionForNow(skills);
+        this._setCurrentAction(bestAction);
+      }
+    } else {
+      this._resetCurrentAction();
+    }
+  };
+  _._filterBattleSkills = function(skills) {
+    var supportSkills;
+    supportSkills = this.model().getSupportSkillsList();
+    skills = skills.filter(function(skill) {
+      return skill.AASkill.isForEnemiesOnly();
+    });
+    if (supportSkills.length > 0) {
+      skills = skills.filter(function(skill) {
+        return !supportSkills.contains(skill.id);
+      });
+    }
+    //TODO: PARTY UPD Навык, который атакует вокруг, надо доп. проверку делать
+    return skills;
+  };
+  _._selectBetterBattleActionForNow = function(skills) {
+    var method, priorityList;
+    // * Пока что смотрим только по списку приоритетов
+    priorityList = this.model().getBattleSkillsPriorityList();
+    if (priorityList.length > 0) {
+      method = function(a, b) {
+        var indexOfSkillA, indexOfSkillB;
+        indexOfSkillA = priorityList.indexOf(a.id);
+        indexOfSkillB = priorityList.indexOf(b.id);
+        // * Если индекса нет, то 100000 (т.е. в самый конец)
+        if (indexOfSkillA < 0) {
+          indexOfSkillA = 100000;
+        }
+        if (indexOfSkillB < 0) {
+          indexOfSkillB = 100000;
+        }
+        return indexOfSkillA - indexOfSkillB;
+      };
+      skills.sort(method);
+      return skills[0];
+    } else {
+      //TODO: PARTY UPD Более умный алгоритм?
+      return skills.sample();
+    }
+  };
+  // * SUPPORT FLOW ==============================================================
+  _._updateMainSupportFlow = function() {
+    return this._updateMainBattleFlow();
+  };
+  _._selectSupportActionToUse = function() {
+    var bestAction, skills;
+    this._nextActionCheck--;
+    if (this._nextActionCheck > 0) {
+      return;
+    }
+    skills = this._filterSupportSkills(this.battler().getUsableAASkills());
+    if (skills.length > 0) {
+      if (skills.length === 1) {
+        this._setCurrentAction(skills[0]);
+      } else {
+        bestAction = this._selectBetterSupportActionForNow(skills);
+        this._setCurrentAction(bestAction);
+      }
+    } else {
+      this._resetCurrentAction();
+    }
+  };
+  _._filterSupportSkills = function(skills) {
+    var supportSkills;
+    supportSkills = this.model().getSupportSkillsList();
+    skills = skills.filter(function(skill) {
+      return skill.AASkill.isForFriends();
+    });
+    if (supportSkills.length > 0) {
+      skills = skills.filter(function(skill) {
+        return supportSkills.contains(skill.id);
+      });
+    }
+    //TODO: Навык, который лечет вокруг, надо доп. проверку делать
+    return skills;
+  };
+  _._selectBetterSupportActionForNow = function(skills) {
+    var method, priorityList;
+    // * Пока что смотрим только по списку приоритетов
+    priorityList = this.model().getSupportSkillsList();
+    if (priorityList.length > 0) {
+      method = function(a, b) {
+        var indexOfSkillA, indexOfSkillB;
+        indexOfSkillA = priorityList.indexOf(a.id);
+        indexOfSkillB = priorityList.indexOf(b.id);
+        // * Если индекса нет, то 100000 (т.е. в самый конец)
+        if (indexOfSkillA < 0) {
+          indexOfSkillA = 100000;
+        }
+        if (indexOfSkillB < 0) {
+          indexOfSkillB = 100000;
+        }
+        return indexOfSkillA - indexOfSkillB;
+      };
+      skills.sort(method);
+      return skills[0];
+    } else {
+      //TODO: PARTY UPD Более умный алгоритм? Надо учитывать параметр модели: healInPriority
+      return skills.sample();
+    }
+  };
+})();
+
+// ■ END AllyAI_BattleFlow.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+// * Машина состояний для АИ союзников на карте
+var AllyAI_FlowMachine;
+
+AllyAI_FlowMachine = class AllyAI_FlowMachine extends AIFlowMachine {
+  constructor() {
+    super(...arguments);
+    this.registerFlowForState(0, new AllyAI_FreeFlow(this.id));
+    this.registerFlowForState(1, new AllyAI_BattleFlow(this.id));
+    // * Начальное состояние - свободное
+    this.switchToFreeState();
+    return;
+  }
+
+  switchToFreeState() {
+    return this.setState(0);
+  }
+
+  switchToBattleState() {
+    return this.setState(1);
+  }
+
+  isFreeState() {
+    return this.state === 0;
+  }
+
+  isBattleState() {
+    return this.state === 1;
+  }
+
+  char() {
+    return $gamePlayer.followers().aaGetFollowerByActorId(this.id);
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
+// * Свободное состояние для АИ союзника
+// * В данном состоянии АИ определяет цель (ищет её)
+var AllyAI_FreeFlow;
+
+AllyAI_FreeFlow = class AllyAI_FreeFlow extends AIFlow {
+  constructor() {
+    super(...arguments);
+    return;
+  }
+
+  char() {
+    return AllyAI_FlowMachine.prototype.char.call(this);
+  }
+
+  // * Выполняется каждый раз при переходе в это состояние
+  onStateStart() {
+    "START FREE STATE".p();
+    this._currentBestTarget = null;
+    this._currentBestTargetSP = null; // * support
+    this._currentTargetTypeToFind = 0; // * 0 - battle, 1 - support
+    // * Общее время на поиск лучшей цели
+    // * Если цель не найдена, выходим из АИ логики
+    this._freeFlowCommonTimer = 0;
+    this._targetSearchTimer = 0;
+  }
+
+  // * Выполняется каждый раз при выходе из этого состояния
+  onStateEnd() {
+    this._freeFlowCommonTimer = 0;
+    return this._targetSearchTimer = 0;
+  }
+
+  isHaveBestBattleTarget() {
+    return this._currentBestTarget != null;
+  }
+
+  isHaveBestSupportTarget() {
+    return this._currentBestTargetSP != null;
+  }
+
+  exitAILogic() {
+    this.onStateEnd();
+    this.char().aaForceResetAILogicState();
+  }
+
+};
+
+(function() {  //╒═════════════════════════════════════════════════════════════════════════╛
+  // ■ AllyAI_FreeFlow.coffee
+  //╒═════════════════════════════════════════════════════════════════════════╛
+  //---------------------------------------------------------------------------
+  var _;
+  //@[DEFINES]
+  _ = AllyAI_FreeFlow.prototype;
+  // * Выполняется один раз при создании объекта (в конструкторе)
+  _._setup = function() {};
+  //TODO: Выбор двух целей (support и battle и уже выбор одной потом)
+  _._updateFlow = function() {
+    if (this._targetSearchTimer === 0) {
+      this._updateTargetSearchFlow();
+    }
+    this._targetSearchTimer++;
+    if (this._freeFlowCommonTimer >= 5) {
+      this._targetSearchTimer = 0;
+    }
+    this._freeFlowCommonTimer++;
+    if (this._freeFlowCommonTimer >= 11) {
+      this._freeFlowCommonTimer = 0;
+      this.exitAILogic();
+    }
+  };
+  _._updateTargetSearchFlow = function() {
+    if (this._currentTargetTypeToFind === 0) {
+      this._updateBattleTargetSearch();
+    } else {
+      this._updateSupportTargetSearch();
+    }
+  };
+  _._onBattleTargetFound = function(t) {
+    // * Если поддержка не в приоритете и есть цель для боя, сразу её выбираем
+    if ((t != null) && !this.model().isSupportInPriority()) {
+      this._onFinalTargetFound(t);
+      return;
+    }
+    if (this.model().isCanSupport()) {
+      // * Теперь смотрим цель для support действия
+      this._currentTargetTypeToFind = 1;
+    } else {
+      if (t != null) {
+        // * Не поддерживает поддержку, т.е.сразу одна цель (бой)
+        this._onFinalTargetFound(t);
+      }
+    }
+  };
+  _._onSupportTargetFound = function(t) {
+    // * Если Support в приоритете и есть цель, то Support цель
+    if ((t != null) && this.model().isSupportInPriority()) {
+      this._onFinalTargetFound(t);
+      return;
+    }
+    // * Если есть боевая цель, то сразу её
+    if (this.isHaveBestBattleTarget()) {
+      this._onFinalTargetFound(this._currentBestTarget);
+      return;
+    }
+    // * Если есть цель Support, то её
+    if (t != null) {
+      this._onFinalTargetFound(t);
+      return;
+    }
+    // * Иначе повторный поиск
+    this._currentTargetTypeToFind = 0;
+  };
+  _._onFinalTargetFound = function(t) {
+    this.entity().setTarget(t);
+    this.logic().switchToBattleState();
+  };
+})();
+
+// ■ END AllyAI_FreeFlow.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ AllyAI_FreeFlow.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = AllyAI_FreeFlow.prototype;
+  _._updateSupportTargetSearch = function() {
+    if (this.isHaveBestSupportTarget()) {
+      return this._onSupportTargetFound(this._currentBestTargetSP);
+    } else {
+      this._currentBestTargetSP = this._trySelectBestSupportTarget();
+      if (!this.isHaveBestSupportTarget()) {
+        // * Не может быть любой цели для поддержки (только по критериям!)
+        "SELECT NO ANY SUPPORT TARGET (null)".p();
+        this._onSupportTargetFound(null);
+      } else {
+        "BEST SUPPORT TARGET FOUND".p();
+      }
+    }
+  };
+  _._trySelectBestSupportTarget = function() {
+    var e, target;
+    try {
+      target = this._trySelectBestSPTargetByCondition(1);
+      if (target == null) {
+        target = this._trySelectBestSPTargetByCondition(2);
+      }
+      if (target == null) {
+        target = this._trySelectBestSPTargetByCondition(3);
+      }
+      return target;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return null;
+    }
+  };
+  _._trySelectBestSPTargetByCondition = function(index) {
+    var condition, e;
+    try {
+      condition = this.model().getBestSupportTargetCondition(index);
+      if (String.any(condition)) {
+        return this._tryFindSupportTargetByCondition(condition);
+      } else {
+        return null;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return null;
+    }
+  };
+  _._tryFindSupportTargetByCondition = function(conditionString) {
+    var candidates, e, filterResultString, i, len, target, targetsAround;
+    console.log("CONDITION STRING RAW: " + conditionString);
+    if (conditionString === "any" || !String.any(conditionString)) {
+      return this._trySelectAnySupportTarget();
+    } else if (conditionString === "none") {
+      return null;
+    } else {
+      targetsAround = this._getAllTargetsForSupportAround();
+      conditionString = conditionString.replaceAll('|', ' || ');
+      conditionString = conditionString.replaceAll('&', ' && ');
+      candidates = [];
+      for (i = 0, len = targetsAround.length; i < len; i++) {
+        target = targetsAround[i];
+        filterResultString = this._applyFiltersToSupportTargetCandidate(target, conditionString);
+        try {
+          if (eval(filterResultString)) {
+            candidates.push(target);
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+      }
+      if (candidates.length > 0) {
+        return this._tryFilterSupportTargetByGroupCondition(candidates);
+      }
+    }
+    return null;
+  };
+  _._trySelectAnySupportTarget = function() {
+    var availabledTargets;
+    availabledTargets = this._getAllTargetsForSupportAround();
+    if (availabledTargets.length > 0) {
+      return this._tryFilterSupportTargetByGroupCondition(availabledTargets);
+    }
+    return null;
+  };
+  _._getAllTargetsForSupportAround = function() {
+    var e, targetsAround;
+    try {
+      targetsAround = AATargetsManager.getAvailableAlliesInRadius(this.char(), this.model().gViewRadius());
+      //  * Пропустим линию видимости пока что (не особо важно)
+      //targetsAround = targetsAround.filter (t) => AAVisionManager.isVisionLineIsFree(@char(), t)
+      console.log(targetsAround);
+      return targetsAround;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return [];
+    }
+  };
+  _._applyFiltersToSupportTargetCandidate = function(target, conditionString) {
+    var e, i, item, len, method, ref;
+    try {
+      ref = ['none', 'any', 'damaged', 'full', 'player', 'ally', 'self', 'other', 'lowHp', 'partyMember', 'condition'];
+      for (i = 0, len = ref.length; i < len; i++) {
+        item = ref[i];
+        if (conditionString.contains(item)) {
+          method = this['_aaAIConditionForSupport_' + item];
+          if (method != null) {
+            conditionString = conditionString.replace(item, method.call(this, target).toString());
+          } else {
+            conditionString = conditionString.replace(item, 'false');
+          }
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return "false";
+    }
+    return conditionString;
+  };
+  // * Нет групповых фильтров
+  _._tryFilterSupportTargetByGroupCondition = function(targets) {
+    return targets.sample();
+  };
+})();
+
+// ■ END AllyAI_FreeFlow.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ AllyAI_FreeFlow.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = AllyAI_FreeFlow.prototype;
+  // * TARGET (SINGLE) CONDITIONS ================================================
+  _._aaAICondition_any = function(t) {
+    return true;
+  };
+  _._aaAICondition_none = function(t) {
+    return false;
+  };
+  _._aaAICondition_condition = function(t) {
+    var condition, e;
+    try {
+      condition = this.model().getBestTargetUserCondition();
+      if (String.any(condition)) {
+        condition = condition.replaceAll("a.", "this.battler().");
+        condition = condition.replaceAll("b.", "$gamePlayer.AABattler().");
+        condition = condition.replaceAll("t.", "t.AABattler().");
+        return eval(condition);
+      } else {
+        // * Пустое условие всегда верно
+        return true;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+  _._aaAICondition_full = function(t) {
+    var e;
+    try {
+      return t.AABattler().hpRate() === 1;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return false;
+    }
+  };
+  _._aaAICondition_damaged = function(t) {
+    return !this._aaAICondition_full(t);
+  };
+  _._aaAICondition_playerTarget = function(t) {
+    var e;
+    try {
+      if ((t != null) && $gameTemp._aaPartyAI_flag_playerAttackSomeone > 0) {
+        return (t.eventId != null) && t.eventId() === $gameTemp._aaPartyAI_flag_playerAttackSomeone;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+  _._aaAICondition_playerOpponent = function(t) {
+    var e;
+    try {
+      return (t != null) && t.AAEntity().getTarget() === $gamePlayer;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return false;
+    }
+  };
+  _._aaAICondition_notMyOpponent = function(t) {
+    var e;
+    try {
+      return !this._aaAICondition_myOpponent(t);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return false;
+    }
+  };
+  _._aaAICondition_myOpponent = function(t) {
+    var e;
+    try {
+      return (t != null) && t.AAEntity().getTarget() === this.char();
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return false;
+    }
+  };
+  // * GROUP CONDITIONS ===========================================================
+  // * Данные методы возвращают объект target, а не Bool!
+  // * Подразумевается что массив targets уже прошёл проверку на null, 0 и 1 (count)
+  _._aaAIConditionGroup_nearest = function(targets) {
+    var e, method, x, y;
+    try {
+      ({x, y} = this.char());
+      method = function(a, b) {
+        var distToA, distToB;
+        distToA = AA.Utils.Math.getXYDistance(x, y, a.x, a.y);
+        distToB = AA.Utils.Math.getXYDistance(x, y, b.x, b.y);
+        return distToA - distToB;
+      };
+      targets.sort(method);
+      return targets[0];
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
+  _._aaAIConditionGroup_further = function(targets) {
+    var e, method, x, y;
+    try {
+      ({x, y} = this.char());
+      method = function(a, b) {
+        var distToA, distToB;
+        distToA = AA.Utils.Math.getXYDistance(x, y, a.x, a.y);
+        distToB = AA.Utils.Math.getXYDistance(x, y, b.x, b.y);
+        return distToB - distToA;
+      };
+      targets.sort(method);
+      return targets[0];
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
+  _._aaAIConditionGroup_weakest = function(targets) {
+    var e, method;
+    try {
+      method = function(a, b) {
+        var valA, valB;
+        valA = a.AABattler().atk;
+        valB = b.AABattler().atk;
+        return valA - valB;
+      };
+      targets.sort(method);
+      return targets[0];
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
+  _._aaAIConditionGroup_strongest = function(targets) {
+    var e, method;
+    try {
+      method = function(a, b) {
+        var valA, valB;
+        valA = a.AABattler().atk;
+        valB = b.AABattler().atk;
+        return valB - valA;
+      };
+      targets.sort(method);
+      return targets[0];
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
+  _._aaAIConditionGroup_lowHp = function(targets) {
+    var e, method;
+    try {
+      method = function(a, b) {
+        var hpA, hpB;
+        hpA = a.AABattler().hp;
+        hpB = b.AABattler().hp;
+        return hpA - hpB;
+      };
+      targets.sort(method);
+      return targets[0];
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
+  _._aaAIConditionGroup_highHp = function(targets) {
+    var e, method;
+    try {
+      method = function(a, b) {
+        var hpA, hpB;
+        hpA = a.AABattler().hp;
+        hpB = b.AABattler().hp;
+        return hpB - hpA;
+      };
+      targets.sort(method);
+      return targets[0];
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
+  _._aaAIConditionGroup_nearestToPlayer = function(targets) {
+    var e, method, x, y;
+    try {
+      ({x, y} = $gamePlayer);
+      method = function(a, b) {
+        var distToA, distToB;
+        distToA = AA.Utils.Math.getXYDistance(x, y, a.x, a.y);
+        distToB = AA.Utils.Math.getXYDistance(x, y, b.x, b.y);
+        return distToA - distToB;
+      };
+      targets.sort(method);
+      return targets[0];
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
+  _._aaAIConditionGroup_furtherFromPlayer = function(targets) {
+    var e, method, x, y;
+    try {
+      ({x, y} = $gamePlayer);
+      method = function(a, b) {
+        var distToA, distToB;
+        distToA = AA.Utils.Math.getXYDistance(x, y, a.x, a.y);
+        distToB = AA.Utils.Math.getXYDistance(x, y, b.x, b.y);
+        return distToB - distToA;
+      };
+      targets.sort(method);
+      return targets[0];
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
+  
+  // * TARGET (SINGLE, SUPPORT) CONDITIONS ================================================
+  _._aaAIConditionForSupport_none = function(t) {
+    return false;
+  };
+  _._aaAIConditionForSupport_any = function(t) {
+    return true;
+  };
+  _._aaAIConditionForSupport_damaged = function(t) {
+    return !this._aaAIConditionForSupport_full(t);
+  };
+  _._aaAIConditionForSupport_full = function(t) {
+    var e;
+    try {
+      return t.AABattler().hpRate() === 1;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return false;
+    }
+  };
+  _._aaAIConditionForSupport_player = function(t) {
+    var e;
+    try {
+      return t === $gamePlayer;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+  _._aaAIConditionForSupport_ally = function(t) {
+    var e;
+    try {
+      return t !== $gamePlayer;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+  _._aaAIConditionForSupport_self = function(t) {
+    var e;
+    try {
+      return t === this.char();
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+  _._aaAIConditionForSupport_other = function(t) {
+    var e;
+    try {
+      return t !== this.char();
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+  _._aaAIConditionForSupport_lowHp = function(t) {
+    var e;
+    try {
+      return t.AABattler().hpRate() < 0.2;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+  _._aaAIConditionForSupport_partyMember = function(t) {
+    var e;
+    try {
+      return $gamePlayer.aaGetABSFollowers().contains(t);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+  _._aaAIConditionForSupport_condition = function(t) {
+    var condition, e;
+    try {
+      condition = this.model().getBestSupportTargetUserCondition();
+      if (String.any(condition)) {
+        condition = condition.replaceAll("a.", "this.battler().");
+        condition = condition.replaceAll("b.", "$gamePlayer.AABattler().");
+        condition = condition.replaceAll("t.", "t.AABattler().");
+        return eval(condition);
+      } else {
+        // * Пустое условие всегда верно
+        return true;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+})();
+
+// ■ END AllyAI_FreeFlow.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ AllyAI_FreeFlow.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = AllyAI_FreeFlow.prototype;
+  _._updateBattleTargetSearch = function() {
+    if (this.isHaveBestBattleTarget()) {
+      return this._onBattleTargetFound(this._currentBestTarget);
+    } else {
+      this._currentBestTarget = this._trySelectBestTarget();
+      if (!this.isHaveBestBattleTarget()) {
+        this._onBattleTargetFound(null);
+      } else {
+        "BEST TARGET FOUND".p();
+      }
+    }
+  };
+  
+  // * Смотрим три условия
+  _._trySelectBestTarget = function() {
+    var target;
+    target = this._trySelectBestTargetByCondition(1);
+    if (target == null) {
+      target = this._trySelectBestTargetByCondition(2);
+    }
+    if (target == null) {
+      target = this._trySelectBestTargetByCondition(3);
+    }
+    return target;
+  };
+  _._trySelectBestTargetByCondition = function(index) {
+    var condition;
+    condition = this.model().getBestTargetCondition(index);
+    if (String.any(condition)) {
+      return this._tryFindTargetByCondition(condition);
+    } else {
+      return null;
+    }
+  };
+  _._tryFindTargetByCondition = function(conditionString) {
+    var candidates, e, filterResultString, i, len, target, targetsAround;
+    console.log("CONDITION STRING RAW: " + conditionString);
+    if (conditionString === "any" || !String.any(conditionString)) {
+      return this._trySelectAnyTarget();
+    } else if (conditionString === "none") {
+      return null;
+    } else {
+      targetsAround = this._getAllTargetsAround();
+      conditionString = conditionString.replaceAll('|', ' || ');
+      conditionString = conditionString.replaceAll('&', ' && ');
+      candidates = [];
+      for (i = 0, len = targetsAround.length; i < len; i++) {
+        target = targetsAround[i];
+        filterResultString = this._applyFiltersToTargetCandidate(target, conditionString);
+        try {
+          if (eval(filterResultString)) {
+            candidates.push(target);
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+      }
+      if (candidates.length > 0) {
+        return this._tryFilterTargetByGroupCondition(candidates);
+      }
+    }
+    return null;
+  };
+  _._applyFiltersToTargetCandidate = function(target, conditionString) {
+    var e, i, item, len, method, ref;
+    try {
+      ref = ['any', 'none', 'condition', 'damaged', 'full', 'playerTarget', 'playerOpponent', 'notMyOpponent', 'myOpponent'];
+      for (i = 0, len = ref.length; i < len; i++) {
+        item = ref[i];
+        if (conditionString.contains(item)) {
+          method = this['_aaAICondition_' + item];
+          if (method != null) {
+            conditionString = conditionString.replace(item, method.call(this, target).toString());
+          } else {
+            conditionString = conditionString.replace(item, 'false');
+          }
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return "false";
+    }
+    return conditionString;
+  };
+  _._tryFilterTargetByGroupCondition = function(targets) {
+    var condition, e;
+    try {
+      condition = this.model().getBestTargetGroupCondition();
+      if (targets.length === 1 || !String.any(condition)) {
+        return targets.sample();
+      }
+      return this._applyTargetsGroupFilters(targets, condition);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
+  _._applyTargetsGroupFilters = function(targets, conditionString) {
+    var available, bestInGroup, e, method;
+    try {
+      bestInGroup = null;
+      available = ['nearest', 'further', 'weakest', 'strongest', 'lowHp', 'highHp', 'nearestToPlayer', 'furtherFromPlayer'];
+      if (available.contains(conditionString)) {
+        method = this['_aaAIConditionGroup_' + conditionString];
+        if (method != null) {
+          bestInGroup = method.call(this, targets);
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return null;
+    }
+    return bestInGroup;
+  };
+  _._trySelectAnyTarget = function() {
+    var availabledTargets;
+    availabledTargets = this._getAllTargetsAround();
+    if (availabledTargets.length > 0) {
+      return this._tryFilterTargetByGroupCondition(availabledTargets);
+    }
+    return null;
+  };
+  _._getAllTargetsAround = function() {
+    var e, targetsAround;
+    try {
+      targetsAround = AATargetsManager.getAvailableTargetsInRadius(this.char(), this.model().gViewRadius());
+      // * Для улучшения производительности, пропустим проверку линии обзора
+      //targetsAround = targetsAround.filter (t) => AAVisionManager.isVisionLineIsFree(@char(), t)
+      return targetsAround;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return [];
+    }
+  };
+})();
+
+// ■ END AllyAI_FreeFlow.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
 (function() {
   var BuffIconsController;
   // * Общий контроллер для отрисовки бафов персонажа (игрока)
@@ -17584,9 +20258,22 @@ AIFlow = class AIFlow extends AIFlowMachine {
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
 (function() {
-  var ALIAS__loadDatabase, _;
+  var ALIAS__loadDataFile, ALIAS__loadDatabase, _;
   //@[DEFINES]
   _ = DataManager;
+  DataManager._databaseFiles.push({
+    name: "$aabsz_WeaponSkillExtensionSlot",
+    src: "AABSZ/WeaponSkillExtensionSlot.json"
+  });
+  // * Чтобы тест битвы из редактора работал
+  //@[ALIAS]
+  ALIAS__loadDataFile = _.loadDataFile;
+  _.loadDataFile = function(name, src) {
+    if (src.contains("AABSZ")) {
+      src = src.replace("Test_", "");
+    }
+    return ALIAS__loadDataFile.call(this, name, src);
+  };
   //@[ALIAS]
   ALIAS__loadDatabase = _.loadDatabase;
   _.loadDatabase = function() {
@@ -17664,7 +20351,8 @@ EnemyAI_BattleFlow = class EnemyAI_BattleFlow extends AIFlow {
   //TODO: filter skills
   onStateEnd() {
     //on char сделать метод основной
-    return this.entity().resetBattle();
+    this.entity().resetBattle();
+    return this.char().aaOnTargetChanged();
   }
 
 };
@@ -18011,6 +20699,7 @@ EnemyAI_FreeFlow = class EnemyAI_FreeFlow extends AIFlow {
   };
   _._onSeeTarget = function(target) {
     this.entity().setTarget(target);
+    this.char().aaOnTargetChanged();
     //"SEE TARGET IN LINE".p()
     //TODO: if enemy have actions, then switch to battle state
     if (this.battler().isHaveAnyAASkill()) {
@@ -18149,6 +20838,16 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
     return this._updateSkillSelectClick();
   }
 
+  _afterClose() {
+    this.buttonCat0.visible = false;
+    return this.buttonCat1.visible = false;
+  }
+
+  _afterOpen() {
+    this.buttonCat0.visible = true;
+    return this.buttonCat1.visible = true;
+  }
+
 };
 
 (function() {  //╒═════════════════════════════════════════════════════════════════════════╛
@@ -18172,12 +20871,14 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
       return this.changeCategory(0);
     });
     this.buttonCat0.move(26, 6);
+    this.buttonCat0.visible = false;
     this.addContent(this.buttonCat0);
     this.buttonCat1 = new KDCore.ButtonM("Button_SkSItemsGroup", true, "Alpha");
     this.buttonCat1.addClickHandler(() => {
       return this.changeCategory(1);
     });
     this.buttonCat1.move(this.buttonCat0.x + 60, this.buttonCat0.y);
+    this.buttonCat1.visible = false;
     this.addContent(this.buttonCat1);
   };
   _._createCategoriesHeader = function() {
@@ -18424,20 +21125,54 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
   var _;
   //@[DEFINES]
   _ = Game_Actor.prototype;
-  _.AACharacter = function() {
-    var id;
-    //TODO: party followers
+  // * Поддерживает ли данный персонаж управление АИ
+  _.isSupportAIControl = function() {
     if (AA.Network.isNetworkGame()) {
+      return false;
+    } else {
+      return KDCore.Utils.getValueFromMeta('ABS', this.actor()) != null;
+    }
+  };
+  _.AACharacter = function() {
+    var e, id, playerData;
+    try {
       if (this.isPlayer()) {
         return $gamePlayer;
       } else {
-        id = ANGameManager.getPlayerDataByActorId(this.actorId());
-        return $gameMap.networkCharacterById(id);
+        if (AA.Network.isNetworkGame()) {
+          playerData = ANGameManager.getPlayerDataByActorId(this.actorId());
+          if (playerData != null) {
+            ({id} = playerData);
+            return $gameMap.networkCharacterById(id);
+          }
+        } else {
+          id = this.actorId();
+          return $gamePlayer.followers().aaGetFollowerByActorId(id);
+        }
       }
-    } else {
-      //TODO: Нет поддержки сопартийцев, поэтому всегда игрок
-      return $gamePlayer;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
     }
+    return null;
+  };
+  _.aaNetSetupTeamId = function(teamId) {
+    var e;
+    try {
+      if (!AA.Network.isNetworkGame()) {
+        return;
+      }
+      this._aaNetTeamId = teamId;
+      if (this.netDataObserver._fields["_aaNetTeamId"] == null) {
+        return this.netDataObserver.addFields(this, "_aaNetTeamId");
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _.aaNetGetTeamId = function() {
+    return this._aaNetTeamId;
   };
   //$[OVER]
   _.isPlayer = function() {
@@ -18506,7 +21241,8 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
       if (this.AACharacter() === $gamePlayer) {
         $gamePlayer.aaSkillsSet.refreshAttackSkillBinding();
       }
-      return uAPI.refreshSkillPanelSafe();
+      uAPI.refreshSkillPanelSafe();
+      return this.aaRefreshSkillExtensionItemForNewWeapon();
     } catch (error) {
       e = error;
       return AA.w(e);
@@ -18523,11 +21259,10 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
     }
   };
   _.aaGetWeaponAttackSkillId = function() {
-    var currentWeapon, e, skillId, weapons;
+    var currentWeapon, e, skillId;
     try {
       if (this._aaCachedWeaponAttackSkillId == null) {
         this._aaCachedWeaponAttackSkillId = 0;
-        weapons = this.weapons();
         currentWeapon = this.weapons()[0];
         if (currentWeapon != null) {
           skillId = KDCore.Utils.getValueFromMeta('attackSkill', currentWeapon);
@@ -18545,6 +21280,36 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
       this._aaCachedWeaponAttackSkillId = 0;
     }
     return this._aaCachedWeaponAttackSkillId;
+  };
+  _.aaGetDefaultSecondarySkillId = function() {
+    var e, isExistsAsAASkill, skillId;
+    try {
+      skillId = KDCore.Utils.getValueFromMeta('defaultSecondarySkill', this.actor());
+      if (!String.any(skillId)) {
+        return 0;
+      }
+      skillId = parseInt(skillId);
+      isExistsAsAASkill = this.getAASkills().find(function(item) {
+        return item.idA === skillId;
+      });
+      if (isExistsAsAASkill != null) {
+        return skillId;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return 0;
+  };
+  _.aaIsEquippedInHeavyArmor = function() {
+    var e;
+    try {
+      return AA.Utils.isAnyItemHaveNotetag(this.equips(), 'aaHeavy');
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
   };
   // * Данные параметры добавлены для Gauge Controller Exp gauge
   Object.defineProperties(_, {
@@ -18634,6 +21399,205 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
         return;
       }
       return Sprite_AADamagePopUpItem.CreateOnCharacterBinded(char, style, text);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+})();
+
+// ■ END Game_Actor.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Actor.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = Game_Actor.prototype;
+  _.aaIsCanUseWeaponWithExtension = function() {
+    var def, e, extItemId;
+    try {
+      def = this.aaGetActiveWeaponExtensionDefinition();
+      if (def == null) {
+        return true;
+      }
+      extItemId = this.aaGetActiveSkillExtensionItemId();
+      if (extItemId > 0) {
+        return this.aaIsCanUseSkillDefinitionNow(def, extItemId);
+      } else {
+        if (def.isRequireExtensionItem()) {
+          return false;
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return true;
+  };
+  _.aaGetActiveWeaponExtensionDefinition = function() {
+    var activeWeapon, def, e;
+    try {
+      activeWeapon = this.weapons()[0];
+      if (activeWeapon != null) {
+        def = activeWeapon.AAExtDefinition;
+        if ((def != null) && def.isValidDefinition()) {
+          return def;
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
+  _.aaGetActiveSkillExtensionItemId = function() {
+    var e;
+    try {
+      if (this._aaActiveExtensionItemId != null) {
+        return this._aaActiveExtensionItemId;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return 0;
+  };
+  _.aaSetActiveSkillExtensionItemId = function(extItemId) {
+    var def, e;
+    try {
+      this._aaActiveExtensionItemId = 0;
+      if (extItemId == null) {
+        return;
+      }
+      if (extItemId <= 0) {
+        return;
+      }
+      def = this.aaGetActiveWeaponExtensionDefinition();
+      if ((def != null) && def.extensions.contains(extItemId)) {
+        this._aaActiveExtensionItemId = extItemId;
+        return;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      this._aaActiveExtensionItemId = 0;
+    }
+  };
+  // * Когда персонаж меняет оружие, надо убрать предметы не подходящие
+  _.aaRefreshSkillExtensionItemForNewWeapon = function() {
+    var def, e, i, item, len, prevExtensionItemId, ref;
+    try {
+      prevExtensionItemId = this.aaGetActiveSkillExtensionItemId();
+      this.aaSetActiveSkillExtensionItemId(0);
+      def = this.aaGetActiveWeaponExtensionDefinition();
+      if (def == null) {
+        return;
+      }
+      if (def.extensions.contains(prevExtensionItemId)) {
+        this.aaSetActiveSkillExtensionItemId(prevExtensionItemId);
+      } else {
+        // * Если нет, пытаемся поставить любую (если требуется вообще)
+        if (def.isRequireExtensionItem()) {
+          ref = def.extensions;
+          for (i = 0, len = ref.length; i < len; i++) {
+            item = ref[i];
+            if ($gameParty.numItems($dataItems[item]) > 0) {
+              this.aaSetActiveSkillExtensionItemId(item);
+              return;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      this.aaSetActiveSkillExtensionItemId(0);
+    }
+  };
+  // * Применить "расширение" оружия к (его) навыку атаки
+  _.aaCheckAndApplySkillExtension = function(skill) {
+    var aaSkillDataCopy, def, e, extItemId, item, skillId;
+    try {
+      if (skill.idA !== this.attackSkillId()) {
+        return skill;
+      }
+      def = this.aaGetActiveWeaponExtensionDefinition(skill);
+      if (def == null) {
+        return skill;
+      }
+      extItemId = this.aaGetActiveSkillExtensionItemId();
+      if (extItemId > 0) {
+        if (this.aaIsCanUseSkillDefinitionNow(def, extItemId)) {
+          item = $dataItems[this.aaGetActiveSkillExtensionItemId()];
+          if (item == null) {
+            return skill;
+          }
+          if (item.AAExtItem == null) {
+            return skill;
+          }
+          skillId = skill.id;
+          // * made a copy of skill data
+          aaSkillDataCopy = JsonEx.parse(JsonEx.stringify(skill.AASkill));
+          $dataSkills[skillId].__aaDefCopy = aaSkillDataCopy;
+          $dataSkills[skillId].AASkill.setNoteParameters(item.AAExtItem.getParameters());
+        } else {
+          console.log("Skill extension not valid now for use (or you don't have any skill extension item)");
+          return null;
+        }
+      } else {
+        // * Если нет никаких, но необходим какой-либо
+        // * то возращаем NULL, так как не можем использовать текущий навык
+        if (def.isRequireExtensionItem()) {
+          console.log("For use this skill " + skill.name + " you should have Skill Extension");
+          return null;
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return skill;
+  };
+  _.aaIsCanUseSkillDefinitionNow = function(def, extItemId) {
+    var e;
+    try {
+      if ($gameParty.numItems($dataItems[extItemId]) <= 0) {
+        return false;
+      }
+      if (!def.extensions.contains(extItemId)) {
+        // * Только если этот предмет можно использовать с данным weapon
+        return false;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return false;
+    }
+    return true;
+  };
+  _.consumeSkillExtension = function(skill) {
+    var def, e, extItemId;
+    try {
+      if (skill.idA !== this.attackSkillId()) {
+        return;
+      }
+      def = this.aaGetActiveWeaponExtensionDefinition(skill);
+      if (def == null) {
+        return;
+      }
+      extItemId = this.aaGetActiveSkillExtensionItemId();
+      if (extItemId <= 0) {
+        return;
+      }
+      if (def.isConsumeExtensionItem()) {
+        return $gameParty.gainItem($dataItems[extItemId], -1, true);
+      }
     } catch (error) {
       e = error;
       return KDCore.warning(e);
@@ -18743,6 +21707,23 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
       return KDCore.warning(e);
     }
   };
+  // * Изменение маны с показом PopUp
+  _.aaGainMpWithPopUp = function(value, isCrit = false) {
+    var e;
+    try {
+      this._result = new Game_ActionResult();
+      this._result.used = true;
+      this._result.mpDamage = value * -1;
+      this._result.success = true;
+      this._result.physical = true;
+      this._result.critical = isCrit === true;
+      this.startDamagePopup();
+      return this.gainMp(value);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
 })();
 
 // ■ END Game_Battler.coffee
@@ -18774,8 +21755,6 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
   _.initMembers = function() {
     ALIAS__initMembers.call(this);
     this.initAASkills();
-    //TODO: Возможно это скинется при загрузке игры
-    AA.EV.subscribeForX(this, "PauseABS", this.gev_onABSPaused.bind(this));
   };
   //@[ALIAS]
   ALIAS__canUse = _.canUse;
@@ -18791,7 +21770,7 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
   _.paySkillCost = function(skill) {
     ALIAS__paySkillCost.call(this, skill);
     if (AA.isABSMap() && (skill.AASkill != null)) {
-      this.aaSetSkillTimer(skill);
+      return this.aaSetSkillTimer(skill);
     }
   };
   // * АБС навыки не учитывают область действия, так как их можно использовать только на карте
@@ -18935,12 +21914,22 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
     try {
       aaSkill = item.AASkill;
       if (aaSkill.isRequireStateOnUser()) {
-        return this.isStateAffected(aaSkill.gUsableIfState());
+        if (!this.isStateAffected(aaSkill.gUsableIfState())) {
+          return false;
+        }
+      }
+      if (aaSkill.idA === this.attackSkillId()) {
+        if (!this.aaIsCanUseWeaponWithExtension()) {
+          return false;
+        }
       }
     } catch (error) {
       e = error;
       AA.w(e);
     }
+    return true;
+  };
+  _.aaIsCanUseWeaponWithExtension = function() {
     return true;
   };
   _.meetsABSSkillContitions = function(skill) {
@@ -18951,6 +21940,28 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
     return this.meetsItemConditions(item);
   };
   
+  // * Применение "расширения" навыка (работает только Game_Actor)
+  _.aaCheckAndApplySkillExtension = function(skill) {
+    return skill;
+  };
+  // * Использование предмета "расширения" навыка (работает только Game_Actor)
+  _.consumeSkillExtension = function(skill) {}; // * EMPTY
+  _.aaGetExtraOverlayImage = function() {
+    var e, state, states;
+    try {
+      states = this.states();
+      if (states.length > 0) {
+        state = states[0];
+        if (state.meta != null) {
+          return state.meta.svOverlay;
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
   // * Добавим MaxTp чтобы Gauge контроллеры работали
   Object.defineProperties(_, {
     mtp: {
@@ -18991,6 +22002,7 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
       return;
     }
     //"ABS STATE ADDED".p(stateId)
+    this.aaStates.checkBattler(this);
     this.aaStates.add(stateId);
   };
   _.clearStatesABS = function() {
@@ -19177,8 +22189,67 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
   })();
   (function() {    // * Методы ABS (Движение)
     // -----------------------------------------------------------------------
-    return _.aaTurnTowardTouchInput = function() {
+    _.aaTurnTowardTouchInput = function() {
       return this.turnTowardCharacter(TouchInput.toMapPoint());
+    };
+    _.aaTeleport = function(point, inAnimation, outAnimation, delay = 1) {
+      var e, staticPoint;
+      try {
+        // * Чтобы не хранить лишние данные, вдруг в качестве Point передался Game_Character
+        staticPoint = {
+          x: point.x,
+          y: point.y
+        };
+        this._aaTeleportData = {
+          point: staticPoint,
+          inAnimation,
+          outAnimation
+        };
+        this._aaTeleportDelay = delay;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+    };
+    _._aaPerformTeleport = function() {
+      var e, inAnimation, outAnimation, point;
+      if (this._aaTeleportData == null) {
+        return;
+      }
+      try {
+        ({point, inAnimation, outAnimation} = this._aaTeleportData);
+        if ($gameMap.isValid(point.x, point.y)) {
+          if (inAnimation > 0) {
+            AABattleActionsManager.playAnimationOnMap(this.x, this.y, inAnimation);
+            return this.aaTeleport(point, 0, outAnimation, 10); // * Если нет анимации входа, то мнгновенно!
+          } else {
+            this.locate(point.x, point.y);
+            if (outAnimation > 0) {
+              AABattleActionsManager.playAnimationOnMap(point.x, point.y, outAnimation);
+            }
+            this._aaOnTeleportPerformed();
+            return this._aaTeleportData = null;
+          }
+        } else {
+          return this._aaTeleportData = null;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return this._aaTeleportData = null;
+      }
+    };
+    return _._aaUpdateTeleportRequest = function() {
+      if (this._aaTeleportData == null) {
+        return;
+      }
+      if (this._aaTeleportDelay > 0) {
+        this._aaTeleportDelay--;
+        if (this._aaTeleportDelay <= 0) {
+          this._aaTeleportDelay = 0;
+          this._aaPerformTeleport();
+        }
+      }
     };
   })();
 })();
@@ -19219,9 +22290,10 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
     this.aaDetermineAndPlaySkillAnimation(skill);
     // * Персонаж "платит" за навык как только использует его
     this.AABattler().useItem(skill.dbItem());
+    this.AABattler().consumeSkillExtension(skill);
     this.AABattler().onAAActionStart();
-    // * Стоит ограничение задержки для безопасности
-    if (skill.actionStartDelay > 0 && skill.actionStartDelay <= 60) {
+    // * Ограничение задержки для безопасности (было снято)
+    if (skill.actionStartDelay > 0) { //and skill.actionStartDelay <= 60
       this.setupDelayedAASkill(skill, point);
     } else {
       AABattleActionsManager.startAASkill(skill, this, point);
@@ -19321,9 +22393,231 @@ FWindow_SkillSelect = class FWindow_SkillSelect extends KDCore.FloatingWindow {
 // ■ Game_Character.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = Game_Character.prototype;
+  _.aaUpdateAIMovement = function() {
+    if (this.isMoving()) {
+      return;
+    }
+    switch (this._moveType) {
+      case 91: // * Approach target
+        this.aaMoveTypeToTarget();
+        return this.aaMoveTypeTeleportToTarget();
+      case 92:
+        this.aaMoveTypeKeepDistance();
+        return this.aaMoveTypeTeleportFromTarget();
+      case 93:
+        return this.aaMoveTypeReturnToHomePoint();
+      case 94:
+        // * СТОИТ НА МЕСТЕ И ВСЁ
+        return this.aaTurnTowardTarget();
+    }
+  };
+  // * NOTHING
+  // Просто стоим
+
+  // * Эти два метода реализует Game_Event (т.к. враги поддерживают телепорт)
+  // * см. файл Game_Event_AIMove_Teleport
+  _.aaMoveTypeTeleportToTarget = function() {}; // * EMPTY
+  _.aaMoveTypeTeleportFromTarget = function() {}; // * EMPTY
+  
+  // * Сохраняем базовые настройки движения события
+  _.aaStoreMoveData = function() {
+    var i, item, len, ref;
+    // * Выполняется один раз, при первой инициализации
+    if (this._storedMoveData != null) {
+      return;
+    }
+    this._storedMoveData = {};
+    ref = ["_moveSpeed", "_moveType", "_moveFrequency"];
+    for (i = 0, len = ref.length; i < len; i++) {
+      item = ref[i];
+      this._storedMoveData[item] = this[item];
+    }
+  };
+  // * Восстанавливаем базоыве настройки движения события
+  _.aaRestoreMoveData = function() {
+    var i, item, len, ref;
+    if (this._storedMoveData == null) {
+      return;
+    }
+    ref = ["_moveSpeed", "_moveType", "_moveFrequency"];
+    for (i = 0, len = ref.length; i < len; i++) {
+      item = ref[i];
+      this[item] = this._storedMoveData[item];
+    }
+  };
+  
+  // * Восстановить базовую скорость движения события
+  _.aaResetDefaultFreqAndSpeed = function() {
+    var i, item, len, ref;
+    if (this._storedMoveData == null) {
+      return;
+    }
+    ref = ["_moveSpeed", "_moveFrequency"];
+    for (i = 0, len = ref.length; i < len; i++) {
+      item = ref[i];
+      this[item] = this._storedMoveData[item];
+    }
+  };
+  // * Сохранить текущую координату как точка "дом"
+  _.aaStoreHomePoint = function() {
+    this.homePoint = {
+      x: this.x,
+      y: this.y
+    };
+  };
+  _.aaResetHomePoint = function() {
+    return this.homePoint = null;
+  };
+  // * У событий AI Free State управляет этим процессом (начинает и завершает)
+  _.aaSetMoveTypeReturnToHomePoint = function() {
+    var e;
+    try {
+      if (this._moveType === 93) {
+        return;
+      }
+      if (this.homePoint == null) {
+        return;
+      }
+      return this._moveType = 93;
+    } catch (error) {
+      //returnMoveData[F, S]
+      //TODO:
+      e = error;
+      return AA.w(e);
+    }
+  };
+  _.aaSetMoveTypeApproachTarget = function() {
+    var e, params;
+    try {
+      if (this._moveType === 91) {
+        return;
+      }
+      // * Быстрая проверка, что есть цель
+      if (!this.AAEntity().inBattle()) {
+        return;
+      }
+      // * Approach target
+      this._moveType = 91;
+      // * Задержка перед следующим движением (для оптимизации)
+      // * Используется, когда вокруг цели (игрока, персонажа) нет места
+      this._aaLastMovingActionDelay = 0;
+      params = this.AAModel().approachMoveData;
+      if (this.distTo(this.AAEntity().getTarget()) >= params[0]) {
+        this.setMoveFrequency(params[1]);
+        return this.setMoveSpeed(params[2]);
+      } else {
+        return this.aaResetDefaultFreqAndSpeed();
+      }
+    } catch (error) {
+      e = error;
+      return AA.w(e);
+    }
+  };
+  _.aaSetMoveTypeKeepBattleDistance = function() {
+    var e, params;
+    try {
+      if (this._moveType === 92) {
+        return;
+      }
+      if (!this.AAEntity().inBattle()) {
+        return;
+      }
+      this._moveType = 92;
+      params = this.AAModel().inBattleMoveData;
+      this.setMoveFrequency(params[1]);
+      this.setMoveSpeed(params[2]);
+      this._aaMinPatrolDist = params[0];
+      this._aaMaxPatrolDist = this.AAModel().gViewRadius();
+      return this._aaCanMakeRandomPatrolMove = params[3];
+    } catch (error) {
+      e = error;
+      return AA.w(e);
+    }
+  };
+  _.aaMoveTypeReturnToHomePoint = function() {
+    var e;
+    try {
+      //"HOME ".p()
+      if (this.homePoint != null) {
+        return this.aaMoveTypeToPoint(this.homePoint);
+      } else {
+        return this.aaRestoreMoveData();
+      }
+    } catch (error) {
+      e = error;
+      return AA.w(e);
+    }
+  };
+  _.aaSetMoveTypeStayStill = function() {
+    var e;
+    try {
+      if (this._moveType === 94) {
+        return;
+      }
+      if (!this.AAEntity().inBattle()) {
+        return;
+      }
+      return this._moveType = 94;
+    } catch (error) {
+      //"STAY STILL".p()
+      e = error;
+      return AA.w(e);
+    }
+  };
+  // * Держать дистанцию боя
+  // * Не подходить близко и не отходить далеко
+  _.aaMoveTypeKeepDistance = function() {
+    var distance, e, target;
+    try {
+      // * Если меньше 0, то ничего
+      if (this._aaMinPatrolDist <= 0) {
+        this.aaTurnTowardTarget();
+        return;
+      }
+      target = this.AAEntity().getTarget();
+      if (target == null) {
+        return;
+      }
+      distance = this.distTo(target);
+      if (distance >= this._aaMaxPatrolDist) {
+        //"DIST > MAX".p()
+        this.aaMoveTypeToTarget(target);
+        return;
+      }
+      if (distance <= this._aaMinPatrolDist) {
+        //"DIST <= MIN".p()
+        this.moveAwayFromCharacter(target);
+        this.aaTurnTowardTarget();
+        return;
+      }
+      if (this._aaCanMakeRandomPatrolMove) {
+        //"RAND MOVE".p()
+        this.moveRandom();
+        this.aaTurnTowardTarget();
+      }
+    } catch (error) {
+      e = error;
+      AA.w(e);
+    }
+  };
+})();
+
+// ■ END Game_Character.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Character.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
 //@[EXTENSION]
 AA.extend(function() {
-  var ALIAS___createXAnimaSetsForState, ALIAS__createNewAnimaXForCharacter, ALIAS__isHaveAnimaXState, _;
+  var ALIAS___createXAnimaSetsForState, ALIAS__createNewAnimaXForCharacter, ALIAS__isHaveAnimaXState, ALIAS__onAnimaXActionEnd, _;
   // * Методы ниже даже не учитываются, если плагин не подключён
   if (Imported.PKD_AnimaX !== true) {
     return;
@@ -19423,6 +22717,44 @@ AA.extend(function() {
     }
     return ALIAS__isHaveAnimaXState.call(this, ...arguments);
   };
+  _.aaPlayAnimaXActionWithEndCallback = function(actionName, callback) {
+    var e;
+    try {
+      if (!this.isAnimX()) {
+        return;
+      }
+      this.__aaActionCallback = callback;
+      return this.startAnimaXCustomAction(actionName, false, true);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  //@[ALIAS]
+  ALIAS__onAnimaXActionEnd = _.onAnimaXActionEnd;
+  _.onAnimaXActionEnd = function() {
+    var e;
+    ALIAS__onAnimaXActionEnd.call(this, ...arguments);
+    try {
+      return this.aaExecuteAnimaXActionCalback();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _.aaExecuteAnimaXActionCalback = function() {
+    var e;
+    try {
+      if (this.__aaActionCallback == null) {
+        return;
+      }
+      this.__aaActionCallback();
+      return this.__aaActionCallback = null;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
 });
 
 // ■ END Game_Character.coffee
@@ -19499,7 +22831,6 @@ AA.extend(function() {
       }
       if (AA.isABSActive()) {
         this.aaUpdateABS();
-        this.aaUpdateNoPassFlag();
       }
     }
   };
@@ -19550,7 +22881,7 @@ AA.extend(function() {
     ALIAS__moveDiagonally = _.moveDiagonally;
     _.moveDiagonally = function(horz, vert) {
       var diag, norm;
-      if (AA.Input.IsDiagonal === true) {
+      if (this.aaIsThisCharCanUseDiagMovement()) {
         diag = this.canPassDiagonally(this._x, this._y, horz, vert);
         norm = this.canPass(this._x, this._y, horz) || this.canPass(this._x, this._y, vert);
         if (diag) {
@@ -19638,7 +22969,6 @@ AA.extend(function() {
       if ((ref1 = this.AASprite()) != null) {
         ref1.initABS();
       }
-      this.aaInitNoPassFlagThread();
     };
     // * Деактивировать АБС режим
     _.stopABS = function() {
@@ -19671,6 +23001,10 @@ AA.extend(function() {
       return this.isABS() && ((ref = this.AAEntity()) != null ? ref.isActive() : void 0);
     };
     _.onTurnEnd = function() {};
+    // * Данный персонаж не может принимать урон (Projectile пролетают через него)
+    _.aaIsInvincible = function() {
+      return false;
+    };
     _.isMyEnemy = function(character) {
       if (!this.isABS()) {
         return false;
@@ -19687,6 +23021,7 @@ AA.extend(function() {
     _.aaUpdateABS = function() {
       var ref;
       this._aaUpdateDelayedSkillActions();
+      this._aaUpdateTeleportRequest();
       if ((ref = this.AABattler()) != null) {
         ref.aaUpdateABS();
       }
@@ -19706,8 +23041,18 @@ AA.extend(function() {
       }
     };
     // * Специальный идентификатор персонажа на карте (0 - игрок, Х - номер события)
-    return _.aaCharId = function() {
+    _.aaCharId = function() {
       return -1;
+    };
+    _.aaDirection = function() {
+      if (this._diagonalDir) {
+        return this._diagonalDir;
+      } else {
+        return this.direction();
+      }
+    };
+    return _.aaIsDodging = function() {
+      return false;
     };
   })();
   (function() {    // -----------------------------------------------------------------------
@@ -19727,7 +23072,9 @@ AA.extend(function() {
     _.aaIsCanMoveByImpulse = function() {
       return true;
     };
-    return _.aaApplyImpulse = function(power, dir, withJump, isReversed = false) {};
+    _.aaApplyImpulse = function(power, dir, withJump, isReversed = false) {};
+    _._aaUpdateTeleportRequest = function() {}; // * Game_Character_AA
+    return _._aaOnTeleportPerformed = function() {};
   })();
   (function() {    // -----------------------------------------------------------------------
 
@@ -19900,6 +23247,9 @@ AA.extend(function() {
       return AA.w(e);
     }
   };
+  _.aaIsThisCharCanUseDiagMovement = function() {
+    return AA.Input.IsDiagonal === true;
+  };
 })();
 
 // ■ END Game_CharacterBase.coffee
@@ -19954,6 +23304,8 @@ AA.extend(function() {
           this.aaTurnTowardTarget();
         }
         this.aaResetNextMoveActionTimer();
+      } else {
+        this.aaTurnTowardTarget();
       }
       return this._aaLastMovingActionDelay++;
     } catch (error) {
@@ -19963,9 +23315,19 @@ AA.extend(function() {
   };
   // * Можно ли выполнить следующее движение (используется для оптимизации преследования)
   _.aaIsCanPerformNextMoveAction = function(target) {
-    if ((target != null) && target.aaIsSurrounded()) {
-      // * Ждём секунду, если цель окружена (нет места подойти)
-      return this._aaLastMovingActionDelay >= 60;
+    if (target == null) {
+      return true;
+    }
+    if (target.aaIsDodging()) { // * Ждём (не идём к цели)
+      return false;
+    }
+    if (target.aaIsSurrounded()) {
+      if ($gameMap.distance(target.x, target.y, this.x, this.y) > 3) {
+        return true;
+      } else {
+        // * Ждём секунду, если цель окружена (нет места подойти)
+        return this._aaLastMovingActionDelay >= 60;
+      }
     } else {
       return true; // * Не надо ждать
     }
@@ -19983,7 +23345,7 @@ AA.extend(function() {
       if (point == null) {
         return;
       }
-      if (AA.Input.IsDiagonal === true) {
+      if (this.aaIsThisCharCanUseDiagMovement()) {
         direction = this.aaFindDirectionToDiagonal(point.x, point.y);
         if (direction % 2 === 0) {
           return this.aaMoveToPointStraight(point);
@@ -20008,6 +23370,7 @@ AA.extend(function() {
       return AA.w(e);
     }
   };
+  //TODO: moveTowardCharacter???
   // * Движение к точки (4 way only)
   _.aaMoveToPointStraight = function(point) {
     var dir;
@@ -20169,16 +23532,24 @@ AA.extend(function() {
   
   // * Данный персонаж окружён препятствиями (нельзя идти ни по одному из 4х направлений)
   _.aaIsSurrounded = function() {
+    this.aaRefreshNoPassFlag();
     if (this._aaNoPassFlag != null) {
-      return this._aaNoPassFlag > 2;
+      return this._aaNoPassFlag > 3;
     } else {
       return false;
     }
   };
-  //?DYNAMIC
-  _.aaUpdateNoPassFlag = function() {}; // * EMPTY
+  // * Проверка что клетки рядом с персонажем свободны
+  // * Используется для умного просчёта движения к цели для АИ
+  // * Чтобы не пытались искать путь, если всё занято вокруг персонажа цели
   _.aaRefreshNoPassFlag = function() {
     var noPass;
+    if (this._aaNoPassFlag != null) {
+      // * Don't need call this method every frame, because player move speed is much slower!
+      if (Math.abs(this._aaNoPassFlagLastCheckFrame - Graphics.frameCount) < 10) {
+        return;
+      }
+    }
     noPass = 0;
     if (!this.canPass(this.x, this.y, 2)) {
       noPass += 1;
@@ -20189,21 +23560,11 @@ AA.extend(function() {
     if (!this.canPass(this.x, this.y, 6)) {
       noPass += 1;
     }
-    if (noPass < 3) {
-      if (!this.canPass(this.x, this.y, 8)) {
-        noPass += 1;
-      }
+    if (!this.canPass(this.x, this.y, 8)) {
+      noPass += 1;
     }
     this._aaNoPassFlag = noPass;
-  };
-  // * Проверка что клетки рядом с персонажем свободны
-  // * Используется для умного просчёта движения к цели для АИ
-  // * Чтобы не пытались искать путь, если всё занято вокруг персонажа цели
-  _.aaInitNoPassFlagThread = function() {
-    this._aaNoPassFlagThread = new KDCore.TimedUpdate(30, this.aaRefreshNoPassFlag.bind(this));
-    this.aaUpdateNoPassFlag = function() {
-      return this._aaNoPassFlagThread.update();
-    };
+    this._aaNoPassFlagLastCheckFrame = Graphics.frameCount;
   };
 })();
 
@@ -20217,7 +23578,7 @@ AA.extend(function() {
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
 (function() {
-  var ALIAS__initMembers, ALIAS__isCollidedWithEvents, ALIAS__list, ALIAS__setPosition, ALIAS__updateSelfMovement, _;
+  var ALIAS__initMembers, ALIAS__isCollidedWithEvents, ALIAS__list, ALIAS__searchLimit, ALIAS__setPosition, ALIAS__updateSelfMovement, _;
   //@[DEFINES]
   _ = Game_Event.prototype;
   //@[ALIAS]
@@ -20254,12 +23615,22 @@ AA.extend(function() {
       return;
     }
     if (this._moveType > 3) {
-      return this.aaUpdateSelfMovementForAI();
+      if (!this._locked) {
+        return this.aaUpdateAIMovement();
+      }
     } else {
       return ALIAS__updateSelfMovement.call(this);
     }
   };
   
+  //@[ALIAS]
+  ALIAS__searchLimit = _.searchLimit;
+  _.searchLimit = function() {
+    if (this.isABS() && this.aaIsNearToTarget()) {
+      return 4;
+    }
+    return ALIAS__searchLimit.call(this, ...arguments);
+  };
   //@[ALIAS]
   ALIAS__setPosition = _.setPosition;
   _.setPosition = function() {
@@ -20363,8 +23734,16 @@ AA.extend(function() {
   _ = Game_Event.prototype;
   //@[EVENT]
   _.gev_onABSPaused = function() {
-    var e;
+    var e, ref;
     try {
+      try {
+        if ((ref = this.AABattler()) != null) {
+          ref.gev_onABSPaused();
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
       if (this.AALogic() == null) {
         return;
       }
@@ -20451,7 +23830,6 @@ AA.extend(function() {
     ALIAS__initABS = _.initABS;
     _.initABS = function() {
       ALIAS__initABS.call(this);
-      AA.EV.subscribeForX(this, "PauseABS", this.gev_onABSPaused.bind(this));
       this.aaStoreMoveData();
       this._aaLastMovingActionDelay = 0;
       $gameTemp.aaRegisterAILogicThread(this.eventId());
@@ -20622,21 +24000,39 @@ AA.extend(function() {
         // * Если ещё живой, то будет onHit
         if (this.AABattler().isAlive()) {
           AA.SAaction.execute(this.AAModel().onHit, this);
+          if (action.isPlayerActionOwner()) {
+            this.aaSetPartyAIOnPlayerAttackFlag();
+          }
         }
       }
       if (!this.AABattler().isAlive()) {
         this.aaOnKilledBy(action);
       }
     };
+    _.aaSetPartyAIOnPlayerAttackFlag = function() {
+      if (!$gamePlayer.aaIsHaveAnyABSFollower()) {
+        return;
+      }
+      $gameTemp._aaPartyAI_flag_playerAttackSomeone = this.eventId();
+      // * Убираем флаг через время
+      setTimeout((function() {
+        return typeof $gameTemp !== "undefined" && $gameTemp !== null ? $gameTemp._aaPartyAI_flag_playerAttackSomeone = null : void 0;
+      }), 1000);
+    };
     _.aaOnKilledBy = function(action) {
       var e;
       try {
-        if (action.isPlayerActionOwner() && this.AAModel().autoExp === 1) {
-          // * Если Exp Pop Up должен появляться над "дающим" опыт врагом
-          $gameTemp.__aaExpGiver = this;
-          uAPI.gainExpForEnemyEv(this.eventId());
-          // * Надо обнулять сразу
-          return $gameTemp.__aaExpGiver = null;
+        if (action.isPlayerActionOwner()) {
+          if (this.AAModel().autoExp === 1) {
+            // * Если Exp Pop Up должен появляться над "дающим" опыт врагом
+            $gameTemp.__aaExpGiver = this;
+            uAPI.gainExpForEnemyEv(this.eventId());
+            // * Надо обнулять сразу
+            $gameTemp.__aaExpGiver = null;
+          }
+          if (this.AAModel().isHaveAfterDeathBonus()) {
+            return uAPI.spawnFlyingBonus(this.eventId(), this.AAModel().bonusOnDeadIds);
+          }
         }
       } catch (error) {
         e = error;
@@ -20681,6 +24077,31 @@ AA.extend(function() {
     };
     _.aaIsCanMoveByImpulse = function() {
       return this.isABS() && !this.AAModel().isHeavy();
+    };
+    _.aaIsNearToTarget = function() {
+      var dist, e, target;
+      try {
+        target = this.AAEntity().getTarget();
+        if (target == null) {
+          return false;
+        }
+        dist = this.distTo(target);
+        if (dist >= 2) {
+          return false;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.aaOnTargetChanged = function() {
+      var e;
+      try {
+
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     };
   })();
   (function() {    // -----------------------------------------------------------------------
@@ -20733,6 +24154,14 @@ AA.extend(function() {
   //$[OVER]
   _.aaGetExtendedHitBoxes = function() {
     return this._aaExtendedHitBox;
+  };
+  //$[OVER]
+  _.aaIsThisCharCanUseDiagMovement = function() {
+    if (AA.Input.IsDiagonalForAI === true) {
+      return Math.random() > 0.45;
+    } else {
+      return false;
+    }
   };
 })();
 
@@ -20792,198 +24221,158 @@ AA.extend(function() {
   var _;
   //@[DEFINES]
   _ = Game_Event.prototype;
-  //TODO: Параметр, может ли враг двигаться диагонально
-
-  // * Сохраняем базовые настройки движения события
-  _.aaStoreMoveData = function() {
-    var i, item, len, ref;
-    // * Выполняется один раз, при первой инициализации
-    if (this._storedMoveData != null) {
-      return;
+  _.aaIsAICanTeleportIn = function() {
+    return this.AAModel().isCanTeleportIn() && this.aaIsAIReadyForNextTeleport() && this.aaIsAITeleportInPointExists();
+  };
+  _.aaIsAICanTeleportOut = function() {
+    return this.AAModel().isCanTeleportOut() && this.aaIsAIReadyForNextTeleport() && this.aaIsAITeleportOutPointExists();
+  };
+  _.aaIsAIReadyForNextTeleport = function() {
+    if (this._aaTeleportTimer == null) {
+      this._aaTeleportTimer = 0;
     }
-    this._storedMoveData = {};
-    ref = ["_moveSpeed", "_moveType", "_moveFrequency"];
-    for (i = 0, len = ref.length; i < len; i++) {
-      item = ref[i];
-      this._storedMoveData[item] = this[item];
+    this._aaTeleportTimer++;
+    // * Если Delay между телепортами прошёл
+    if (this._aaTeleportTimer >= this.AAModel().gTeleportDelay() / 60) {
+      this._aaTeleportTimer = 0;
+      if (!$gameTemp._aaIsTeleportIsBusy && KDCore.Utils.isChanceIsGood(this.AAModel().gTeleportRate())) {
+        return true;
+      }
+    }
+    return false;
+  };
+  // * Чтобы боты не телепортировались одновременно
+  _.aaPrepareSafeTeleportForAI = function() {
+    $gameTemp._aaIsTeleportIsBusy = true;
+    setTimeout((function() {
+      var e;
+      try {
+        return typeof $gameTemp !== "undefined" && $gameTemp !== null ? $gameTemp._aaIsTeleportIsBusy = null : void 0;
+      } catch (error) {
+        e = error;
+        return AA.warning(e);
+      }
+    }), 500);
+  };
+  _.aaIsAITeleportInPointExists = function() {
+    var candidatePoints, dist, e, target;
+    this._aaLastTeleportPoint = null;
+    target = this.AAEntity().getTarget();
+    if (target == null) {
+      return false;
+    }
+    dist = this.distTo(target);
+    if (dist <= 1) {
+      return false;
+    }
+    if (dist > this.AAModel().gTeleportDistIn()) {
+      return false;
+    }
+    try {
+      candidatePoints = AA.Utils.Math.getAdjacentPoints(target.x, target.y);
+      if ((candidatePoints != null) && candidatePoints.length > 0) {
+        this._aaLastTeleportPoint = this.aaFilterProperTeleportPoint(candidatePoints);
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      this._aaLastTeleportPoint = null;
+    }
+    return this._aaLastTeleportPoint != null;
+  };
+  _.aaFilterProperTeleportPoint = function(points) {
+    var e, goodPoints, i, len, p;
+    try {
+      goodPoints = [];
+      for (i = 0, len = points.length; i < len; i++) {
+        p = points[i];
+        if (this.canPass(p.x, p.y, this.direction()) && (p.x !== this.x && p.y !== this.y)) {
+          goodPoints.push(p);
+        }
+      }
+      if (goodPoints.length > 0) {
+        return goodPoints.sample();
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
+  };
+  _.aaIsAITeleportOutPointExists = function() {
+    var candidatePoints, dist, e, outDist, target;
+    this._aaLastTeleportPoint = null;
+    target = this.AAEntity().getTarget();
+    if (target == null) {
+      return false;
+    }
+    dist = this.distTo(target);
+    outDist = this.AAModel().gTeleportDistOut();
+    if (dist > outDist) {
+      return false;
+    }
+    try {
+      candidatePoints = AA.Utils.Math.getPointsOutRadius(this.x, this.y, outDist);
+      if ((candidatePoints != null) && candidatePoints.length > 0) {
+        this._aaLastTeleportPoint = this.aaFilterProperTeleportPoint(candidatePoints);
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      this._aaLastTeleportPoint = null;
+    }
+    return this._aaLastTeleportPoint != null;
+  };
+  _.aaMoveTypeTeleportToTarget = function() {
+    var e;
+    try {
+      if (this.aaIsAICanTeleportIn()) {
+        return this.aaPerformAITeleport();
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
     }
   };
-  // * Восстанавливаем базоыве настройки движения события
-  _.aaRestoreMoveData = function() {
-    var i, item, len, ref;
-    if (this._storedMoveData == null) {
-      return;
+  _.aaPerformAITeleport = function() {
+    var e, teleportEndAnim, teleportStartAnim, x, y;
+    try {
+      if (this._aaLastTeleportPoint == null) {
+        return;
+      }
+      this.aaPrepareSafeTeleportForAI();
+      ({x, y} = this._aaLastTeleportPoint);
+      ({teleportStartAnim, teleportEndAnim} = this.AAModel());
+      this.aaTeleport({x, y}, teleportStartAnim, teleportEndAnim);
+      return this._aaLastTeleportPoint = null;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
     }
-    ref = ["_moveSpeed", "_moveType", "_moveFrequency"];
-    for (i = 0, len = ref.length; i < len; i++) {
-      item = ref[i];
-      this[item] = this._storedMoveData[item];
+  };
+  _.aaMoveTypeTeleportFromTarget = function() {
+    var e;
+    try {
+      if (this.aaIsAICanTeleportOut()) {
+        return this.aaPerformAITeleport();
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
     }
   };
   
-  // * Восстановить базовую скорость движения события
-  _.aaResetDefaultFreqAndSpeed = function() {
-    var i, item, len, ref;
-    if (this._storedMoveData == null) {
+  //$[OVER]
+  _._aaOnTeleportPerformed = function() {
+    var e;
+    if (!this.isABS()) {
       return;
     }
-    ref = ["_moveSpeed", "_moveFrequency"];
-    for (i = 0, len = ref.length; i < len; i++) {
-      item = ref[i];
-      this[item] = this._storedMoveData[item];
-    }
-  };
-  // * Сохранить текущую координату как точка "дом"
-  _.aaStoreHomePoint = function() {
-    this.homePoint = {
-      x: this.x,
-      y: this.y
-    };
-  };
-  _.aaResetHomePoint = function() {
-    return this.homePoint = null;
-  };
-  
-  // * AI Free State управляет этим процессом (начинает и завершает)
-  _.aaSetMoveTypeReturnToHomePoint = function() {
-    var e;
     try {
-      if (this._moveType === 93) {
-        return;
-      }
-      if (this.homePoint == null) {
-        return;
-      }
-      return this._moveType = 93;
-    } catch (error) {
-      //returnMoveData[F, S]
-      //TODO:
-      e = error;
-      return AA.w(e);
-    }
-  };
-  _.aaSetMoveTypeApproachTarget = function() {
-    var e, params;
-    try {
-      if (this._moveType === 91) {
-        return;
-      }
-      // * Быстрая проверка, что есть цель
-      if (!this.AAEntity().inBattle()) {
-        return;
-      }
-      // * Approach target
-      this._moveType = 91;
-      // * Задержка перед следующим движением (для оптимизации)
-      // * Используется, когда вокруг цели (игрока, персонажа) нет места
-      this._aaLastMovingActionDelay = 0;
-      params = this.AAModel().approachMoveData;
-      if (this.distTo(this.AAEntity().getTarget()) >= params[0]) {
-        this.setMoveFrequency(params[1]);
-        return this.setMoveSpeed(params[2]);
-      } else {
-        return this.aaResetDefaultFreqAndSpeed();
-      }
+      return this.aaTurnTowardTarget();
     } catch (error) {
       e = error;
-      return AA.w(e);
-    }
-  };
-  _.aaSetMoveTypeKeepBattleDistance = function() {
-    var e, params;
-    try {
-      if (this._moveType === 92) {
-        return;
-      }
-      if (!this.AAEntity().inBattle()) {
-        return;
-      }
-      this._moveType = 92;
-      params = this.AAModel().inBattleMoveData;
-      this.setMoveFrequency(params[1]);
-      this.setMoveSpeed(params[2]);
-      this._aaMinPatrolDist = params[0];
-      this._aaMaxPatrolDist = this.AAModel().gViewRadius();
-      return this._aaCanMakeRandomPatrolMove = params[3];
-    } catch (error) {
-      e = error;
-      return AA.w(e);
-    }
-  };
-  _.aaSetMoveTypeStayStill = function() {
-    var e;
-    try {
-      if (this._moveType === 94) {
-        return;
-      }
-      if (!this.AAEntity().inBattle()) {
-        return;
-      }
-      return this._moveType = 94;
-    } catch (error) {
-      //"STAY STILL".p()
-      e = error;
-      return AA.w(e);
-    }
-  };
-  // * Все эти режимы движения, не имеют собственной логики окончания (выхода из режима)
-  _.aaUpdateSelfMovementForAI = function() {
-    if (!this._locked && !this.isMoving()) {
-      switch (this._moveType) {
-        case 91: // * Approach target
-          this.aaMoveTypeToTarget();
-          break;
-        case 92:
-          this.aaMoveTypeKeepDistance();
-          break;
-        case 93:
-          //"HOME ".p()
-          if (this.homePoint != null) {
-            this.aaMoveTypeToPoint(this.homePoint);
-          } else {
-            this.aaRestoreMoveData();
-          }
-          break;
-        case 94:
-          // * СТОИТ НА МЕСТЕ И ВСЁ
-          this.aaTurnTowardTarget();
-          break;
-      }
-    }
-  };
-  // * Держать дистанцию боя
-  // * Не подходить близко и не отходить далеко
-  // * NOTHING
-  // Просто стоим
-  _.aaMoveTypeKeepDistance = function() {
-    var distance, e, target;
-    try {
-      // * Если меньше 0, то ничего
-      if (this._aaMinPatrolDist <= 0) {
-        this.aaTurnTowardTarget();
-        return;
-      }
-      target = this.AAEntity().getTarget();
-      distance = this.distTo(target);
-      if (distance >= this._aaMaxPatrolDist) {
-        //"DIST > MAX".p()
-        this.aaMoveTypeToTarget(target);
-        return;
-      }
-      if (distance <= this._aaMinPatrolDist) {
-        //"DIST <= MIN".p()
-        this.moveAwayFromCharacter(target);
-        this.aaTurnTowardTarget();
-        return;
-      }
-      if (this._aaCanMakeRandomPatrolMove) {
-        //"RAND MOVE".p()
-        this.moveRandom();
-        this.aaTurnTowardTarget();
-      }
-    } catch (error) {
-      e = error;
-      AA.w(e);
+      return KDCore.warning(e);
     }
   };
 })();
@@ -21320,6 +24709,702 @@ AA.extend(function() {
 
 // Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Follower.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var ALIAS__chaseCharacter, ALIAS__initMembers, ALIAS__isActive, ALIAS__isVisible, ALIAS__refresh, ALIAS__update, _;
+  //@[DEFINES]
+  _ = Game_Follower.prototype;
+  //@[ALIAS]
+  ALIAS__isActive = _.isActive;
+  _.isActive = function() {
+    return ALIAS__isActive.call(this, ...arguments) && (this.actor() != null);
+  };
+  //@[ALIAS]
+  ALIAS__isVisible = _.isVisible;
+  _.isVisible = function() {
+    var result;
+    result = ALIAS__isVisible.call(this, ...arguments);
+    if (this.isABS()) {
+      return result && this.isActive() && !this.aaIsKilledNow();
+    }
+    return result;
+  };
+  
+  //@[ALIAS]
+  ALIAS__initMembers = _.initMembers;
+  _.initMembers = function() {
+    ALIAS__initMembers.call(this, ...arguments);
+    this._moveType = 0;
+    this._aaSetupInitialABSParameters();
+  };
+  //@[ALIAS]
+  ALIAS__refresh = _.refresh;
+  _.refresh = function() {
+    ALIAS__refresh.call(this, ...arguments);
+    setTimeout((() => {
+      return this._aaRefreshABS();
+    }), 200);
+  };
+  //@[ALIAS]
+  ALIAS__chaseCharacter = _.chaseCharacter;
+  _.chaseCharacter = function(character) {
+    if (this.aaIsInBattleState() || this.aaIsInReturnState()) {
+
+    } else {
+      // * EMPTY
+      ALIAS__chaseCharacter.call(this, ...arguments);
+      this._diagonalDir = false; // * Без этого персонаж дёргается при диагональном движении
+    }
+  };
+  
+  //@[ALIAS]
+  ALIAS__update = _.update;
+  _.update = function() {
+    ALIAS__update.call(this, ...arguments);
+    if (!this.isABS()) {
+      return;
+    }
+    if (!AA.isABSActive()) {
+      return;
+    }
+    if (!this.isActive()) {
+      return;
+    }
+    if (this.aaIsKilledNow()) {
+      return;
+    }
+    this.aaUpdateABS();
+    if (this.aaIsInReturnState()) {
+      this.aaUpdateReturnState();
+    }
+  };
+})();
+
+// ■ END Game_Follower.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Follower.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var ALIAS__aaOnActionOnMe, ALIAS__aaOnDeath, ALIAS__aaOnDefeat, ALIAS__aaUpdateABS, ALIAS__clearABS, ALIAS__initABS, _;
+  //@[DEFINES]
+  _ = Game_Follower.prototype;
+  _.AAModel = function() {
+    return this.AAEntity().model();
+  };
+  _.aaCharId = function() {
+    return this._memberIndex * -1;
+  };
+  _.actorId = function() {
+    var e;
+    try {
+      if (this.actor() != null) {
+        return this.actor().actorId();
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return 0;
+  };
+  // * После смены сцены (если потеряли поток логики)
+  _.aaIsShouldBeReActivated = function() {
+    return this.isABS() && !$gameTemp.aaIsHaveAILogicThreadFor();
+  };
+  _.aaIsInBattleState = function() {
+    return this._aaMainAIState === 1;
+  };
+  _.aaIsInReturnState = function() {
+    return this._aaMainAIState === 2;
+  };
+  _.aaIsInFreeState = function() {
+    return this._aaMainAIState === 0;
+  };
+  _.aaIsKilledNow = function() {
+    return this._aaBeenKilled === true;
+  };
+  // * Этот метод вызывается для выхода из АИ логики и возвращения к игроку
+  _.aaForceResetAILogicState = function() {
+    this._aaChangeAllyAIMainStateTo(2);
+  };
+  // * Этот метод вызывается для выхода из АИ логики снова в обычного Follower
+  _.aaForceStopAILogic = function() {
+    var e;
+    try {
+      this._aaChangeAllyAIMainStateTo(0);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+  };
+  _.aaRefreshABSThread = function() {
+    //TODO: PARTY UPD Нормельная система смерти!!!
+    if (this.isABS() && this.aaIsKilledNow() === true && this.AABattler().isAlive()) {
+      this.aaRevivePartyMember();
+      return;
+    }
+    if (!$gameTemp.aaIsHaveAILogicThreadFor(this.aaCharId())) {
+      $gameTemp.aaRegisterAILogicThread(this.aaCharId());
+    }
+  };
+  _.aaRevivePartyMember = function() {
+    var e;
+    try {
+      this._aaBeenKilled = false;
+      this.initABS();
+      this.AAEntity().activate();
+      return this.refresh();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  //@[EVENT]
+  _.gev_onABSPaused = function() {
+    var e, ref;
+    try {
+      try {
+        if ((ref = this.AABattler()) != null) {
+          ref.gev_onABSPaused();
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      if (this.AALogic() == null) {
+        return;
+      }
+      return this.aaForceStopAILogic();
+    } catch (error) {
+      e = error;
+      return AA.w(e);
+    }
+  };
+  //@[ALIAS]
+  ALIAS__initABS = _.initABS;
+  _.initABS = function() {
+    ALIAS__initABS.call(this);
+    this._aaLastMovingActionDelay = 0;
+    this.aaRefreshABSThread();
+    this._aaInitParallelUserActions();
+  };
+  _._aaInitParallelUserActions = function() {
+    var e, model;
+    try {
+      model = this.AAModel();
+      if (AA.SAaction.isProper(this.AAModel().turnAction) || AA.SAaction.isProper(this.AAModel().turnActionInBattle)) {
+        this._aaParallelActionTick = 0;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      this.aaClearParallelUserActions();
+    }
+  };
+  //@[ALIAS]
+  ALIAS__clearABS = _.clearABS;
+  _.clearABS = function() {
+    ALIAS__clearABS.call(this);
+    this.aaForceStopAILogic();
+    $gameTemp.aaClearAILogicThread(this.aaCharId());
+    this.aaClearParallelUserActions();
+  };
+  _.aaClearParallelUserActions = function() {
+    return this._aaParallelActionTick = -1;
+  };
+  //@[ALIAS]
+  ALIAS__aaUpdateABS = _.aaUpdateABS;
+  _.aaUpdateABS = function() {
+    ALIAS__aaUpdateABS.call(this, ...arguments);
+    this._aaUpdateABSMoving();
+    this._aaUpdateDeadState();
+    if (this._aaParallelActionTick >= 0) {
+      this._aaUpdateParallelUserActions();
+    }
+    if (!this.aaIsInBattleState()) {
+      this._aaUpdateMainStateTransferThread();
+    }
+  };
+  _._aaUpdateABSMoving = function() {
+    if (!this.aaIsInBattleState()) {
+      return;
+    }
+    if (!this.canMove()) {
+      return;
+    }
+    this.aaUpdateAIMovement();
+  };
+  _._aaUpdateDeadState = function() {
+    if (this.isActive() && !this.AABattler().isAlive()) {
+      // * Отключаем АБС для этого события
+      this.stopABS();
+      this.aaOnDefeat();
+    }
+  };
+  //@[ALIAS]
+  ALIAS__aaOnDefeat = _.aaOnDefeat;
+  _.aaOnDefeat = function() {
+    ALIAS__aaOnDefeat.call(this, ...arguments);
+    this.aaForceStopAILogic();
+    this.aaOnDeath();
+  };
+  //@[ALIAS]
+  ALIAS__aaOnDeath = _.aaOnDeath;
+  _.aaOnDeath = function() {
+    var model;
+    ALIAS__aaOnDeath.call(this, ...arguments);
+    if (Imported.PKD_AnimaX === true && this.isAnimX()) {
+      this.clearXAnimParts();
+    }
+    model = this.AAModel();
+    if (model.isHaveOnDeathAction()) {
+      AA.SAaction.execute(model.onDeath, this);
+    }
+    if (model.isHaveOnDeathVariable()) {
+      KDCore.Utils.addToVar(model.onDeathVar, 1);
+    }
+    //TODO: PARTY UPD Нормельная система смерти!!!
+    this._aaBeenKilled = true;
+    this.refresh();
+    "ON DEATH AA AI".p();
+  };
+  // * Обработка параллельный пользовательских действий (из Model)
+  _._aaUpdateParallelUserActions = function() {
+    var e, model;
+    try {
+      // * Используется обычный таймер, а не KDCore.TimedUpdate, чтобы сохранялось
+      // * и загружалось
+      this._aaParallelActionTick++;
+      if (this._aaParallelActionTick >= 60) {
+        this._aaParallelActionTick = 0;
+        model = this.AAModel();
+        AA.SAaction.execute(model.turnAction, this);
+        if (this.inBattle()) {
+          AA.SAaction.execute(model.turnActionInBattle, this);
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      this.aaClearParallelUserActions();
+    }
+  };
+  //@[ALIAS]
+  ALIAS__aaOnActionOnMe = _.aaOnActionOnMe;
+  _.aaOnActionOnMe = function(action) {
+    var result;
+    ALIAS__aaOnActionOnMe.call(this, action);
+    result = this.AABattler().result();
+    if (result == null) {
+      return;
+    }
+    if (result.isHit() && result.hpDamage > 0) {
+      this.aaRequestShakeEffect();
+      // * Если ещё живой, то будет onHit
+      if (this.AABattler().isAlive()) {
+        AA.SAaction.execute(this.AAModel().onHit, this);
+        // * Для условия
+        this._aaAllyGotDamage = true;
+      }
+    }
+    if (!this.AABattler().isAlive()) {
+      this.aaOnKilledBy(action);
+    }
+  };
+  _._aaIsInBattleAnimaXState = function() {
+    return this.AAEntity().inBattle();
+  };
+  _.aaIsCanMoveByImpulse = function() {
+    var e;
+    try {
+      if (!this.isABS()) {
+        return false;
+      }
+      if (this.AAModel().isHeavy()) {
+        return false;
+      }
+      if (this.AABattler().aaIsEquippedInHeavyArmor()) {
+        return false;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return true;
+  };
+  _.aaOnKilledBy = function(action) {};
+  _._aaSetupInitialABSParameters = function() {
+    // 0 - follower (ABS like OFF)
+    // 1 - Battle (ABS controll)
+    // 2 - Looting (not implemented)
+    this._aaMainAIState = 0;
+    this._aaMainStateTransferCheckTimer = 0;
+  };
+  _._aaUpdateMainStateTransferThread = function() {
+    this._aaMainStateTransferCheckTimer++;
+    if (this._aaMainStateTransferCheckTimer >= 30) {
+      this._aaUpdateMainStateTransferConditions();
+      this._aaMainStateTransferCheckTimer = 0;
+    }
+  };
+  _._aaUpdateMainStateTransferConditions = function() {
+    var conditions, e;
+    conditions = this._aaConvertMainStateConditions(this.AAModel().getBattleStartConditions());
+    this._aaClearConditionsTempFlags();
+    try {
+      //console.log conditions
+      // * Проверяем все условия
+      if (eval(conditions)) {
+        this._aaChangeAllyAIMainStateTo(1);
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      KDCore.warning("Check Ally AI battleConditionType");
+      this.aaForceResetAILogicState();
+      // * Force change to proper conditions
+      this.AAModel().battleConditionType = "seeEnemy";
+    }
+  };
+  _._aaClearConditionsTempFlags = function() {
+    return this._aaAllyGotDamage = false;
+  };
+  _._aaConvertMainStateConditions = function(conditionString) {
+    var e, i, item, len, method, ref;
+    try {
+      conditionString = conditionString.replaceAll('|', ' || ');
+      conditionString = conditionString.replaceAll('&', ' && ');
+      ref = ['seeEnemy', 'gotDamage', 'playerAction', 'playerGotDamage', 'playerInDanger', 'playerAttacksSomeone', 'condition'];
+      for (i = 0, len = ref.length; i < len; i++) {
+        item = ref[i];
+        if (conditionString.contains(item)) {
+          method = this['_aaAICondition_' + item];
+          if (method != null) {
+            conditionString = conditionString.replace(item, method.call(this).toString());
+          } else {
+            conditionString = conditionString.replace(item, 'false');
+          }
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return "false";
+    }
+    return conditionString;
+  };
+  _._aaChangeAllyAIMainStateTo = function(newStateIndex) {
+    if (this._aaMainAIState !== newStateIndex) {
+      this._aaMainAIState = newStateIndex;
+      this._aaOnAIMainStateChanged();
+    }
+  };
+  _._aaOnAIMainStateChanged = function() {
+    if (this.aaIsInBattleState()) {
+      // * Переходим в режим поиска (выбора) цели
+      this.AALogic().switchToFreeState();
+    }
+    console.log("STATE CHANGED to " + this._aaMainAIState);
+    this.setThrough(this.aaIsInFreeState());
+  };
+  _._aaRefreshABS = function() {
+    var e;
+    try {
+      //TODO: PARTY UPD Надо делать нормальную обработку ABS состояния в зависимости от Visible
+      //TODO: PARTY UPD нормельная обработка смерти игрока
+      if ($gamePlayer.AABattler() == null) {
+        this.clearABS();
+        return;
+      }
+      if (!$gamePlayer.AABattler().isAlive()) {
+        this.clearABS();
+        return;
+      }
+      if ((this.actor() != null) && this.actor().isSupportAIControl()) {
+        if (this.aaEntity != null) {
+          if (this.aaEntity.actorId !== this.actorId()) {
+            return this._aaInitNewABSEntity();
+          } else {
+
+          }
+        } else {
+          // * NOTHING, same Actor
+          return this._aaInitNewABSEntity();
+        }
+      } else {
+        return this.clearABS();
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._aaInitNewABSEntity = function() {
+    if (this.isABS()) {
+      this.clearABS();
+    }
+    this._aaBeenKilled = false;
+    this.aaEntity = new AAAllyEntity(this.actorId());
+    if (this.aaEntity.character() != null) {
+      this.initABS();
+    } else {
+      KDCore.warning("Follower character not found on Game Map");
+      this.clearABS();
+    }
+  };
+  // * Этот метод выполняется из отдельного потока для логики АИ
+  //$[OUTER]
+  _.aaUpdateAILogic = function() {
+    var e;
+    try {
+      if (!this.isVisible()) {
+        return;
+      }
+      if (!this.aaIsInBattleState()) {
+        return;
+      }
+      if (this.isActive()) {
+        if (AA.isABSActive()) {
+          return this.AALogic().update();
+        }
+      } else {
+        return $gameTemp.aaClearAILogicThread(this.aaCharId());
+      }
+    } catch (error) {
+      e = error;
+      return AA.w(e);
+    }
+  };
+  // * Точка (дом) союзника - это игрок
+  //$[OVER]
+  _.aaMoveTypeReturnToHomePoint = function() {
+    var e;
+    try {
+      return this.aaMoveTypeToPoint($gamePlayer);
+    } catch (error) {
+      e = error;
+      return AA.w(e);
+    }
+  };
+  _.aaUpdateReturnState = function() {
+    if (!this.canMove()) {
+      this.aaForceStopAILogic();
+      return;
+    }
+    if (!this.isMoving()) {
+      if (!this.aaIsNearThePoint($gamePlayer)) {
+        this.aaMoveTypeReturnToHomePoint();
+      } else {
+        this.aaForceStopAILogic();
+      }
+    }
+  };
+})();
+
+// ■ END Game_Follower.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Follower.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = Game_Follower.prototype;
+  // * Данный метод является только лишь условием, он только проверяет наличие целей, но
+  // не устанавливает ни одну из них, т.к. для этого есть другие услвоия
+  _._aaAICondition_seeEnemy = function() {
+    var e, targetsAround;
+    try {
+      targetsAround = AATargetsManager.getAvailableTargetsInRadius(this, this.AAModel().gViewRadius());
+      if ((targetsAround != null) && targetsAround.length > 0) {
+        targetsAround = targetsAround.filter((t) => {
+          return AAVisionManager.isVisionLineIsFree(this, t);
+        });
+        return targetsAround.length > 0;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+  _._aaAICondition_gotDamage = function() {
+    return this._aaAllyGotDamage === true;
+  };
+  _._aaAICondition_playerGotDamage = function() {
+    return $gameTemp._aaPartyAI_flag_playerGotDamage === true;
+  };
+  _._aaAICondition_playerInDanger = function() {
+    return $gamePlayer._aaIsInBattleAnimaXState();
+  };
+  // * Алтернатива (но в методы выше этот же код, чтоыб два раза не выполнять)
+  //playerEnemies =
+  //    AATargetsManager.getAllWhoHavePlayerAsTargetInRange(@AAModel().gViewRadius())
+  //return playerEnemies.length > 0
+  _._aaAICondition_playerAttacksSomeone = function() {
+    return $gameTemp._aaPartyAI_flag_playerAttackSomeone > 0;
+  };
+  _._aaAICondition_playerAction = function() {
+    var certainId;
+    certainId = this.AAModel().getCertainActionId();
+    if (certainId > 0) {
+      return $gameTemp._aaPartyAI_flag_playerMadeAction === certainId;
+    } else {
+      return $gameTemp._aaPartyAI_flag_playerMadeAction != null;
+    }
+  };
+  _._aaAICondition_condition = function() {
+    var condition, e;
+    try {
+      condition = this.AAModel().getBattleStartUserCondition();
+      if (String.any(condition)) {
+        condition = condition.replaceAll("a.", "this.AABattler().");
+        condition = condition.replaceAll("b.", "$gamePlayer.AABattler().");
+        return eval(condition);
+      } else {
+        // * Пустое условие всегда верно
+        return true;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+})();
+
+// ■ END Game_Follower.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Followers.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var ALIAS__updateMove, _;
+  //@[DEFINES]
+  _ = Game_Followers.prototype;
+  //@[ALIAS]
+  ALIAS__updateMove = _.updateMove;
+  _.updateMove = function() {
+    var charToChase, i, j, ref, results;
+    if ($gamePlayer.aaIsHaveAnyABSFollower()) {
+      results = [];
+      for (i = j = ref = this._data.length - 1; (ref <= 0 ? j <= 0 : j >= 0); i = ref <= 0 ? ++j : --j) {
+        if (i > 0) {
+          charToChase = this._data[i - 1];
+          if ((charToChase != null) && charToChase.isABS() && charToChase.aaIsInBattleState()) {
+            charToChase = $gamePlayer;
+          }
+        } else {
+          charToChase = $gamePlayer;
+        }
+        results.push(this._data[i].chaseCharacter(charToChase));
+      }
+      return results;
+    } else {
+      return ALIAS__updateMove.call(this, ...arguments);
+    }
+  };
+})();
+
+// ■ END Game_Followers.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Followers.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = Game_Followers.prototype;
+  _.aaGetABSFollowers = function() {
+    return this._data.filter(function(f) {
+      return (f != null) && f.isABS() && f.isActive();
+    });
+  };
+  _.aaGetABSFollowersAll = function() {
+    return this._data.filter(function(f) {
+      return (f != null) && f.isABS();
+    });
+  };
+  _.aaGetABSFollowersXyAAExt = function(x, y) {
+    return this.aaGetABSFollowers().filter(function(f) {
+      return f.posExt(x, y);
+    });
+  };
+  _.aaGetFollowerByActorId = function(actorId) {
+    var e;
+    try {
+      return this._data.find(function(f) {
+        return (f.actor() != null) && f.actorId() === actorId;
+      });
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return null;
+    }
+  };
+  _.aaGetFollowerByCharId = function(charId) {
+    var e;
+    try {
+      return this._data.find(function(f) {
+        return (f.actor() != null) && f.aaCharId() === charId;
+      });
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return null;
+    }
+  };
+  _.aaRefreshABSMemebers = function() {
+    var i, len, p, ref, results;
+    ref = this.aaGetABSFollowersAll();
+    results = [];
+    for (i = 0, len = ref.length; i < len; i++) {
+      p = ref[i];
+      results.push(p.aaRefreshABSThread());
+    }
+    return results;
+  };
+  _.aaOnPlayerDeathEvent = function() {
+    var e, i, len, p, ref, results;
+    try {
+      ref = this.aaGetABSFollowersAll();
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        p = ref[i];
+        results.push(p.refresh());
+      }
+      return results;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+})();
+
+// ■ END Game_Followers.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Game_Interpreter.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
@@ -21615,8 +25700,7 @@ AA.extend(function() {
       // * Учёт количества, если спавн прошёл успешно
       if ($gameTemp.aaLastSpawnedEvent != null) {
         this.aaEncountersData.count++;
-        // * If not set custom spawn animation, we try use default for Encounters
-        if ($gameSystem.aaEnemySpawnAnimationId <= 0) {
+        if (($gameSystem.aaEnemySpawnAnimationId == null) || $gameSystem.aaEnemySpawnAnimationId <= 0) {
           return this.aaPlaySpawnAnimation($gameTemp.aaLastSpawnedEvent, this.addGetEncounterAnimation());
         }
       }
@@ -21685,6 +25769,14 @@ AA.extend(function() {
   // * Инициализация временных данных, когда переход на новую карту
   _.aaOnNewMapLoaded = function() {
     AA.System.onNewMapLoaded();
+    // * Храним все навыки на карте
+    this._aaMapSkills = [];
+    // * Храним все летающие бонусы на карте
+    this._aaMapBonuses = [];
+    $gameTemp.aaProjYOff = $gameMap.tileWidth() * 0.25;
+    // * Сохраняем состояние врагов (пока ещё прошлой карты, не новой)
+    this.aaStoreEnemiesHPs();
+    $gameTemp.__aaIsShouldRestoreEnemiesHp = true;
     // * Для производительности, флаг что существует хоть один Spawn Block
     this._aaIsAnySpawnBlockEvent = false;
     // * Кэш точек карты для конкретного региона (для оптимизации)
@@ -21695,19 +25787,19 @@ AA.extend(function() {
   };
   // * Проверка АБС событий и активация по требованию
   _.refreshABSMembers = function() {
-    var e, j, len, ref, results;
+    var e, j, len, ref;
     try {
       ref = this.eventsAA();
-      results = [];
       for (j = 0, len = ref.length; j < len; j++) {
         e = ref[j];
         if (e.aaIsShouldBeReActivated()) {
-          results.push(e.initABS());
-        } else {
-          results.push(void 0);
+          e.initABS();
         }
       }
-      return results;
+      $gamePlayer.followers().aaRefreshABSMemebers();
+      if (AA.Network.isNetworkGame()) {
+        return AA.Network.refreshABSMembers();
+      }
     } catch (error) {
       e = error;
       return AA.w(e);
@@ -21715,15 +25807,15 @@ AA.extend(function() {
   };
   // * Когда карта загружена, происходит активация ABS событий
   _.initABS = function() {
-    var e, j, len, ref, results;
+    var e, j, len, ref;
     try {
       ref = this.eventsAA();
-      results = [];
       for (j = 0, len = ref.length; j < len; j++) {
         e = ref[j];
-        results.push(e.initABS());
+        e.initABS();
       }
-      return results;
+      // * Чтобы АИ союзников восстановил поток после выхода из меню
+      return this.refreshABSMembers();
     } catch (error) {
       e = error;
       return AA.w(e);
@@ -21734,6 +25826,10 @@ AA.extend(function() {
     return this.events().filter(function(e) {
       return e.isABS();
     });
+  };
+  // * Все АИ собзники на карте
+  _.followersAA = function() {
+    return $gamePlayer.followers().aaGetABSFollowers();
   };
   // * Все ABS события с меткой label
   _.eventAAWithLabel = function(label = "") {
@@ -21778,6 +25874,19 @@ AA.extend(function() {
       return [];
     }
   };
+  _.eventsXyNoAAExt = function(x, y) {
+    var e, events;
+    try {
+      events = this.eventsXyExt(x, y);
+      return events.filter(function(ev) {
+        return !ev.isABS();
+      });
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return [];
+    }
+  };
   // * События в указанной точке (с учётом Extended Hit Box)
   _.eventsXyExt = function(x, y) {
     var e;
@@ -21807,6 +25916,17 @@ AA.extend(function() {
       return [];
     }
   };
+  // * Аналогично, только члены партии в данной точке
+  _.follwersXyAAExt = function(x, y) {
+    var e;
+    try {
+      return $gamePlayer.followers().aaGetABSFollowersXyAAExt(x, y);
+    } catch (error) {
+      e = error;
+      AA.w(e);
+      return [];
+    }
+  };
   // * Возвращяет спрайтсет карты (!Надо проверять сцену сперва)
   _.aaSpriteset = function() {
     return SceneManager._scene._spriteset;
@@ -21814,11 +25934,11 @@ AA.extend(function() {
   _.aaIsMapAnimationRequested = function() {
     return this.aaMapAnimations.length > 0;
   };
-  _.aaRequestMapAnimation = function(x, y, animationId) {
+  _.aaRequestMapAnimation = function(x, y, animationId, sx, sy) {
     if (animationId <= 0) {
       return;
     }
-    this.aaMapAnimations.push({x, y, animationId});
+    this.aaMapAnimations.push({x, y, animationId, sx, sy});
   };
   // * Данный метод возвращает позиции с учётом расширенного HitBox
   _.aaGetExtendedPointsFor = function(char) {
@@ -21875,6 +25995,99 @@ AA.extend(function() {
     }
     return positions;
   };
+  // * Сохраняет состояния HP врагов
+  _.aaStoreEnemiesHPs = function() {
+    var b, dataToStore, e, ev, events, j, len;
+    try {
+      //"STORE ENEMIES HPS".p()
+      events = this.eventsAA().filter(function(ev) {
+        return ev.AAModel().saveHp > 0 && !(ev instanceof Game_AASpawnedEvent);
+      });
+      if (events.length === 0) {
+        return;
+      }
+      dataToStore = {};
+      for (j = 0, len = events.length; j < len; j++) {
+        ev = events[j];
+        try {
+          b = ev.AABattler();
+          if (b == null) {
+            continue;
+          }
+          if (b.hpRate() !== 1) {
+            dataToStore[ev.eventId()] = b._hp;
+          }
+        } catch (error) {
+          //"STORED FOR".p(ev.eventId())
+          e = error;
+          KDCore.warning(e);
+        }
+      }
+      return $gameSystem.aaSaveEnemiesHpDataForMap(this.mapId(), dataToStore);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  // * Восстанавливает HP врагов из сохранённого состояния
+  _.aaRestoreEnemiesHPs = function() {
+    var dataToRestore, e, evId, events, hp, results, targetEvent;
+    try {
+      //"RESTORE ENEMIES HPS".p()
+      dataToRestore = $gameSystem.aaGetEnemiesHpDataForMap(this.mapId());
+      if (dataToRestore == null) {
+        return;
+      }
+      events = this.eventsAA().filter(function(ev) {
+        return ev.AAModel().saveHp > 0;
+      });
+      if (events.length === 0) {
+        return;
+      }
+      results = [];
+      for (evId in dataToRestore) {
+        hp = dataToRestore[evId];
+        try {
+          targetEvent = events.find(function(ev) {
+            return ev.eventId() === Number(evId);
+          });
+          if (targetEvent == null) {
+            continue;
+          }
+          results.push(targetEvent.AABattler()._hp = hp);
+        } catch (error) {
+          //"RESTORED FOR".p(evId)
+          e = error;
+          results.push(KDCore.warning(e));
+        }
+      }
+      return results;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _.aaIsPointPassableForDodge = function(x, y) {
+    var e;
+    try {
+      if (x == null) {
+        return false;
+      }
+      if (y == null) {
+        return false;
+      }
+      if (!this.aaIsPointInMapBorders(x, y)) {
+        return false;
+      }
+      if (this.eventsXyNoAAExt(x, y).length > 0) {
+        return false;
+      }
+      return this.isPassable(x, y);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
 })();
 
 // ■ END Game_Map.coffee
@@ -21887,17 +26100,67 @@ AA.extend(function() {
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
 (function() {
-  var ALIAS__setup, _;
+  var _;
   //@[DEFINES]
   _ = Game_Map.prototype;
-  //@[ALIAS]
-  ALIAS__setup = _.setup;
-  _.setup = function(mapId) {
-    // * Храним все навыки на карте
-    this._aaMapSkills = [];
-    $gameTemp.aaProjYOff = $gameMap.tileWidth() * 0.25;
-    ALIAS__setup.call(this, mapId);
+  _.aaMapFlyBonuses = function() {
+    return this._aaMapBonuses;
   };
+  _.aaRequestFlyBonusSpawn = function(evId, bonusData) {
+    var e, event, mapBonusObj;
+    try {
+      if (bonusData == null) {
+        return;
+      }
+      //"SPAWN BONUS".p()
+      event = this.event(evId);
+      if (event == null) {
+        return;
+      }
+      mapBonusObj = new AAMapFlyBonusInstance(event.x, event.y, bonusData);
+      //TODO: Network code! (see Game_Map::startAASkill)
+      KDCore.Utils.playSE(bonusData.spawnSE);
+      return this._aaRegisterNewFlyBonus(mapBonusObj);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._aaRegisterNewFlyBonus = function(bonus) {
+    var e, i, index, j, ref;
+    try {
+      index = 0;
+      for (i = j = 0, ref = this._aaMapBonuses.length; (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
+        if (this._aaMapBonuses[i] == null) {
+          index = i;
+          break;
+        }
+      }
+      this._aaMapBonuses[index] = bonus;
+      //TODO: NETWORK CODE (see Game_Map::_registerNewAASkill)
+      if (KDCore.Utils.isSceneMap()) {
+        return $gameMap.aaSpriteset().aaCreateNewMapFlyBonus(index, bonus.delay() > 0);
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+})();
+
+// ■ END Game_Map.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Map.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = Game_Map.prototype;
   _.aaMapSkills = function() {
     return this._aaMapSkills;
   };
@@ -22168,31 +26431,35 @@ AA.extend(function() {
   //@[ALIAS]
   ALIAS__addActor = _.addActor;
   _.addActor = function() {
-    if (!AA.Network.isNetworkGame() && ($gameParty.leader() != null)) {
-      AA.w("In Alpha ABS Z " + AA.Version / 100 + " you can't add more than one party member");
-      return;
-    }
     ALIAS__addActor.call(this, ...arguments);
     // * Если игрока не было, но появился
     if ($gameTemp._noABSPlayer === true && ($gameParty.leader() != null)) {
       AA.System.checkABSPlayerExists();
     }
   };
-  //TODO: Пока только игрок может быть (АБС)
-  //TODO: Добавить игнорирование членов группы с пустыми именами (частая ошибка новичков)
   //@[ALIAS]
   ALIAS__setupStartingMembers = _.setupStartingMembers;
   _.setupStartingMembers = function() {
     ALIAS__setupStartingMembers.call(this);
-    if (this._actors.length > 0) {
-      this._actors = [this._actors.first()];
-    }
+    // * Игнорирование членов группы с пустыми именами (частая ошибка новичков)
+    this._actors = this._actors.filter(function(actor) {
+      return String.any($dataActors[actor].name);
+    });
   };
   
   //@[ALIAS]
   ALIAS__gainItem = _.gainItem;
   _.gainItem = function(item, amount, includeEquip) {
+    var e, ref;
     ALIAS__gainItem.call(this, item, amount, includeEquip);
+    try {
+      if ((ref = AA.Sprite_WeaponExtensionSlot.Instance()) != null) {
+        ref.closeMenu();
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
     //TODO: Пока так, но вообще это будет отдельный плагин
     if (amount > 0 && (this.itemContainer(item) != null)) {
       $gameTemp._pLastItemGainedToParty = [item, amount];
@@ -22215,27 +26482,44 @@ AA.extend(function() {
   var _;
   //@[DEFINES]
   _ = Game_Party.prototype;
-  _.aaCheckDeath = function() {
-    if (!AA.Network.isNetworkGame()) {
-      // * Пока что такая проверка, так как АБС не поддерживает больше 1 члена партии
-      if (!this.isAllDead()) {
-        return;
+  _.aaRefreshABSStatesSet = function() {
+    var actor, e, i, len, ref, results;
+    try {
+      ref = this.members();
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        actor = ref[i];
+        if (actor == null) {
+          continue;
+        }
+        if (actor.aaStates == null) {
+          continue;
+        }
+        if (actor.aaStates.isNotHaveBattler()) {
+          results.push(actor.clearStatesABS());
+        } else {
+          results.push(void 0);
+        }
       }
-    } else {
-      if ($gameParty.leader() == null) {
-        return;
-      }
-      if ($gameParty.leader().isAlive()) {
-        return;
-      }
+      return results;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
     }
-    // * Пока только игрок
-    //TODO: Если будет партия по типу переключения (Genshin mode), то можно переключать
-    // персонажа на живого (опция)
+  };
+  _.aaCheckDeath = function() {
+    //TODO: PARTY UPD Что делать если игрок погиб, а партия нет?
+    if ($gameParty.leader() == null) {
+      return;
+    }
+    if ($gameParty.leader().isAlive()) {
+      return;
+    }
+    // * Пока GAME OVER если игрок погибает
+    //TODO: Если будет партия по типу переключения (Genshin mode),
+    //TODO: то можно переключать персонажа на живого (опция)
     $gamePlayer.aaOnDefeat();
   };
-  //TODO: POP UP!
-
   // * Дать опыт всей группе (с учётом опций (разделение, для всех))
   // * isVisible == true -> Показать PopUp
   _.aaGainExpForParty = function(value, isVisible = true) {
@@ -22249,6 +26533,7 @@ AA.extend(function() {
       3) Вся группа - разделить
       4) Кто убил
       */
+      //TODO: PARTY UPD Опыт для союзников надо давать (опции)
       this.leader().gainExp(value);
       // * Не показывать если 0 опыта
       if (value === 0) {
@@ -22283,6 +26568,27 @@ AA.extend(function() {
     } catch (error) {
       e = error;
       AA.w(e);
+    }
+  };
+  // * Дать золото всей группе (только над игроком)
+  _.aaGainGoldForParty = function(value) {
+    var char, data, e, p;
+    try {
+      this.gainGold(value);
+      p = AA.PP.getGoldPopUpSettings();
+      char = $gamePlayer;
+      data = AADamagePopUpFactory.createGoldPopUpData(value, char);
+      if (data == null) {
+        return;
+      }
+      if (p.bindToChar === true) {
+        return Sprite_AADamagePopUpItem.CreateOnCharacterBinded(char, data.settings, data.value);
+      } else {
+        return Sprite_AADamagePopUpItem.CreateOnCharacter(char, data.settings, data.value);
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
     }
   };
 })();
@@ -22354,7 +26660,7 @@ AA.extend(function() {
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
 (function() {
-  var ALIAS__canMove, ALIAS__executeEncounter, ALIAS__initMembers, ALIAS__moveStraight, ALIAS__update, _;
+  var ALIAS__canMove, ALIAS__executeEncounter, ALIAS__initMembers, ALIAS__moveStraight, ALIAS__update, ALIAS__updateScroll, _;
   //@[DEFINES]
   _ = Game_Player.prototype;
   //@[ALIAS]
@@ -22365,6 +26671,14 @@ AA.extend(function() {
   };
   // ======================================================================
 
+  //@[ALIAS]
+  ALIAS__updateScroll = _.updateScroll;
+  _.updateScroll = function() {
+    if (this.aaIsDodging()) {
+      return;
+    }
+    return ALIAS__updateScroll.call(this, ...arguments);
+  };
   //@[ALIAS]
   ALIAS__canMove = _.canMove;
   _.canMove = function() {
@@ -22414,7 +26728,7 @@ AA.extend(function() {
     //@[ALIAS]
     ALIAS__getInputDirection = _.getInputDirection;
     _.getInputDirection = function() {
-      if (AA.Input.IsDiagonal === true) {
+      if (this.aaIsThisCharCanUseDiagMovement()) {
         return Input.dir8;
       } else {
         return ALIAS__getInputDirection.call(this);
@@ -22425,7 +26739,7 @@ AA.extend(function() {
     ALIAS__executeMove = _.executeMove;
     _.executeMove = function(direction) {
       var horz, vert;
-      if (AA.Input.IsDiagonal === true) {
+      if (this.aaIsThisCharCanUseDiagMovement()) {
         if (direction % 2 === 0) {
           return ALIAS__executeMove.call(this, direction);
         } else if (Math.abs(direction % 2) === 1) {
@@ -22440,13 +26754,160 @@ AA.extend(function() {
     //@[ALIAS]
     ALIAS__findDirectionTo = _.findDirectionTo;
     _.findDirectionTo = function(goalX, goalY) {
-      if (AA.Input.IsDiagonal === true) {
+      if (this.aaIsThisCharCanUseDiagMovement()) {
         return this.aaFindDirectionToDiagonal(goalX, goalY);
       } else {
         return ALIAS__findDirectionTo.call(this, goalX, goalY);
       }
     };
   })();
+})();
+
+// ■ END Game_Player.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Player.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = Game_Player.prototype;
+  _.aaIsInvincible = function() {
+    return this.aaIsDodging() && AA.PP.getDodgeSettings().isInvincible === true;
+  };
+  _.aaIsDodging = function() {
+    return this._aaInDodgeMovement === true;
+  };
+  _.aaIsCanDodgeNow = function() {
+    return this.aaIsDodgeAllowedNow() && this.isABS() && this.canMove() && !this.aaIsDodging() && this.aaIsNextDodgeReady();
+  };
+  _.aaIsDodgeAllowedNow = function() {
+    var e;
+    try {
+      if (!AA.PP.isAllowDodge()) {
+        return false;
+      }
+      if (AA.PP.getDodgeSettings().dodgeSwitch > 0) {
+        if ($gameSwitches.value(AA.PP.getDodgeSettings().dodgeSwitch) === true) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+  _.aaIsNextDodgeReady = function() {
+    return !this._aaDodgeRestTimer || this._aaDodgeRestTimer <= 0;
+  };
+  _.aaPerformDodge = function() {
+    var dodgeMoveSpeed, dodgeSteps, dodgeStepsDelay, e, isAnimaXDodge;
+    try {
+      //console.log("DODGE!")
+      this._aaInDodgeMovement = true;
+      this.__aaPrevMoveSpeed = this.moveSpeed();
+      this.setThrough(true);
+      dodgeSteps = this._aaGetDodgeStepsCount();
+      isAnimaXDodge = this.isAnimX() && this.isHaveAnimaXActionWithName('Dodge');
+      dodgeStepsDelay = AA.PP.getDodgeSettings().delayBetweenStepMS;
+      dodgeMoveSpeed = AA.PP.getDodgeSettings().dodgeMoveSpeed;
+      if (isAnimaXDodge) {
+        this.aaPlayAnimaXActionWithEndCallback("Dodge", this.aaOnDodgeEnds.bind(this));
+      }
+      if (dodgeSteps > 0) {
+        if (!isAnimaXDodge) {
+          setTimeout((() => {
+            return this.aaOnDodgeEnds();
+          }), dodgeStepsDelay + 1);
+        }
+        this.setMoveSpeed(dodgeMoveSpeed);
+        this._aaMakeDodgeMovement();
+        if (dodgeSteps > 1) {
+          return setTimeout((() => {
+            return this._aaMakeDodgeMovement();
+          }), dodgeStepsDelay);
+        }
+      } else {
+        return this.aaOnDodgeEnds();
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._aaMakeDodgeMovement = function() {
+    var e, h, v;
+    try {
+      if (this._diagonalDir) {
+        [h, v] = AA.Utils.get8Dir(this._diagonalDir);
+        return this.moveDiagonally(h, v);
+      } else {
+        return this.moveStraight(this.direction());
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._aaGetDodgeStepsCount = function() {
+    var d, e, nextMovePoint, pointsCount;
+    try {
+      pointsCount = 0;
+      d = this.aaDirection();
+      nextMovePoint = AA.Utils.Math.getNextPointByDirection(this.x, this.y, d);
+      if ($gameMap.aaIsPointPassableForDodge(nextMovePoint.x, nextMovePoint.y)) {
+        pointsCount += 1;
+        if (AA.PP.getDodgeSettings().stepsCount > 1) {
+          nextMovePoint = AA.Utils.Math.getNextPointByDirection(nextMovePoint.x, nextMovePoint.y, d);
+          if ($gameMap.aaIsPointPassableForDodge(nextMovePoint.x, nextMovePoint.y)) {
+            pointsCount += 1;
+          }
+        }
+      }
+      return pointsCount;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return 0;
+    }
+  };
+  _.aaOnDodgeEnds = function() {
+    var e, time;
+    try {
+      //console.log("DODGE END")
+      this._aaInDodgeMovement = false;
+      this.setThrough(false);
+      this.setMoveSpeed(this.__aaPrevMoveSpeed || 4);
+      if (AA.PP.getDodgeSettings().dodgeRestVariable > 0) {
+        time = KDCore.Utils.getVar(AA.PP.getDodgeSettings().dodgeRestVariable);
+      } else {
+        time = AA.PP.getDodgeSettings().dodgeRestTimerFrames;
+      }
+      return this._aaDodgeRestTimer = time;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._aaUpdateDodgeRestTimer = function() {
+    var e;
+    try {
+      if (this._aaDodgeRestTimer > 0) {
+        return this._aaDodgeRestTimer -= 1;
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
 })();
 
 // ■ END Game_Player.coffee
@@ -22534,6 +26995,9 @@ AA.extend(function() {
     if (this._aaOnDeathTimer != null) {
       this._aaUpdateDeathTimer();
     }
+    if (this._aaDodgeRestTimer != null) {
+      this._aaUpdateDodgeRestTimer();
+    }
     //TODO: Можно убрать, но пока оставлю
     if (this.aaIsMotionRequested() && $gameParty.leader().isAlive()) {
       this.aaClearMotion();
@@ -22546,9 +27010,6 @@ AA.extend(function() {
       this.aaOnDeath();
     }
   };
-  _.subscribeForGEvents = function() {
-    return AA.EV.subscribeForX(this, "PauseABS", this.gev_onABSPaused.bind(this));
-  };
   //@[EVENT]
   _.gev_onABSPaused = function() {
     var e;
@@ -22559,6 +27020,24 @@ AA.extend(function() {
       e = error;
       return AA.w(e);
     }
+  };
+  _.aaGetABSFollowers = function() {
+    return this.followers().aaGetABSFollowers();
+  };
+  _.aaIsHaveAnyABSFollower = function() {
+    return this.aaGetABSFollowers().length > 0;
+  };
+  _.aaIsCanMoveByImpulse = function() {
+    var e;
+    try {
+      if (this.isABS() && this.AABattler().aaIsEquippedInHeavyArmor()) {
+        return false;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return true;
   };
   (function() {    // * Основные (приватные) методы АБС
     // -----------------------------------------------------------------------
@@ -22643,8 +27122,26 @@ AA.extend(function() {
       //TODO: На будущее: тут можно определить кто именно атаковал, так как action имеет packedSubject
       // * Сброс камеры (если есть опция)
       $gameTemp.aaResetMapScrollOnAction();
+      this.aaSetPartyAIOnDamageFlag();
       if (AA.Network.isNetworkPvPGame()) {
         this.aaOnActionOnMeInNetwork(action);
+      }
+    };
+    _.aaSetPartyAIOnDamageFlag = function() {
+      var result;
+      if (!this.aaIsHaveAnyABSFollower()) {
+        return;
+      }
+      result = this.AABattler().result();
+      if (result == null) {
+        return;
+      }
+      if (result.isHit() && result.hpDamage > 0) {
+        $gameTemp._aaPartyAI_flag_playerGotDamage = true;
+        // * Убираем флаг через время
+        setTimeout((function() {
+          return typeof $gameTemp !== "undefined" && $gameTemp !== null ? $gameTemp._aaPartyAI_flag_playerGotDamage = false : void 0;
+        }), 1000);
       }
     };
     _.aaOnActionOnMeInNetwork = function(action) {
@@ -22715,6 +27212,7 @@ AA.extend(function() {
         }
       }
       if (AA.PP.getCommonEventOnPlayerDeath() > 0) {
+        this.followers().aaOnPlayerDeathEvent();
         this._aaOnDeathTimer = 90;
       } else {
         this._aaOnDeathTimer = 10;
@@ -22776,6 +27274,22 @@ AA.extend(function() {
       return KDCore.warning(e);
     }
   };
+  //$[OVER]
+  _._aaOnTeleportPerformed = function() {
+    uAPI.resetMapScroll();
+    return $gameTemp.clearDestination();
+  };
+  _.aaAfterLoad = function() {
+    var e;
+    try {
+      if (this.aaIsDodging()) {
+        return this.aaOnDodgeEnds();
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
 })();
 
 // ■ END Game_Player.coffee
@@ -22788,7 +27302,7 @@ AA.extend(function() {
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
 (function() {
-  var _;
+  var ALIAS__startPerformAASkill, _;
   //@[DEFINES]
   _ = Game_Player.prototype;
   // * Выполнить атаку первичным навыком (в первой ячеке E)
@@ -22870,6 +27384,10 @@ AA.extend(function() {
         });
       }
       if (skill != null) {
+        // * Проверяем активный Skill Extension
+        skill = this.AABattler().aaCheckAndApplySkillExtension(skill);
+      }
+      if (skill != null) {
         AA.UI.skillPerformResult(skillId, 1);
         //TODO: perform skill
         "PERFROM SKILL ".p(skillId);
@@ -22935,6 +27453,22 @@ AA.extend(function() {
       }
     }
   };
+  //@[ALIAS]
+  ALIAS__startPerformAASkill = _.startPerformAASkill;
+  _.startPerformAASkill = function() {
+    ALIAS__startPerformAASkill.call(this, ...arguments);
+    return this.aaSetPartyAIOnPlayerMadeActionFlag();
+  };
+  _.aaSetPartyAIOnPlayerMadeActionFlag = function() {
+    if (!this.aaIsHaveAnyABSFollower()) {
+      return;
+    }
+    $gameTemp._aaPartyAI_flag_playerMadeAction = this.activeAASkill().databaseId();
+    // * Убираем флаг через время
+    setTimeout((function() {
+      return typeof $gameTemp !== "undefined" && $gameTemp !== null ? $gameTemp._aaPartyAI_flag_playerMadeAction = null : void 0;
+    }), 1000);
+  };
   // * Обновление навыков для панели задач (при смене лидера)
   // * Также выполняется начальная расстановка навыков
   _.aaRefreshABSSkillsForPanel = function() {
@@ -22976,9 +27510,10 @@ AA.extend(function() {
     }
     try {
       this._aaUpdateInput_Rotation();
-    } catch (error) {
       //TODO: Action Keys
       //@_aaUpdateInput_ActionKeys()
+      this._aaUpdateInput_Dodge();
+    } catch (error) {
       e = error;
       AA.w(e);
     }
@@ -22988,6 +27523,16 @@ AA.extend(function() {
     this.aaInRotation = this.canMove() && Input.isPressed(AA.IKey.ROT);
     if (this.aaInRotation) {
       this.turnTowardCharacter(TouchInput.toMapPoint());
+    }
+  };
+  _._aaUpdateInput_Dodge = function() {
+    if (!AA.PP.isAllowDodge()) {
+      return;
+    }
+    if (Input.isTriggered(AA.PP.getDodgeSettings().dodgeKey)) {
+      if (this.aaIsCanDodgeNow()) {
+        this.aaPerformDodge();
+      }
     }
   };
   _._aaUpdateInput_ActionKeys = function() {
@@ -23149,7 +27694,7 @@ AA.extend(function() {
     var e;
     ALIAS__onBeforeSave.call(this, ...arguments);
     try {
-      return $gameScreen.aaOnBeforeSave();
+      return AA.System.onBeforeGameSave();
     } catch (error) {
       e = error;
       return KDCore.warning(e);
@@ -23162,7 +27707,7 @@ AA.extend(function() {
     var e;
     ALIAS__onAfterLoad.call(this, ...arguments);
     try {
-      return $gameScreen.onAfterLoad();
+      return AA.System.onGameLoaded();
     } catch (error) {
       e = error;
       return KDCore.warning(e);
@@ -23193,6 +27738,23 @@ AA.extend(function() {
         this.aaInitUserUISettings();
       }
       return this._aaUserUiSettings;
+    };
+  })();
+  (function() {    // -----------------------------------------------------------------------
+
+    // * Состояние врагов (сохранение и загрузка здоровья)
+    // -----------------------------------------------------------------------
+    _.aaSaveEnemiesHpDataForMap = function(mapId, data) {
+      if (this._aaEnemiesHPDataStored == null) {
+        this._aaEnemiesHPDataStored = {};
+      }
+      this._aaEnemiesHPDataStored[mapId] = data;
+    };
+    _.aaGetEnemiesHpDataForMap = function(mapId) {
+      if (this._aaEnemiesHPDataStored == null) {
+        return null;
+      }
+      return this._aaEnemiesHPDataStored[mapId];
     };
   })();
 })();
@@ -23335,7 +27897,11 @@ AA.extend(function() {
         if (!AA.isABSMap()) {
           return;
         }
-        ev = $gameMap.event(eventId);
+        if (eventId > 0) {
+          ev = $gameMap.event(eventId);
+        } else {
+          ev = $gamePlayer.followers().aaGetFollowerByCharId(eventId);
+        }
         if (ev != null) {
           return ev.aaUpdateAILogic();
         } else {
@@ -23343,6 +27909,17 @@ AA.extend(function() {
         }
       }), 100);
       this.__aaAILogicThreads[eventId] = thread;
+    };
+    _.aaIsHaveAILogicThreadFor = function(eventId) {
+      var e;
+      try {
+        this._aaInitAILogicThreads();
+        return this.__aaAILogicThreads[eventId] != null;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return false;
+      }
     };
     _.aaClearAILogicThread = function(eventId) {
       var thread;
@@ -23363,6 +27940,7 @@ AA.extend(function() {
         value = ref[key];
         this.aaClearAILogicThread(key);
       }
+      this.__aaAILogicThreads = {};
     };
   })();
   (function() {    // * Камера
@@ -23551,9 +28129,6 @@ AA.Utils.Guard = function() {};
   _.loadAA = function(filename) {
     return this.loadBitmap('img/Alpha/', filename);
   };
-  _.loadAnimaX = function(filename) {
-    return this.loadBitmap('img/charactersAA/', filename);
-  };
   _.loadAAWeaponMotion = function(filename) {
     return this.loadBitmap('img/weaponsAA/', filename);
   };
@@ -23725,6 +28300,62 @@ AA.Utils.Math = function() {};
     }
     return points;
   };
+  _.getNeibPoints = function(x, y, d) {
+    var e, points;
+    try {
+      points = [];
+      switch (d) {
+        case 4:
+        case 6:
+        case 2:
+        case 8:
+          return this.getLeftAndRightPoints(x, y, d);
+        case 7:
+          points.push({
+            x: x + 1,
+            y
+          });
+          points.push({
+            x,
+            y: y + 1
+          });
+          break;
+        case 9:
+          points.push({
+            x: x - 1,
+            y
+          });
+          points.push({
+            x,
+            y: y + 1
+          });
+          break;
+        case 1:
+          points.push({
+            x: x + 1,
+            y
+          });
+          points.push({
+            x,
+            y: y - 1
+          });
+          break;
+        case 3:
+          points.push({
+            x: x - 1,
+            y
+          });
+          points.push({
+            x,
+            y: y - 1
+          });
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return points;
+  };
   //Функция принимает шесть аргументов: три координаты вершин треугольника (x1, y1, x2, y2, x3, y3)
   // и координату, которую нужно проверить на вхождение в треугольник (x, y).
   //Функция возвращает true, если координата находится внутри треугольника
@@ -23829,6 +28460,116 @@ AA.Utils.Math = function() {};
       return AP.Empty;
     }
   };
+  // All in Radius (expect center)
+  //@[by CHAT GPT]
+  _.getPointsInRadius = function(x, y, radius) {
+    var e, i, j, k, l, points, ref, ref1, ref2, ref3;
+    try {
+      if (radius == null) {
+        return [];
+      }
+      if (radius <= 1) {
+        return [];
+      }
+      points = [];
+      for (i = k = ref = x - radius, ref1 = x + radius; (ref <= ref1 ? k <= ref1 : k >= ref1); i = ref <= ref1 ? ++k : --k) {
+        for (j = l = ref2 = y - radius, ref3 = y + radius; (ref2 <= ref3 ? l <= ref3 : l >= ref3); j = ref2 <= ref3 ? ++l : --l) {
+          if (Math.sqrt((i - x) ** 2 + (j - y) ** 2) <= radius) {
+            points.push({
+              x: i,
+              y: j
+            });
+          }
+        }
+      }
+      points = points.filter(function(p) {
+        return p.x !== x && p.y !== y;
+      });
+      return points;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return [];
+    }
+  };
+  // * Точки на краю круга только
+  _.getPointsOutRadius = function(x, y, radius) {
+    var e, points;
+    try {
+      points = this.getPointsInRadius(x, y, radius + 1);
+      return points.filter(function(p) {
+        return AA.Utils.Math.getXYDistance(x, y, p.x, p.y) > radius;
+      });
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return [];
+    }
+  };
+  // Square around X,Y (8 points)
+  //@[by CHAT GPT]
+  _.getAdjacentPoints = function(x, y) {
+    var e, i, j, k, l, points;
+    try {
+      points = [];
+      for (i = k = -1; k <= 1; i = ++k) {
+        for (j = l = -1; l <= 1; j = ++l) {
+          if (i !== 0 || j !== 0) {
+            points.push({
+              x: x + i,
+              y: y + j
+            });
+          }
+        }
+      }
+      return points;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return [];
+    }
+  };
+  _.getNextPointByDirection = function(sx, sy, d) {
+    var e;
+    try {
+      switch (d) {
+        case 1:
+          sx -= 1;
+          sy += 1;
+          break;
+        case 2:
+          sy += 1;
+          break;
+        case 3:
+          sx += 1;
+          sy += 1;
+          break;
+        case 4:
+          sx -= 1;
+          break;
+        case 6:
+          sx += 1;
+          break;
+        case 7:
+          sx -= 1;
+          sy -= 1;
+          break;
+        case 8:
+          sy -= 1;
+          break;
+        case 9:
+          sx += 1;
+          sy -= 1;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return {
+      x: sx,
+      y: sy
+    };
+  };
 })();
 
 // ■ END MATH.coffee
@@ -23898,22 +28639,17 @@ AA.Utils.Math = function() {};
       });
     }
 
-    //TODO: Всплывающий урон вынести в отдельный плагин
-    getPopUpDamageSettings(id) {
-      var data, settings;
-      settings = this.getParam("popUpDamageTable", []);
-      data = settings.getById(id);
-      if (data != null) {
-        return data;
-      } else {
-        return {
-          id: "default",
+    getGoldPopUpSettings() {
+      return this.getParam("popUpGoldSettings", {
+        textFormat: "%2%1",
+        popUpStyle: {
+          id: "gold",
           randDX: 15,
           randDY: 10,
           stayTime: 12,
           noFlyUp: false,
           noFadeOut: false,
-          changeFontSize: 22,
+          changeFontSize: 16,
           text: {
             visible: true,
             size: {
@@ -23924,20 +28660,77 @@ AA.Utils.Math = function() {};
               x: 0,
               y: 0
             },
-            alignment: "center",
+            alignment: "right",
             outline: {
               color: null,
               width: 2
             },
             font: {
               face: "AABS_3",
-              size: 18,
+              size: 12,
               italic: false
             },
-            textColor: "#E6E6E6".toCss()
+            textColor: "#e6c42e"
           },
-          image: null
-        };
+          image: {
+            name: "goldPopUpIcon",
+            margins: {
+              x: 26,
+              y: 0
+            },
+            fadeInSpeed: 20
+          }
+        },
+        bindToChar: false
+      });
+    }
+
+    //TODO: Всплывающий урон вынести в отдельный плагин
+    getPopUpDamageSettings(id) {
+      var data, settings;
+      settings = this.getParam("popUpDamageTable", []);
+      data = settings.getById(id);
+      if (data != null) {
+        return data;
+      } else {
+        // * Gold have own default settings (in other parameter)
+        // * Потому что золото было позже добавлено
+        if (id === 'gold') {
+          return this.getGoldPopUpSettings().popUpStyle;
+        } else {
+          return {
+            id: "default",
+            randDX: 15,
+            randDY: 10,
+            stayTime: 12,
+            noFlyUp: false,
+            noFadeOut: false,
+            changeFontSize: 22,
+            text: {
+              visible: true,
+              size: {
+                w: 0,
+                h: 0 // * not used
+              },
+              margins: {
+                x: 0,
+                y: 0
+              },
+              alignment: "center",
+              outline: {
+                color: null,
+                width: 2
+              },
+              font: {
+                face: "AABS_3",
+                size: 18,
+                italic: false
+              },
+              textColor: "#E6E6E6".toCss()
+            },
+            image: null
+          };
+        }
       }
     }
 
@@ -24158,6 +28951,92 @@ AA.Utils.Math = function() {};
       return this.getParam("enemies_noPassVision2", []);
     }
 
+    getAfterDeathBonuses() {
+      return this.getParam("enemies_afterDeathBonuses", [
+        {
+          image: "bonusGreen",
+          actionSE: "",
+          spawnSE: "",
+          startOffsetRadiusInPx: 16,
+          stayFrames: 12,
+          flySpeed: 8,
+          actionSA: "",
+          hpGainE: 25,
+          mpGainE: 0,
+          expGainE: 0,
+          goldGainE: 0
+        },
+        {
+          image: "bonusBlue",
+          actionSE: "",
+          spawnSE: "",
+          startOffsetRadiusInPx: 16,
+          stayFrames: 12,
+          flySpeed: 8,
+          actionSA: "", //AScript
+          hpGainE: 0, //@[EVal]
+          mpGainE: 25, //@[EVal]
+          expGainE: 0, //@[EVal]
+          goldGainE: 0 //@[EVal]
+        },
+        {
+          image: "bonusYellow",
+          actionSE: "",
+          spawnSE: "",
+          startOffsetRadiusInPx: 16,
+          stayFrames: 12,
+          flySpeed: 8,
+          actionSA: "", //AScript
+          hpGainE: 0, //@[EVal]
+          mpGainE: 0, //@[EVal]
+          expGainE: 0, //@[EVal]
+          goldGainE: 50 //@[EVal]
+        },
+        {
+          image: "bonusRed",
+          actionSE: "",
+          spawnSE: "",
+          startOffsetRadiusInPx: 16,
+          stayFrames: 12,
+          flySpeed: 8,
+          actionSA: "", //AScript
+          hpGainE: 0, //@[EVal]
+          mpGainE: 0, //@[EVal]
+          expGainE: 10, //@[EVal]
+          goldGainE: 0 //@[EVal]
+        },
+        {
+          image: "bonusRed",
+          actionSE: "",
+          spawnSE: "",
+          startOffsetRadiusInPx: 16,
+          stayFrames: 12,
+          flySpeed: 8,
+          actionSA: "ba_1", //AScript
+          hpGainE: 0, //@[EVal]
+          mpGainE: 0, //@[EVal]
+          expGainE: 0, //@[EVal]
+          goldGainE: 0 //@[EVal]
+        }
+      ]);
+    }
+
+    getAfterDeathBonus(index) {
+      var bonuses, e;
+      try {
+        if (index <= 0) {
+          return null;
+        }
+        bonuses = this.getAfterDeathBonuses();
+        // * Iterate from 1 in game!
+        return bonuses[index - 1];
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
+    }
+
     // * Карта
     // -----------------------------------------------------------------------
 
@@ -24351,6 +29230,40 @@ AA.Utils.Math = function() {};
 
 // ■ END PRIVATE.coffee
 //---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ ParamsManager.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+//$[ENCODE]
+(function() {
+  var _;
+  // * Базовые настройки элементов интерфейса
+  // * Эти настройки используется BASIC версия плагина
+
+  //@[DEFINES]
+  _ = AA.ParamsManager.prototype;
+  _.isUseMorePreciseProjectileAnimations = function() {
+    return this.getParam("morePreciseProjAnim", true);
+  };
+  _.isAllowDodge = function() {
+    return this.getParam("isAllowDodge", true);
+  };
+  _.getDodgeSettings = function() {
+    return this.getParam("dodgeSettings", {
+      dodgeKey: 'f',
+      dodgeSwitch: 0, // * If false -> can't dodge now!
+      isInvincible: true,
+      stepsCount: 2, // * 1 or 2
+      delayBetweenStepMS: 100,
+      dodgeMoveSpeed: 5,
+      dodgeRestVariable: 0,
+      dodgeRestTimerFrames: 30
+    });
+  };
+})();
 
 
 // Generated by CoffeeScript 2.6.1
@@ -25028,6 +29941,7 @@ AA.Utils.Parser = function() {};
         continue;
       }
       _.processABSSkillParamsInItem(item, true);
+      _.processABSExtensionItemParamsInItem(item);
     }
     //TODO: checkWeapon aaAttackSkill Note
     _.checkInitialAttackABSSkill();
@@ -25044,6 +29958,17 @@ AA.Utils.Parser = function() {};
       _.processABSEnemyParams(item);
     }
   };
+  // * Для персонажей (члены партии)
+  _.processABSActorsNotetags = function() {
+    var item, j, len;
+    for (j = 0, len = $dataActors.length; j < len; j++) {
+      item = $dataActors[j];
+      if (item == null) {
+        continue;
+      }
+      _.processABSAllyParams(item);
+    }
+  };
   // * Для состояний
   _.processABSStatesNotetags = function() {
     var item, j, len;
@@ -25053,6 +29978,24 @@ AA.Utils.Parser = function() {};
         continue;
       }
       _.processABSStateParamsInItem(item);
+    }
+  };
+  // * Для оржуия AAExt
+  _.processABSWeaponsNotetags = function() {
+    var e, item, j, len, results;
+    try {
+      results = [];
+      for (j = 0, len = $dataWeapons.length; j < len; j++) {
+        item = $dataWeapons[j];
+        if (item == null) {
+          continue;
+        }
+        results.push(_.processABSExtensionParamsInWeapon(item));
+      }
+      return results;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
     }
   };
   // * Навык атаки всегда должен быть АБС 0
@@ -25093,8 +30036,54 @@ AA.Utils.Parser = function() {};
         item.idA += AA.Utils.ItemsIDStart;
       }
       // * Данные АБС навыка храняться у предмета
-      item.AASkill = new AASkill2(item.idA, isItem);
+      item.AASkill = new AASkill2(item.idA);
       return item.AASkill.setNoteParameters(params);
+    } catch (error) {
+      e = error;
+      return AA.w(e);
+    }
+  };
+  _.processABSExtensionItemParamsInItem = function(item) {
+    var e, j, len, param, paramPair, params, paramsRaw, ref;
+    if (((ref = item.meta) != null ? ref.AAExt : void 0) == null) {
+      return;
+    }
+    try {
+      params = [];
+      paramsRaw = _.parseNoteGroup("AAExt", item.note);
+      for (j = 0, len = paramsRaw.length; j < len; j++) {
+        param = paramsRaw[j];
+        paramPair = _.extractABSParameter(param); //ACore
+        if (paramPair != null) {
+          params.push(paramPair);
+        }
+      }
+      // * Данные АБС навыка храняться у предмета
+      item.AAExtItem = new AASkillExtensionItem(item.id);
+      return item.AAExtItem.setNoteParameters(params);
+    } catch (error) {
+      e = error;
+      return AA.w(e);
+    }
+  };
+  _.processABSExtensionParamsInWeapon = function(item) {
+    var e, j, len, param, paramPair, params, paramsRaw, ref;
+    if (((ref = item.meta) != null ? ref.AAExt : void 0) == null) {
+      return;
+    }
+    try {
+      params = [];
+      paramsRaw = _.parseNoteGroup("AAExt", item.note);
+      for (j = 0, len = paramsRaw.length; j < len; j++) {
+        param = paramsRaw[j];
+        paramPair = _.extractABSParameter(param); //ACore
+        if (paramPair != null) {
+          params.push(paramPair);
+        }
+      }
+      // * Данные АБС навыка храняться у предмета
+      item.AAExtDefinition = new AASkillExtensionDefinition(item.id);
+      return item.AAExtDefinition.setNoteParameters(params);
     } catch (error) {
       e = error;
       return AA.w(e);
@@ -25160,6 +30149,28 @@ AA.Utils.Parser = function() {};
         }
       }
       return item.AAEnemy = params;
+    } catch (error) {
+      e = error;
+      return AA.w(e);
+    }
+  };
+  // * Чтение параметров персонажей
+  _.processABSAllyParams = function(item) {
+    var e, j, len, param, paramPair, params, paramsRaw, ref;
+    if (((ref = item.meta) != null ? ref.ABS : void 0) == null) {
+      return;
+    }
+    try {
+      params = [];
+      paramsRaw = _.extractABSParametersFromDBItem(item);
+      for (j = 0, len = paramsRaw.length; j < len; j++) {
+        param = paramsRaw[j];
+        paramPair = _.extractABSParameter(param); //ACore
+        if (paramPair != null) {
+          params.push(paramPair);
+        }
+      }
+      return item.AAAllyChar = params;
     } catch (error) {
       e = error;
       return AA.w(e);
@@ -25301,6 +30312,8 @@ AA.Utils.Parser = function() {};
     this.aaCreateMouseDetectionThread();
     this.aaInitMapScrollSystem();
     this.aaInitExtraControllers();
+    this.aaRestoreEnemiesHp();
+    this.aaRefreshPartyABSMembers();
     // * Небольшая задержка на приём визуальных эффектов от сервера
     AA.Utils.callDelayed(function() {
       return $gameTemp._aaCanReceiveVisualFromServer = true;
@@ -25502,24 +30515,30 @@ AA.Utils.Parser = function() {};
 
       }
     };
-    // TODO: Пока только события собирает и netChars в PvP режиме
     // * NOTHING, ничего
     _.aaGetABSEntityInPosition = function(point) {
-      var candidates, e, events;
+      var candidates, chars, e, events, partyMembers;
       try {
         events = $gameMap.eventsXyAAExt(point.x, point.y);
         if (events.length > 0) {
           return events.first();
         }
+        partyMembers = $gameMap.follwersXyAAExt(point.x, point.y);
+        if (partyMembers.length > 0) {
+          return partyMembers.first();
+        }
         if (AA.Network.isNetworkPvPGame()) {
           candidates = $gameMap.netCharsXyAAExt(point.x, point.y);
-          if (candidates.length > 0) {
-            return candidates.first();
+          chars = candidates.filter(function(char) {
+            return char.AAEntity().isMyEnemy($gamePlayer.AAEntity());
+          });
+          if (chars.length > 0) {
+            return chars.first();
           }
         }
       } catch (error) {
         e = error;
-        AA.w;
+        AA.w(e);
       }
       return null;
     };
@@ -25781,6 +30800,30 @@ AA.Utils.Parser = function() {};
     this.aaUpdateMouseDetection();
     this.aaUpdateMapScrlByMouse();
     this.aaUpdateExtraControllers();
+  };
+  _.aaRestoreEnemiesHp = function() {
+    var e;
+    if ($gameTemp.__aaIsShouldRestoreEnemiesHp == null) {
+      return;
+    }
+    $gameTemp.__aaIsShouldRestoreEnemiesHp = null;
+    try {
+      return $gameMap.aaRestoreEnemiesHPs();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  // * Т.к. АИ союзников постоянны (создаются один раз), то надо обновлять их после загрузки карты
+  _.aaRefreshPartyABSMembers = function() {
+    var e;
+    try {
+      $gamePlayer.followers().aaRefreshABSMemebers();
+      return $gameParty.aaRefreshABSStatesSet();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
   };
   //@[EVENT]
   _.gev_onABSPartyLeaderReady = function() {
@@ -26640,6 +31683,183 @@ Sprite_AADamagePopUpItem = class Sprite_AADamagePopUpItem extends KDCore.Sprite 
 
 
 // Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Sprite_AAMapFlyBonus.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+
+// * Данный спрайт практически похож на Sprite_AAMapSkill2Projectile
+var Sprite_AAMapFlyBonus;
+
+Sprite_AAMapFlyBonus = class Sprite_AAMapFlyBonus extends KDCore.Sprite {
+  constructor(mapIndex, isAppear) {
+    super();
+    this.mapIndex = mapIndex;
+    this.obj = $gameMap.aaMapFlyBonuses()[this.mapIndex];
+    this._ended = false;
+    this._isShouldAppear = isAppear;
+    this._initParams();
+    this._setupImage();
+    this._updatePosition();
+    if (this._frames != null) {
+      this._updateFrame();
+    }
+    if (this._isShouldAppear === true) {
+      this._setupAppear();
+    }
+    return;
+  }
+
+  // * Завёршён (достиг игрока)
+  isEnd() {
+    return this._ended === true;
+  }
+
+  update() {
+    super.update();
+    if (this._frames != null) {
+      this._updateFrame();
+    }
+    this._updatePosition();
+    if (this._isShouldAppear === false) {
+      this._updateDirection();
+      if (!this.isEnd()) {
+        this._updateHit();
+      }
+    } else {
+      this._updateAppear();
+    }
+    this._updateMove();
+    if (this.isEnd()) {
+      this._updateEnd();
+    }
+  }
+
+  _initParams() {
+    this.anchor.x = 0.5;
+    this.anchor.y = 0.5;
+    this.z = 9;
+  }
+
+  _setupImage() {
+    this._setupAnimatedImg();
+    this.bitmap = ImageManager.loadPicture(this.obj.image());
+  }
+
+  _setupAnimatedImg() {
+    var data;
+    this._curFrame = 0;
+    this._frameTimer = 0;
+    data = AA.Utils.getFramesAndSpeed(this.obj.image());
+    this._frames = data.f;
+    this._frameSpeed = data.s;
+  }
+
+  _updateDirection() {
+    var eX, eY, sX, sY, x, y;
+    ({x, y} = this.obj.getTargetPoint());
+    eX = x;
+    eY = y;
+    sX = this.obj.x;
+    sY = this.obj.y;
+    this._angle = Math.atan2(eY - sY, eX - sX) * 180 / Math.PI;
+    this.dx = this.obj.speed() * Math.cos(this._angle * Math.PI / 180);
+    this.dy = this.obj.speed() * Math.sin(this._angle * Math.PI / 180);
+  }
+
+  _updatePosition() {
+    this.x = this.obj.x - $gameMap.displayX() * $gameMap.tileWidth();
+    this.y = this.obj.y - $gameMap.displayY() * $gameMap.tileWidth();
+  }
+
+  _updateMove() {
+    this.obj.x += this.dx;
+    this.obj.y += this.dy;
+  }
+
+  _updateFrame() {
+    var ph, pw, sx, sy;
+    pw = this.bitmap.width / this._frames;
+    ph = this.bitmap.height;
+    sx = this._curFrame * pw;
+    sy = 0;
+    if (this._frameTimer >= this._frameSpeed) {
+      this._frameTimer = 0;
+      this._curFrame = this._curFrame >= this._frames - 1 ? 0 : this._curFrame + 1;
+    }
+    this.setFrame(sx, sy, pw, ph);
+    this._frameTimer += 1;
+  }
+
+  _updateHit() {
+    var playerHit;
+    if (this.obj.isPhantom()) {
+      return;
+    }
+    playerHit = this._checkHitPlayer();
+    if (playerHit === true) {
+      this.onHit();
+    }
+  }
+
+  _updateEnd() {
+    this.opacity -= 36;
+    if (this.opacity < 50) {
+      return this.onEnd();
+    }
+  }
+
+  onEnd() {
+    //"ON END".p()
+    this.opacity = 0;
+    // * Using the same Event as Skills
+    AA.EV.call("MapSkillsRequestsClean");
+  }
+
+  _updateAppear() {
+    if (this._yUpStep >= 12) {
+      this.dy = 0; // * stop moving up
+      this._delay++; // * wait a little
+      this._updateHit(); // * can check Hit
+      if (this._delay > this._delayMax) {
+        this._isShouldAppear = false; // * fly to Player
+      }
+    } else {
+      this._yUpStep += 1;
+      this.opacity += 20;
+    }
+  }
+
+  _setupAppear() {
+    this._delay = 0;
+    this._delayMax = this.obj.delay() / 2 + Math.randomInt(this.obj.delay() + this.obj.delay() / 2);
+    this._yUpStep = 0;
+    this.dy = -1;
+    this.opacity = 0;
+    this.dx = 0;
+  }
+
+  // * Когда достиг игрока
+  _checkHitPlayer() {
+    var dist;
+    dist = AATargetsManager.getScreenExtDistance($gamePlayer, 0, this.x, this.y);
+    return dist < 26;
+  }
+
+  onHit() {
+    //"ON HIT".p()
+    this._ended = true;
+    this._isShouldAppear = false;
+    this.obj.onHit();
+  }
+
+};
+
+// ■ END Sprite_AAMapFlyBonus.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
 var Sprite_AAMapSkill2Projectile;
 
 Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite {
@@ -26661,7 +31881,7 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     return;
   }
 
-  // * Навыв завершён (достиг цели или расстояния)
+  // * Навык завершён (достиг цели или расстояния)
   isEnd() {
     return this._ended === true;
   }
@@ -26747,18 +31967,20 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     this._frameSpeed = data.s;
   };
   _._setupDirection = function() {
-    var eX, eY, sX, sY, yo;
+    var a, eX, eY, pi, sX, sY, yo;
     yo = 0;
     eX = this.skill.scX;
     eY = this.skill.scY;
     sX = this.skill.x;
     sY = this.skill.y;
     this._angle = Math.atan2(eY - yo - sY, eX - sX) * 180 / Math.PI;
-    //pi = Math.PI / 180
-    //TODO: pi
-    this.rotation = (this._angle + 90) * Math.PI / 180;
-    this.dx = this.skill.speed() * Math.cos(this._angle * Math.PI / 180);
-    this.dy = this.skill.speed() * Math.sin(this._angle * Math.PI / 180);
+    pi = Math.PI / 180;
+    if (!this.skill.isStaticAngle()) {
+      this.rotation = (this._angle + 90) * pi;
+    }
+    a = this._angle * pi;
+    this.dx = this.skill.speed() * Math.cos(a);
+    this.dy = this.skill.speed() * Math.sin(a);
   };
   _._updatePosition = function() {
     this.x = this.skill.x - $gameMap.displayX() * $gameMap.tileWidth();
@@ -26859,6 +32081,12 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     var dist;
     if (this.skill.isSubjectIsPlayer()) {
       //TODO: friendlyfier is 1
+      return false;
+    }
+    if (this.skill.isSubjectIsAlly()) {
+      return false;
+    }
+    if ($gamePlayer.aaIsInvincible()) {
       return false;
     }
     dist = AATargetsManager.getScreenExtDistance($gamePlayer, $gameTemp.aaProjYOff, this.x, this.y);
@@ -27019,6 +32247,12 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
   _._targetHitProcess = function(target) {
     //"HIT".p()
     //console.info(target)
+    if (AA.PP.isUseMorePreciseProjectileAnimations()) {
+      target.__aaLastProjectileHitPoint = {
+        x: this.x,
+        y: this.y
+      };
+    }
     AABattleActionsManager.applySkillAction(this.skill.getSubject(), target, this.skill.aaSkill);
     // * Vector On Hit Actions работают отдельно, не в AABattleActionsManager
     if (target instanceof Game_Event) {
@@ -27238,7 +32472,7 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
 (function() {
-  var ALIAS__targetSpritePosition, _;
+  var ALIAS__targetSpritePosition, ALIAS__targetSpritePosition2, _;
   // * MZ only
   if (KDCore.isMV()) {
     return;
@@ -27269,6 +32503,21 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
         y: 0
       };
     }
+  };
+  
+  //@[ALIAS]
+  ALIAS__targetSpritePosition2 = _.targetSpritePosition;
+  _.targetSpritePosition = function(sprite) {
+    var difX, difY, result, t, x, y;
+    result = ALIAS__targetSpritePosition2.call(this, ...arguments);
+    if ((sprite != null) && (sprite.__aaExAnimationPos != null) && (sprite._character != null)) {
+      ({difX, difY} = sprite.__aaExAnimationPos);
+      t = sprite._character;
+      x = t.screenX() + difX;
+      y = t.screenY() + difY;
+      return {x, y};
+    }
+    return result;
   };
 })();
 
@@ -27654,7 +32903,7 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
       return;
     }
     // * Игрок не имеет дополнительной информации
-    if (!this.isEnemy()) {
+    if (this.isPlayer()) {
       return;
     }
     this._characterAASettings = this._character.AAEntity().model();
@@ -27663,10 +32912,13 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     }
     // * Дальше код выполняется только для Enemies Events
     this._aaSetupMiniHpGauge();
-    this._aaSetupVisionDrawCheck();
+    if (this.isEnemy()) {
+      this._aaSetupVisionDrawCheck();
+    }
   };
   _._aaSetupMiniHpGauge = function() {
     var e, params;
+    //TODO: PARTY UPD Другой стиль для союзников???
     if (!AA.PP.getMiniHpGaugeSettings().active) {
       return;
     }
@@ -27674,7 +32926,9 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     this.aaMiniHPGauge = new AA.Sprite_CharacterMiniGauge(params);
     try {
       //console.log @_characterAASettings.miniHPGaugeOffset
-      this.aaMiniHPGauge.setExtraMargins(...this._characterAASettings.miniHPGaugeOffset);
+      if ((this._characterAASettings.miniHPGaugeOffset != null) && this._characterAASettings.miniHPGaugeOffset instanceof Array) {
+        this.aaMiniHPGauge.setExtraMargins(...this._characterAASettings.miniHPGaugeOffset);
+      }
       this.aaMiniHPGauge.refreshPosition(0, 0); // * чтобы Margins применились безопасно
     } catch (error) {
       e = error;
@@ -27733,11 +32987,9 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     this.aaMiniHPGauge.showAndHide();
   };
   _._aaUpdateExtraInfo = function() {
+    this._aaUpdateVisionDraw();
     if (!this.isABSEntity()) {
       return;
-    }
-    if (this._aaIsShouldCheckVisionDraw === true) {
-      this._aaUpdateVisionDraw();
     }
     if (!this._aaMiniHpShowWhenNotFull) {
       return;
@@ -27780,10 +33032,11 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
   var _;
   //@[DEFINES]
   _ = Sprite_Character.prototype;
+  //TODO: НЕ РАБОТАЕТ ПО СЕТИ, двигается вместе со своим персонажем
   _._aaSetupStateOverlaySprite = function() {
     this._aaStateOverlaySprite = new Sprite_StateOverlay();
     this._aaStateOverlaySprite.scale.set(0.8);
-    this._aaStateOverlaySprite.z = 1;
+    this._aaStateOverlaySprite.z = 3;
     this._aaStateOverlaySprite.setup(this._character.AABattler());
     return this.parent.addChild(this._aaStateOverlaySprite);
   };
@@ -27791,7 +33044,7 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     if (this._aaStateOverlaySprite == null) {
       return;
     }
-    return this._aaStateOverlaySprite.move(this.x, this.y);
+    return this._aaStateOverlaySprite.move(this.x, this.y + 12);
   };
   _._aaSetupStateIcon = function() {
     var e, x, y;
@@ -27838,22 +33091,26 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
   _._aaSetupVisionDrawCheck = function() {
     this._aaIsShouldCheckVisionDraw = true;
   };
+  _._aaIsDrawVision = function() {
+    return this._aaIsShouldCheckVisionDraw === true && ($gameSystem.aaDrawEnemyVision != null) && this._character.isABS();
+  };
   _._aaUpdateVisionDraw = function() {
     var e;
-    if ($gameSystem.aaDrawEnemyVision == null) {
-      if (this._aaVisionSpr != null) {
-        this._aaDestroyVisionSprite();
-      }
-    } else {
+    if (this._aaIsDrawVision()) {
       try {
         if (this._aaVisionSpr == null) {
           this._aaCreateVisionSprite();
         }
-        this._aaRefreshVisionSprite();
+        return this._aaRefreshVisionSprite();
       } catch (error) {
         e = error;
         KDCore.warning(e);
-        $gameSystem.aaDrawEnemyVision = null;
+        return $gameSystem.aaDrawEnemyVision = null;
+      }
+    } else {
+      if (this._aaVisionSpr != null) {
+        this._aaDestroyVisionSprite();
+        return this._aaIsShouldCheckVisionDraw = false;
       }
     }
   };
@@ -28272,6 +33529,9 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
         if (iconsArray == null) {
           iconsArray = [];
         }
+        if (this.stateIconsGroup == null) {
+          return;
+        }
         statesIcons = this.stateIconsGroup.children;
         results = [];
         for (index = i = 0, len = statesIcons.length; i < len; index = ++i) {
@@ -28421,12 +33681,24 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     return this.add(this.face);
   };
   _._createNameText = function() {
-    this.nameText = new KDCore.UI.Sprite_UIText(this.params.nameText);
-    return this.add(this.nameText);
+    var e;
+    try {
+      this.nameText = new KDCore.UI.Sprite_UIText(this.params.nameText);
+      return this.add(this.nameText);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
   };
   _._createLevelText = function() {
-    this.levelText = new KDCore.UI.Sprite_UIText(this.params.levelText);
-    return this.add(this.levelText);
+    var e;
+    try {
+      this.levelText = new KDCore.UI.Sprite_UIText(this.params.levelText);
+      return this.add(this.levelText);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
   };
   _._createBattleState = function() {
     this.battleState = new KDCore.UI.Sprite_UIImage(this.params.battleState);
@@ -28601,31 +33873,6 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     //$[OVER]
     isUnderMouse() {
       return this.icon.isUnderMouse() && this.isFullVisible();
-    }
-
-    //TODO: Этот метод в KDCore
-    isFullVisible() {
-      return this.visible === true && this.allParentsIsVisible(); //TODO: Этот метод в KDCore
-    }
-
-    allParentsIsVisible() {
-      var p;
-      if (!this.visible) {
-        return false;
-      }
-      if (this.parent != null) {
-        p = this.parent;
-        while (p != null) {
-          if (p.visible === true) {
-            p = p.parent;
-          } else {
-            return false;
-          }
-        }
-        return true;
-      } else {
-        return this.visible === true;
-      }
     }
 
     pulseClick() {
@@ -28894,6 +34141,88 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
 
 // Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Sprite_StateOverlay.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var ALIAS__updateFrame, ALIAS__updatePattern, _;
+  //@[DEFINES]
+  _ = Sprite_StateOverlay.prototype;
+  //@[ALIAS]
+  ALIAS__updatePattern = _.updatePattern;
+  _.updatePattern = function() {
+    if (this._battler != null) {
+      this._overlayExtraImage = this._battler.aaGetExtraOverlayImage();
+      if (String.any(this._overlayExtraImage)) {
+        if (this.__lastOverlayBitmapName !== this._overlayExtraImage) {
+          this._aaLoadExtraBitmap();
+          this.__lastOverlayBitmapName = this._overlayExtraImage;
+        }
+      } else {
+        this._aaResetExtraBitmap();
+      }
+    } else {
+      if (String.any(this.__lastOverlayBitmapName) || String.any(this._overlayExtraImage)) {
+        this._aaResetExtraBitmap();
+      }
+    }
+    ALIAS__updatePattern.call(this, ...arguments);
+  };
+  
+  //@[ALIAS]
+  ALIAS__updateFrame = _.updateFrame;
+  _.updateFrame = function() {
+    if (String.any(this._overlayExtraImage)) {
+      return this._aaUpdateExtraOverlayFrame();
+    } else {
+      return ALIAS__updateFrame.call(this, ...arguments);
+    }
+  };
+})();
+
+// ■ END Sprite_StateOverlay.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Sprite_StateOverlay.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = Sprite_StateOverlay.prototype;
+  _._aaLoadExtraBitmap = function() {
+    this.bitmap = ImageManager.loadPicture(this._overlayExtraImage);
+    return this._aaUpdateExtraOverlayFrame();
+  };
+  _._aaResetExtraBitmap = function() {
+    this._overlayExtraImage = null;
+    this.__lastOverlayBitmapName = null;
+    return this.loadBitmap();
+  };
+  _._aaUpdateExtraOverlayFrame = function() {
+    var e, h, sx, sy, w;
+    try {
+      w = 96;
+      h = 96;
+      sx = this._pattern * w;
+      sy = 0;
+      return this.setFrame(sx, sy, w, h);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+})();
+
+// ■ END Sprite_StateOverlay.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Sprite_Weapon.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
@@ -28968,6 +34297,550 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
 
 // ■ END Sprite_Weapon.coffee
 //---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+// * Класс ячейки для расширения навыка оружия (аммуниция)
+(function() {
+  var Sprite_WeaponExtensionSlot;
+  Sprite_WeaponExtensionSlot = class Sprite_WeaponExtensionSlot extends KDCore.UI.Sprite_UIElement {
+    constructor() {
+      super(...arguments);
+      this.reset("position");
+      this.refreshActiveExtItem();
+      this.tag = "skillExtensionIcon";
+      return;
+    }
+
+    defaultParams() {
+      return $aabsz_WeaponSkillExtensionSlot;
+    }
+
+    static Instance() {
+      var e;
+      try {
+        if (AA.UI.isValid()) {
+          return AA.UI.uiSet.sActorSkillExtIcon;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
+    }
+
+    //$[OVER]
+    isActive() {
+      if (this.params.isVisibleOnlyWhenWeaponHaveExtensionsSupport) {
+        if (this.isDisabled()) {
+          return false;
+        }
+      } else {
+        return true;
+      }
+    }
+
+    refresh() {
+      return this.refreshActiveExtItem();
+    }
+
+    actor() {
+      return $gameParty.leader();
+    }
+
+    isEnabled() {
+      return this._mainButton.isEnabled();
+    }
+
+    isDisabled() {
+      return this._mainButton.isDisabled();
+    }
+
+    disable() {
+      if (this.isDisabled()) {
+        return;
+      }
+      return this._mainButton.disable();
+    }
+
+    enable() {
+      if (this.isEnabled()) {
+        return;
+      }
+      this.visible = true;
+      return this._mainButton.enable();
+    }
+
+    //$[OVER]
+    isCanBeEdited() {
+      return this.params.isCanBeEdited === true;
+    }
+
+    //$[OVER]
+    isHaveHideWithMessageFlag() {
+      return this.params.isHideWithMessage === true;
+    }
+
+    isMenuIsOpened() {
+      return this._isMenuIsOpen === true;
+    }
+
+    isValidActiveWeaponExtension() {
+      var ref;
+      return (this.actor() != null) && ((ref = this.getActiveWeaponExtensionDefinition()) != null ? ref.isValidDefinition() : void 0);
+    }
+
+    getActiveWeaponExtensionDefinition() {
+      var ref;
+      return (ref = this.actor()) != null ? ref.aaGetActiveWeaponExtensionDefinition() : void 0;
+    }
+
+    getActiveSkillExtensionItemId() {
+      return this.actor().aaGetActiveSkillExtensionItemId();
+    }
+
+    refreshActiveExtItem() {
+      var def, e, extItemId, item, j, len, ref;
+      try {
+        if (this.isValidActiveWeaponExtension()) {
+          def = this.actor().aaGetActiveWeaponExtensionDefinition();
+          this.enable();
+          extItemId = this.getActiveSkillExtensionItemId();
+          if ((extItemId != null) && extItemId > 0) {
+            this.setActiveItem($dataItems[extItemId], def);
+          } else {
+            this.setActiveItem(0);
+          }
+        } else {
+          this.disable();
+          this.setActiveItem(0);
+          if (this.params.isVisibleOnlyWhenWeaponHaveExtensionsSupport) {
+            this.visible = false;
+          }
+        }
+        if (this.isMenuIsOpened()) {
+          ref = this.getAllMenuElements();
+          for (j = 0, len = ref.length; j < len; j++) {
+            item = ref[j];
+            item.refreshItem();
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        this.disable();
+        this.setActiveItem(0);
+      }
+    }
+
+    getAllMenuElements() {
+      if (this._extItemsMenu != null) {
+        return this._extItemsMenu.children.filter(function(i) {
+          return (i != null) && (i.refreshItem != null);
+        });
+      } else {
+        return [];
+      }
+    }
+
+    closeMenu() {
+      var e;
+      if (!this.isMenuIsOpened()) {
+        return;
+      }
+      try {
+        this._isMenuIsOpen = false;
+        this.selectionOutline.hide();
+        this._destroyExtItemsMenu();
+        return this.refreshActiveExtItem();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    openMenu() {
+      var e;
+      if (this.isMenuIsOpened()) {
+        return;
+      }
+      try {
+        this._isMenuIsOpen = true;
+        this.selectionOutline.show(this._pressedColor);
+        this._createExtItemsMenu();
+        return this.refreshActiveExtItem();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setActiveItem(item, definition) {
+      var count, e;
+      try {
+        if (item == null) {
+          return this._clearActiveItem();
+        } else {
+          this._drawActiveExtItemIcon(item.iconIndex);
+          if ((definition != null) && definition.isConsumeExtensionItem()) {
+            count = $gameParty.numItems(item);
+            return this.countText.draw(count);
+          } else {
+            return this.countText.draw("");
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    update() {
+      super.update();
+      return this._refreshThread.update();
+    }
+
+    _prepare() {
+      super._prepare();
+      this._isMenuIsOpen = false;
+      this._initColors();
+      this._refreshThread = new KDCore.TimedUpdate(30, this.refreshActiveExtItem.bind(this));
+    }
+
+  };
+  AA.link(Sprite_WeaponExtensionSlot);
+})();
+
+(function() {  //╒═════════════════════════════════════════════════════════════════════════╛
+  // ■ Sprite_WeaponExtensionSlot.coffee
+  //╒═════════════════════════════════════════════════════════════════════════╛
+  //---------------------------------------------------------------------------
+  var _;
+  //@[DEFINES]
+  _ = AA.Sprite_WeaponExtensionSlot.prototype;
+  _._initColors = function() {
+    return AA.Sprite_SKillPanelItem.prototype._tryConvertColor.call(this, "_pressedColor", "pressedOutlineColor");
+  };
+  _._createContent = function() {
+    var e;
+    try {
+      this._createActiveItemButton();
+      this._createActiveItemIcon();
+      this._createActiveItemCountText();
+      return this._createSelectionOutline();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._createActiveItemButton = function() {
+    var e;
+    try {
+      this._mainButton = new KDCore.ButtonMU(this.params.buttonImages, true, "Alpha");
+      this._mainButton.addClickHandler(this._onMainButtonClick.bind(this));
+      return this.add(this._mainButton);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._onMainButtonClick = function() {
+    var e;
+    try {
+      if (this.isMenuIsOpened()) {
+        return this.closeMenu();
+      } else {
+        return this.openMenu();
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._createActiveItemIcon = function() {
+    var e;
+    try {
+      this.icon = new KDCore.UI.Sprite_UIIcon(this.params.icon);
+      this._mainButton.addChild(this.icon);
+      return this.icon.move(this.params.icon.marings);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._createActiveItemCountText = function() {
+    var e;
+    try {
+      this.countText = new KDCore.UI.Sprite_UIText(this.params.countText);
+      return this._mainButton.addChild(this.countText);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._createSelectionOutline = function() {
+    this.selectionOutline = new AA.Sprite_SkillPanelOutline();
+    this.selectionOutline.move(this.params.outlineMargins);
+    this.add(this.selectionOutline);
+  };
+  _._clearActiveItem = function() {
+    var e;
+    try {
+      this.icon.draw(0);
+      return this.countText.draw("");
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._drawActiveExtItemIcon = function(iconIndex) {
+    var e;
+    try {
+      return this.icon.draw(iconIndex);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._destroyExtItemsMenu = function() {
+    var e, element, j, len, ref;
+    try {
+      if (this._extItemsMenu == null) {
+        return;
+      }
+      ref = this.getAllMenuElements();
+      for (j = 0, len = ref.length; j < len; j++) {
+        element = ref[j];
+        element.visible = false;
+        element.destroyMenuItem();
+      }
+      this._extItemsMenu.removeFromParent();
+      this._extItemsMenu.visible = false;
+      return this._extItemsMenu = null;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._createExtItemsMenu = function() {
+    var activeItemId, def, e, index, itemId, itemsCandidates, j, len;
+    try {
+      activeItemId = this.getActiveSkillExtensionItemId();
+      this._extItemsMenu = new Sprite();
+      this._extItemsMenu.move(this.params.menuItem.xMarginFromParent, this.params.menuItem.yMarginFromParent);
+      this._createMenuItemFor(null, 0); // * Nothing
+      def = this.getActiveWeaponExtensionDefinition();
+      if (def == null) {
+        return;
+      }
+      itemsCandidates = def.extensions;
+      index = 1;
+      for (j = 0, len = itemsCandidates.length; j < len; j++) {
+        itemId = itemsCandidates[j];
+        if ($gameParty.numItems($dataItems[itemId]) > 0) {
+          // * Not show active item in Menu
+          if (itemId !== activeItemId) {
+            this._createMenuItemFor($dataItems[itemId], index, def.isConsumeExtensionItem());
+            index++;
+          }
+        }
+      }
+      return this.add(this._extItemsMenu);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _._createMenuItemFor = function(item, index, isConsumed) {
+    var e;
+    try {
+      item = new AA.Sprite_WeaponExtensionSlotMenuItem(item, index, this.closeMenu.bind(this), isConsumed);
+      return this._extItemsMenu.addChild(item);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+})();
+
+// ■ END Sprite_WeaponExtensionSlot.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+(function() {
+  var Sprite_WeaponExtensionSlotMenuItem;
+  Sprite_WeaponExtensionSlotMenuItem = class Sprite_WeaponExtensionSlotMenuItem extends KDCore.Sprite {
+    constructor(item, index, onClickHandler, isCounted = true) {
+      super();
+      this.item = item;
+      this.index = index;
+      this.onClickHandler = onClickHandler;
+      this.isCounted = isCounted;
+      this.params = this.defaultParams();
+      this._create();
+      this.refreshItem();
+      this.show();
+      return;
+    }
+
+    defaultParams() {
+      return $aabsz_WeaponSkillExtensionSlot.menuItem;
+    }
+
+    isEditorMode() {
+      return SceneManager._scene instanceof AA.Scene_UIEditor;
+    }
+
+    destroyMenuItem() {
+      var e;
+      try {
+        if ($gameTemp.kdButtonUnderMouse === this._mainButton) {
+          $gameTemp.kdButtonUnderMouse = null;
+        }
+        this._mainButton.visible = false;
+        return this._mainButton._updateMain();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    show() {
+      var destX, destY, e;
+      try {
+        destX = this.params.xMarginFromParent * this.index;
+        destY = this.params.yMarginFromParent * this.index;
+        if (!this.params.isAnimated || this.index === 0) {
+          this.move(destX, destY);
+        } else {
+          this.moveWithAnimation(destX, destY, this.params.animationDurationInFrames);
+        }
+        this.appear(this.params.fadeInSpeedOf255PerFrame);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        this.move(0, 0);
+      }
+    }
+
+    refreshItem() {
+      var e, numItems, ref, ref1, ref2, ref3;
+      try {
+        if (this.item == null) {
+          return this._drawEmptyItem();
+        } else {
+          if ((ref = this.icon) != null) {
+            ref.draw(this.item.iconIndex);
+          }
+          if ((ref1 = this.nameText) != null) {
+            ref1.draw(this.item.name);
+          }
+          numItems = $gameParty.numItems(this.item);
+          if (this.isCounted) {
+            return (ref2 = this.countText) != null ? ref2.draw(numItems) : void 0;
+          } else {
+            return (ref3 = this.countText) != null ? ref3.draw("") : void 0;
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawEmptyItem() {
+      var e, ref, ref1, ref2;
+      try {
+        if ((ref = this.icon) != null) {
+          ref.draw(this.params.nothingItemIconIndex);
+        }
+        if ((ref1 = this.countText) != null) {
+          ref1.draw("");
+        }
+        return (ref2 = this.nameText) != null ? ref2.draw(this.params.emptyItemText) : void 0;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _create() {
+      this._createMainButton();
+      this._createIcon();
+      this._createNameText();
+      if (this.item != null) {
+        return this._createCountText();
+      }
+    }
+
+    _createMainButton() {
+      this._mainButton = new KDCore.ButtonMU(this.params.buttonImages, true, "Alpha");
+      this._mainButton.addClickHandler(this._onMainButtonClick.bind(this));
+      return this.add(this._mainButton);
+    }
+
+    _onMainButtonClick() {
+      var e, itemId, ref;
+      try {
+        if (this.isEditorMode()) {
+          return;
+        }
+        itemId = 0;
+        if (this.item != null) {
+          itemId = this.item.id;
+        }
+        if ((ref = $gameParty.leader()) != null) {
+          ref.aaSetActiveSkillExtensionItemId(itemId);
+        }
+        return setTimeout((() => {
+          if (this.onClickHandler != null) {
+            return this.onClickHandler();
+          }
+        }), 50);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createIcon() {
+      var e;
+      try {
+        this.icon = new KDCore.UI.Sprite_UIIcon(this.params.icon);
+        this._mainButton.addChild(this.icon);
+        return this.icon.move(this.params.icon.marings);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createCountText() {
+      var e;
+      try {
+        this.countText = new KDCore.UI.Sprite_UIText(this.params.countText);
+        return this._mainButton.addChild(this.countText);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createNameText() {
+      var e;
+      try {
+        this.nameText = new KDCore.UI.Sprite_UIText(this.params.nameText);
+        return this._mainButton.addChild(this.nameText);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  AA.link(Sprite_WeaponExtensionSlotMenuItem);
+})();
 
 
 // Generated by CoffeeScript 2.6.1
@@ -29182,6 +35055,7 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
   _ = Spriteset_Base.prototype;
   _.aaCreateBloodSplatterEffectLayer = function() {
     this._aaBloodSplatterSpriteBase = new Sprite();
+    this._aaBloodSplatterSpriteBase.z = 9;
     return this.addChild(this._aaBloodSplatterSpriteBase);
   };
   _.aaCreateBloodSplatterEffectSprite = function() {
@@ -29278,6 +35152,8 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
   _.createCharacters = function() {
     ALIAS__createCharacters.call(this);
     this.aaCreateMapSkills();
+    this.aaCreateMapFlyBonus();
+    // * Одно событие для Skills и Бонусов
     AA.EV.subscribeFor("MapSkillsRequestsClean", this._aaClearMapSkills.bind(this));
   };
 })();
@@ -29308,11 +35184,11 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
       }
     };
     _.aaSetupMapAnimation = function(animationRequest) {
-      var animation, animationId, spr, tempChar, x, y;
+      var animation, animationId, difX, difY, spr, sx, sy, tempChar, x, y;
       if (animationRequest == null) {
         return;
       }
-      ({x, y, animationId} = animationRequest);
+      ({x, y, animationId, sx, sy} = animationRequest);
       animation = $dataAnimations[animationId];
       if (animation == null) {
         KDCore.warning("Animation with ID " + animationId + " not found!");
@@ -29322,6 +35198,11 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
       tempChar = new Game_Character();
       tempChar.setPosition(x, y);
       spr = new Sprite_Character(tempChar);
+      if ((sx != null) && (sy != null)) {
+        difX = sx - tempChar.screenX();
+        difY = sy - tempChar.screenY();
+        spr.__aaExAnimationPos = {difX, difY};
+      }
       this._aaMapAnimationSprites.push(spr);
       this._characterSprites.push(spr);
       if (KDCore.isMZ()) {
@@ -29391,6 +35272,7 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     // * Над персонажами
     _.aaCreateExtraMapUpLayer = function() {
       this._aaLayer02 = new Sprite();
+      this._aaLayer02.z = 4;
       this.addChild(this._aaLayer02);
     };
     _.aaCreateDamagePopUpLayer = function() {
@@ -29430,6 +35312,11 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
       var char, effectBase, i, j, k, l, len, maxw, pSize, part, ph, pw, ref, shatterEffectsSet, sx, sx2, sy, sy2, x, y, y3, y_perc;
       char = characterSprite._character;
       effectBase = new Sprite();
+      if (characterSprite._character != null) {
+        effectBase.z = characterSprite._character.screenZ();
+      } else {
+        effectBase.z = 1;
+      }
       this._tilemap.addChild(effectBase);
       this.aaRegisterDynamicSprite(effectBase, char, -characterSprite.width / 2, -characterSprite.height);
       x = char._aaShatterEffectData[3];
@@ -29603,6 +35490,63 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
 //---------------------------------------------------------------------------
 (function() {
   var _;
+  // * Данные методы аналогичны методам обработки Projectile Skills
+  // (см. Spriteset_Map_AASkills)
+
+  //@[DEFINES]
+  _ = Spriteset_Map.prototype;
+  _.aaCreateMapFlyBonus = function() {
+    var i, j, ref;
+    this._aaMapFlyBonuses = [];
+// * Создаём уже существующие (зарегестрированные) на карте
+    for (i = j = 0, ref = $gameMap.aaMapFlyBonuses().length; (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
+      this.aaCreateNewMapFlyBonus(i, false);
+    }
+  };
+  _.aaCreateNewMapFlyBonus = function(index, isAppear = true) {
+    var bonus, sprite;
+    bonus = $gameMap.aaMapFlyBonuses()[index];
+    if (bonus == null) {
+      return;
+    }
+    sprite = new Sprite_AAMapFlyBonus(index, isAppear);
+    this._aaMapFlyBonuses[index] = sprite;
+    this._tilemap.addChild(sprite);
+  };
+  
+  // * Вызывается из метода _aaClearMapSkills, т.к. используется одно событие
+  _._aaClearMapFlyBonuses = function() {
+    var e, i, j, ref, results;
+    try {
+      results = [];
+      for (i = j = 0, ref = $gameMap.aaMapFlyBonuses().length; (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
+        if (!this._aaMapFlyBonuses[i] || this._aaMapFlyBonuses[i].isEnd()) {
+          this._tilemap.removeChild(this._aaMapFlyBonuses[i]);
+          this._aaMapFlyBonuses[i] = null;
+          results.push($gameMap.aaMapFlyBonuses()[i] = null);
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+})();
+
+// ■ END Spriteset_Map.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Spriteset_Map.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
   //@[DEFINES]
   _ = Spriteset_Map.prototype;
   _.aaCreateMapSkills = function() {
@@ -29626,6 +35570,7 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
   //@[EVENT]
   _._aaClearMapSkills = function() {
     var i, j, ref;
+    this._aaClearMapFlyBonuses();
     for (i = j = 0, ref = $gameMap.aaMapSkills().length; (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
       if (!this._aaMapSkills[i] || this._aaMapSkills[i].isEnd()) {
         this._tilemap.removeChild(this._aaMapSkills[i]);
@@ -29649,6 +35594,21 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
       super();
       this._init(); //#Spriteset_UI_0
       this.applyUserSettings(); // * Применить настройки игрока
+    }
+
+    static Instance() {
+      var e;
+      try {
+        if (KDCore.Utils.isSceneMap()) {
+          return SceneManager._scene._aaUI;
+        } else if (SceneManager._scene instanceof AA.Scene_UIEditor) {
+          return SceneManager._scene.uiSpriteset;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
     }
 
     isActive() {
@@ -29707,22 +35667,40 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
 
     // * Обновить элемент (применить настройки)
     refreshElement(tag) {
-      var element;
+      var e, element;
       element = this.getElement(tag);
       if (element == null) {
         return;
       }
-      this._applyUserSettingsFor(element, $gameSystem.aaGetUserUISettings()); //#Spriteset_UI_0
+      try {
+        if (element.refresh != null) {
+          element.refresh();
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      try {
+        this._applyUserSettingsFor(element, $gameSystem.aaGetUserUISettings()); //#Spriteset_UI_0
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
     }
 
     // * Обновить контроллер элемента
     refreshController(tag) {
-      var controller;
-      controller = this.getController(tag);
-      if (controller == null) {
-        return;
+      var controller, e;
+      try {
+        controller = this.getController(tag);
+        if (controller == null) {
+          return;
+        }
+        controller.refresh();
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
       }
-      controller.refresh();
     }
 
     // * Восстановить настройки элемента
@@ -29837,6 +35815,23 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     this.uiSets.push(uiSet);
     this._addElementToUI(uiSet);
   };
+  // * Добавит и зарегестрировать элемент (чтобы можно было управлять через команды)
+  _._registerUIElement = function(sprite) {
+    var e;
+    try {
+      if (sprite == null) {
+        return;
+      }
+      if (sprite.tag == null) {
+        console.warn("You try register UI element without TAG");
+      }
+      this._addElementToUI(sprite);
+      return this.elements.push(sprite);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
   // * Добавить элемент на обычный слой (выше пользовательских)
   _._addElementToUI = function(sprite) {
     return this.layer.addChild(sprite);
@@ -29895,7 +35890,8 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
   _._createActorUI = function() {
     this._createActorGauges();
     this._createActorBuffsIcons();
-    return this._createActorStatesIcons();
+    this._createActorStatesIcons();
+    return this._createActorSkillExtensionMenu();
   };
   _._createActorGauges = function() {
     this.sActorGauges = new AA.UISet_ActorGauges(this);
@@ -29914,6 +35910,10 @@ Sprite_AAMapSkill2Projectile = class Sprite_AAMapSkill2Projectile extends Sprite
     }
     this.sActorStates = new AA.UISet_ActorStatesIcons(this);
     return this._registerUISet(this.sActorStates); //# Spriteset_UI_0
+  };
+  _._createActorSkillExtensionMenu = function() {
+    this.sActorSkillExtIcon = new AA.Sprite_WeaponExtensionSlot();
+    this._registerUIElement(this.sActorSkillExtIcon);
   };
 })();
 
@@ -30186,7 +36186,8 @@ uAPI = function() {};
         var e;
         try {
           if (KDCore.Utils.isSceneMap() && !SceneManager.isSceneChanging()) {
-            return AA.UI.refreshElement('skills');
+            AA.UI.refreshElement('skills');
+            return AA.UI.refreshElement('skillExtensionIcon');
           }
         } catch (error) {
           e = error;
@@ -30512,6 +36513,25 @@ uAPI = function() {};
     };
     // * Изменить (дать) здоровье напрямую (с вспылвающим PopUp)
     _.gainHpForBattler = function(charId, value, isCrit = false) {
+      var e;
+      try {
+        uAPI._gainHpOrMpForBattler(charId, value, 'hp', isCrit);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+    };
+    // * Изменить (дать) ману напрямую (с вспылвающим PopUp)
+    _.gainMpForBattler = function(charId, value, isCrit = false) {
+      var e;
+      try {
+        uAPI._gainHpOrMpForBattler(charId, value, 'mp', isCrit);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+    };
+    _._gainHpOrMpForBattler = function(charId, value, type, isCrit) {
       var battler, e, event;
       try {
         //TODO: Получение по charId вынести в Utils (много где используется)
@@ -30530,10 +36550,43 @@ uAPI = function() {};
         if (battler == null) {
           return;
         }
-        battler.aaGainHpWithPopUp(value, isCrit);
+        if (type === 'hp') {
+          return battler.aaGainHpWithPopUp(value, isCrit);
+        } else {
+          return battler.aaGainMpWithPopUp(value, isCrit);
+        }
       } catch (error) {
         e = error;
-        KDCore.warning(e);
+        return KDCore.warning(e);
+      }
+    };
+    // * Дать опыт (с PopUp)
+    _.gainExpForParty = function(value) {
+      var e;
+      try {
+        if (value == null) {
+          return;
+        }
+        if (value <= 0) {
+          return;
+        }
+        return $gameParty.aaGainExpForParty(value, true);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    // * Дать золото (с PopUp)
+    _.gainGoldForParty = function(value) {
+      var e;
+      try {
+        if (value == null) {
+          return;
+        }
+        return $gameParty.aaGainGoldForParty(value);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
       }
     };
     // * Получить одного врага по метке (первый)
@@ -30549,7 +36602,7 @@ uAPI = function() {};
       }
     };
     // * Получить всех врагов по метке (массив)
-    return _.getEnemiesByLabel = function(label = "") {
+    _.getEnemiesByLabel = function(label = "") {
       var e;
       try {
         return $gameMap.eventAAWithLabel(label);
@@ -30557,6 +36610,60 @@ uAPI = function() {};
         e = error;
         KDCore.warning(e);
         return [];
+      }
+    };
+    // * Сбросить сохранённое состояние здоровья врага (врагов, всей карты, вообще)
+    _.resetHpForEnemy = function(mapId, eventId = 0) {
+      var e;
+      try {
+        if ($gameSystem._aaEnemiesHPDataStored == null) {
+          return;
+        }
+        if ((mapId == null) || mapId === 0) {
+          $gameSystem._aaEnemiesHPDataStored = null;
+          return;
+        }
+        if ((eventId == null) || eventId <= 0) {
+          $gameSystem._aaEnemiesHPDataStored[mapId] = null;
+          delete $gameSystem._aaEnemiesHPDataStored[mapId];
+          return;
+        }
+        return delete $gameSystem._aaEnemiesHPDataStored[mapId][eventId];
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    // * Спавн "летающего" бонуса (от события) до игрока
+    // * bonusIds - array
+    //TODO: Добавить SAction
+    return _.spawnFlyingBonus = function(eventId, bonusIds) {
+      var bonusData, e, event, i, id, len, results;
+      try {
+        if (bonusIds == null) {
+          return;
+        }
+        if (bonusIds.length === 0) {
+          return;
+        }
+        // * Проверка, что событие существует
+        event = $gameMap.event(eventId);
+        if (event == null) {
+          return;
+        }
+        results = [];
+        for (i = 0, len = bonusIds.length; i < len; i++) {
+          id = bonusIds[i];
+          bonusData = AA.PP.getAfterDeathBonus(id);
+          if (bonusData == null) {
+            continue;
+          }
+          results.push($gameMap.aaRequestFlyBonusSpawn(eventId, bonusData));
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
       }
     };
   })();
@@ -30888,6 +36995,48 @@ uAPI = function() {};
   })();
   (function() {    // * Для сетевого режима
     // -----------------------------------------------------------------------
+    //? byWhat: actor, actorId, netId, actorName, playerName, playerIndex, info
+    // * IS OUTER used for server synchronization
+    _.setTeamIdFor = function(byWhat, value, teamId, isOuter = false) {
+      var actor, e;
+      try {
+        if (!AA.Network.isNetworkGame()) {
+          return;
+        }
+        actor = nAPI.getPlayerInfo('actor', byWhat, value);
+        if (actor == null) {
+          return console.warn("Actor by " + byWhat + " with value " + value + " not found");
+        } else {
+          actor.aaNetSetupTeamId(teamId);
+          if (!isOuter) {
+            return AANetworkManager.setActorNetworkTeamId(actor.actorId(), teamId);
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.setPvPMode = function() {
+      var e;
+      try {
+        AA.Network.setPvPMode();
+        return AANetworkManager.refreshPvPGameModeState();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.setPvEMode = function() {
+      var e;
+      try {
+        AA.Network.setPvEMode();
+        return AANetworkManager.refreshPvPGameModeState();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
     // * what can be: actor, actorId, netId, actorName, playerName, playerIndex, info
     return _.getWhoKillMeInPvP = function(what = "actorId") {
       var e;
@@ -31398,34 +37547,49 @@ UISkillsItemsController = class UISkillsItemsController {
   //@[DEFINES]
   _ = UISkillsItemsController.prototype;
   _._updateItemsStates = function() {
-    var i, item, len, ref, results;
-    ref = this.skillItems;
-    results = [];
-    for (i = 0, len = ref.length; i < len; i++) {
-      item = ref[i];
-      results.push(this._updateItemState(item));
+    var e, i, item, len, ref, results;
+    try {
+      ref = this.skillItems;
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        item = ref[i];
+        results.push(this._updateItemState(item));
+      }
+      return results;
+    } catch (error) {
+      e = error;
+      return AA.w(e);
     }
-    return results;
   };
   _._updateItemsTimers = function() {
-    var i, item, len, ref, results;
-    ref = this.skillItems;
-    results = [];
-    for (i = 0, len = ref.length; i < len; i++) {
-      item = ref[i];
-      results.push(this._updateItemTimer(item));
+    var e, i, item, len, ref, results;
+    try {
+      ref = this.skillItems;
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        item = ref[i];
+        results.push(this._updateItemTimer(item));
+      }
+      return results;
+    } catch (error) {
+      e = error;
+      return AA.w(e);
     }
-    return results;
   };
   _._updateItemsCount = function() {
-    var i, item, len, ref, results;
-    ref = this.skillItems;
-    results = [];
-    for (i = 0, len = ref.length; i < len; i++) {
-      item = ref[i];
-      results.push(this._updateItemCount(item));
+    var e, i, item, len, ref, results;
+    try {
+      ref = this.skillItems;
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        item = ref[i];
+        results.push(this._updateItemCount(item));
+      }
+      return results;
+    } catch (error) {
+      e = error;
+      return AA.w(e);
     }
-    return results;
   };
   // * Обновить состояние (таймер, доступность)
   _._updateItemState = function(item) {
@@ -31514,13 +37678,18 @@ UISkillsItemsController = class UISkillsItemsController {
     }
   };
   _._checkAndClearEmptyItems = function() {
-    var i, item, len, ref;
-    ref = this.skillItems;
-    for (i = 0, len = ref.length; i < len; i++) {
-      item = ref[i];
-      if (item.skillId <= 0) {
-        item.clear();
+    var e, i, item, len, ref;
+    try {
+      ref = this.skillItems;
+      for (i = 0, len = ref.length; i < len; i++) {
+        item = ref[i];
+        if (item.skillId <= 0) {
+          item.clear();
+        }
       }
+    } catch (error) {
+      e = error;
+      AA.w(e);
     }
   };
   
@@ -31638,8 +37807,8 @@ UITargetInfoController = class UITargetInfoController {
     return this.gev_onUnderMouseEventChanged();
   }
 
-  setup(target) {
-    this.target = target;
+  setup(target1) {
+    this.target = target1;
     if (this.target == null) {
       this.hideTargetInfo();
     }
@@ -31687,6 +37856,10 @@ UITargetInfoController = class UITargetInfoController {
     }
     try {
       battler = this.target.AABattler();
+      if (battler == null) {
+        this.targetInfoSpr.drawStates(null);
+        return;
+      }
       if (battler.isAlive()) {
         this.targetInfoSpr.drawStates(battler.allIcons());
       } else {
@@ -31710,13 +37883,29 @@ UITargetInfoController = class UITargetInfoController {
   }
 
   gev_onUnderMouseEventChanged() {
-    if ($gameTemp._aaEventUnderCursor != null) {
+    if (this.isValidTargetToShow($gameTemp._aaEventUnderCursor)) {
       if (this.target !== $gameTemp._aaEventUnderCursor) {
         this.setup($gameTemp._aaEventUnderCursor);
       }
     } else {
       this.hideTargetInfo();
     }
+  }
+
+  isValidTargetToShow(target) {
+    var e;
+    if (target == null) {
+      return false;
+    }
+    try {
+      if (target instanceof Game_Event) {
+        return target.isABS();
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
   }
 
   _createSoControllers() {
@@ -32183,4 +38372,4 @@ Window_SkillSelectorList = class Window_SkillSelectorList extends Window_Selecta
 // ■ END Window_SkillSelectorList.coffee
 //---------------------------------------------------------------------------
 
-//Plugin Alpha_ABSZ builded by PKD PluginBuilder 2.2 - 16.01.2023
+//Plugin Alpha_ABSZ builded by PKD PluginBuilder 2.2 - 23.10.2023
