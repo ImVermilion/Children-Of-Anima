@@ -1,9 +1,9 @@
 [
 null,
 {"id":1,"battlerName":"","characterIndex":5,"characterName":"!Flame","classId":2,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"Actor1","traits":[],"initialLevel":1,"maxLevel":99,"name":"Alma","nickname":"","note":"","profile":""},
-{"id":2,"battlerName":"","characterIndex":0,"characterName":"","classId":1,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"","traits":[],"initialLevel":1,"maxLevel":99,"name":"","nickname":"","note":"","profile":""},
+{"id":2,"battlerName":"","characterIndex":0,"characterName":"Laira","classId":1,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"","traits":[],"initialLevel":1,"maxLevel":99,"name":"Laira","nickname":"","note":"","profile":""},
 {"id":3,"battlerName":"","characterIndex":0,"characterName":"","classId":1,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"","traits":[],"initialLevel":1,"maxLevel":99,"name":"","nickname":"","note":"","profile":""},
-{"id":4,"battlerName":"chico_pelo_castaño_0","characterIndex":0,"characterName":"chico_pelo_castaño","classId":2,"equips":[0,0,0,0,0],"faceIndex":2,"faceName":"chico_pelo_castaño","traits":[],"initialLevel":1,"maxLevel":5,"name":"Héroe","nickname":"","note":"<pSkillPointsVarId:17>","profile":""},
+{"id":4,"battlerName":"","characterIndex":1,"characterName":"PJ_Base_Alto","classId":2,"equips":[0,0,0,0,0],"faceIndex":1,"faceName":"PJ_Base","traits":[],"initialLevel":1,"maxLevel":5,"name":"Héroe","nickname":"","note":"<pSkillPointsVarId:17>","profile":""},
 {"id":5,"battlerName":"","characterIndex":0,"characterName":"Numina","classId":7,"equips":[9,0,0,0,0],"faceIndex":2,"faceName":"Caras","traits":[],"initialLevel":1,"maxLevel":99,"name":"Numina","nickname":"","note":"<ABS>\nactivateWhen:playerInDanger|playerGotDamage\nbestTarget1:any\nviewRadius:5\nreturnRadius:8\n</ABS>","profile":""},
 {"id":6,"battlerName":"wolf-grey-sv_2","characterIndex":1,"characterName":"wolfdog","classId":12,"equips":[0,0,0,0,0],"faceIndex":4,"faceName":"Lobo","traits":[],"initialLevel":1,"maxLevel":99,"name":"Lobo","nickname":"","note":"<ABS>\nactivateWhen:playerInDanger|playerGotDamage\nbestTarget1:any\nviewRadius:5\nreturnRadius:8\n</ABS>","profile":""},
 {"id":7,"battlerName":"","characterIndex":0,"characterName":"","classId":1,"equips":[0,0,0,0,0],"faceIndex":0,"faceName":"","traits":[],"initialLevel":1,"maxLevel":99,"name":"","nickname":"","note":"","profile":""},
