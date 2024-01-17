@@ -1,5 +1,5 @@
 {
-    "visible": true,
+    "visible": false,
     "position": { "x": "Graphics.width - 90", "y": "Graphics.height - 126" },
     "images": {
         "main": "button_00",
