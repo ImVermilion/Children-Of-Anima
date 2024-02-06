@@ -114,3 +114,9 @@ body {
         transform: rotate(360deg);
     }
 }
+#vermilion_menu {
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
+    width: 300px; /* Ancho del menú */
+    height: 200px; /* Altura del menú */
+}
+
