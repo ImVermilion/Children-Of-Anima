@@ -1,0 +1,24 @@
+[
+    {
+        "id": "1",
+        "name": "Tablón de Arresven",
+        "quests": [
+            {
+                "Title": "Pedido de flores",
+                "Description": "La florista de Arresven Cynthia necesita ayuda para un pedido de flores.",
+                "LongDescription": "La florista de Arresven Cynthia necesita ayuda para un pedido de flores. Recolecta 10 flores del bosque cercano.",
+                "IconIndex": 1,
+                "SwitchId": 53,
+                "ItemId": 93
+            },
+            {
+                "Title": "Limpieza de la plaza",
+                "Description": "El alcalde de Arresven necesita voluntarios para limpiar la plaza.",
+                "LongDescription": "El alcalde de Arresven necesita voluntarios para limpiar la plaza. Ayuda a recoger la basura y ordenar los bancos.",
+                "IconIndex": 2,
+                "SwitchId": 13,
+                "ItemId": 92
+            }
+        ]
+    }
+]
