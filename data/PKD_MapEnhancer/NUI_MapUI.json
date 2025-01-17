@@ -1,0 +1,59 @@
+{
+    "type": "screen",
+    "childrens": [
+        {
+            "type": "rect",
+            "parameters": {
+                "fillAlpha": 0,
+                "strokeWidth": 6,
+                "strokeColor": "#FF0000"
+            },
+            "bindings": {
+                "width": "100% - 3",
+                "height": "100% - 3",
+                "x": 3,
+                "y": 3
+            }
+        },
+        {
+            "type": "rect",
+            "parameters": {
+                "fillColor": "#1E201E",
+                "strokeWidth": 2,
+                "fillAlpha": 0.95
+            },
+            "bindings": {
+                "width": "100%",
+                "height": "38hdp",
+                "x": 3,
+                "y": 3
+            },
+            "childrens": [
+                {
+                    "type": "text",
+                    "parameters": {
+                        "alignment": "left"
+                    },
+                    "bindings": {
+                        "text": ["Group: %1", "$layerIndex"],
+                        "x": "4hdp",
+                        "y": "center",
+                        "width": "98",
+                        "height": "98%",
+                        "fontSize": "60%"
+                    }
+                },
+                {
+                    "type": "group",
+                    "id": "_extraContent",
+                    "bindings": {
+                        "x": "prevEndY + 2hdp",
+                        "y": 0,
+                        "width": "100% - prevWidth",
+                        "height": "100%"
+                    }
+                }
+            ]
+        }
+    ]
+}

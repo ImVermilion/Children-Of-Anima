@@ -1,0 +1,234 @@
+{
+    "type": "screen",
+    "id": "skillInfoRoot",
+    "constants": {
+        "skillStatusesText": [
+            { "id": "opened", "textColor": "#21e310", "text": "Can be learned" },
+            { "id": "learned", "textColor": "#cfa425", "text": "Learned" },
+            { "id": "closed", "textColor": "#e32910", "text": "Not available now" },
+            { "id": "editor", "textColor": "#cccccc", "text": "Click or press Enter to start edit" }
+        ],
+        "skillRequirementPassedTextColor": "#21e310",
+        "skillRequirementNotPassedTextColor": "#e32910",
+        "skillRequirementDefaultTextColor": "#8d796c",
+        "defaultTextWhenNotHaveSpecialCondition": "None"
+    },
+    "childrens": [
+        {
+            "type": "plane",
+            "id": "skillInfoBackground",
+            "parameters" : "folderName:pSimpleSkillsTree;imageName:skillInfoBackgroundNew;margins:20",
+            "bindings": {
+                "size": { "width": "402hdp", "height": "506hdp" },
+                "position": { "x": "end - width - 20dp", "y": "86hdp" }
+            },
+            "childrens": [
+                {
+                    "type": "image",
+                    "id": "skillNameHeader",
+                    "parameters": "folderName:pSimpleSkillsTree;imageName:skillInfoHeader",
+                    "bindings": {
+                        "size": { "width": "100%", "height": "32dp" },
+                        "position": { "x": "center", "y": 20 }
+                    },
+                    "childrens": [
+                        {
+                            "type": "text",
+                            "id": "skillNameTextSpr",
+                            "effects": ["shadow"],
+                            "parameters": "textColor:#e3af4c",
+                            "bindings": {
+                                "size": { "width": "100%", "height": "100%" },
+                                "text": ["%1", "$skillName"],
+                                "fontSize": "20hdp"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "id": "skillStatusTextSpr",
+                    "bindings": {
+                        "position": { "x": "center", "y": "prevEndY + 10" },
+                        "size": { "width": "100%", "height": "18hdp" },
+                        "text": ["%1", "$skillStatusText"],
+                        "textColor": "$skillStatusTextColor",
+                        "fontSize": "14hdp"
+                    }
+                },
+                {
+                    "type": "textExt",
+                    "id": "skillDescriptionTextSpr",
+                    "parameters": "",
+                    "bindings": {
+                        "position": { "x": 40, "y": "prevEndY + 10" },
+                        "size": { "width": "100% - 80", "height": "60hdp" },
+                        "text": ["%1", "$skillDescriptionText"],
+                        "fontSize": "13hdp"
+                    }
+                },
+                {
+                    "type": "group",
+                    "id": "requirementsHeaderGroup",
+                    "bindings": {
+                        "size": { "width": "100%", "height": "auto" },
+                        "position": { "x": "center", "y": "prevEndY + 30" }
+                    },
+                    "childrens": [
+                        {
+                            "type": "text",
+                            "bindings": {
+                                "position": { "x": "center", "y": 0 },
+                                "size": { "width": "100%", "height": "16hdp" },
+                                "text": "REQUIREMENTS",
+                                "textColor": "#e3af4c",
+                                "fontSize": "14hdp"
+                            }
+                        },
+                        {
+                            "type": "image",
+                            "parameters": "folderName:pSimpleSkillsTree;imageName:skillInfoSeparator",
+                            "bindings": {
+                                "size": { "width": "314hdp", "height": "32hdp" },
+                                "position": { "x": "center", "y": "prevEndY + 2" }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "id": "requirementsTextGroup",
+                    "bindings": {
+                        "size": { "width": "100%", "height": "auto" },
+                        "position": { "x": "40hdp", "y": "prevEndY" }
+                    },
+                    "childrens": [
+                        {
+                            "type": "group",
+                            "bindings": {
+                                "size": { "width": "100%", "height": "14hdp" }
+                            },
+                            "childrens": [
+                                {
+                                    "type": "text",
+                                    "id": "skillLevelRequirementTitleTextSpr",
+                                    "parameters": "alignment:left",
+                                    "bindings": {
+                                        "position": { "x": 0, "y": 0 },
+                                        "size": { "width": "40hdp", "height": "100%" },
+                                        "text": "Level:",
+                                        "textColor": "#e3af4c",
+                                        "fontSize": "90%"
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "id": "skillLevelRequirementValueTextSpr",
+                                    "parameters": "alignment:left",
+                                    "bindings": {
+                                        "position": { "x": "prevEndX + 20", "y": 0 },
+                                        "size": { "width": "100%", "height": "100%" },
+                                        "text": ["%1", "$skillLevelRequirementText"],
+                                        "textColor": "$skillLevelRequirementTextColor",
+                                        "fontSize": "90%"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "group",
+                            "bindings": {
+                                "size": { "width": "100%", "height": "14hdp" },
+                                "position": { "x": 0, "y": "prevEndY + 8" }
+                            },
+                            "childrens": [
+                                {
+                                    "type": "text",
+                                    "id": "skillPointsRequirementTitleTextSpr",
+                                    "parameters": "alignment:left",
+                                    "bindings": {
+                                        "position": { "x": 0, "y": 0 },
+                                        "size": { "width": "70hdp", "height": "100%" },
+                                        "text": "Skill points:",
+                                        "textColor": "#e3af4c",
+                                        "fontSize": "90%"
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "id": "skillPointsRequirementValueTextSpr",
+                                    "parameters": "alignment:left",
+                                    "bindings": {
+                                        "position": { "x": "prevEndX + 20", "y": 0 },
+                                        "size": { "width": "100%", "height": "100%" },
+                                        "text": ["%1", "$skillPointsRequirementText"],
+                                        "textColor": "$skillPointsRequirementTextColor",
+                                        "fontSize": "90%"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "group",
+                            "bindings": {
+                                "size": { "width": "100%", "height": "14hdp" },
+                                "position": { "x": 0, "y": "prevEndY + 8" }
+                            },
+                            "childrens": [
+                                {
+                                    "type": "text",
+                                    "id": "skillSpecialCondRequirementTitleTextSpr",
+                                    "parameters": "alignment:left",
+                                    "bindings": {
+                                        "position": { "x": 0, "y": 0 },
+                                        "size": { "width": "66hdp", "height": "100%" },
+                                        "text": "Condition:",
+                                        "textColor": "#e3af4c",
+                                        "fontSize": "90%"
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "id": "skillSpecialCondRequirementValueTextSpr",
+                                    "parameters": "alignment:left",
+                                    "bindings": {
+                                        "position": { "x": "prevEndX + 20", "y": 0 },
+                                        "size": { "width": "100%", "height": "100%" },
+                                        "text": ["%1", "$skillSpecialCondRequirementText"],
+                                        "textColor": "$skillSpecialCondRequirementTextColor",
+                                        "fontSize": "90%"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "image",
+                    "parameters": "folderName:pSimpleSkillsTree;imageName:skillInfoSeparator",
+                    "bindings": {
+                        "size": { "width": "314hdp", "height": "32hdp" },
+                        "position": { "x": "center", "y": "prevEndY + 12" }
+                    }
+                },
+                {
+                    "type": "image",
+                    "id": "skillPreviewImageSpr",
+                    "parameters": "folderName:pSimpleSkillsTree/preview;keepAspect",
+                    "bindings": {
+                        "size": { "width": "340hdp", "height": "160hdp" },
+                        "position": { "x": "center", "y": "prevEndY" },
+                        "image": "$skillPreviewImage"
+                    }
+                },
+                {
+                    "type": "group",
+                    "id": "skillGifPreviewImage",
+                    "bindings": {
+                        "position": { "x": "prevX", "y": "prevY" }
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2022 Vladimir Skrypnikov (Pheonix KageDesu)
- * <http://kdworkshop.net/>
+ * Copyright (c) 2024 Vladimir Skrypnikov (Pheonix KageDesu)
+ * <https://kdworkshop.net/>
  *
 
 * License: Creative Commons 4.0 Attribution, Share Alike, Commercial
@@ -13,10 +13,10 @@
  */
 
 /*:
- * @plugindesc (v.2.5)[PRO] Visual Map Inventory
+ * @plugindesc (v.2.9)[PRO] Visual Map Inventory
  * @author Pheonix KageDesu
  * @target MZ MV
- * @url http://kdworkshop.net/plugins/map-inventory
+ * @url https://kdworkshop.net/plugins/map-inventory
  *
  * @help
  * ---------------------------------------------------------------------------
@@ -150,8 +150,8 @@
  *      <aItemType: CUSTOM_TYPE|CUSTOM_TYPE> (can be many types for one item)
  *      <aItemTypeColor: HEX_COLOR>
  *      <itemRare: QUALITY_LEVEL>
- * 
- *      [PRO only]
+ *      <notForHotCell> (this item CAN'T be dragged to Hot Cell)
+ *      <invDescBackImg:NAME>
  *      <weight: ITEM_WEIGHT>
  *      <weightStore: ADD_TO_MAX_WEIGHT>
  *      <iImg: NAME> - image as item icon (should be in img\pMapInventory\Icons\)
@@ -164,6 +164,8 @@
  *      <weight:6>
  *      <weightStore:20>
  *      <iImg:potion>
+ *      <invDescBackImg:customBackground>
+ *      <notForHotCell>
  * ---------------------------------------------------------------------------
  *  [PRO only] How add drop chance to item in visual chest:
  * 
@@ -243,9 +245,32 @@
  *      Where isCallCommonEvent true or false
  *      (if true, commonEvent will be called anyway, if you setup any in MISelectItemToVariable script call)
  * ---------------------------------------------------------------------------
+ * Since update 2.8 you can show description window for any item anywhere via script calls
+ *
+ * For show description window use next script call:
+ *  PKD_MI.showExternalItemDescriptionWindowFor(ITEM, X, Y, APPEAR_SPEED);
+ *
+ * Where ITEM - item object, X, Y - screen coordinates
+ *      APPEAR_SPEED - null or 0 - instant, any number appears from transparency speed
+ *
+ * Example:  PKD_MI.showExternalItemDescriptionWindowFor($dataItems[11], 100, 200, 25);
+ *
+ *
+ * For close (destroy window), use script call: PKD_MI.closeExternalDescriptionWindow();
+ *
+ *
+ * Added script calls for control forbidden actors (for party selector) during game
+ * (See Plugin Parameter Forbidden Actors)
+ *
+ * PKD_MI.addForbiddenActorForPartySelector(ACTOR_ID);
+ * PKD_MI.removeForbiddenActorForPartySelector(ACTOR_ID);
+ *
+ * ---------------------------------------------------------------------------
  * If you like my Plugins, want more and offten updates,
- * please support me on Boosty!
+ * please support me on Boosty or Patreon!
  * 
+ * Patreon Page:
+ *      https://www.patreon.com/KageDesu
  * Boosty Page:
  *      https://boosty.to/kagedesu
  * YouTube Channel:
@@ -282,6 +307,24 @@
  * @default 0
  * @desc Common Event called when player close inventory
  * 
+ * @param seOnInvOpen
+ * @parent OpenMapInventoryKey
+ * @text Open SE
+ * @type file
+ * @dir audio/se
+ * @require 1
+ * @default 
+ * @desc Sound effect SE when player open inventory
+ * 
+ * @param seOnInvClose
+ * @parent OpenMapInventoryKey
+ * @text Close SE
+ * @type file
+ * @dir audio/se
+ * @require 1
+ * @default
+ * @desc Sound effect SE when player close inventory
+ * 
  * @param isCloseOnlyByButton:b
  * @text Is Not close on ESC?
  * @parent OpenMapInventoryKey
@@ -305,6 +348,13 @@
  * @type string
  * @default t
  * @desc
+ * 
+ * @param isCloseInventoryWithTakeAll:b
+ * @text Close Inventory with Take All?
+ * @parent TakeAllChestKey
+ * @type boolean
+ * @default false
+ * @desc Close inventory after Take All items from chest?
  * 
  * @param useGamepad:b
  * @text Is Use Gamepad?
@@ -396,6 +446,22 @@
  * @default true
  * @desc Allow opens party selector when player want use item
  * 
+ * @param seOnPartySelectorAppears
+ * @parent AllowPartySelect
+ * @text Open SE
+ * @type file
+ * @dir audio/se
+ * @require 1
+ * @default
+ * @desc Party selector appears SE
+ * 
+ * @param partySelectorVisualsSettings:j
+ * @parent AllowPartySelect
+ * @text Visual Settings
+ * @type note
+ * @default "\"actorFaceSize\": 46\n\"actorFaceMargins\": { \"x\": 6, \"y\": 6 }\n\"equipIconSize\": 20\n\"moveDistance\": 50\n\"moveSpeed\": 10\n\"fadeOutSpeed\": 25\n\"fadeInSpeed\": 50\n\"backgroundLayerSize\": { \"w\": -1, \"h\": -1 }\n\"backgroundLayerOpacity\": 200"
+ * @desc Settings, in [param name]:[value] format. You can change values after :
+ * 
  * @param partySelectorFilter:intA
  * @parent AllowPartySelect
  * @text Forbidden Actors
@@ -423,6 +489,43 @@
  * @type struct<XY2>
  * @default {"x:e":"0","y:e":"0"}
  * @desc X and Y coordinates for description window static position  
+ * 
+ * @param customHelpWinBack
+ * @parent headerInventorySettings
+ * @text Description background
+ * @type file
+ * @dir img/pMapInventory/
+ * @require 1
+ * @default
+ * @desc [Optional] Custom image for descrption window background
+ * 
+ * @param showUseOnlyImagePerActor:b
+ * @parent headerInventorySettings
+ * @text Show Use Only Actors?
+ * @type boolean
+ * @default false
+ * @desc Who can equip image in desc. Require UseOnlyActor_ID.png and <iOnlyForActor:ID> note
+ * 
+ * @param useOnlyImagePerActorPos:struct
+ * @parent showUseOnlyImagePerActor:b
+ * @text Image position
+ * @type struct<XY>
+ * @default {"x:int":"196","y:int":"120"}
+ * @desc X and Y coordinates  
+ * 
+ * @param showWhoEquipThisItem:b
+ * @parent headerInventorySettings
+ * @text Show Who is Equip?
+ * @type boolean
+ * @default false
+ * @desc Show image of actor that equipped that item. Require InventorySlotB_Actor_ID.png
+ * 
+ * @param whoEquipImagePos:struct
+ * @parent showWhoEquipThisItem:b
+ * @text Image position
+ * @type struct<XY>
+ * @default {"x:int":"0","y:int":"0"}
+ * @desc X and Y coordinates  
  * 
  * @param spacer|chestsSettings @text‏‏‎ ‎@desc ===============================================
  * 
@@ -482,6 +585,14 @@
  * @type boolean
  * @default false
  * @desc If true, player will moving slowly when inventoy is overweighted
+ * 
+ * @param wSystemEquipmentsIncluded:b
+ * @parent UseWSystem
+ * @text Equipped items still have weight
+ * @type boolean
+ * @default false
+ * @desc If false, item weight don't counts if someone equipped this item
+ * 
  * 
  * @param spacer|limitedSystem @text‏‏‎ ‎@desc ===============================================
  * 
@@ -549,6 +660,19 @@
  * @default false
  * @desc If true, item name color in default windows will be same as item quality level color
  * 
+ * @param qualityIconsPerTier:b
+ * @parent QualitySystemColor:b
+ * @text Quality Icon per Tier?
+ * @type boolean
+ * @default false
+ * @desc If true, will be used separate item per quality level.
+ * 
+ * @param qualityLevelBelowIcon:b
+ * @parent QualitySystemColor:b
+ * @text Quality image below?
+ * @type boolean
+ * @default false
+ * @desc If true, quality level image will be BELOW icon
  * 
  * @param spacer|equipStatsSystem @text‏‏‎ ‎@desc ===============================================
  * 
@@ -564,6 +688,13 @@
  * @type boolean
  * @default false
  * @desc If false, when item is equipped you can see only gained stats (without actor ones)
+ * 
+ * @param useShortStatsText
+ * @parent AllowEquipsStats
+ * @text Show short stats text?
+ * @type boolean
+ * @default false
+ * @desc If true, you always will see only item stats (without actor ones)
  * 
  * @param ExtraDescriptionsForStats:structA
  * @parent AllowEquipsStats
@@ -630,6 +761,21 @@
  * @default ["{\"key:str\":\"1\",\"pos:struct\":\"{\\\"x:int\\\":\\\"40\\\",\\\"y:int\\\":\\\"560\\\"}\"}", "{\"key:str\":\"2\",\"pos:struct\":\"{\\\"x:int\\\":\\\"80\\\",\\\"y:int\\\":\\\"560\\\"}\"}", "{\"key:str\":\"3\",\"pos:struct\":\"{\\\"x:int\\\":\\\"120\\\",\\\"y:int\\\":\\\"560\\\"}\"}", "{\"key:str\":\"f\",\"pos:struct\":\"{\\\"x:int\\\":\\\"160\\\",\\\"y:int\\\":\\\"560\\\"}\"}"]
  * @desc Hot cells for inventory items on screen
  * 
+ * @param notUseExtraImgIconInHotCell:b
+ * @parent OIHotCells:structA
+ * @text Only IconSet icon?
+ * @type boolean
+ * @default false
+ * @desc If true - item icon in hot cell always be from IconSet, not from <iImg:X> notetag
+ * 
+ * @param hotCellCustomIconSize:i
+ * @parent OIHotCells:structA
+ * @text Custom Hot Cell Icon Size
+ * @type number
+ * @min 0
+ * @default 0
+ * @desc [Optional] Custom icon size for Hot Cell. 0 - use same as Inventory cell
+ * 
  * @param OIHotCellsEx:structA
  * @parent AllowOuterItems
  * @text Extra Groups
@@ -637,13 +783,26 @@
  * @default []
  * @desc Extra Hot cells groups, change groups by script call: MI_SwitchHotCellsGroup(index)
  * 
- * 
  * @param OIHotCellsShowDesc:bool
  * @parent AllowOuterItems
  * @text Show Description?
  * @type boolean
  * @default true
  * @desc Show description of hot cell item when hover by mouse?
+ * 
+ * @param hotCellRemoveItemAtZero:bool
+ * @parent AllowOuterItems
+ * @text Is auto remove?
+ * @type boolean
+ * @default false
+ * @desc To delete an item from a cell if it is over (zero count)?
+ * 
+ * @param isAllowAssignHotCellsByHotKeys:b
+ * @parent AllowOuterItems
+ * @text Allows key assign?
+ * @type boolean
+ * @default false
+ * @desc Assign an item from the inventory to the hot cell when the cell hot key is pressed
  * 
  * @param spacer|cellsSystem @text‏‏‎ ‎@desc ===============================================
  * 
@@ -671,6 +830,24 @@
  * @default {"iconSize:i":"30","columnsPerPage:i":"5","rowsPerPage:i":"5","iconMode:i":"1"}
  * @desc Custom Cells Settings
  * 
+ * @param userDisabledCellImage
+ * @parent headerCellsSettings
+ * @text Disabled image
+ * @type file
+ * @required 1
+ * @dir img/pMapInventory/
+ * @default
+ * @desc [Optional] Image for disabled cell (added above cell when cell is disabled)
+ * 
+ * @param disabledCellClickSe:b
+ * @parent headerCellsSettings
+ * @text Disabled Cell SE
+ * @type file
+ * @required 1
+ * @dir audio/se
+ * @default
+ * @desc [Optional] Play SE when you click on disabled cell
+ * 
  * @param spacer|extraDescriptions @text‏‏‎ ‎@desc ===============================================
  * 
  * 
@@ -680,6 +857,13 @@
  * @default []
  * @desc Description text for item when you press left mouse button on it
  * 
+ * @param spacer|altDescriptionGroup @text‏‏‎ ‎@desc ===============================================
+ * 
+ * @param altDescriptionsList:structA
+ * @text Alternative Descriptions
+ * @type struct<LAltDescItemData>[]
+ * @default []
+ * @desc Alternative description windows for items
  * 
  * @param spacer|throwOutSystem @text‏‏‎ ‎@desc ===============================================
  * 
@@ -702,6 +886,28 @@
  * @text Throw Out Settings
  * @desc Items throw out feature configuration 
  * @default {"margins:struct":"{\"x:int\":\"15\",\"y:int\":\"350\"}","startOpacity:int":"175","fadeOutSpeed:int":"5","throwOutSE":"Wind7"}
+ * 
+ * @param isShowDropOutSlider:b
+ * @parent AllowThrowOutSystem:b
+ * @text Is show slider?
+ * @type boolean
+ * @default false
+ * @desc Show a slider to select the number of items? (if > 1)
+ * 
+ * @param isDropOutToGround:b
+ * @parent AllowThrowOutSystem:b
+ * @text Is drop out to Ground?
+ * @type boolean
+ * @default false
+ * @desc [Extended Loot required] Throw an item to the ground if you drag it from the inventory
+ * 
+ * @param isDropOutViaThrowOutBox:b
+ * @parent AllowThrowOutSystem:b
+ * @text Is drop out from Throw Box?
+ * @type boolean
+ * @default false
+ * @desc [Extended Loot required] Throw an item to the ground if you drag it on Throw Box
+ * 
  * 
  * @param spacer|newCatSystem @text‏‏‎ ‎@desc ===============================================
  * 
@@ -888,10 +1094,10 @@
  * @default
  */
 /*:ru
- * @plugindesc (v.2.5)[PRO] Визуальный инвентарь
+ * @plugindesc (v.2.9)[PRO] Инвентарь
  * @author Pheonix KageDesu
  * @target MZ MV
- * @url http://kdworkshop.net/plugins/map-inventory
+ * @url https://kdworkshop.net/plugins/map-inventory
  *
  * @help
  * ---------------------------------------------------------------------------
@@ -1034,8 +1240,8 @@
  *      <aItemType: CUSTOM_TYPE|CUSTOM_TYPE> \\ может быть несколько, через |
  *      <aItemTypeColor: HEX_COLOR> \\ Цвет названия типа
  *      <itemRare: QUALITY_LEVEL> \\ Уровень качества
- * 
- *      [Только для PRO версии]
+ *      <notForHotCell> \\ данный предмет нельзя поместить в ячейку быстрого доступа (Hot Cell)
+ *      <invDescBackImg:NAME> \\ изображения для фона окна описания
  *      <weight: ITEM_WEIGHT> \\ вес предмета
  *      <weightStore: ADD_TO_MAX_WEIGHT> \\ добавляет к макс. переносимому весу
  *      <iImg: NAME> \\ картинка заместо иконки (из папки img\pMapInventory\Icons\)
@@ -1132,6 +1338,26 @@
  *      Где isCallCommonEvent true или false
  *      (если true (истинна), то общее событие будет вызванно в любом случае, даже если предмет не выбран)
  * ---------------------------------------------------------------------------
+ * Начиная с обновления 2.8 можно открыть окно описания предмета где угодно
+ *
+ * Используйте следующий вызов скрипта:
+ *  PKD_MI.showExternalItemDescriptionWindowFor(ITEM, X, Y, APPEAR_SPEED);
+ *
+ * Где ITEM - объект предмета, X, Y - координаты на экране
+ *      APPEAR_SPEED - ничего или 0 - появится сразу, любое число - скорость появления
+ *
+ * Пример:  PKD_MI.showExternalItemDescriptionWindowFor($dataItems[11], 100, 200, 25);
+ *
+ *
+ * Чтобы закрыть (уничтожить) окно, исп. вызов скрипта: PKD_MI.closeExternalDescriptionWindow();
+ *
+ * Добавлены скрипты чтобы управлять списокм запрещённых пересонажей (для выбора из группы)
+ * (см. Параметр плагина: Запрещённые персонажи)
+ *
+ * PKD_MI.addForbiddenActorForPartySelector(ACTOR_ID);
+ * PKD_MI.removeForbiddenActorForPartySelector(ACTOR_ID);
+ *
+ * ---------------------------------------------------------------------------
  * Получить PRO версию, а также поддержать меня Вы можете на Boosty
  * 
  * Boosty:
@@ -1155,6 +1381,38 @@
  * @default i
  * @desc
  * 
+ * @param ceOnInvOpen:int
+ * @parent OpenMapInventoryKey
+ * @text Open CE
+ * @type common_event
+ * @default 0
+ * @desc Общее событие, когда игрок открывает инвентарь
+ * 
+ * @param ceOnInvClose:int
+ * @parent OpenMapInventoryKey
+ * @text Close CE
+ * @type common_event
+ * @default 0
+ * @desc Общее событие, когда игрок закрывает инвентарь
+ * 
+ * @param seOnInvOpen
+ * @parent OpenMapInventoryKey
+ * @text Open SE
+ * @type file
+ * @dir audio/se
+ * @require 1
+ * @default 
+ * @desc Звуковой эффект, когда игрок открывает инвентарь
+ * 
+ * @param seOnInvClose
+ * @parent OpenMapInventoryKey
+ * @text Close SE
+ * @type file
+ * @dir audio/se
+ * @require 1
+ * @default
+ * @desc Звуковой эффект, когда игрок закрывает инвентарь
+ * 
  * @param isCloseOnlyByButton:b
  * @text Закрывать на ESC?
  * @parent OpenMapInventoryKey
@@ -1169,6 +1427,13 @@
  * @type string
  * @default t
  * @desc
+ * 
+ * @param isCloseInventoryWithTakeAll:b
+ * @text Закрывать инвентарь?
+ * @parent TakeAllChestKey
+ * @type boolean
+ * @default false
+ * @desc Закрывать инвентарь после нажатия кнопки Взять всё?
  * 
  * @param useGamepad:b
  * @text Исп. геймпад?
@@ -1261,6 +1526,22 @@
  * @default true
  * @desc Будет ли показано доп. меню для выбора сопартийца при исп. предмета?
  * 
+ * @param seOnPartySelectorAppears
+ * @parent AllowPartySelect
+ * @text Open SE
+ * @type file
+ * @dir audio/se
+ * @require 1
+ * @default
+ * @desc Звуковой эффект появления меню выбора сопартийцев
+ * 
+ * @param partySelectorVisualsSettings:j
+ * @parent AllowPartySelect
+ * @text Visual Settings
+ * @type note
+ * @default "\"actorFaceSize\": 46\n\"actorFaceMargins\": { \"x\": 6, \"y\": 6 }\n\"equipIconSize\": 20\n\"moveDistance\": 50\n\"moveSpeed\": 10\n\"fadeOutSpeed\": 25\n\"fadeInSpeed\": 50\n\"backgroundLayerSize\": { \"w\": -1, \"h\": -1 }\n\"backgroundLayerOpacity\": 200"
+ * @desc Настройки в формате [имя параметра]:[значение]. Только значение после : можно менять
+ * 
  * @param partySelectorFilter:intA
  * @parent AllowPartySelect
  * @text Запрещённые персонажи
@@ -1288,6 +1569,16 @@
  * @type struct<XY2>
  * @default {"x:e":"0","y:e":"0"}
  * @desc Позиция на экране для параметра  Статичная позиция описания
+ * 
+ * @param customHelpWinBack
+ * @parent headerInventorySettings
+ * @text Description background
+ * @type file
+ * @dir img/pMapInventory/
+ * @require 1
+ * @default
+ * @desc [Опционально] Изображение для фона окна описания предметов
+ * 
  * 
  * @param spacer|chestsSettings @text‏‏‎ ‎@desc ===============================================
  * 
@@ -1347,6 +1638,13 @@
  * @type boolean
  * @default false
  * @desc Вкл. замедление движения игрока когда у него перевес?
+ * 
+ * @param wSystemEquipmentsIncluded:b
+ * @parent UseWSystem
+ * @text Учёт экипированных вещей
+ * @type boolean
+ * @default false
+ * @desc Если ВЫКЛ., то вес экипированных вещей не учитывается
  * 
  * @param spacer|limitedSystem @text‏‏‎ ‎@desc ===============================================
  * 
@@ -1414,6 +1712,47 @@
  * @default false
  * @desc If true, item name color in default windows will be same as item quality level color
  * 
+ * @param qualityIconsPerTier:b
+ * @parent QualitySystemColor:b
+ * @text Quality Icon per Tier?
+ * @type boolean
+ * @default false
+ * @desc Если ВКЛ, то будет использоваться своя иконка для каждого уровня качества
+ * 
+ * @param qualityLevelBelowIcon:b
+ * @parent QualitySystemColor:b
+ * @text Quality image below?
+ * @type boolean
+ * @default false
+ * @desc Если ВКЛ, то изображения качестве предмета будет ПОД иконкой предмета
+ * 
+ * @param showUseOnlyImagePerActor:b
+ * @parent headerInventorySettings
+ * @text Show Use Only Actors?
+ * @type boolean
+ * @default false
+ * @desc Кто может экип. предмет. (в описании) Нужно UseOnlyActor_ID.png и заметка <iOnlyForActor:ID>
+ * 
+ * @param useOnlyImagePerActorPos:struct
+ * @parent showUseOnlyImagePerActor:b
+ * @text Image position
+ * @type struct<XY>
+ * @default {"x:int":"196","y:int":"120"}
+ * @desc Координаты X и Y  
+ * 
+ * @param showWhoEquipThisItem:b
+ * @parent headerInventorySettings
+ * @text Show Who is Equip?
+ * @type boolean
+ * @default false
+ * @desc Показывать на ком экипирован предмет. Нужен файл InventorySlotB_Actor_ID.png
+ * 
+ * @param whoEquipImagePos:struct
+ * @parent showWhoEquipThisItem:b
+ * @text Image position
+ * @type struct<XY>
+ * @default {"x:int":"0","y:int":"0"}
+ * @desc Координаты X и Y   
  * 
  * @param spacer|equipStatsSystem @text‏‏‎ ‎@desc ===============================================
  * 
@@ -1429,6 +1768,13 @@
  * @type boolean
  * @default false
  * @desc If false, when item is equipped you can see only gained stats (without actor ones)
+ * 
+ * @param useShortStatsText
+ * @parent AllowEquipsStats
+ * @text Show short stats text?
+ * @type boolean
+ * @default false
+ * @desc Если ВКЛ, то всегда будут показываться только хар-ки предмета
  * 
  * @param ExtraDescriptionsForStats:structA
  * @parent AllowEquipsStats
@@ -1485,7 +1831,7 @@
  * @text Hot Keys Enabled?
  * @type boolean
  * @default true
- * @desc Can player use hot keys to activate hot items?
+ * @desc Разрешить использование горячих клавишь для активации горячих ячеек?
  * 
  * @param OIHotCells:structA
  * @parent AllowOuterItems
@@ -1493,6 +1839,21 @@
  * @type struct<LHotCell>[]
  * @default ["{\"key:str\":\"1\",\"pos:struct\":\"{\\\"x:int\\\":\\\"40\\\",\\\"y:int\\\":\\\"560\\\"}\"}", "{\"key:str\":\"2\",\"pos:struct\":\"{\\\"x:int\\\":\\\"80\\\",\\\"y:int\\\":\\\"560\\\"}\"}", "{\"key:str\":\"3\",\"pos:struct\":\"{\\\"x:int\\\":\\\"120\\\",\\\"y:int\\\":\\\"560\\\"}\"}", "{\"key:str\":\"f\",\"pos:struct\":\"{\\\"x:int\\\":\\\"160\\\",\\\"y:int\\\":\\\"560\\\"}\"}"]
  * @desc Hot cells for inventory items on screen
+ * 
+ * @param notUseExtraImgIconInHotCell:b
+ * @parent OIHotCells:structA
+ * @text Only IconSet icon?
+ * @type boolean
+ * @default false
+ * @desc Если ВКЛ - то иконка будет всегда из IconSet, а не из <iImg:X>
+ * 
+ * @param hotCellCustomIconSize:i
+ * @parent OIHotCells:structA
+ * @text Custom Hot Cell Icon Size
+ * @type number
+ * @min 0
+ * @default 0
+ * @desc [Опционально] Размер иконок для Hot Cell. 0 - по умолчанию (как в инвентаре)
  * 
  * @param OIHotCellsEx:structA
  * @parent AllowOuterItems
@@ -1507,6 +1868,21 @@
  * @type boolean
  * @default true
  * @desc Show description of hot cell item when hover by mouse?
+ * 
+ * @param hotCellRemoveItemAtZero:bool
+ * @parent AllowOuterItems
+ * @text Is auto remove?
+ * @type boolean
+ * @default false
+ * @desc Удалять предмет из ячейки, если он закончился (кол-во = 0)?
+ * 
+ * @param isAllowAssignHotCellsByHotKeys:b
+ * @parent AllowOuterItems
+ * @text Allows key assign?
+ * @type boolean
+ * @default false
+ * @desc Назначать выделенный предмет из инвентаря в ячейку, если нажать кнопку ячейки
+ * 
  * 
  * @param spacer|cellsSystem @text‏‏‎ ‎@desc ===============================================
  * 
@@ -1525,14 +1901,32 @@
  * @text Use custom size of cells?
  * @type boolean
  * @default false
- * @desc If true, you can change size and count per page of inventory cells
+ * @desc Использовать свой размер ячеек?
  * 
  * @param CustomCellSettings:struct
  * @parent UseCustomCellsSize:b
  * @text Custom Cells Settings
  * @type struct<LCustomCell>
  * @default {"iconSize:i":"30","columnsPerPage:i":"5","rowsPerPage:i":"5","iconMode:i":"1"}
- * @desc Custom Cells Settings
+ * @desc Кастомные настройки для ячеек (размер, кол-во на стринице)
+ * 
+ * @param userDisabledCellImage
+ * @parent headerCellsSettings
+ * @text Disabled image
+ * @type file
+ * @required 1
+ * @dir img/pMapInventory/
+ * @default
+ * @desc [Опционально] Изображение для ячейки, которая недоступна (накладывается поверх)
+ * 
+ * @param disabledCellClickSe:b
+ * @parent headerCellsSettings
+ * @text Disabled Cell SE
+ * @type file
+ * @required 1
+ * @dir audio/se
+ * @default
+ * @desc [Опционально] Звук при нажатии на закрытую (недоступную) ячейку инвентаря
  * 
  * @param spacer|extraDescriptions @text‏‏‎ ‎@desc ===============================================
  * 
@@ -1565,6 +1959,29 @@
  * @text Throw Out Settings
  * @desc Настройки
  * @default {"margins:struct":"{\"x:int\":\"15\",\"y:int\":\"350\"}","startOpacity:int":"175","fadeOutSpeed:int":"5","throwOutSE":"Wind7"}
+ * 
+ * @param isShowDropOutSlider:b
+ * @parent AllowThrowOutSystem:b
+ * @text Is show slider?
+ * @type boolean
+ * @default false
+ * @desc [PRO] Показывать слайдер для выбора кол-ва предметов?
+ * 
+ * @param isDropOutToGround:b
+ * @parent AllowThrowOutSystem:b
+ * @text Is drop out to Ground?
+ * @type boolean
+ * @default false
+ * @desc [Нужен Extended Loot] Выбрасывать предмет на землю если перетащить его из инвентаря
+ * 
+ * @param isDropOutViaThrowOutBox:b
+ * @parent AllowThrowOutSystem:b
+ * @text Is drop out from Throw Box?
+ * @type boolean
+ * @default false
+ * @desc [Нужен Extended Loot] Выбрасывать предмет на землю если перетащить его на Throw Out Box
+ * 
+ * 
  * 
  * @param spacer|newCatSystem @text‏‏‎ ‎@desc ===============================================
  * 
@@ -2188,6 +2605,12 @@
   @text Condition
   @desc Script call, if return false - button will be DISABLED. Leave empty - always enabled
   @default 
+
+  @param gpCursorOffset:s
+  @text Gamepad Cursor
+  @type struct<XY>
+  @desc Gamepad Cursor offset relative this option (when this option is selected)
+  @default {"x:int":"0","y:int":"0"}
 */
 
 /*~struct~LAltDescSettings:
@@ -2332,6 +2755,80 @@
 */
 
 
+/*~struct~LAltDescItemData:
+
+  @param itemId:i
+  @text Item
+  @type item
+  @default 7
+  @desc This description will be for the specified item
+
+  @param background
+  @text Image
+  @type file
+  @require 1
+  @dir img/pMapInventory
+  @desc Background image for description window
+
+  @param marginX:i
+  @parent background
+  @text Margin X
+  @type number
+  @default 24
+  @desc How many pixels from Cursor Point or Cell to description Window
+
+  @param marginY:i
+  @parent background
+  @text Margin Y
+  @type number
+  @default 24
+  @desc How many pixels from Cursor Point or Cell to description Window
+
+  @param dataGroup
+  @text Description Data
+
+  @param specialTitle
+  @parent dataGroup
+  @text Name
+  @desc [Optional] Special name for item, leave empty for use from DB
+
+  @param specialIconIndex
+  @parent dataGroup
+  @text Icon
+  @desc [Optional] Special icon for item, leave empty for use from DB
+
+  @param extraDescription
+  @parent dataGroup
+  @text Description
+  @desc [Optional] Special description for item, leave empty for use from DB
+
+  @param visualGroup
+  @text Visual Settings
+
+  @param titleTextSettings:j
+  @parent visualGroup
+  @text Title settings
+  @type note
+  @desc Edit values after X and Y. Value should be Number (without quotes)
+  @default "\"visible\": true\n\"size\": { \"w\": 190, \"h\": 36 }\n\"alignment\": \"center\"\n\"font\": { \"face\": \"\", \"size\": 14, \"italic\": false }\n\"margins\": { \"x\": 0, \"y\": 4 }\n\"outline\": { \"color\": \"#000000\", \"width\": 2 }\n\"textColor\": \"#FFFFFF\""
+
+  @param iconSettings:j
+  @parent visualGroup
+  @text Icon settings
+  @type note
+  @desc Edit values after X and Y. Value should be Number (without quotes)
+  @default "\"visible\": true\n\"size\": 32\n\"margins\": { \"x\": 78, \"y\": 43 }\n"
+
+  @param descriptionSettings:j
+  @parent visualGroup
+  @text Description settings
+  @type note
+  @desc Edit values after X and Y. Value should be Number (without quotes)
+  @default "\"visible\": true\n\"size\": { \"w\": 146, \"h\": 196 }\n\"font\": { \"face\": \"\", \"size\": 12, \"italic\": false }\n\"margins\": { \"x\": 24, \"y\": 98 }\n"
+
+*/
+
+
 var Imported = Imported || {};
 Imported.PKD_MapInventory = true;
 
@@ -2354,7 +2851,7 @@ PKD_MI.isPro = function() {
     return true;
 };
 
-PKD_MI.Version = 250; // 2.5
+PKD_MI.Version = 290;
 
 DataManager._databaseFiles.push({
     name: '$PKD_MapInventorySettings',
@@ -2412,6 +2909,17 @@ PKD_MI.getUIMapChestSettings = function () {
 
 
 
+/*!
+ * pixi-filters - v4.2.0
+ * Compiled Fri, 05 Aug 2022 19:51:27 UTC
+ *
+ * pixi-filters is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+var __filters=function(e,n,t,r,o,i,l,a){"use strict";var s=function(e,n){return(s=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(e,n){e.__proto__=n}||function(e,n){for(var t in n)Object.prototype.hasOwnProperty.call(n,t)&&(e[t]=n[t])})(e,n)};function u(e,n){function t(){this.constructor=e}s(e,n),e.prototype=null===n?Object.create(n):(t.prototype=n.prototype,new t)}var f=function(){return(f=Object.assign||function(e){for(var n,t=arguments,r=1,o=arguments.length;r<o;r++)for(var i in n=t[r])Object.prototype.hasOwnProperty.call(n,i)&&(e[i]=n[i]);return e}).apply(this,arguments)};Object.create;Object.create;var c="attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}",m=function(e){function n(n){var t=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform float gamma;\nuniform float contrast;\nuniform float saturation;\nuniform float brightness;\nuniform float red;\nuniform float green;\nuniform float blue;\nuniform float alpha;\n\nvoid main(void)\n{\n    vec4 c = texture2D(uSampler, vTextureCoord);\n\n    if (c.a > 0.0) {\n        c.rgb /= c.a;\n\n        vec3 rgb = pow(c.rgb, vec3(1. / gamma));\n        rgb = mix(vec3(.5), mix(vec3(dot(vec3(.2125, .7154, .0721), rgb)), rgb, saturation), contrast);\n        rgb.r *= red;\n        rgb.g *= green;\n        rgb.b *= blue;\n        c.rgb = rgb * brightness;\n\n        c.rgb *= c.a;\n    }\n\n    gl_FragColor = c * alpha;\n}\n")||this;return t.gamma=1,t.saturation=1,t.contrast=1,t.brightness=1,t.red=1,t.green=1,t.blue=1,t.alpha=1,Object.assign(t,n),t}return u(n,e),n.prototype.apply=function(e,n,t,r){this.uniforms.gamma=Math.max(this.gamma,1e-4),this.uniforms.saturation=this.saturation,this.uniforms.contrast=this.contrast,this.uniforms.brightness=this.brightness,this.uniforms.red=this.red,this.uniforms.green=this.green,this.uniforms.blue=this.blue,this.uniforms.alpha=this.alpha,e.applyFilter(this,n,t,r)},n}(n.Filter),p=function(e){function n(n){void 0===n&&(n=.5);var t=e.call(this,c,"\nuniform sampler2D uSampler;\nvarying vec2 vTextureCoord;\n\nuniform float threshold;\n\nvoid main() {\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    // A simple & fast algorithm for getting brightness.\n    // It's inaccuracy , but good enought for this feature.\n    float _max = max(max(color.r, color.g), color.b);\n    float _min = min(min(color.r, color.g), color.b);\n    float brightness = (_max + _min) * 0.5;\n\n    if(brightness > threshold) {\n        gl_FragColor = color;\n    } else {\n        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);\n    }\n}\n")||this;return t.threshold=n,t}return u(n,e),Object.defineProperty(n.prototype,"threshold",{get:function(){return this.uniforms.threshold},set:function(e){this.uniforms.threshold=e},enumerable:!1,configurable:!0}),n}(n.Filter),d=function(e){function n(n,r,o){void 0===n&&(n=4),void 0===r&&(r=3),void 0===o&&(o=!1);var i=e.call(this,c,o?"\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec2 uOffset;\nuniform vec4 filterClamp;\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n\n    // Sample top left pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y + uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Sample top right pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y + uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Sample bottom right pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y - uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Sample bottom left pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y - uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Average\n    color *= 0.25;\n\n    gl_FragColor = color;\n}\n":"\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec2 uOffset;\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n\n    // Sample top left pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y + uOffset.y));\n\n    // Sample top right pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y + uOffset.y));\n\n    // Sample bottom right pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y - uOffset.y));\n\n    // Sample bottom left pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y - uOffset.y));\n\n    // Average\n    color *= 0.25;\n\n    gl_FragColor = color;\n}")||this;return i._kernels=[],i._blur=4,i._quality=3,i.uniforms.uOffset=new Float32Array(2),i._pixelSize=new t.Point,i.pixelSize=1,i._clamp=o,Array.isArray(n)?i.kernels=n:(i._blur=n,i.quality=r),i}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i=this._pixelSize.x/n._frame.width,l=this._pixelSize.y/n._frame.height;if(1===this._quality||0===this._blur)o=this._kernels[0]+.5,this.uniforms.uOffset[0]=o*i,this.uniforms.uOffset[1]=o*l,e.applyFilter(this,n,t,r);else{for(var a=e.getFilterTexture(),s=n,u=a,f=void 0,c=this._quality-1,m=0;m<c;m++)o=this._kernels[m]+.5,this.uniforms.uOffset[0]=o*i,this.uniforms.uOffset[1]=o*l,e.applyFilter(this,s,u,1),f=s,s=u,u=f;o=this._kernels[c]+.5,this.uniforms.uOffset[0]=o*i,this.uniforms.uOffset[1]=o*l,e.applyFilter(this,s,t,r),e.returnFilterTexture(a)}},n.prototype._updatePadding=function(){this.padding=Math.ceil(this._kernels.reduce((function(e,n){return e+n+.5}),0))},n.prototype._generateKernels=function(){var e=this._blur,n=this._quality,t=[e];if(e>0)for(var r=e,o=e/n,i=1;i<n;i++)r-=o,t.push(r);this._kernels=t,this._updatePadding()},Object.defineProperty(n.prototype,"kernels",{get:function(){return this._kernels},set:function(e){Array.isArray(e)&&e.length>0?(this._kernels=e,this._quality=e.length,this._blur=Math.max.apply(Math,e)):(this._kernels=[0],this._quality=1)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"clamp",{get:function(){return this._clamp},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"pixelSize",{get:function(){return this._pixelSize},set:function(e){"number"==typeof e?(this._pixelSize.x=e,this._pixelSize.y=e):Array.isArray(e)?(this._pixelSize.x=e[0],this._pixelSize.y=e[1]):e instanceof t.Point?(this._pixelSize.x=e.x,this._pixelSize.y=e.y):(this._pixelSize.x=1,this._pixelSize.y=1)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"quality",{get:function(){return this._quality},set:function(e){this._quality=Math.max(1,Math.round(e)),this._generateKernels()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blur",{get:function(){return this._blur},set:function(e){this._blur=e,this._generateKernels()},enumerable:!1,configurable:!0}),n}(n.Filter),h=function(e){function n(t){var o=e.call(this,c,"uniform sampler2D uSampler;\nvarying vec2 vTextureCoord;\n\nuniform sampler2D bloomTexture;\nuniform float bloomScale;\nuniform float brightness;\n\nvoid main() {\n    vec4 color = texture2D(uSampler, vTextureCoord);\n    color.rgb *= brightness;\n    vec4 bloomColor = vec4(texture2D(bloomTexture, vTextureCoord).rgb, 0.0);\n    bloomColor.rgb *= bloomScale;\n    gl_FragColor = color + bloomColor;\n}\n")||this;o.bloomScale=1,o.brightness=1,o._resolution=r.settings.FILTER_RESOLUTION,"number"==typeof t&&(t={threshold:t});var i=Object.assign(n.defaults,t);o.bloomScale=i.bloomScale,o.brightness=i.brightness;var l=i.kernels,a=i.blur,s=i.quality,u=i.pixelSize,f=i.resolution;return o._extractFilter=new p(i.threshold),o._extractFilter.resolution=f,o._blurFilter=l?new d(l):new d(a,s),o.pixelSize=u,o.resolution=f,o}return u(n,e),n.prototype.apply=function(e,n,t,r,o){var i=e.getFilterTexture();this._extractFilter.apply(e,n,i,1,o);var l=e.getFilterTexture();this._blurFilter.apply(e,i,l,1),this.uniforms.bloomScale=this.bloomScale,this.uniforms.brightness=this.brightness,this.uniforms.bloomTexture=l,e.applyFilter(this,n,t,r),e.returnFilterTexture(l),e.returnFilterTexture(i)},Object.defineProperty(n.prototype,"resolution",{get:function(){return this._resolution},set:function(e){this._resolution=e,this._extractFilter&&(this._extractFilter.resolution=e),this._blurFilter&&(this._blurFilter.resolution=e)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"threshold",{get:function(){return this._extractFilter.threshold},set:function(e){this._extractFilter.threshold=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"kernels",{get:function(){return this._blurFilter.kernels},set:function(e){this._blurFilter.kernels=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blur",{get:function(){return this._blurFilter.blur},set:function(e){this._blurFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"quality",{get:function(){return this._blurFilter.quality},set:function(e){this._blurFilter.quality=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"pixelSize",{get:function(){return this._blurFilter.pixelSize},set:function(e){this._blurFilter.pixelSize=e},enumerable:!1,configurable:!0}),n.defaults={threshold:.5,bloomScale:1,brightness:1,kernels:null,blur:8,quality:4,pixelSize:1,resolution:r.settings.FILTER_RESOLUTION},n}(n.Filter),g=function(e){function n(n){void 0===n&&(n=8);var t=e.call(this,c,"varying vec2 vTextureCoord;\n\nuniform vec4 filterArea;\nuniform float pixelSize;\nuniform sampler2D uSampler;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 pixelate(vec2 coord, vec2 size)\n{\n    return floor( coord / size ) * size;\n}\n\nvec2 getMod(vec2 coord, vec2 size)\n{\n    return mod( coord , size) / size;\n}\n\nfloat character(float n, vec2 p)\n{\n    p = floor(p*vec2(4.0, -4.0) + 2.5);\n\n    if (clamp(p.x, 0.0, 4.0) == p.x)\n    {\n        if (clamp(p.y, 0.0, 4.0) == p.y)\n        {\n            if (int(mod(n/exp2(p.x + 5.0*p.y), 2.0)) == 1) return 1.0;\n        }\n    }\n    return 0.0;\n}\n\nvoid main()\n{\n    vec2 coord = mapCoord(vTextureCoord);\n\n    // get the rounded color..\n    vec2 pixCoord = pixelate(coord, vec2(pixelSize));\n    pixCoord = unmapCoord(pixCoord);\n\n    vec4 color = texture2D(uSampler, pixCoord);\n\n    // determine the character to use\n    float gray = (color.r + color.g + color.b) / 3.0;\n\n    float n =  65536.0;             // .\n    if (gray > 0.2) n = 65600.0;    // :\n    if (gray > 0.3) n = 332772.0;   // *\n    if (gray > 0.4) n = 15255086.0; // o\n    if (gray > 0.5) n = 23385164.0; // &\n    if (gray > 0.6) n = 15252014.0; // 8\n    if (gray > 0.7) n = 13199452.0; // @\n    if (gray > 0.8) n = 11512810.0; // #\n\n    // get the mod..\n    vec2 modd = getMod(coord, vec2(pixelSize));\n\n    gl_FragColor = color * character( n, vec2(-1.0) + modd * 2.0);\n\n}\n")||this;return t.size=n,t}return u(n,e),Object.defineProperty(n.prototype,"size",{get:function(){return this.uniforms.pixelSize},set:function(e){this.uniforms.pixelSize=e},enumerable:!1,configurable:!0}),n}(n.Filter),v=function(e){function n(n){var t=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform float transformX;\nuniform float transformY;\nuniform vec3 lightColor;\nuniform float lightAlpha;\nuniform vec3 shadowColor;\nuniform float shadowAlpha;\n\nvoid main(void) {\n    vec2 transform = vec2(1.0 / filterArea) * vec2(transformX, transformY);\n    vec4 color = texture2D(uSampler, vTextureCoord);\n    float light = texture2D(uSampler, vTextureCoord - transform).a;\n    float shadow = texture2D(uSampler, vTextureCoord + transform).a;\n\n    color.rgb = mix(color.rgb, lightColor, clamp((color.a - light) * lightAlpha, 0.0, 1.0));\n    color.rgb = mix(color.rgb, shadowColor, clamp((color.a - shadow) * shadowAlpha, 0.0, 1.0));\n    gl_FragColor = vec4(color.rgb * color.a, color.a);\n}\n")||this;return t._thickness=2,t._angle=0,t.uniforms.lightColor=new Float32Array(3),t.uniforms.shadowColor=new Float32Array(3),Object.assign(t,{rotation:45,thickness:2,lightColor:16777215,lightAlpha:.7,shadowColor:0,shadowAlpha:.7},n),t.padding=1,t}return u(n,e),n.prototype._updateTransform=function(){this.uniforms.transformX=this._thickness*Math.cos(this._angle),this.uniforms.transformY=this._thickness*Math.sin(this._angle)},Object.defineProperty(n.prototype,"rotation",{get:function(){return this._angle/t.DEG_TO_RAD},set:function(e){this._angle=e*t.DEG_TO_RAD,this._updateTransform()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"thickness",{get:function(){return this._thickness},set:function(e){this._thickness=e,this._updateTransform()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lightColor",{get:function(){return o.rgb2hex(this.uniforms.lightColor)},set:function(e){o.hex2rgb(e,this.uniforms.lightColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lightAlpha",{get:function(){return this.uniforms.lightAlpha},set:function(e){this.uniforms.lightAlpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"shadowColor",{get:function(){return o.rgb2hex(this.uniforms.shadowColor)},set:function(e){o.hex2rgb(e,this.uniforms.shadowColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"shadowAlpha",{get:function(){return this.uniforms.shadowAlpha},set:function(e){this.uniforms.shadowAlpha=e},enumerable:!1,configurable:!0}),n}(n.Filter),y=function(e){function n(n,o,s,u){void 0===n&&(n=2),void 0===o&&(o=4),void 0===s&&(s=r.settings.FILTER_RESOLUTION),void 0===u&&(u=5);var f,c,m=e.call(this)||this;return"number"==typeof n?(f=n,c=n):n instanceof t.Point?(f=n.x,c=n.y):Array.isArray(n)&&(f=n[0],c=n[1]),m.blurXFilter=new a.BlurFilterPass(!0,f,o,s,u),m.blurYFilter=new a.BlurFilterPass(!1,c,o,s,u),m.blurYFilter.blendMode=i.BLEND_MODES.SCREEN,m.defaultFilter=new l.AlphaFilter,m}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=e.getFilterTexture();this.defaultFilter.apply(e,n,t,r),this.blurXFilter.apply(e,n,o,1),this.blurYFilter.apply(e,o,t,0),e.returnFilterTexture(o)},Object.defineProperty(n.prototype,"blur",{get:function(){return this.blurXFilter.blur},set:function(e){this.blurXFilter.blur=this.blurYFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blurX",{get:function(){return this.blurXFilter.blur},set:function(e){this.blurXFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blurY",{get:function(){return this.blurYFilter.blur},set:function(e){this.blurYFilter.blur=e},enumerable:!1,configurable:!0}),n}(n.Filter),b=function(e){function n(t){var r=e.call(this,c,"uniform float radius;\nuniform float strength;\nuniform vec2 center;\nuniform sampler2D uSampler;\nvarying vec2 vTextureCoord;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform vec2 dimensions;\n\nvoid main()\n{\n    vec2 coord = vTextureCoord * filterArea.xy;\n    coord -= center * dimensions.xy;\n    float distance = length(coord);\n    if (distance < radius) {\n        float percent = distance / radius;\n        if (strength > 0.0) {\n            coord *= mix(1.0, smoothstep(0.0, radius / distance, percent), strength * 0.75);\n        } else {\n            coord *= mix(1.0, pow(percent, 1.0 + strength * 0.75) * radius / distance, 1.0 - percent);\n        }\n    }\n    coord += center * dimensions.xy;\n    coord /= filterArea.xy;\n    vec2 clampedCoord = clamp(coord, filterClamp.xy, filterClamp.zw);\n    vec4 color = texture2D(uSampler, clampedCoord);\n    if (coord != clampedCoord) {\n        color *= max(0.0, 1.0 - length(coord - clampedCoord));\n    }\n\n    gl_FragColor = color;\n}\n")||this;return r.uniforms.dimensions=new Float32Array(2),Object.assign(r,n.defaults,t),r}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.radius},set:function(e){this.uniforms.radius=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"strength",{get:function(){return this.uniforms.strength},set:function(e){this.uniforms.strength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.center},set:function(e){this.uniforms.center=e},enumerable:!1,configurable:!0}),n.defaults={center:[.5,.5],radius:100,strength:1},n}(n.Filter),x=function(e){function t(n,t,r){void 0===t&&(t=!1),void 0===r&&(r=1);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform sampler2D colorMap;\nuniform float _mix;\nuniform float _size;\nuniform float _sliceSize;\nuniform float _slicePixelSize;\nuniform float _sliceInnerSize;\nvoid main() {\n    vec4 color = texture2D(uSampler, vTextureCoord.xy);\n\n    vec4 adjusted;\n    if (color.a > 0.0) {\n        color.rgb /= color.a;\n        float innerWidth = _size - 1.0;\n        float zSlice0 = min(floor(color.b * innerWidth), innerWidth);\n        float zSlice1 = min(zSlice0 + 1.0, innerWidth);\n        float xOffset = _slicePixelSize * 0.5 + color.r * _sliceInnerSize;\n        float s0 = xOffset + (zSlice0 * _sliceSize);\n        float s1 = xOffset + (zSlice1 * _sliceSize);\n        float yOffset = _sliceSize * 0.5 + color.g * (1.0 - _sliceSize);\n        vec4 slice0Color = texture2D(colorMap, vec2(s0,yOffset));\n        vec4 slice1Color = texture2D(colorMap, vec2(s1,yOffset));\n        float zOffset = fract(color.b * innerWidth);\n        adjusted = mix(slice0Color, slice1Color, zOffset);\n\n        color.rgb *= color.a;\n    }\n    gl_FragColor = vec4(mix(color, adjusted, _mix).rgb, color.a);\n\n}")||this;return o.mix=1,o._size=0,o._sliceSize=0,o._slicePixelSize=0,o._sliceInnerSize=0,o._nearest=!1,o._scaleMode=null,o._colorMap=null,o._scaleMode=null,o.nearest=t,o.mix=r,o.colorMap=n,o}return u(t,e),t.prototype.apply=function(e,n,t,r){this.uniforms._mix=this.mix,e.applyFilter(this,n,t,r)},Object.defineProperty(t.prototype,"colorSize",{get:function(){return this._size},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"colorMap",{get:function(){return this._colorMap},set:function(e){var t;e&&(e instanceof n.Texture||(e=n.Texture.from(e)),(null===(t=e)||void 0===t?void 0:t.baseTexture)&&(e.baseTexture.scaleMode=this._scaleMode,e.baseTexture.mipmap=i.MIPMAP_MODES.OFF,this._size=e.height,this._sliceSize=1/this._size,this._slicePixelSize=this._sliceSize/this._size,this._sliceInnerSize=this._slicePixelSize*(this._size-1),this.uniforms._size=this._size,this.uniforms._sliceSize=this._sliceSize,this.uniforms._slicePixelSize=this._slicePixelSize,this.uniforms._sliceInnerSize=this._sliceInnerSize,this.uniforms.colorMap=e),this._colorMap=e)},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"nearest",{get:function(){return this._nearest},set:function(e){this._nearest=e,this._scaleMode=e?i.SCALE_MODES.NEAREST:i.SCALE_MODES.LINEAR;var n=this._colorMap;n&&n.baseTexture&&(n.baseTexture._glTextures={},n.baseTexture.scaleMode=this._scaleMode,n.baseTexture.mipmap=i.MIPMAP_MODES.OFF,n._updateID++,n.baseTexture.emit("update",n.baseTexture))},enumerable:!1,configurable:!0}),t.prototype.updateColorMap=function(){var e=this._colorMap;e&&e.baseTexture&&(e._updateID++,e.baseTexture.emit("update",e.baseTexture),this.colorMap=e)},t.prototype.destroy=function(n){void 0===n&&(n=!1),this._colorMap&&this._colorMap.destroy(n),e.prototype.destroy.call(this)},t}(n.Filter),_=function(e){function n(n,t){void 0===n&&(n=0),void 0===t&&(t=1);var r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec3 color;\nuniform float alpha;\n\nvoid main(void) {\n    vec4 currentColor = texture2D(uSampler, vTextureCoord);\n    gl_FragColor = vec4(mix(currentColor.rgb, color.rgb, currentColor.a * alpha), currentColor.a);\n}\n")||this;return r._color=0,r._alpha=1,r.uniforms.color=new Float32Array(3),r.color=n,r.alpha=t,r}return u(n,e),Object.defineProperty(n.prototype,"color",{get:function(){return this._color},set:function(e){var n=this.uniforms.color;"number"==typeof e?(o.hex2rgb(e,n),this._color=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],this._color=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this._alpha},set:function(e){this.uniforms.alpha=e,this._alpha=e},enumerable:!1,configurable:!0}),n}(n.Filter),C=function(e){function n(n,t,r){void 0===n&&(n=16711680),void 0===t&&(t=0),void 0===r&&(r=.4);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec3 originalColor;\nuniform vec3 newColor;\nuniform float epsilon;\nvoid main(void) {\n    vec4 currentColor = texture2D(uSampler, vTextureCoord);\n    vec3 colorDiff = originalColor - (currentColor.rgb / max(currentColor.a, 0.0000000001));\n    float colorDistance = length(colorDiff);\n    float doReplace = step(colorDistance, epsilon);\n    gl_FragColor = vec4(mix(currentColor.rgb, (newColor + colorDiff) * currentColor.a, doReplace), currentColor.a);\n}\n")||this;return o._originalColor=16711680,o._newColor=0,o.uniforms.originalColor=new Float32Array(3),o.uniforms.newColor=new Float32Array(3),o.originalColor=n,o.newColor=t,o.epsilon=r,o}return u(n,e),Object.defineProperty(n.prototype,"originalColor",{get:function(){return this._originalColor},set:function(e){var n=this.uniforms.originalColor;"number"==typeof e?(o.hex2rgb(e,n),this._originalColor=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],this._originalColor=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"newColor",{get:function(){return this._newColor},set:function(e){var n=this.uniforms.newColor;"number"==typeof e?(o.hex2rgb(e,n),this._newColor=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],this._newColor=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"epsilon",{get:function(){return this.uniforms.epsilon},set:function(e){this.uniforms.epsilon=e},enumerable:!1,configurable:!0}),n}(n.Filter),S=function(e){function n(n,t,r){void 0===t&&(t=200),void 0===r&&(r=200);var o=e.call(this,c,"precision mediump float;\n\nvarying mediump vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec2 texelSize;\nuniform float matrix[9];\n\nvoid main(void)\n{\n   vec4 c11 = texture2D(uSampler, vTextureCoord - texelSize); // top left\n   vec4 c12 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y - texelSize.y)); // top center\n   vec4 c13 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y - texelSize.y)); // top right\n\n   vec4 c21 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y)); // mid left\n   vec4 c22 = texture2D(uSampler, vTextureCoord); // mid center\n   vec4 c23 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y)); // mid right\n\n   vec4 c31 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y + texelSize.y)); // bottom left\n   vec4 c32 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y + texelSize.y)); // bottom center\n   vec4 c33 = texture2D(uSampler, vTextureCoord + texelSize); // bottom right\n\n   gl_FragColor =\n       c11 * matrix[0] + c12 * matrix[1] + c13 * matrix[2] +\n       c21 * matrix[3] + c22 * matrix[4] + c23 * matrix[5] +\n       c31 * matrix[6] + c32 * matrix[7] + c33 * matrix[8];\n\n   gl_FragColor.a = c22.a;\n}\n")||this;return o.uniforms.texelSize=new Float32Array(2),o.uniforms.matrix=new Float32Array(9),void 0!==n&&(o.matrix=n),o.width=t,o.height=r,o}return u(n,e),Object.defineProperty(n.prototype,"matrix",{get:function(){return this.uniforms.matrix},set:function(e){var n=this;e.forEach((function(e,t){n.uniforms.matrix[t]=e}))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"width",{get:function(){return 1/this.uniforms.texelSize[0]},set:function(e){this.uniforms.texelSize[0]=1/e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"height",{get:function(){return 1/this.uniforms.texelSize[1]},set:function(e){this.uniforms.texelSize[1]=1/e},enumerable:!1,configurable:!0}),n}(n.Filter),F=function(e){function n(){return e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    float lum = length(texture2D(uSampler, vTextureCoord.xy).rgb);\n\n    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n\n    if (lum < 1.00)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.75)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.50)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.3)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n}\n")||this}return u(n,e),n}(n.Filter),z=function(e){function n(t){var r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\nuniform vec2 dimensions;\n\nconst float SQRT_2 = 1.414213;\n\nconst float light = 1.0;\n\nuniform float curvature;\nuniform float lineWidth;\nuniform float lineContrast;\nuniform bool verticalLine;\nuniform float noise;\nuniform float noiseSize;\n\nuniform float vignetting;\nuniform float vignettingAlpha;\nuniform float vignettingBlur;\n\nuniform float seed;\nuniform float time;\n\nfloat rand(vec2 co) {\n    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nvoid main(void)\n{\n    vec2 pixelCoord = vTextureCoord.xy * filterArea.xy;\n    vec2 dir = vec2(vTextureCoord.xy * filterArea.xy / dimensions - vec2(0.5, 0.5));\n    \n    gl_FragColor = texture2D(uSampler, vTextureCoord);\n    vec3 rgb = gl_FragColor.rgb;\n\n    if (noise > 0.0 && noiseSize > 0.0)\n    {\n        pixelCoord.x = floor(pixelCoord.x / noiseSize);\n        pixelCoord.y = floor(pixelCoord.y / noiseSize);\n        float _noise = rand(pixelCoord * noiseSize * seed) - 0.5;\n        rgb += _noise * noise;\n    }\n\n    if (lineWidth > 0.0)\n    {\n        float _c = curvature > 0. ? curvature : 1.;\n        float k = curvature > 0. ?(length(dir * dir) * 0.25 * _c * _c + 0.935 * _c) : 1.;\n        vec2 uv = dir * k;\n\n        float v = (verticalLine ? uv.x * dimensions.x : uv.y * dimensions.y) * min(1.0, 2.0 / lineWidth ) / _c;\n        float j = 1. + cos(v * 1.2 - time) * 0.5 * lineContrast;\n        rgb *= j;\n        float segment = verticalLine ? mod((dir.x + .5) * dimensions.x, 4.) : mod((dir.y + .5) * dimensions.y, 4.);\n        rgb *= 0.99 + ceil(segment) * 0.015;\n    }\n\n    if (vignetting > 0.0)\n    {\n        float outter = SQRT_2 - vignetting * SQRT_2;\n        float darker = clamp((outter - length(dir) * SQRT_2) / ( 0.00001 + vignettingBlur * SQRT_2), 0.0, 1.0);\n        rgb *= darker + (1.0 - darker) * (1.0 - vignettingAlpha);\n    }\n\n    gl_FragColor.rgb = rgb;\n}\n")||this;return r.time=0,r.seed=0,r.uniforms.dimensions=new Float32Array(2),Object.assign(r,n.defaults,t),r}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,this.uniforms.seed=this.seed,this.uniforms.time=this.time,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"curvature",{get:function(){return this.uniforms.curvature},set:function(e){this.uniforms.curvature=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lineWidth",{get:function(){return this.uniforms.lineWidth},set:function(e){this.uniforms.lineWidth=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lineContrast",{get:function(){return this.uniforms.lineContrast},set:function(e){this.uniforms.lineContrast=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"verticalLine",{get:function(){return this.uniforms.verticalLine},set:function(e){this.uniforms.verticalLine=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noise",{get:function(){return this.uniforms.noise},set:function(e){this.uniforms.noise=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noiseSize",{get:function(){return this.uniforms.noiseSize},set:function(e){this.uniforms.noiseSize=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignetting",{get:function(){return this.uniforms.vignetting},set:function(e){this.uniforms.vignetting=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingAlpha",{get:function(){return this.uniforms.vignettingAlpha},set:function(e){this.uniforms.vignettingAlpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingBlur",{get:function(){return this.uniforms.vignettingBlur},set:function(e){this.uniforms.vignettingBlur=e},enumerable:!1,configurable:!0}),n.defaults={curvature:1,lineWidth:1,lineContrast:.25,verticalLine:!1,noise:0,noiseSize:1,seed:0,vignetting:.3,vignettingAlpha:1,vignettingBlur:.3,time:0},n}(n.Filter),O=function(e){function n(n,t){void 0===n&&(n=1),void 0===t&&(t=5);var r=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform vec4 filterArea;\nuniform sampler2D uSampler;\n\nuniform float angle;\nuniform float scale;\n\nfloat pattern()\n{\n   float s = sin(angle), c = cos(angle);\n   vec2 tex = vTextureCoord * filterArea.xy;\n   vec2 point = vec2(\n       c * tex.x - s * tex.y,\n       s * tex.x + c * tex.y\n   ) * scale;\n   return (sin(point.x) * sin(point.y)) * 4.0;\n}\n\nvoid main()\n{\n   vec4 color = texture2D(uSampler, vTextureCoord);\n   float average = (color.r + color.g + color.b) / 3.0;\n   gl_FragColor = vec4(vec3(average * 10.0 - 5.0 + pattern()), color.a);\n}\n")||this;return r.scale=n,r.angle=t,r}return u(n,e),Object.defineProperty(n.prototype,"scale",{get:function(){return this.uniforms.scale},set:function(e){this.uniforms.scale=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"angle",{get:function(){return this.uniforms.angle},set:function(e){this.uniforms.angle=e},enumerable:!1,configurable:!0}),n}(n.Filter),P=function(e){function i(o){var l=e.call(this)||this;l.angle=45,l._distance=5,l._resolution=r.settings.FILTER_RESOLUTION;var a=o?f(f({},i.defaults),o):i.defaults,s=a.kernels,u=a.blur,m=a.quality,p=a.pixelSize,h=a.resolution;l._tintFilter=new n.Filter(c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform float alpha;\nuniform vec3 color;\n\nuniform vec2 shift;\nuniform vec4 inputSize;\n\nvoid main(void){\n    vec4 sample = texture2D(uSampler, vTextureCoord - shift * inputSize.zw);\n\n    // Premultiply alpha\n    sample.rgb = color.rgb * sample.a;\n\n    // alpha user alpha\n    sample *= alpha;\n\n    gl_FragColor = sample;\n}"),l._tintFilter.uniforms.color=new Float32Array(4),l._tintFilter.uniforms.shift=new t.Point,l._tintFilter.resolution=h,l._blurFilter=s?new d(s):new d(u,m),l.pixelSize=p,l.resolution=h;var g=a.shadowOnly,v=a.rotation,y=a.distance,b=a.alpha,x=a.color;return l.shadowOnly=g,l.rotation=v,l.distance=y,l.alpha=b,l.color=x,l._updatePadding(),l}return u(i,e),i.prototype.apply=function(e,n,t,r){var o=e.getFilterTexture();this._tintFilter.apply(e,n,o,1),this._blurFilter.apply(e,o,t,r),!0!==this.shadowOnly&&e.applyFilter(this,n,t,0),e.returnFilterTexture(o)},i.prototype._updatePadding=function(){this.padding=this.distance+2*this.blur},i.prototype._updateShift=function(){this._tintFilter.uniforms.shift.set(this.distance*Math.cos(this.angle),this.distance*Math.sin(this.angle))},Object.defineProperty(i.prototype,"resolution",{get:function(){return this._resolution},set:function(e){this._resolution=e,this._tintFilter&&(this._tintFilter.resolution=e),this._blurFilter&&(this._blurFilter.resolution=e)},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"distance",{get:function(){return this._distance},set:function(e){this._distance=e,this._updatePadding(),this._updateShift()},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"rotation",{get:function(){return this.angle/t.DEG_TO_RAD},set:function(e){this.angle=e*t.DEG_TO_RAD,this._updateShift()},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"alpha",{get:function(){return this._tintFilter.uniforms.alpha},set:function(e){this._tintFilter.uniforms.alpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"color",{get:function(){return o.rgb2hex(this._tintFilter.uniforms.color)},set:function(e){o.hex2rgb(e,this._tintFilter.uniforms.color)},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"kernels",{get:function(){return this._blurFilter.kernels},set:function(e){this._blurFilter.kernels=e},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"blur",{get:function(){return this._blurFilter.blur},set:function(e){this._blurFilter.blur=e,this._updatePadding()},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"quality",{get:function(){return this._blurFilter.quality},set:function(e){this._blurFilter.quality=e},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"pixelSize",{get:function(){return this._blurFilter.pixelSize},set:function(e){this._blurFilter.pixelSize=e},enumerable:!1,configurable:!0}),i.defaults={rotation:45,distance:5,color:0,alpha:.5,shadowOnly:!1,kernels:null,blur:2,quality:3,pixelSize:1,resolution:r.settings.FILTER_RESOLUTION},i}(n.Filter),A=function(e){function n(n){void 0===n&&(n=5);var t=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float strength;\nuniform vec4 filterArea;\n\n\nvoid main(void)\n{\n\tvec2 onePixel = vec2(1.0 / filterArea);\n\n\tvec4 color;\n\n\tcolor.rgb = vec3(0.5);\n\n\tcolor -= texture2D(uSampler, vTextureCoord - onePixel) * strength;\n\tcolor += texture2D(uSampler, vTextureCoord + onePixel) * strength;\n\n\tcolor.rgb = vec3((color.r + color.g + color.b) / 3.0);\n\n\tfloat alpha = texture2D(uSampler, vTextureCoord).a;\n\n\tgl_FragColor = vec4(color.rgb * alpha, alpha);\n}\n")||this;return t.strength=n,t}return u(n,e),Object.defineProperty(n.prototype,"strength",{get:function(){return this.uniforms.strength},set:function(e){this.uniforms.strength=e},enumerable:!1,configurable:!0}),n}(n.Filter),T=function(e){function r(t){var o=e.call(this,c,"// precision highp float;\n\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform vec2 dimensions;\nuniform float aspect;\n\nuniform sampler2D displacementMap;\nuniform float offset;\nuniform float sinDir;\nuniform float cosDir;\nuniform int fillMode;\n\nuniform float seed;\nuniform vec2 red;\nuniform vec2 green;\nuniform vec2 blue;\n\nconst int TRANSPARENT = 0;\nconst int ORIGINAL = 1;\nconst int LOOP = 2;\nconst int CLAMP = 3;\nconst int MIRROR = 4;\n\nvoid main(void)\n{\n    vec2 coord = (vTextureCoord * filterArea.xy) / dimensions;\n\n    if (coord.x > 1.0 || coord.y > 1.0) {\n        return;\n    }\n\n    float cx = coord.x - 0.5;\n    float cy = (coord.y - 0.5) * aspect;\n    float ny = (-sinDir * cx + cosDir * cy) / aspect + 0.5;\n\n    // displacementMap: repeat\n    // ny = ny > 1.0 ? ny - 1.0 : (ny < 0.0 ? 1.0 + ny : ny);\n\n    // displacementMap: mirror\n    ny = ny > 1.0 ? 2.0 - ny : (ny < 0.0 ? -ny : ny);\n\n    vec4 dc = texture2D(displacementMap, vec2(0.5, ny));\n\n    float displacement = (dc.r - dc.g) * (offset / filterArea.x);\n\n    coord = vTextureCoord + vec2(cosDir * displacement, sinDir * displacement * aspect);\n\n    if (fillMode == CLAMP) {\n        coord = clamp(coord, filterClamp.xy, filterClamp.zw);\n    } else {\n        if( coord.x > filterClamp.z ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.x -= filterClamp.z;\n            } else if (fillMode == MIRROR) {\n                coord.x = filterClamp.z * 2.0 - coord.x;\n            }\n        } else if( coord.x < filterClamp.x ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.x += filterClamp.z;\n            } else if (fillMode == MIRROR) {\n                coord.x *= -filterClamp.z;\n            }\n        }\n\n        if( coord.y > filterClamp.w ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.y -= filterClamp.w;\n            } else if (fillMode == MIRROR) {\n                coord.y = filterClamp.w * 2.0 - coord.y;\n            }\n        } else if( coord.y < filterClamp.y ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.y += filterClamp.w;\n            } else if (fillMode == MIRROR) {\n                coord.y *= -filterClamp.w;\n            }\n        }\n    }\n\n    gl_FragColor.r = texture2D(uSampler, coord + red * (1.0 - seed * 0.4) / filterArea.xy).r;\n    gl_FragColor.g = texture2D(uSampler, coord + green * (1.0 - seed * 0.3) / filterArea.xy).g;\n    gl_FragColor.b = texture2D(uSampler, coord + blue * (1.0 - seed * 0.2) / filterArea.xy).b;\n    gl_FragColor.a = texture2D(uSampler, coord).a;\n}\n")||this;return o.offset=100,o.fillMode=r.TRANSPARENT,o.average=!1,o.seed=0,o.minSize=8,o.sampleSize=512,o._slices=0,o._offsets=new Float32Array(1),o._sizes=new Float32Array(1),o._direction=-1,o.uniforms.dimensions=new Float32Array(2),o._canvas=document.createElement("canvas"),o._canvas.width=4,o._canvas.height=o.sampleSize,o.texture=n.Texture.from(o._canvas,{scaleMode:i.SCALE_MODES.NEAREST}),Object.assign(o,r.defaults,t),o}return u(r,e),r.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,this.uniforms.aspect=l/i,this.uniforms.seed=this.seed,this.uniforms.offset=this.offset,this.uniforms.fillMode=this.fillMode,e.applyFilter(this,n,t,r)},r.prototype._randomizeSizes=function(){var e=this._sizes,n=this._slices-1,t=this.sampleSize,r=Math.min(this.minSize/t,.9/this._slices);if(this.average){for(var o=this._slices,i=1,l=0;l<n;l++){var a=i/(o-l),s=Math.max(a*(1-.6*Math.random()),r);e[l]=s,i-=s}e[n]=i}else{i=1;var u=Math.sqrt(1/this._slices);for(l=0;l<n;l++){s=Math.max(u*i*Math.random(),r);e[l]=s,i-=s}e[n]=i}this.shuffle()},r.prototype.shuffle=function(){for(var e=this._sizes,n=this._slices-1;n>0;n--){var t=Math.random()*n>>0,r=e[n];e[n]=e[t],e[t]=r}},r.prototype._randomizeOffsets=function(){for(var e=0;e<this._slices;e++)this._offsets[e]=Math.random()*(Math.random()<.5?-1:1)},r.prototype.refresh=function(){this._randomizeSizes(),this._randomizeOffsets(),this.redraw()},r.prototype.redraw=function(){var e,n=this.sampleSize,t=this.texture,r=this._canvas.getContext("2d");r.clearRect(0,0,8,n);for(var o=0,i=0;i<this._slices;i++){e=Math.floor(256*this._offsets[i]);var l=this._sizes[i]*n,a=e>0?e:0,s=e<0?-e:0;r.fillStyle="rgba("+a+", "+s+", 0, 1)",r.fillRect(0,o>>0,n,l+1>>0),o+=l}t.baseTexture.update(),this.uniforms.displacementMap=t},Object.defineProperty(r.prototype,"sizes",{get:function(){return this._sizes},set:function(e){for(var n=Math.min(this._slices,e.length),t=0;t<n;t++)this._sizes[t]=e[t]},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"offsets",{get:function(){return this._offsets},set:function(e){for(var n=Math.min(this._slices,e.length),t=0;t<n;t++)this._offsets[t]=e[t]},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"slices",{get:function(){return this._slices},set:function(e){this._slices!==e&&(this._slices=e,this.uniforms.slices=e,this._sizes=this.uniforms.slicesWidth=new Float32Array(e),this._offsets=this.uniforms.slicesOffset=new Float32Array(e),this.refresh())},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"direction",{get:function(){return this._direction},set:function(e){if(this._direction!==e){this._direction=e;var n=e*t.DEG_TO_RAD;this.uniforms.sinDir=Math.sin(n),this.uniforms.cosDir=Math.cos(n)}},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"red",{get:function(){return this.uniforms.red},set:function(e){this.uniforms.red=e},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"green",{get:function(){return this.uniforms.green},set:function(e){this.uniforms.green=e},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"blue",{get:function(){return this.uniforms.blue},set:function(e){this.uniforms.blue=e},enumerable:!1,configurable:!0}),r.prototype.destroy=function(){var e;null===(e=this.texture)||void 0===e||e.destroy(!0),this.texture=this._canvas=this.red=this.green=this.blue=this._sizes=this._offsets=null},r.defaults={slices:5,offset:100,direction:0,fillMode:0,average:!1,seed:0,red:[0,0],green:[0,0],blue:[0,0],minSize:8,sampleSize:512},r.TRANSPARENT=0,r.ORIGINAL=1,r.LOOP=2,r.CLAMP=3,r.MIRROR=4,r}(n.Filter),w=function(e){function n(t){var r=this,o=Object.assign({},n.defaults,t),i=o.outerStrength,l=o.innerStrength,a=o.color,s=o.knockout,u=o.quality,f=Math.round(o.distance);return(r=e.call(this,c,"varying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\n\nuniform float outerStrength;\nuniform float innerStrength;\n\nuniform vec4 glowColor;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform bool knockout;\n\nconst float PI = 3.14159265358979323846264;\n\nconst float DIST = __DIST__;\nconst float ANGLE_STEP_SIZE = min(__ANGLE_STEP_SIZE__, PI * 2.0);\nconst float ANGLE_STEP_NUM = ceil(PI * 2.0 / ANGLE_STEP_SIZE);\n\nconst float MAX_TOTAL_ALPHA = ANGLE_STEP_NUM * DIST * (DIST + 1.0) / 2.0;\n\nvoid main(void) {\n    vec2 px = vec2(1.0 / filterArea.x, 1.0 / filterArea.y);\n\n    float totalAlpha = 0.0;\n\n    vec2 direction;\n    vec2 displaced;\n    vec4 curColor;\n\n    for (float angle = 0.0; angle < PI * 2.0; angle += ANGLE_STEP_SIZE) {\n       direction = vec2(cos(angle), sin(angle)) * px;\n\n       for (float curDistance = 0.0; curDistance < DIST; curDistance++) {\n           displaced = clamp(vTextureCoord + direction * \n                   (curDistance + 1.0), filterClamp.xy, filterClamp.zw);\n\n           curColor = texture2D(uSampler, displaced);\n\n           totalAlpha += (DIST - curDistance) * curColor.a;\n       }\n    }\n    \n    curColor = texture2D(uSampler, vTextureCoord);\n\n    float alphaRatio = (totalAlpha / MAX_TOTAL_ALPHA);\n\n    float innerGlowAlpha = (1.0 - alphaRatio) * innerStrength * curColor.a;\n    float innerGlowStrength = min(1.0, innerGlowAlpha);\n    \n    vec4 innerColor = mix(curColor, glowColor, innerGlowStrength);\n\n    float outerGlowAlpha = alphaRatio * outerStrength * (1. - curColor.a);\n    float outerGlowStrength = min(1.0 - innerColor.a, outerGlowAlpha);\n\n    vec4 outerGlowColor = outerGlowStrength * glowColor.rgba;\n    \n    if (knockout) {\n      float resultAlpha = outerGlowAlpha + innerGlowAlpha;\n      gl_FragColor = vec4(glowColor.rgb * resultAlpha, resultAlpha);\n    }\n    else {\n      gl_FragColor = innerColor + outerGlowColor;\n    }\n}\n".replace(/__ANGLE_STEP_SIZE__/gi,""+(1/u/f).toFixed(7)).replace(/__DIST__/gi,f.toFixed(0)+".0"))||this).uniforms.glowColor=new Float32Array([0,0,0,1]),Object.assign(r,{color:a,outerStrength:i,innerStrength:l,padding:f,knockout:s}),r}return u(n,e),Object.defineProperty(n.prototype,"color",{get:function(){return o.rgb2hex(this.uniforms.glowColor)},set:function(e){o.hex2rgb(e,this.uniforms.glowColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"outerStrength",{get:function(){return this.uniforms.outerStrength},set:function(e){this.uniforms.outerStrength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"innerStrength",{get:function(){return this.uniforms.innerStrength},set:function(e){this.uniforms.innerStrength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"knockout",{get:function(){return this.uniforms.knockout},set:function(e){this.uniforms.knockout=e},enumerable:!1,configurable:!0}),n.defaults={distance:10,outerStrength:4,innerStrength:0,color:16777215,quality:.1,knockout:!1},n}(n.Filter),D=function(e){function n(r){var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec2 dimensions;\n\nuniform vec2 light;\nuniform bool parallel;\nuniform float aspect;\n\nuniform float gain;\nuniform float lacunarity;\nuniform float time;\nuniform float alpha;\n\n${perlin}\n\nvoid main(void) {\n    vec2 coord = vTextureCoord * filterArea.xy / dimensions.xy;\n\n    float d;\n\n    if (parallel) {\n        float _cos = light.x;\n        float _sin = light.y;\n        d = (_cos * coord.x) + (_sin * coord.y * aspect);\n    } else {\n        float dx = coord.x - light.x / dimensions.x;\n        float dy = (coord.y - light.y / dimensions.y) * aspect;\n        float dis = sqrt(dx * dx + dy * dy) + 0.00001;\n        d = dy / dis;\n    }\n\n    vec3 dir = vec3(d, d, 0.0);\n\n    float noise = turb(dir + vec3(time, 0.0, 62.1 + time) * 0.05, vec3(480.0, 320.0, 480.0), lacunarity, gain);\n    noise = mix(noise, 0.0, 0.3);\n    //fade vertically.\n    vec4 mist = vec4(noise, noise, noise, 1.0) * (1.0 - coord.y);\n    mist.a = 1.0;\n    // apply user alpha\n    mist *= alpha;\n\n    gl_FragColor = texture2D(uSampler, vTextureCoord) + mist;\n\n}\n".replace("${perlin}","vec3 mod289(vec3 x)\n{\n    return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\nvec4 mod289(vec4 x)\n{\n    return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\nvec4 permute(vec4 x)\n{\n    return mod289(((x * 34.0) + 1.0) * x);\n}\nvec4 taylorInvSqrt(vec4 r)\n{\n    return 1.79284291400159 - 0.85373472095314 * r;\n}\nvec3 fade(vec3 t)\n{\n    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);\n}\n// Classic Perlin noise, periodic variant\nfloat pnoise(vec3 P, vec3 rep)\n{\n    vec3 Pi0 = mod(floor(P), rep); // Integer part, modulo period\n    vec3 Pi1 = mod(Pi0 + vec3(1.0), rep); // Integer part + 1, mod period\n    Pi0 = mod289(Pi0);\n    Pi1 = mod289(Pi1);\n    vec3 Pf0 = fract(P); // Fractional part for interpolation\n    vec3 Pf1 = Pf0 - vec3(1.0); // Fractional part - 1.0\n    vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);\n    vec4 iy = vec4(Pi0.yy, Pi1.yy);\n    vec4 iz0 = Pi0.zzzz;\n    vec4 iz1 = Pi1.zzzz;\n    vec4 ixy = permute(permute(ix) + iy);\n    vec4 ixy0 = permute(ixy + iz0);\n    vec4 ixy1 = permute(ixy + iz1);\n    vec4 gx0 = ixy0 * (1.0 / 7.0);\n    vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;\n    gx0 = fract(gx0);\n    vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);\n    vec4 sz0 = step(gz0, vec4(0.0));\n    gx0 -= sz0 * (step(0.0, gx0) - 0.5);\n    gy0 -= sz0 * (step(0.0, gy0) - 0.5);\n    vec4 gx1 = ixy1 * (1.0 / 7.0);\n    vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;\n    gx1 = fract(gx1);\n    vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);\n    vec4 sz1 = step(gz1, vec4(0.0));\n    gx1 -= sz1 * (step(0.0, gx1) - 0.5);\n    gy1 -= sz1 * (step(0.0, gy1) - 0.5);\n    vec3 g000 = vec3(gx0.x, gy0.x, gz0.x);\n    vec3 g100 = vec3(gx0.y, gy0.y, gz0.y);\n    vec3 g010 = vec3(gx0.z, gy0.z, gz0.z);\n    vec3 g110 = vec3(gx0.w, gy0.w, gz0.w);\n    vec3 g001 = vec3(gx1.x, gy1.x, gz1.x);\n    vec3 g101 = vec3(gx1.y, gy1.y, gz1.y);\n    vec3 g011 = vec3(gx1.z, gy1.z, gz1.z);\n    vec3 g111 = vec3(gx1.w, gy1.w, gz1.w);\n    vec4 norm0 = taylorInvSqrt(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));\n    g000 *= norm0.x;\n    g010 *= norm0.y;\n    g100 *= norm0.z;\n    g110 *= norm0.w;\n    vec4 norm1 = taylorInvSqrt(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));\n    g001 *= norm1.x;\n    g011 *= norm1.y;\n    g101 *= norm1.z;\n    g111 *= norm1.w;\n    float n000 = dot(g000, Pf0);\n    float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));\n    float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));\n    float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));\n    float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));\n    float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));\n    float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));\n    float n111 = dot(g111, Pf1);\n    vec3 fade_xyz = fade(Pf0);\n    vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);\n    vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);\n    float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);\n    return 2.2 * n_xyz;\n}\nfloat turb(vec3 P, vec3 rep, float lacunarity, float gain)\n{\n    float sum = 0.0;\n    float sc = 1.0;\n    float totalgain = 1.0;\n    for (float i = 0.0; i < 6.0; i++)\n    {\n        sum += totalgain * pnoise(P * sc, rep);\n        sc *= lacunarity;\n        totalgain *= gain;\n    }\n    return abs(sum);\n}\n"))||this;o.parallel=!0,o.time=0,o._angle=0,o.uniforms.dimensions=new Float32Array(2);var i=Object.assign(n.defaults,r);return o._angleLight=new t.Point,o.angle=i.angle,o.gain=i.gain,o.lacunarity=i.lacunarity,o.alpha=i.alpha,o.parallel=i.parallel,o.center=i.center,o.time=i.time,o}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.light=this.parallel?this._angleLight:this.center,this.uniforms.parallel=this.parallel,this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,this.uniforms.aspect=l/i,this.uniforms.time=this.time,this.uniforms.alpha=this.alpha,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"angle",{get:function(){return this._angle},set:function(e){this._angle=e;var n=e*t.DEG_TO_RAD;this._angleLight.x=Math.cos(n),this._angleLight.y=Math.sin(n)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"gain",{get:function(){return this.uniforms.gain},set:function(e){this.uniforms.gain=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lacunarity",{get:function(){return this.uniforms.lacunarity},set:function(e){this.uniforms.lacunarity=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this.uniforms.alpha},set:function(e){this.uniforms.alpha=e},enumerable:!1,configurable:!0}),n.defaults={angle:30,gain:.5,lacunarity:2.5,time:0,parallel:!0,center:[0,0],alpha:1},n}(n.Filter),j=function(e){function n(n,r,o){void 0===n&&(n=[0,0]),void 0===r&&(r=5),void 0===o&&(o=0);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform vec2 uVelocity;\nuniform int uKernelSize;\nuniform float uOffset;\n\nconst int MAX_KERNEL_SIZE = 2048;\n\n// Notice:\n// the perfect way:\n//    int kernelSize = min(uKernelSize, MAX_KERNELSIZE);\n// BUT in real use-case , uKernelSize < MAX_KERNELSIZE almost always.\n// So use uKernelSize directly.\n\nvoid main(void)\n{\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    if (uKernelSize == 0)\n    {\n        gl_FragColor = color;\n        return;\n    }\n\n    vec2 velocity = uVelocity / filterArea.xy;\n    float offset = -uOffset / length(uVelocity) - 0.5;\n    int k = uKernelSize - 1;\n\n    for(int i = 0; i < MAX_KERNEL_SIZE - 1; i++) {\n        if (i == k) {\n            break;\n        }\n        vec2 bias = velocity * (float(i) / float(k) + offset);\n        color += texture2D(uSampler, vTextureCoord + bias);\n    }\n    gl_FragColor = color / float(uKernelSize);\n}\n")||this;return i.kernelSize=5,i.uniforms.uVelocity=new Float32Array(2),i._velocity=new t.ObservablePoint(i.velocityChanged,i),i.setVelocity(n),i.kernelSize=r,i.offset=o,i}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=this.velocity,i=o.x,l=o.y;this.uniforms.uKernelSize=0!==i||0!==l?this.kernelSize:0,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"velocity",{get:function(){return this._velocity},set:function(e){this.setVelocity(e)},enumerable:!1,configurable:!0}),n.prototype.setVelocity=function(e){if(Array.isArray(e)){var n=e[0],t=e[1];this._velocity.set(n,t)}else this._velocity.copyFrom(e)},n.prototype.velocityChanged=function(){this.uniforms.uVelocity[0]=this._velocity.x,this.uniforms.uVelocity[1]=this._velocity.y,this.padding=1+(Math.max(Math.abs(this._velocity.x),Math.abs(this._velocity.y))>>0)},Object.defineProperty(n.prototype,"offset",{get:function(){return this.uniforms.uOffset},set:function(e){this.uniforms.uOffset=e},enumerable:!1,configurable:!0}),n}(n.Filter),M=function(e){function n(n,t,r){void 0===t&&(t=.05),void 0===r&&(r=n.length);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform float epsilon;\n\nconst int MAX_COLORS = %maxColors%;\n\nuniform vec3 originalColors[MAX_COLORS];\nuniform vec3 targetColors[MAX_COLORS];\n\nvoid main(void)\n{\n    gl_FragColor = texture2D(uSampler, vTextureCoord);\n\n    float alpha = gl_FragColor.a;\n    if (alpha < 0.0001)\n    {\n      return;\n    }\n\n    vec3 color = gl_FragColor.rgb / alpha;\n\n    for(int i = 0; i < MAX_COLORS; i++)\n    {\n      vec3 origColor = originalColors[i];\n      if (origColor.r < 0.0)\n      {\n        break;\n      }\n      vec3 colorDiff = origColor - color;\n      if (length(colorDiff) < epsilon)\n      {\n        vec3 targetColor = targetColors[i];\n        gl_FragColor = vec4((targetColor + colorDiff) * alpha, alpha);\n        return;\n      }\n    }\n}\n".replace(/%maxColors%/g,r.toFixed(0)))||this;return o._replacements=[],o._maxColors=0,o.epsilon=t,o._maxColors=r,o.uniforms.originalColors=new Float32Array(3*r),o.uniforms.targetColors=new Float32Array(3*r),o.replacements=n,o}return u(n,e),Object.defineProperty(n.prototype,"replacements",{get:function(){return this._replacements},set:function(e){var n=this.uniforms.originalColors,t=this.uniforms.targetColors,r=e.length;if(r>this._maxColors)throw new Error("Length of replacements ("+r+") exceeds the maximum colors length ("+this._maxColors+")");n[3*r]=-1;for(var i=0;i<r;i++){var l=e[i],a=l[0];"number"==typeof a?a=o.hex2rgb(a):l[0]=o.rgb2hex(a),n[3*i]=a[0],n[3*i+1]=a[1],n[3*i+2]=a[2];var s=l[1];"number"==typeof s?s=o.hex2rgb(s):l[1]=o.rgb2hex(s),t[3*i]=s[0],t[3*i+1]=s[1],t[3*i+2]=s[2]}this._replacements=e},enumerable:!1,configurable:!0}),n.prototype.refresh=function(){this.replacements=this._replacements},Object.defineProperty(n.prototype,"maxColors",{get:function(){return this._maxColors},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"epsilon",{get:function(){return this.uniforms.epsilon},set:function(e){this.uniforms.epsilon=e},enumerable:!1,configurable:!0}),n}(n.Filter),R=function(e){function n(t,r){void 0===r&&(r=0);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec2 dimensions;\n\nuniform float sepia;\nuniform float noise;\nuniform float noiseSize;\nuniform float scratch;\nuniform float scratchDensity;\nuniform float scratchWidth;\nuniform float vignetting;\nuniform float vignettingAlpha;\nuniform float vignettingBlur;\nuniform float seed;\n\nconst float SQRT_2 = 1.414213;\nconst vec3 SEPIA_RGB = vec3(112.0 / 255.0, 66.0 / 255.0, 20.0 / 255.0);\n\nfloat rand(vec2 co) {\n    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nvec3 Overlay(vec3 src, vec3 dst)\n{\n    // if (dst <= 0.5) then: 2 * src * dst\n    // if (dst > 0.5) then: 1 - 2 * (1 - dst) * (1 - src)\n    return vec3((dst.x <= 0.5) ? (2.0 * src.x * dst.x) : (1.0 - 2.0 * (1.0 - dst.x) * (1.0 - src.x)),\n                (dst.y <= 0.5) ? (2.0 * src.y * dst.y) : (1.0 - 2.0 * (1.0 - dst.y) * (1.0 - src.y)),\n                (dst.z <= 0.5) ? (2.0 * src.z * dst.z) : (1.0 - 2.0 * (1.0 - dst.z) * (1.0 - src.z)));\n}\n\n\nvoid main()\n{\n    gl_FragColor = texture2D(uSampler, vTextureCoord);\n    vec3 color = gl_FragColor.rgb;\n\n    if (sepia > 0.0)\n    {\n        float gray = (color.x + color.y + color.z) / 3.0;\n        vec3 grayscale = vec3(gray);\n\n        color = Overlay(SEPIA_RGB, grayscale);\n\n        color = grayscale + sepia * (color - grayscale);\n    }\n\n    vec2 coord = vTextureCoord * filterArea.xy / dimensions.xy;\n\n    if (vignetting > 0.0)\n    {\n        float outter = SQRT_2 - vignetting * SQRT_2;\n        vec2 dir = vec2(vec2(0.5, 0.5) - coord);\n        dir.y *= dimensions.y / dimensions.x;\n        float darker = clamp((outter - length(dir) * SQRT_2) / ( 0.00001 + vignettingBlur * SQRT_2), 0.0, 1.0);\n        color.rgb *= darker + (1.0 - darker) * (1.0 - vignettingAlpha);\n    }\n\n    if (scratchDensity > seed && scratch != 0.0)\n    {\n        float phase = seed * 256.0;\n        float s = mod(floor(phase), 2.0);\n        float dist = 1.0 / scratchDensity;\n        float d = distance(coord, vec2(seed * dist, abs(s - seed * dist)));\n        if (d < seed * 0.6 + 0.4)\n        {\n            highp float period = scratchDensity * 10.0;\n\n            float xx = coord.x * period + phase;\n            float aa = abs(mod(xx, 0.5) * 4.0);\n            float bb = mod(floor(xx / 0.5), 2.0);\n            float yy = (1.0 - bb) * aa + bb * (2.0 - aa);\n\n            float kk = 2.0 * period;\n            float dw = scratchWidth / dimensions.x * (0.75 + seed);\n            float dh = dw * kk;\n\n            float tine = (yy - (2.0 - dh));\n\n            if (tine > 0.0) {\n                float _sign = sign(scratch);\n\n                tine = s * tine / period + scratch + 0.1;\n                tine = clamp(tine + 1.0, 0.5 + _sign * 0.5, 1.5 + _sign * 0.5);\n\n                color.rgb *= tine;\n            }\n        }\n    }\n\n    if (noise > 0.0 && noiseSize > 0.0)\n    {\n        vec2 pixelCoord = vTextureCoord.xy * filterArea.xy;\n        pixelCoord.x = floor(pixelCoord.x / noiseSize);\n        pixelCoord.y = floor(pixelCoord.y / noiseSize);\n        // vec2 d = pixelCoord * noiseSize * vec2(1024.0 + seed * 512.0, 1024.0 - seed * 512.0);\n        // float _noise = snoise(d) * 0.5;\n        float _noise = rand(pixelCoord * noiseSize * seed) - 0.5;\n        color += _noise * noise;\n    }\n\n    gl_FragColor.rgb = color;\n}\n")||this;return o.seed=0,o.uniforms.dimensions=new Float32Array(2),"number"==typeof t?(o.seed=t,t=void 0):o.seed=r,Object.assign(o,n.defaults,t),o}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i;this.uniforms.dimensions[0]=null===(o=n.filterFrame)||void 0===o?void 0:o.width,this.uniforms.dimensions[1]=null===(i=n.filterFrame)||void 0===i?void 0:i.height,this.uniforms.seed=this.seed,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"sepia",{get:function(){return this.uniforms.sepia},set:function(e){this.uniforms.sepia=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noise",{get:function(){return this.uniforms.noise},set:function(e){this.uniforms.noise=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noiseSize",{get:function(){return this.uniforms.noiseSize},set:function(e){this.uniforms.noiseSize=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"scratch",{get:function(){return this.uniforms.scratch},set:function(e){this.uniforms.scratch=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"scratchDensity",{get:function(){return this.uniforms.scratchDensity},set:function(e){this.uniforms.scratchDensity=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"scratchWidth",{get:function(){return this.uniforms.scratchWidth},set:function(e){this.uniforms.scratchWidth=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignetting",{get:function(){return this.uniforms.vignetting},set:function(e){this.uniforms.vignetting=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingAlpha",{get:function(){return this.uniforms.vignettingAlpha},set:function(e){this.uniforms.vignettingAlpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingBlur",{get:function(){return this.uniforms.vignettingBlur},set:function(e){this.uniforms.vignettingBlur=e},enumerable:!1,configurable:!0}),n.defaults={sepia:.3,noise:.3,noiseSize:1,scratch:.5,scratchDensity:.3,scratchWidth:1,vignetting:.3,vignettingAlpha:1,vignettingBlur:.3},n}(n.Filter),E=function(e){function n(t,r,o){void 0===t&&(t=1),void 0===r&&(r=0),void 0===o&&(o=.1);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec2 thickness;\nuniform vec4 outlineColor;\nuniform vec4 filterClamp;\n\nconst float DOUBLE_PI = 3.14159265358979323846264 * 2.;\n\nvoid main(void) {\n    vec4 ownColor = texture2D(uSampler, vTextureCoord);\n    vec4 curColor;\n    float maxAlpha = 0.;\n    vec2 displaced;\n    for (float angle = 0.; angle <= DOUBLE_PI; angle += ${angleStep}) {\n        displaced.x = vTextureCoord.x + thickness.x * cos(angle);\n        displaced.y = vTextureCoord.y + thickness.y * sin(angle);\n        curColor = texture2D(uSampler, clamp(displaced, filterClamp.xy, filterClamp.zw));\n        maxAlpha = max(maxAlpha, curColor.a);\n    }\n    float resultAlpha = max(maxAlpha, ownColor.a);\n    gl_FragColor = vec4((ownColor.rgb + outlineColor.rgb * (1. - ownColor.a)) * resultAlpha, resultAlpha);\n}\n".replace(/\$\{angleStep\}/,n.getAngleStep(o)))||this;return i._thickness=1,i.uniforms.thickness=new Float32Array([0,0]),i.uniforms.outlineColor=new Float32Array([0,0,0,1]),Object.assign(i,{thickness:t,color:r,quality:o}),i}return u(n,e),n.getAngleStep=function(e){var t=Math.max(e*n.MAX_SAMPLES,n.MIN_SAMPLES);return(2*Math.PI/t).toFixed(7)},n.prototype.apply=function(e,n,t,r){this.uniforms.thickness[0]=this._thickness/n._frame.width,this.uniforms.thickness[1]=this._thickness/n._frame.height,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"color",{get:function(){return o.rgb2hex(this.uniforms.outlineColor)},set:function(e){o.hex2rgb(e,this.uniforms.outlineColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"thickness",{get:function(){return this._thickness},set:function(e){this._thickness=e,this.padding=e},enumerable:!1,configurable:!0}),n.MIN_SAMPLES=1,n.MAX_SAMPLES=100,n}(n.Filter),I=function(e){function n(n){void 0===n&&(n=10);var t=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform vec2 size;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 pixelate(vec2 coord, vec2 size)\n{\n\treturn floor( coord / size ) * size;\n}\n\nvoid main(void)\n{\n    vec2 coord = mapCoord(vTextureCoord);\n\n    coord = pixelate(coord, size);\n\n    coord = unmapCoord(coord);\n\n    gl_FragColor = texture2D(uSampler, coord);\n}\n")||this;return t.size=n,t}return u(n,e),Object.defineProperty(n.prototype,"size",{get:function(){return this.uniforms.size},set:function(e){"number"==typeof e&&(e=[e,e]),this.uniforms.size=e},enumerable:!1,configurable:!0}),n}(n.Filter),k=function(e){function n(n,t,r,o){void 0===n&&(n=0),void 0===t&&(t=[0,0]),void 0===r&&(r=5),void 0===o&&(o=-1);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform float uRadian;\nuniform vec2 uCenter;\nuniform float uRadius;\nuniform int uKernelSize;\n\nconst int MAX_KERNEL_SIZE = 2048;\n\nvoid main(void)\n{\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    if (uKernelSize == 0)\n    {\n        gl_FragColor = color;\n        return;\n    }\n\n    float aspect = filterArea.y / filterArea.x;\n    vec2 center = uCenter.xy / filterArea.xy;\n    float gradient = uRadius / filterArea.x * 0.3;\n    float radius = uRadius / filterArea.x - gradient * 0.5;\n    int k = uKernelSize - 1;\n\n    vec2 coord = vTextureCoord;\n    vec2 dir = vec2(center - coord);\n    float dist = length(vec2(dir.x, dir.y * aspect));\n\n    float radianStep = uRadian;\n    if (radius >= 0.0 && dist > radius) {\n        float delta = dist - radius;\n        float gap = gradient;\n        float scale = 1.0 - abs(delta / gap);\n        if (scale <= 0.0) {\n            gl_FragColor = color;\n            return;\n        }\n        radianStep *= scale;\n    }\n    radianStep /= float(k);\n\n    float s = sin(radianStep);\n    float c = cos(radianStep);\n    mat2 rotationMatrix = mat2(vec2(c, -s), vec2(s, c));\n\n    for(int i = 0; i < MAX_KERNEL_SIZE - 1; i++) {\n        if (i == k) {\n            break;\n        }\n\n        coord -= center;\n        coord.y *= aspect;\n        coord = rotationMatrix * coord;\n        coord.y /= aspect;\n        coord += center;\n\n        vec4 sample = texture2D(uSampler, coord);\n\n        // switch to pre-multiplied alpha to correctly blur transparent images\n        // sample.rgb *= sample.a;\n\n        color += sample;\n    }\n\n    gl_FragColor = color / float(uKernelSize);\n}\n")||this;return i._angle=0,i.angle=n,i.center=t,i.kernelSize=r,i.radius=o,i}return u(n,e),n.prototype.apply=function(e,n,t,r){this.uniforms.uKernelSize=0!==this._angle?this.kernelSize:0,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"angle",{get:function(){return this._angle},set:function(e){this._angle=e,this.uniforms.uRadian=e*Math.PI/180},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.uCenter},set:function(e){this.uniforms.uCenter=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.uRadius},set:function(e){(e<0||e===1/0)&&(e=-1),this.uniforms.uRadius=e},enumerable:!1,configurable:!0}),n}(n.Filter),L=function(e){function n(t){var r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform vec2 dimensions;\n\nuniform bool mirror;\nuniform float boundary;\nuniform vec2 amplitude;\nuniform vec2 waveLength;\nuniform vec2 alpha;\nuniform float time;\n\nfloat rand(vec2 co) {\n    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nvoid main(void)\n{\n    vec2 pixelCoord = vTextureCoord.xy * filterArea.xy;\n    vec2 coord = pixelCoord / dimensions;\n\n    if (coord.y < boundary) {\n        gl_FragColor = texture2D(uSampler, vTextureCoord);\n        return;\n    }\n\n    float k = (coord.y - boundary) / (1. - boundary + 0.0001);\n    float areaY = boundary * dimensions.y / filterArea.y;\n    float v = areaY + areaY - vTextureCoord.y;\n    float y = mirror ? v : vTextureCoord.y;\n\n    float _amplitude = ((amplitude.y - amplitude.x) * k + amplitude.x ) / filterArea.x;\n    float _waveLength = ((waveLength.y - waveLength.x) * k + waveLength.x) / filterArea.y;\n    float _alpha = (alpha.y - alpha.x) * k + alpha.x;\n\n    float x = vTextureCoord.x + cos(v * 6.28 / _waveLength - time) * _amplitude;\n    x = clamp(x, filterClamp.x, filterClamp.z);\n\n    vec4 color = texture2D(uSampler, vec2(x, y));\n\n    gl_FragColor = color * _alpha;\n}\n")||this;return r.time=0,r.uniforms.amplitude=new Float32Array(2),r.uniforms.waveLength=new Float32Array(2),r.uniforms.alpha=new Float32Array(2),r.uniforms.dimensions=new Float32Array(2),Object.assign(r,n.defaults,t),r}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i;this.uniforms.dimensions[0]=null===(o=n.filterFrame)||void 0===o?void 0:o.width,this.uniforms.dimensions[1]=null===(i=n.filterFrame)||void 0===i?void 0:i.height,this.uniforms.time=this.time,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"mirror",{get:function(){return this.uniforms.mirror},set:function(e){this.uniforms.mirror=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"boundary",{get:function(){return this.uniforms.boundary},set:function(e){this.uniforms.boundary=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"amplitude",{get:function(){return this.uniforms.amplitude},set:function(e){this.uniforms.amplitude[0]=e[0],this.uniforms.amplitude[1]=e[1]},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"waveLength",{get:function(){return this.uniforms.waveLength},set:function(e){this.uniforms.waveLength[0]=e[0],this.uniforms.waveLength[1]=e[1]},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this.uniforms.alpha},set:function(e){this.uniforms.alpha[0]=e[0],this.uniforms.alpha[1]=e[1]},enumerable:!1,configurable:!0}),n.defaults={mirror:!0,boundary:.5,amplitude:[0,20],waveLength:[30,100],alpha:[1,1],time:0},n}(n.Filter),N=function(e){function n(n,t,r){void 0===n&&(n=[-10,0]),void 0===t&&(t=[0,10]),void 0===r&&(r=[0,0]);var o=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec2 red;\nuniform vec2 green;\nuniform vec2 blue;\n\nvoid main(void)\n{\n   gl_FragColor.r = texture2D(uSampler, vTextureCoord + red/filterArea.xy).r;\n   gl_FragColor.g = texture2D(uSampler, vTextureCoord + green/filterArea.xy).g;\n   gl_FragColor.b = texture2D(uSampler, vTextureCoord + blue/filterArea.xy).b;\n   gl_FragColor.a = texture2D(uSampler, vTextureCoord).a;\n}\n")||this;return o.red=n,o.green=t,o.blue=r,o}return u(n,e),Object.defineProperty(n.prototype,"red",{get:function(){return this.uniforms.red},set:function(e){this.uniforms.red=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"green",{get:function(){return this.uniforms.green},set:function(e){this.uniforms.green=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blue",{get:function(){return this.uniforms.blue},set:function(e){this.uniforms.blue=e},enumerable:!1,configurable:!0}),n}(n.Filter),X=function(e){function n(t,r,o){void 0===t&&(t=[0,0]),void 0===o&&(o=0);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\n\nuniform vec2 center;\n\nuniform float amplitude;\nuniform float wavelength;\n// uniform float power;\nuniform float brightness;\nuniform float speed;\nuniform float radius;\n\nuniform float time;\n\nconst float PI = 3.14159;\n\nvoid main()\n{\n    float halfWavelength = wavelength * 0.5 / filterArea.x;\n    float maxRadius = radius / filterArea.x;\n    float currentRadius = time * speed / filterArea.x;\n\n    float fade = 1.0;\n\n    if (maxRadius > 0.0) {\n        if (currentRadius > maxRadius) {\n            gl_FragColor = texture2D(uSampler, vTextureCoord);\n            return;\n        }\n        fade = 1.0 - pow(currentRadius / maxRadius, 2.0);\n    }\n\n    vec2 dir = vec2(vTextureCoord - center / filterArea.xy);\n    dir.y *= filterArea.y / filterArea.x;\n    float dist = length(dir);\n\n    if (dist <= 0.0 || dist < currentRadius - halfWavelength || dist > currentRadius + halfWavelength) {\n        gl_FragColor = texture2D(uSampler, vTextureCoord);\n        return;\n    }\n\n    vec2 diffUV = normalize(dir);\n\n    float diff = (dist - currentRadius) / halfWavelength;\n\n    float p = 1.0 - pow(abs(diff), 2.0);\n\n    // float powDiff = diff * pow(p, 2.0) * ( amplitude * fade );\n    float powDiff = 1.25 * sin(diff * PI) * p * ( amplitude * fade );\n\n    vec2 offset = diffUV * powDiff / filterArea.xy;\n\n    // Do clamp :\n    vec2 coord = vTextureCoord + offset;\n    vec2 clampedCoord = clamp(coord, filterClamp.xy, filterClamp.zw);\n    vec4 color = texture2D(uSampler, clampedCoord);\n    if (coord != clampedCoord) {\n        color *= max(0.0, 1.0 - length(coord - clampedCoord));\n    }\n\n    // No clamp :\n    // gl_FragColor = texture2D(uSampler, vTextureCoord + offset);\n\n    color.rgb *= 1.0 + (brightness - 1.0) * p * fade;\n\n    gl_FragColor = color;\n}\n")||this;return i.center=t,Object.assign(i,n.defaults,r),i.time=o,i}return u(n,e),n.prototype.apply=function(e,n,t,r){this.uniforms.time=this.time,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.center},set:function(e){this.uniforms.center=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"amplitude",{get:function(){return this.uniforms.amplitude},set:function(e){this.uniforms.amplitude=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"wavelength",{get:function(){return this.uniforms.wavelength},set:function(e){this.uniforms.wavelength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"brightness",{get:function(){return this.uniforms.brightness},set:function(e){this.uniforms.brightness=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"speed",{get:function(){return this.uniforms.speed},set:function(e){this.uniforms.speed=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.radius},set:function(e){this.uniforms.radius=e},enumerable:!1,configurable:!0}),n.defaults={amplitude:30,wavelength:160,brightness:1,speed:500,radius:-1},n}(n.Filter),B=function(e){function n(n,t,r){void 0===t&&(t=0),void 0===r&&(r=1);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform sampler2D uLightmap;\nuniform vec4 filterArea;\nuniform vec2 dimensions;\nuniform vec4 ambientColor;\nvoid main() {\n    vec4 diffuseColor = texture2D(uSampler, vTextureCoord);\n    vec2 lightCoord = (vTextureCoord * filterArea.xy) / dimensions;\n    vec4 light = texture2D(uLightmap, lightCoord);\n    vec3 ambient = ambientColor.rgb * ambientColor.a;\n    vec3 intensity = ambient + light.rgb;\n    vec3 finalColor = diffuseColor.rgb * intensity;\n    gl_FragColor = vec4(finalColor, diffuseColor.a);\n}\n")||this;return o._color=0,o.uniforms.dimensions=new Float32Array(2),o.uniforms.ambientColor=new Float32Array([0,0,0,r]),o.texture=n,o.color=t,o}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i;this.uniforms.dimensions[0]=null===(o=n.filterFrame)||void 0===o?void 0:o.width,this.uniforms.dimensions[1]=null===(i=n.filterFrame)||void 0===i?void 0:i.height,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"texture",{get:function(){return this.uniforms.uLightmap},set:function(e){this.uniforms.uLightmap=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"color",{get:function(){return this._color},set:function(e){var n=this.uniforms.ambientColor;"number"==typeof e?(o.hex2rgb(e,n),this._color=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],n[3]=e[3],this._color=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this.uniforms.ambientColor[3]},set:function(e){this.uniforms.ambientColor[3]=e},enumerable:!1,configurable:!0}),n}(n.Filter),G=function(e){function n(n,r,o,i){void 0===n&&(n=100),void 0===r&&(r=600);var l=e.call(this,c,"varying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float blur;\nuniform float gradientBlur;\nuniform vec2 start;\nuniform vec2 end;\nuniform vec2 delta;\nuniform vec2 texSize;\n\nfloat random(vec3 scale, float seed)\n{\n    return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);\n}\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n    float total = 0.0;\n\n    float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);\n    vec2 normal = normalize(vec2(start.y - end.y, end.x - start.x));\n    float radius = smoothstep(0.0, 1.0, abs(dot(vTextureCoord * texSize - start, normal)) / gradientBlur) * blur;\n\n    for (float t = -30.0; t <= 30.0; t++)\n    {\n        float percent = (t + offset - 0.5) / 30.0;\n        float weight = 1.0 - abs(percent);\n        vec4 sample = texture2D(uSampler, vTextureCoord + delta / texSize * percent * radius);\n        sample.rgb *= sample.a;\n        color += sample * weight;\n        total += weight;\n    }\n\n    color /= total;\n    color.rgb /= color.a + 0.00001;\n\n    gl_FragColor = color;\n}\n")||this;return l.uniforms.blur=n,l.uniforms.gradientBlur=r,l.uniforms.start=o||new t.Point(0,window.innerHeight/2),l.uniforms.end=i||new t.Point(600,window.innerHeight/2),l.uniforms.delta=new t.Point(30,30),l.uniforms.texSize=new t.Point(window.innerWidth,window.innerHeight),l.updateDelta(),l}return u(n,e),n.prototype.updateDelta=function(){this.uniforms.delta.x=0,this.uniforms.delta.y=0},Object.defineProperty(n.prototype,"blur",{get:function(){return this.uniforms.blur},set:function(e){this.uniforms.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"gradientBlur",{get:function(){return this.uniforms.gradientBlur},set:function(e){this.uniforms.gradientBlur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"start",{get:function(){return this.uniforms.start},set:function(e){this.uniforms.start=e,this.updateDelta()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"end",{get:function(){return this.uniforms.end},set:function(e){this.uniforms.end=e,this.updateDelta()},enumerable:!1,configurable:!0}),n}(n.Filter),K=function(e){function n(){return null!==e&&e.apply(this,arguments)||this}return u(n,e),n.prototype.updateDelta=function(){var e=this.uniforms.end.x-this.uniforms.start.x,n=this.uniforms.end.y-this.uniforms.start.y,t=Math.sqrt(e*e+n*n);this.uniforms.delta.x=e/t,this.uniforms.delta.y=n/t},n}(G),q=function(e){function n(){return null!==e&&e.apply(this,arguments)||this}return u(n,e),n.prototype.updateDelta=function(){var e=this.uniforms.end.x-this.uniforms.start.x,n=this.uniforms.end.y-this.uniforms.start.y,t=Math.sqrt(e*e+n*n);this.uniforms.delta.x=-n/t,this.uniforms.delta.y=e/t},n}(G),W=function(e){function n(n,t,r,o){void 0===n&&(n=100),void 0===t&&(t=600);var i=e.call(this)||this;return i.tiltShiftXFilter=new K(n,t,r,o),i.tiltShiftYFilter=new q(n,t,r,o),i}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=e.getFilterTexture();this.tiltShiftXFilter.apply(e,n,o,1),this.tiltShiftYFilter.apply(e,o,t,r),e.returnFilterTexture(o)},Object.defineProperty(n.prototype,"blur",{get:function(){return this.tiltShiftXFilter.blur},set:function(e){this.tiltShiftXFilter.blur=this.tiltShiftYFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"gradientBlur",{get:function(){return this.tiltShiftXFilter.gradientBlur},set:function(e){this.tiltShiftXFilter.gradientBlur=this.tiltShiftYFilter.gradientBlur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"start",{get:function(){return this.tiltShiftXFilter.start},set:function(e){this.tiltShiftXFilter.start=this.tiltShiftYFilter.start=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"end",{get:function(){return this.tiltShiftXFilter.end},set:function(e){this.tiltShiftXFilter.end=this.tiltShiftYFilter.end=e},enumerable:!1,configurable:!0}),n}(n.Filter),Y=function(e){function n(t){var r=e.call(this,c,"varying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float radius;\nuniform float angle;\nuniform vec2 offset;\nuniform vec4 filterArea;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 twist(vec2 coord)\n{\n    coord -= offset;\n\n    float dist = length(coord);\n\n    if (dist < radius)\n    {\n        float ratioDist = (radius - dist) / radius;\n        float angleMod = ratioDist * ratioDist * angle;\n        float s = sin(angleMod);\n        float c = cos(angleMod);\n        coord = vec2(coord.x * c - coord.y * s, coord.x * s + coord.y * c);\n    }\n\n    coord += offset;\n\n    return coord;\n}\n\nvoid main(void)\n{\n\n    vec2 coord = mapCoord(vTextureCoord);\n\n    coord = twist(coord);\n\n    coord = unmapCoord(coord);\n\n    gl_FragColor = texture2D(uSampler, coord );\n\n}\n")||this;return Object.assign(r,n.defaults,t),r}return u(n,e),Object.defineProperty(n.prototype,"offset",{get:function(){return this.uniforms.offset},set:function(e){this.uniforms.offset=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.radius},set:function(e){this.uniforms.radius=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"angle",{get:function(){return this.uniforms.angle},set:function(e){this.uniforms.angle=e},enumerable:!1,configurable:!0}),n.defaults={radius:200,angle:4,padding:20,offset:new t.Point},n}(n.Filter),Z=function(e){function n(t){var r,o=Object.assign(n.defaults,t),i=o.maxKernelSize,l=function(e,n){var t={};for(var r in e)Object.prototype.hasOwnProperty.call(e,r)&&n.indexOf(r)<0&&(t[r]=e[r]);if(null!=e&&"function"==typeof Object.getOwnPropertySymbols){var o=0;for(r=Object.getOwnPropertySymbols(e);o<r.length;o++)n.indexOf(r[o])<0&&Object.prototype.propertyIsEnumerable.call(e,r[o])&&(t[r[o]]=e[r[o]])}return t}(o,["maxKernelSize"]);return r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform vec2 uCenter;\nuniform float uStrength;\nuniform float uInnerRadius;\nuniform float uRadius;\n\nconst float MAX_KERNEL_SIZE = ${maxKernelSize};\n\n// author: http://byteblacksmith.com/improvements-to-the-canonical-one-liner-glsl-rand-for-opengl-es-2-0/\nhighp float rand(vec2 co, float seed) {\n    const highp float a = 12.9898, b = 78.233, c = 43758.5453;\n    highp float dt = dot(co + seed, vec2(a, b)), sn = mod(dt, 3.14159);\n    return fract(sin(sn) * c + seed);\n}\n\nvoid main() {\n\n    float minGradient = uInnerRadius * 0.3;\n    float innerRadius = (uInnerRadius + minGradient * 0.5) / filterArea.x;\n\n    float gradient = uRadius * 0.3;\n    float radius = (uRadius - gradient * 0.5) / filterArea.x;\n\n    float countLimit = MAX_KERNEL_SIZE;\n\n    vec2 dir = vec2(uCenter.xy / filterArea.xy - vTextureCoord);\n    float dist = length(vec2(dir.x, dir.y * filterArea.y / filterArea.x));\n\n    float strength = uStrength;\n\n    float delta = 0.0;\n    float gap;\n    if (dist < innerRadius) {\n        delta = innerRadius - dist;\n        gap = minGradient;\n    } else if (radius >= 0.0 && dist > radius) { // radius < 0 means it's infinity\n        delta = dist - radius;\n        gap = gradient;\n    }\n\n    if (delta > 0.0) {\n        float normalCount = gap / filterArea.x;\n        delta = (normalCount - delta) / normalCount;\n        countLimit *= delta;\n        strength *= delta;\n        if (countLimit < 1.0)\n        {\n            gl_FragColor = texture2D(uSampler, vTextureCoord);\n            return;\n        }\n    }\n\n    // randomize the lookup values to hide the fixed number of samples\n    float offset = rand(vTextureCoord, 0.0);\n\n    float total = 0.0;\n    vec4 color = vec4(0.0);\n\n    dir *= strength;\n\n    for (float t = 0.0; t < MAX_KERNEL_SIZE; t++) {\n        float percent = (t + offset) / MAX_KERNEL_SIZE;\n        float weight = 4.0 * (percent - percent * percent);\n        vec2 p = vTextureCoord + dir * percent;\n        vec4 sample = texture2D(uSampler, p);\n\n        // switch to pre-multiplied alpha to correctly blur transparent images\n        // sample.rgb *= sample.a;\n\n        color += sample * weight;\n        total += weight;\n\n        if (t > countLimit){\n            break;\n        }\n    }\n\n    color /= total;\n    // switch back from pre-multiplied alpha\n    // color.rgb /= color.a + 0.00001;\n\n    gl_FragColor = color;\n}\n".replace("${maxKernelSize}",i.toFixed(1)))||this,Object.assign(r,l),r}return u(n,e),Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.uCenter},set:function(e){this.uniforms.uCenter=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"strength",{get:function(){return this.uniforms.uStrength},set:function(e){this.uniforms.uStrength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"innerRadius",{get:function(){return this.uniforms.uInnerRadius},set:function(e){this.uniforms.uInnerRadius=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.uRadius},set:function(e){(e<0||e===1/0)&&(e=-1),this.uniforms.uRadius=e},enumerable:!1,configurable:!0}),n.defaults={strength:.1,center:[0,0],innerRadius:0,radius:-1,maxKernelSize:32},n}(n.Filter);return e.AdjustmentFilter=m,e.AdvancedBloomFilter=h,e.AsciiFilter=g,e.BevelFilter=v,e.BloomFilter=y,e.BulgePinchFilter=b,e.CRTFilter=z,e.ColorMapFilter=x,e.ColorOverlayFilter=_,e.ColorReplaceFilter=C,e.ConvolutionFilter=S,e.CrossHatchFilter=F,e.DotFilter=O,e.DropShadowFilter=P,e.EmbossFilter=A,e.GlitchFilter=T,e.GlowFilter=w,e.GodrayFilter=D,e.KawaseBlurFilter=d,e.MotionBlurFilter=j,e.MultiColorReplaceFilter=M,e.OldFilmFilter=R,e.OutlineFilter=E,e.PixelateFilter=I,e.RGBSplitFilter=N,e.RadialBlurFilter=k,e.ReflectionFilter=L,e.ShockwaveFilter=X,e.SimpleLightmapFilter=B,e.TiltShiftAxisFilter=G,e.TiltShiftFilter=W,e.TiltShiftXFilter=K,e.TiltShiftYFilter=q,e.TwistFilter=Y,e.ZoomBlurFilter=Z,Object.defineProperty(e,"__esModule",{value:!0}),e}({},PIXI,PIXI,PIXI,PIXI.utils,PIXI,PIXI.filters,PIXI.filters);Object.assign(PIXI.filters,__filters);
+//# sourceMappingURL=pixi-filters.js.map
+
+
 // Generated by CoffeeScript 2.6.1
 // ==========================================================================
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -2421,7 +2929,7 @@ PKD_MI.getUIMapChestSettings = function () {
 // * LIBRARY WITH MZ AND MZ SUPPORT
 //! {OUTER FILE}
 
-//?rev 16.11.22
+//?rev 20.02.24
 var KDCore;
 
 window.Imported = window.Imported || {};
@@ -2432,7 +2940,7 @@ KDCore = KDCore || {};
 
 // * Двузначные числа нельзя в версии, сравнение идёт по первой цифре поулчается (3.43 - нельзя, можно 3.4.3)
 //%[МЕНЯТЬ ПРИ ИЗМЕНЕНИИ]
-KDCore._fileVersion = '3.2';
+KDCore._fileVersion = '3.3.3';
 
 // * Методы и библиотеки данной версии
 KDCore._loader = 'loader_' + KDCore._fileVersion;
@@ -2516,7 +3024,7 @@ KDCore.registerLibraryToLoad(function() {
     return this.getByField('id', id);
   };
   // * Ищет элемент, у которого поле FIELD (имя поля) == value
-  return Array.prototype.getByField = function(field, value) {
+  Array.prototype.getByField = function(field, value) {
     var e;
     try {
       return this.find(function(item) {
@@ -2528,6 +3036,39 @@ KDCore.registerLibraryToLoad(function() {
       return null;
     }
   };
+  Object.defineProperty(Array.prototype, "delete", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "max", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "min", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "sample", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "first", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "last", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "shuffle", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "count", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "isEmpty", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "getById", {
+    enumerable: false
+  });
+  return Object.defineProperty(Array.prototype, "getByField", {
+    enumerable: false
+  });
 });
 
 
@@ -2790,6 +3331,23 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
+  // * В MZ нету данной функции, а она часто используется в моих плагинах
+  if (!KDCore.isMZ()) {
+    return;
+  }
+  //?[NEW] (from MV)
+  return ImageManager.loadEmptyBitmap = function() {
+    if (this._emptyBitmap != null) {
+      return this._emptyBitmap;
+    } else {
+      return new Bitmap();
+    }
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
   var _input_onKeyDown, _input_onKeyUp, i, j, k, l;
   Input.KeyMapperPKD = {};
 //Numbers
@@ -2955,7 +3513,7 @@ KDCore.registerLibraryToLoad(function() {
       return null;
     };
     _.hasMeta = function(symbol, obj) {
-      return (obj.meta != null) && (obj.meta[symbol] != null);
+      return (obj != null) && (obj.meta != null) && (obj.meta[symbol] != null);
     };
     _.getValueFromMeta = function(symbol, obj) {
       if (!_.hasMeta(symbol, obj)) {
@@ -2982,12 +3540,18 @@ KDCore.registerLibraryToLoad(function() {
         return false;
       }
     };
+    _.isMapScene = function() {
+      return this.isSceneMap();
+    };
     _.isSceneBattle = function() {
       try {
         return !SceneManager.isSceneChanging() && SceneManager._scene instanceof Scene_Battle;
       } catch (error) {
         return false;
       }
+    };
+    _.isBattleScene = function() {
+      return this.isSceneBattle();
     };
     _.getEventCommentValue = function(commentCode, list) {
       var comment, e, i, item;
@@ -3293,6 +3857,168 @@ KDCore.registerLibraryToLoad(function() {
         return null;
       }
     };
+    //@[3.2.1] since
+    _.isValidCE = function(commonEventId) {
+      var e;
+      try {
+        return commonEventId > 0 && ($dataCommonEvents[commonEventId] != null);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return false;
+      }
+    };
+    //@[3.2.1] since
+    _.startCE = function(commonEventId) {
+      var e;
+      try {
+        if (this.isValidCE(commonEventId)) {
+          return $gameTemp.reserveCommonEvent(commonEventId);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    //@[3.2.1] since
+    _.checkSwitch = function(value) {
+      if (value == null) {
+        return false;
+      }
+      if (isFinite(value)) {
+        return false;
+      }
+      return KDCore.SDK.checkSwitch(value);
+    };
+    //@[3.2.1] since
+    // * Вызвать с задержкой в time миллисекунд
+    // * Не забываем про bind
+    _.callDelayed = function(method, time = 1) {
+      var e;
+      try {
+        if (method == null) {
+          return;
+        }
+        setTimeout((function() {
+          var e;
+          try {
+            return method();
+          } catch (error) {
+            e = error;
+            return KDCore.warning(e);
+          }
+        }), time);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+    };
+    //@[3.2.1] since
+    //<meta:1,2,3,4> -> [1,2,3,4]
+    _.getArrayOfNumbersFromMeta = function(symbol, obj) {
+      var e, values;
+      try {
+        values = this.getArrayOfValuesFromMeta(symbol, obj);
+        return values.map(function(v) {
+          return Number(v);
+        });
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return [];
+      }
+    };
+    //@[3.2.1] since
+    //<meta:a,b,c> -> ["a", "b", "c"]
+    //<meta:a> -> ["a"]
+    _.getArrayOfValuesFromMeta = function(symbol, obj) {
+      var e, items, values;
+      try {
+        values = this.getValueFromMeta(symbol, obj);
+        if (String.any(values)) {
+          if (values.contains(',')) {
+            items = values.split(',');
+            return items || [];
+          } else {
+            return [values];
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return [];
+      }
+    };
+    //@[3.2.1] since
+    // * Когда содержит одинаковый набор ключей
+    //<meta:value1>
+    //<meta:value2>
+    //...
+    // -> [value1,value2,...]
+    _.getArrayOfValuesOfSameMeta = function(symbol, obj) {
+      var e, j, len, line, lines, result;
+      try {
+        if (!this.hasMeta(symbol, obj)) {
+          return [];
+        }
+        lines = obj.note.split("\n").filter(function(l) {
+          return l.contains(symbol);
+        });
+        result = [];
+        for (j = 0, len = lines.length; j < len; j++) {
+          line = lines[j];
+          try {
+            line = line.replace("<" + symbol + ":", "");
+            line = line.replace(">", "");
+            result.push(line);
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+          }
+        }
+        return result;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return [];
+    };
+    //@[3.2.7] since
+    _.getIndexIn2DArrayByIJ = function(row, col, cols) {
+      return row * cols + col;
+    };
+    //@[3.2.7] since
+    // * row - строка
+    // * col - столбец
+    _.getIJByIndexIn2DArray = function(index, cols) {
+      var col, e, row;
+      try {
+        row = Math.floor(index / cols);
+        col = index % cols;
+        return [row, col];
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return [0, 0];
+      }
+    };
+    //@[3.2.7] since
+    _.isSwitchIsTRUE = function(switchId) {
+      var e;
+      if (switchId == null) {
+        return true;
+      }
+      if (switchId <= 0) {
+        return true;
+      }
+      try {
+        return $gameSwitches.value(switchId) === true;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return false;
+    };
     //@[2.9.7] since
     // * Shrink number 100000 to "100k" and ect, returns STRING
     _.formatNumberToK = function(num) {
@@ -3325,6 +4051,67 @@ KDCore.registerLibraryToLoad(function() {
     this.drawFace(faceName, faceIndex, x, y);
   };
 });
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ Window_Selectable.coffee
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    //---------------------------------------------------------------------------
+    var ALIAS__select, _;
+    //@[DEFINES]
+    _ = Window_Selectable.prototype;
+    //@[ALIAS]
+    ALIAS__select = _.select;
+    _.select = function(index) {
+      var e;
+      ALIAS__select.call(this, ...arguments);
+      try {
+        return this._pOnSelectionChanged(index);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._pOnSelectionChanged = function(newIndex) {
+      var e;
+      try {
+        if (this._pkdLastSelectedIndex == null) {
+          this._pkdLastSelectedIndex = newIndex;
+          return this.pOnSelectionChanged();
+        } else {
+          if (this._pkdLastSelectedIndex !== newIndex) {
+            this._pkdLastSelectedIndex = newIndex;
+            return this.pOnSelectionChanged();
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.safeSelect = function(index = 0) {
+      var e;
+      try {
+        if (this.maxItems() > index) {
+          return this.select(index);
+        } else {
+          return this.select(-1);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    
+    // * Called only when new (different) index is selected
+    _.pOnSelectionChanged = function() {};
+  })();
+});
+
+// ■ END Window_Selectable.coffee
+//---------------------------------------------------------------------------
 
 
 // Generated by CoffeeScript 2.6.1
@@ -3861,6 +4648,22 @@ KDCore.registerLibraryToLoad(function() {
       changer.change('opacity').from(0).to(255).step(step);
       changer.done(function() {
         sprite.opacity = 255;
+        if (onDone != null) {
+          return onDone();
+        }
+      });
+      if (isAutoStart) {
+        changer.start();
+      }
+      return changer;
+    }
+
+    static CreateForOpacityDown(sprite, step = 35, onDone = null, isAutoStart = true) {
+      var changer;
+      changer = new Changer(sprite);
+      changer.change('opacity').from(sprite.opacity).to(0).step(step);
+      changer.done(function() {
+        sprite.opacity = 0;
         if (onDone != null) {
           return onDone();
         }
@@ -4409,6 +5212,45 @@ KDCore.registerLibraryToLoad(function() {
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
   //@[AUTO EXTEND]
+  return KDCore.MapAnchorPoint = class MapAnchorPoint {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this._realX = this.x;
+      this._realY = this.y;
+    }
+
+    shiftY() {
+      return 0;
+    }
+
+    jumpHeight() {
+      return 0;
+    }
+
+    scrolledX() {
+      return Game_CharacterBase.prototype.scrolledX.call(this);
+    }
+
+    scrolledY() {
+      return Game_CharacterBase.prototype.scrolledY.call(this);
+    }
+
+    screenX() {
+      return Game_CharacterBase.prototype.screenX.call(this);
+    }
+
+    screenY() {
+      return Game_CharacterBase.prototype.screenY.call(this);
+    }
+
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  //@[AUTO EXTEND]
   //?[DEPRECATED]
   return KDCore.ParametersManager = class ParametersManager {
     constructor(pluginName) {
@@ -4572,6 +5414,7 @@ KDCore.registerLibraryToLoad(function() {
       params = {};
       for (key in paramSet) {
         value = paramSet[key];
+        KDCore.__ppNameToParseNext = key;
         clearKey = this.parseKey(key);
         typeKey = this.parseKeyType(key);
         params[clearKey] = this.parseParamItem(typeKey, value);
@@ -4585,6 +5428,19 @@ KDCore.registerLibraryToLoad(function() {
 
     parseKeyType(keyRaw) {
       return keyRaw.split(":")[1];
+    }
+
+    writeDetailedError() {
+      var e;
+      try {
+        if (!String.any(KDCore.__ppNameToParseNext)) {
+          return;
+        }
+        return console.warn("Please, check Plugin Parameter " + KDCore.__ppNameToParseNext + " in plugin " + this.pluginName);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     }
 
     // * Проверка, загружены ли параметры плагина
@@ -4647,12 +5503,15 @@ KDCore.registerLibraryToLoad(function() {
           case "json":
           case "j":
             return this.parseJson(item);
+          case "jA":
+            return this.parseArray(item, 'json');
           default:
             return item;
         }
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
         return item;
       }
     }
@@ -4674,6 +5533,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return elements;
     }
@@ -4694,6 +5554,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return null;
     }
@@ -4710,11 +5571,13 @@ KDCore.registerLibraryToLoad(function() {
           } catch (error) {
             e = error;
             console.warn(e);
+            this.writeDetailedError();
           }
         }
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return elements;
     }
@@ -4729,6 +5592,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return item;
     }
@@ -4757,6 +5621,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         KDCore.warning(e);
+        this.writeDetailedError();
         return null; // * Чтобы default value был возвращён
       }
     }
@@ -4880,6 +5745,10 @@ KDCore.registerLibraryToLoad(function() {
       return new Point(this[0], this[1]);
     };
 
+    Object.defineProperty(Array.prototype, "toPoint", {
+      enumerable: false
+    });
+
     Sprite.prototype.toPoint = function() {
       return new Point(this.x, this.y);
     };
@@ -4903,6 +5772,12 @@ KDCore.registerLibraryToLoad(function() {
     class Sprite extends superClass {
       constructor() {
         super(...arguments);
+        this.pHandledIndex = 0;
+        return;
+      }
+
+      pIsSupportKeyboardHandle() {
+        return false;
       }
 
       appear(step, delay = 0) {
@@ -4919,6 +5794,35 @@ KDCore.registerLibraryToLoad(function() {
           var ref;
           return (ref = this._opChanger) != null ? ref.update() : void 0;
         };
+      }
+
+      disapper(step, delay = 0) {
+        this._opChanger = KDCore.Changer.CreateForOpacityDown(this, step, () => {
+          this._opChanger = null;
+          return this._updateOpChanger = function() {}; // * EMPTY
+        }, false); // * Not autostart for Delay
+        if (delay > 0) {
+          this._opChanger.delay(delay);
+        }
+        this._opChanger.start();
+        this._updateOpChanger = () => {
+          var ref;
+          return (ref = this._opChanger) != null ? ref.update() : void 0;
+        };
+      }
+
+      moveWithAnimation(dx, dy, duration = 30, easingType = 2) {
+        var e;
+        try {
+          this._moveAnimationItem = new Game_Picture();
+          this._moveAnimationItem._x = this.x;
+          this._moveAnimationItem._y = this.y;
+          this._moveAnimationItem.move(0, this.x + dx, this.y + dy, 1, 1, 255, 0, duration, easingType);
+          this.updateMovingAnimation = this.updateMovingAnimationBody;
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
       }
 
       assignTooltip(content, params) {
@@ -4974,10 +5878,39 @@ KDCore.registerLibraryToLoad(function() {
         }
       }
 
+      //@[DYNAMIC]
+      updateMovingAnimation() {} // * EMPTY
+
+      updateMovingAnimationBody() {
+        var e;
+        try {
+          if (this._moveAnimationItem == null) {
+            return;
+          }
+          this._moveAnimationItem.update();
+          this.x = this._moveAnimationItem._x;
+          this.y = this._moveAnimationItem._y;
+          if (this._moveAnimationItem._duration <= 0) {
+            this._moveAnimationItem = null;
+            this.updateMovingAnimation = function() {};
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+          this.updateMovingAnimation = function() {};
+        }
+      }
+
       update() {
         super.update();
         this._updateOpChanger();
-        return this.updateTooltip();
+        this.updateTooltip();
+        if (this.updateMovingAnimation != null) {
+          this.updateMovingAnimation();
+        }
+        if (this.pIsHandlerActive()) {
+          this._pHandleKeyboardInputs();
+        }
       }
 
       //@[DYNAMIC]
@@ -4991,8 +5924,8 @@ KDCore.registerLibraryToLoad(function() {
         return this.bitmap.clear();
       }
 
-      add(child) {
-        return this.addChild(child);
+      add() {
+        return this.addChild(...arguments);
       }
 
       bNew(w, h) {
@@ -5139,6 +6072,236 @@ KDCore.registerLibraryToLoad(function() {
         }
         if (!String.isNullOrEmpty(outline.color)) {
           b.outlineColor = outline.color;
+        }
+      }
+
+      activateHandlerManagment() {
+        var e;
+        try {
+          this.handleUpAction = this.selectPreviousHandlerItem;
+          this.handleDownAction = this.selectNextHandlerItem;
+          return this._handleManagerActive = true;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      deactivateHandlerManagment() {
+        var ref;
+        this._handleManagerActive = false;
+        this.handleUpAction = function() {}; // * EMPTY
+        this.handleDownAction = function() {}; // * EMPTY
+        if ((ref = $gameTemp.__pkdActiveKeyboardHandler) != null) {
+          ref.pDeactivateHandler();
+        }
+        $gameTemp.__pkdActiveKeyboardHandler = null;
+      }
+
+      addChild(item) {
+        var c, handlers;
+        c = super.addChild(...arguments);
+        if (item instanceof KDCore.Sprite && (item.pIsSupportKeyboardHandle != null) && item.pIsSupportKeyboardHandle()) {
+          handlers = this._pGetAllHandlers();
+          item.pHandledIndex = handlers.length - 1;
+        }
+        return c;
+      }
+
+      pIsAnyHandlerSelected() {
+        return $gameTemp.__pkdActiveKeyboardHandler != null;
+      }
+
+      selectPreviousHandlerItem() {
+        var e;
+        try {
+          if (!this.pIsAnyHandlerSelected()) {
+            return this._trySelectHandler(0);
+          } else {
+            return this._trySelectHandler(this._selectedHandlerIndex() - 1);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _selectedHandlerIndex() {
+        return $gameTemp.__pkdActiveKeyboardHandler.pHandledIndex;
+      }
+
+      _trySelectHandler(index) {
+        var e, handlerItemToSelect;
+        try {
+          handlerItemToSelect = this._pGetAllHandlers().find(function(i) {
+            return i.pHandledIndex === index;
+          });
+          if (handlerItemToSelect != null) {
+            handlerItemToSelect.pActivateHandler();
+          }
+          return this._pOnHandled();
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pGetAllHandlers() {
+        return this.children.filter(function(i) {
+          return i instanceof KDCore.Sprite && (i.pIsSupportKeyboardHandle != null) && i.pIsSupportKeyboardHandle();
+        });
+      }
+
+      selectNextHandlerItem() {
+        var e;
+        try {
+          if (!this.pIsAnyHandlerSelected()) {
+            return this._trySelectHandler(0);
+          } else {
+            return this._trySelectHandler(this._selectedHandlerIndex() + 1);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      activeItemFilterOptions() {
+        return {
+          distance: 15,
+          outerStrength: 4
+        };
+      }
+
+      pIsHandlerActive() {
+        return this._handleManagerActive === true || this._handlerActive === true;
+      }
+
+      destroy() {
+        if ($gameTemp.__pkdActiveKeyboardHandler === this) {
+          $gameTemp.__pkdActiveKeyboardHandler = null;
+        }
+        return super.destroy();
+      }
+
+      _pOnHandled() {
+        return Input.clear();
+      }
+
+      _pHandleKeyL() {
+        var e;
+        try {
+          if (this.handleLeftAction != null) {
+            this.handleLeftAction();
+            return this._pOnHandled();
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyR() {
+        var e;
+        try {
+          if (this.handleRightAction != null) {
+            this.handleRightAction();
+            return this._pOnHandled();
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyU() {
+        var e;
+        try {
+          if (this.handleUpAction != null) {
+            this.handleUpAction();
+            return this._pOnHandled();
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyD() {
+        var e;
+        try {
+          if (this.handleDownAction != null) {
+            this.handleDownAction();
+            return this._pOnHandled();
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyOK() {
+        var e;
+        try {
+          if (this.handleOKAction != null) {
+            this.handleOKAction();
+            return this._pOnHandled();
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      pActivateHandler() {
+        if (!this.pIsSupportKeyboardHandle()) {
+          return;
+        }
+        if (($gameTemp.__pkdActiveKeyboardHandler != null) && $gameTemp.__pkdActiveKeyboardHandler !== this) {
+          $gameTemp.__pkdActiveKeyboardHandler.pDeactivateHandler();
+        }
+        this._handlerActive = true;
+        this._activateHandlerVisually();
+        $gameTemp.__pkdActiveKeyboardHandler = this;
+      }
+
+      _activateHandlerVisually() {
+        var e;
+        try {
+          //@filters = [new PIXI.filters.OutlineFilter(0.8, 0x99ff99, 0.5)]
+          //@filters = [new PIXI.filters.GlowFilter(2, 0.8, 0, 0x09f9, 0.5)]
+          return this.filters = [new PIXI.filters.GlowFilter(this.activeItemFilterOptions())];
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      pDeactivateHandler() {
+        if ($gameTemp.__pkdActiveKeyboardHandler === this) {
+          $gameTemp.__pkdActiveKeyboardHandler = null;
+        }
+        this._handlerActive = false;
+        this.filters = [];
+      }
+
+      _pHandleKeyboardInputs() {
+        var e;
+        try {
+          if (Input.isTriggered('left')) {
+            return this._pHandleKeyL();
+          } else if (Input.isTriggered('right')) {
+            return this._pHandleKeyR();
+          } else if (Input.isTriggered('up')) {
+            return this._pHandleKeyU();
+          } else if (Input.isTriggered('down')) {
+            return this._pHandleKeyD();
+          } else if (Input.isTriggered('ok')) {
+            return this._pHandleKeyOK();
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
         }
       }
 
@@ -5981,6 +7144,385 @@ KDCore.registerLibraryToLoad(function() {
 
 
 // Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_ItemsList;
+  // * Класс который позволяет сделать список (на основе Window_Selectable), но из Sprite элементов, а не Draw на Bitmap
+
+    //rev 08.02.24
+
+    //TODO: Dynamic items height, controls handlers support
+  Sprite_ItemsList = class Sprite_ItemsList extends Window_Selectable {
+    constructor(r) {
+      if (KDCore.isMV()) {
+        super(r.x, r.y, r.width, r.height);
+      } else {
+        super(r);
+      }
+      this._prevSelectedIndex = -1;
+      this._createItemsContainer();
+      this._createWindowContentMask();
+      this._setupBackgroundType();
+      return;
+    }
+
+    activate(index) {
+      var e;
+      try {
+        this.refresh();
+        if (index != null) {
+          this.safeSelect(index);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return super.activate();
+    }
+
+    maxItems() {
+      return this.getAllItems().length;
+    }
+
+    getAllItems() {
+      return this.itemsSet || [];
+    }
+
+    setItems(itemsSet, singleItemHeight = null) {
+      this.itemsSet = itemsSet;
+      this.singleItemHeight = singleItemHeight;
+      this._clearPreviousItems();
+      if (this.singleItemHeight == null) {
+        this._adjustAutoItemsHeight(this.itemsSet[0]);
+      }
+      this.refresh();
+      this._drawNewItems();
+    }
+
+    itemAt(index) {
+      return this.getAllItems()[index];
+    }
+
+    isNeedScaleItemsW() {
+      return false;
+    }
+
+    isNeedScaleItemsH() {
+      return false;
+    }
+
+    lineHeight() {
+      return this.singleItemHeight || 36;
+    }
+
+    isDrawWindowDefaultItemsBack() {
+      return false;
+    }
+
+    //$[OVER]
+    _updateCursor() {
+      return this._cursorSprite.visible = false;
+    }
+
+    update() {
+      super.update();
+      this._itemsContainer.y = -this._scrollY;
+      return this._updateItemsSelectionState();
+    }
+
+  };
+  (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ PRIVATE
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    //---------------------------------------------------------------------------
+    var _;
+    //@[DEFINES]
+    _ = Sprite_ItemsList.prototype;
+    _._createItemsContainer = function() {
+      if (!this.isDrawWindowDefaultItemsBack()) {
+        this._contentsBackSprite.visible = false;
+      }
+      this._windowItemsContentLayer = new Sprite();
+      this._windowItemsContentLayer.move(this._padding, this._padding);
+      this.addChild(this._windowItemsContentLayer);
+      this._itemsContainer = new KDCore.Sprite();
+      this._windowItemsContentLayer.addChild(this._itemsContainer);
+      this.addChild(this._downArrowSprite);
+      return this.addChild(this._upArrowSprite);
+    };
+    _._setupBackgroundType = function() {
+      return this.setBackgroundType(2);
+    };
+    _._createWindowContentMask = function() {
+      var e, m, maskBitmap;
+      try {
+        maskBitmap = new Bitmap(this.width - this._padding * 2, this.height - this._padding * 2);
+        maskBitmap.fillAll("#FFF");
+        m = new Sprite(maskBitmap);
+        this._windowItemsContentLayer.mask = m;
+        return this._windowItemsContentLayer.addChild(m);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._adjustAutoItemsHeight = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          this.singleItemHeight = 36;
+          return;
+        }
+        if (item.realHeight != null) {
+          this.singleItemHeight = item.realHeight();
+        } else {
+          if (item.height > 0) {
+            this.singleItemHeight = item.height;
+          }
+        }
+        if (this.singleItemHeight === 0 || !this.singleItemHeight) {
+          return this.singleItemHeight = 36;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._clearPreviousItems = function() {
+      var c, e, i, j, len, len1, ref, results, toRemove;
+      try {
+        toRemove = [];
+        ref = this._itemsContainer.children;
+        for (i = 0, len = ref.length; i < len; i++) {
+          c = ref[i];
+          toRemove.push(c);
+        }
+        results = [];
+        for (j = 0, len1 = toRemove.length; j < len1; j++) {
+          c = toRemove[j];
+          results.push(c.removeFromParent());
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._drawNewItems = function() {
+      var e, i, index, item, len, ref, results;
+      try {
+        ref = this.getAllItems();
+        results = [];
+        for (index = i = 0, len = ref.length; i < len; index = ++i) {
+          item = ref[index];
+          results.push(this._addNewItemToList(item, index));
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._addNewItemToList = function(item, index) {
+      var e, rect;
+      try {
+        if (item == null) {
+          return;
+        }
+        rect = this.itemRect(index);
+        item.x = rect.x;
+        item.y = rect.y;
+        this._adjustItemWidthAndHeight(item);
+        return this._itemsContainer.addChild(item);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._adjustItemWidthAndHeight = function(item) {
+      var e, scaleFactor;
+      try {
+        if (item == null) {
+          return;
+        }
+        if (this.isNeedScaleItemsW()) {
+          scaleFactor = this._defaultItemWidth() / this._getItemWidth(item);
+          item.scale.x = scaleFactor;
+        }
+        if (this.isNeedScaleItemsH()) {
+          scaleFactor = this.lineHeight() / this._getItemHeight(item);
+          return item.scale.y = scaleFactor;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._getItemWidth = function(item) {
+      var e, v;
+      v = this._defaultItemWidth();
+      try {
+        if (item == null) {
+          return v;
+        }
+        if (item.realWidth != null) {
+          v = item.realWidth();
+        } else {
+          if (item.width > 0) {
+            v = item.width;
+          }
+        }
+        if (v === 0 || !v) {
+          v = this._defaultItemWidth();
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return v;
+    };
+    _._defaultItemWidth = function() {
+      return this.width - this._padding * 2;
+    };
+    _._getItemHeight = function(item) {
+      var e, v;
+      v = 36;
+      try {
+        if (item == null) {
+          return v;
+        }
+        if (item.realHeight != null) {
+          v = item.realHeight();
+        } else {
+          if (item.height > 0) {
+            v = item.height;
+          }
+        }
+        if (v === 0 || !v) {
+          v = 36;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return v;
+    };
+    _._updateItemsSelectionState = function() {
+      var e;
+      try {
+        if (!this.active || this.index() < 0 || !this.cursorVisible) {
+          this._disableSelectionForAll();
+          return;
+        }
+        return this._selectItemAtIndex(this.index());
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._disableSelectionForAll = function() {
+      var e, i, item, len, ref, results;
+      try {
+        this._prevSelectedIndex = -1;
+        ref = this.getAllItems();
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          results.push(this._deselectItem(item));
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._selectItem = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        if ((this._prevSelectedIndex != null) && this._prevSelectedIndex >= 0) {
+          this._deselectItem(this.itemAt(this._prevSelectedIndex));
+        }
+        if (item.activateInList != null) {
+          return item.activateInList();
+        } else {
+          return this._selectItemVisually(item);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._selectItemVisually = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        return item.filters = [
+          new PIXI.filters.GlowFilter({
+            distance: 15,
+            outerStrength: 4
+          })
+        ];
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._deselectItem = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        if (item.deactivateInList != null) {
+          return item.deactivateInList();
+        } else {
+          return this._deselectItemVisually(item);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._deselectItemVisually = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        return item.filters = [];
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._selectItemAtIndex = function(index) {
+      var e, item;
+      try {
+        if (this._prevSelectedIndex !== index) {
+          item = this.itemAt(index);
+          if (item == null) {
+            return;
+          }
+          this._selectItem(item);
+          return this._prevSelectedIndex = index;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+  })();
+  // ■ END PRIVATE
+  //---------------------------------------------------------------------------
+  return KDCore.Sprite_ItemsList = Sprite_ItemsList;
+});
+
+
+// Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad((function() {
   var Sprite_TilingFrame;
   Sprite_TilingFrame = class Sprite_TilingFrame extends KDCore.Sprite {
@@ -6438,7 +7980,7 @@ KDCore.registerLibraryToLoad(function() {
       if (this.isDisabled()) {
         return;
       }
-      if (TouchInput.isTriggered() && this.isMouseIn()) {
+      if (TouchInput.isTriggered() && this.isUnderMouse()) {
         this._isTriggered = true;
         this._setImageState(0);
       }
@@ -6553,7 +8095,7 @@ KDCore.registerLibraryToLoad(function() {
   // * Пространство имён для всех UIElements
   KDCore.UI = KDCore.UI || {};
   (function() {    // * Общий класс для всех UI элементов
-    //?rev 13.10.20
+    //?rev 07.02.2024
     var Sprite_UIElement;
     Sprite_UIElement = (function() {
       // * ABSTRACT значит что класс сам по себе ничего не создаёт, не хранит данные
@@ -6601,6 +8143,10 @@ KDCore.registerLibraryToLoad(function() {
           this.filters[0].desaturate();
         }
 
+        clearFilters() {
+          return this.filters = [];
+        }
+
         // * Общий метод (можно ли редактировать визуально)
         isCanBeEdited() {
           return false;
@@ -6614,7 +8160,39 @@ KDCore.registerLibraryToLoad(function() {
         // * Общий метод (находится ли объект под мышкой)
         isUnderMouse() {
           var ref;
-          return (ref = this.zeroChild()) != null ? ref.isUnderMouse() : void 0;
+          return ((ref = this.zeroChild()) != null ? ref.isUnderMouse() : void 0) && this.isFullVisible();
+        }
+
+        // * Полностью ли виден объект? (включае всех его родителей)
+        isFullVisible() {
+          return this.visible === true && this.allParentsIsVisible();
+        }
+
+        // * Все ли родители объекта видимы
+        allParentsIsVisible() {
+          var e, p;
+          if (!this.visible) {
+            return false;
+          }
+          try {
+            if (this.parent != null) {
+              p = this.parent;
+              while (p != null) {
+                if (p.visible === true) {
+                  p = p.parent;
+                } else {
+                  return false;
+                }
+              }
+              return true;
+            } else {
+              return this.visible === true;
+            }
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+            return true;
+          }
         }
 
         // * Параметры первого элемента (если он есть)
@@ -6700,10 +8278,11 @@ KDCore.registerLibraryToLoad(function() {
     
     // * Подготовка элемента (проверка параметров)
     _._prepare = function() {
-      if (this.params == null) {
-        this.params = this.defaultParams();
+      //@params = @defaultParams() unless @params?
+      this.params = Object.assign({}, this.defaultParams(), this.params);
+      if (this.params.visible != null) {
+        this.visible = this.params.visible;
       }
-      return this.visible = this.params.visible;
     };
     // * Наследники создают свои элементы в этом методе
     _._createContent = function() {}; // * EMPTY
@@ -6716,10 +8295,18 @@ KDCore.registerLibraryToLoad(function() {
       }
       try {
         ({x, y} = this.params.position);
+        if (isFinite(x) && isFinite(y)) {
+          x = Number(x);
+          y = Number(y);
+        } else {
+          x = Number(eval(x));
+          y = Number(eval(y));
+        }
         this.move(x, y);
       } catch (error) {
         e = error;
         KDCore.warning(e);
+        this.move(0, 0);
       }
     };
   })();
@@ -6943,7 +8530,7 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
-  (function() {    //TODO: ROOT IMAGE FOLDER AS PARAMETER!!!
+  (function() {
     var Sprite_UIGauge;
     Sprite_UIGauge = class Sprite_UIGauge extends KDCore.UI.Sprite_UIElement {
       constructor() {
@@ -7333,11 +8920,10 @@ KDCore.registerLibraryToLoad(function() {
             color: null,
             width: 2
           },
-          textColor: "#FFFFFF".toCss(),
-          // ? can be Null or not exists
+          textColor: "#FFFFFF",
           shadow: {
             color: "#000",
-            opacity: 200,
+            opacity: 0,
             margins: {
               x: 1,
               y: 1
@@ -8557,6 +10143,163 @@ KDCore.registerLibraryToLoad(function() {
       this._parent.style.width = Graphics._canvas.style.width;
       this._parent.style.height = Graphics._canvas.style.height;
     };
+    _.initReactComponents = function(withBabel = true) {
+      var e;
+      try {
+        if (withBabel) {
+          this._loadBabel();
+        }
+        return this._loadReact();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._loadBabel = function() {
+      var e;
+      try {
+        return this._loadScript('https://unpkg.com/babel-standalone@6/babel.min.js');
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._loadReact = function() {
+      var e;
+      try {
+        this._loadScript('https://unpkg.com/react@18/umd/react.production.min.js');
+        return this._loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js');
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._loadScript = function(src, isReact = false) {
+      var e, script;
+      try {
+        script = document.createElement("script");
+        if (isReact === true) {
+          script.type = "text/babel";
+        } else {
+          script.type = "text/javascript";
+          script.crossorigin = true;
+        }
+        script.src = src;
+        script.async = false;
+        script.defer = true;
+        script.onerror = function(e) {
+          KDCore.warning('HUI: Failed to load script');
+          return KDCore.warning(e);
+        };
+        document.body.appendChild(script);
+        if (isReact === true) {
+          return window.dispatchEvent(new Event('DOMContentLoaded'));
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.loadReactComponent = function(componentName, folder = 'data/uiComponents') {
+      var e, src;
+      try {
+        src = folder + "/" + componentName + ".js";
+        return this._loadScript(src, true);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.addReactComponent = function(componentName, props, uniqueId = null) {
+      var e, element, reactElement, root;
+      try {
+        if (window[componentName] == null) {
+          KDCore.warning("Cant find " + componentName + ", make sure to load it first");
+          return null;
+        }
+        if (uniqueId == null) {
+          uniqueId = componentName;
+        }
+        // * Создаём отдельный DIV для каждого элемента (чтобы можно было удалять)
+        element = this._getElementForReactComponent(uniqueId);
+        root = ReactDOM.createRoot(element);
+        reactElement = React.createElement(window[componentName], props);
+        root.render(reactElement);
+        return KDCore.HUI.getElement(uniqueId);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return null;
+      }
+    };
+    // * Simple React Component (without JSX!)
+    _.loadReactComponentFromFile = function(filename, props, uniqueId, handler, folder = "data/uiComponents") {
+      var e, url, xhr;
+      try {
+        xhr = new XMLHttpRequest();
+        url = folder + "/" + filename + ".js";
+        xhr.open("GET", url);
+        xhr.overrideMimeType("plain/text");
+        xhr.onload = function() {
+          var e, element;
+          eval(xhr.responseText);
+          element = KDCore.HUI.addReactComponent(filename, props, uniqueId);
+          try {
+            if (handler != null) {
+              return handler(element, filename);
+            }
+          } catch (error) {
+            e = error;
+            return KDCore.warning(e);
+          }
+        };
+        return xhr.send();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._getElementForReactComponent = function(componentId) {
+      var e, element;
+      try {
+        this.removeElementById(componentId);
+        element = this.addElement(componentId, '', null);
+        return element;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
+    };
+    _.loadElementFromFile = function(filename, handler, folder = "data/uiComponents") {
+      var e, url, xhr;
+      try {
+        xhr = new XMLHttpRequest();
+        url = folder + "/" + filename + ".html";
+        xhr.open("GET", url);
+        xhr.overrideMimeType("plain/text");
+        xhr.onload = function() {
+          var e, element, htmlElementText;
+          // * Хотел отдельные данные передавать и заменять в HTML текст
+          // * Но если у нас есть React компоненты, то это не надо
+          //htmlElementText = @convertDataKeys(xhr.responseText, dataKeys)
+          htmlElementText = xhr.responseText;
+          element = KDCore.HUI.addElement(filename, htmlElementText, null);
+          try {
+            if (handler != null) {
+              return handler(element, filename);
+            }
+          } catch (error) {
+            e = error;
+            return KDCore.warning(e);
+          }
+        };
+        return xhr.send();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
     _.addCSS = function(name, folder = "css") {
       var head;
       if (!this.isInited()) {
@@ -8583,6 +10326,15 @@ KDCore.registerLibraryToLoad(function() {
       }
       this._parent.appendChild(element);
       return element;
+    };
+    _.appendElement = function(element) {
+      var e;
+      try {
+        return this._parent.appendChild(element);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     };
     // * Может быть NULL
     _.getElement = function(id) {
@@ -8903,8 +10655,7 @@ KDCore.registerLibraryToLoad(function() {
           if (String.any(text) && text.contains("<center>")) {
             if (text[0] === "<" && text[1] === "c") { // * Должен быть в начале строки
               newText = text.replace("<center>", "");
-              this.drawTextExInCenter(newText, x, y, width);
-              return;
+              return this.drawTextExInCenter(newText, x, y, width);
             }
           }
         }
@@ -8912,7 +10663,7 @@ KDCore.registerLibraryToLoad(function() {
         e = error;
         KDCore.warning(e);
       }
-      alias_WBDTEX_KDCore29122021.call(this, ...arguments);
+      return alias_WBDTEX_KDCore29122021.call(this, ...arguments);
     };
   }
   //?NEW
@@ -8930,11 +10681,11 @@ KDCore.registerLibraryToLoad(function() {
       } else {
         newY = y;
       }
-      this.drawTextEx(text, newX, newY, width);
+      return this.drawTextEx(text, newX, newY, width);
     } catch (error) {
       e = error;
       KDCore.warning(e);
-      this.drawTextEx(text, x, y, width);
+      return this.drawTextEx(text, x, y, width);
     }
   };
   //?NEW
@@ -8943,7 +10694,7 @@ KDCore.registerLibraryToLoad(function() {
     this.drawTextEx("", 0, 0, 100);
     maxWidth = this.contentsWidth();
     wrappedText = Window_Message.prototype.pWordWrap.call(this, text, width || maxWidth, maxLines);
-    this.drawTextEx(wrappedText, x, y, width);
+    return this.drawTextEx(wrappedText, x, y, width);
   };
   //?NEW
   return Window_Message.prototype.pWordWrap = function(text, maxWidth, maxLines) {
@@ -9012,7 +10763,7 @@ if (KDCore._requireLoadLibrary === true) {
 // ==========================================================================
 // ==========================================================================
 
-//Plugin KDCore builded by PKD PluginBuilder 2.2 - 18.11.2022
+//Plugin KDCore builded by PKD PluginBuilder 2.2 - 20.02.2024
 
 // * FOR MV
 
@@ -9544,6 +11295,7 @@ if (KDCore._requireLoadLibrary === true) {
     return $gamePlayer._absInvOffByUAPI !== true;
   };
   window.DisableMapInventory = function() {
+    $gameTemp.__miNotCloseSE = true;
     $gamePlayer._absInvOffByUAPI = true;
     CloseMapInventory();
   };
@@ -10174,7 +11926,7 @@ if (KDCore._requireLoadLibrary === true) {
         members = $gameParty.battleMembers();
       }
       // * Фильтр, чтобы убирать из Selector запрещённых в параметрах персонажей
-      filter = PKD_MI.Parameters.getForbiddenActorsForPartySelector();
+      filter = this._getForbiddenActorsForPartySelector();
       if (filter.length > 0) {
         newMembers = [];
         for (j = 0, len = members.length; j < len; j++) {
@@ -10190,6 +11942,33 @@ if (KDCore._requireLoadLibrary === true) {
         return members;
       }
     }
+  };
+  _._getForbiddenActorsForPartySelector = function() {
+    var actorId, dinamicAllowed, dinamicForbidden, e, forbidden, fromParameters, j, k, l, len, len1, len2;
+    try {
+      forbidden = [];
+      fromParameters = PKD_MI.Parameters.getForbiddenActorsForPartySelector();
+      dinamicForbidden = $gamePlayer.miGetForbiddenActorsForPartySelector();
+      dinamicAllowed = $gamePlayer.miGetAllowedActorsForPartySelector();
+      for (j = 0, len = fromParameters.length; j < len; j++) {
+        actorId = fromParameters[j];
+        forbidden.push(actorId);
+      }
+      for (k = 0, len1 = dinamicForbidden.length; k < len1; k++) {
+        actorId = dinamicForbidden[k];
+        if (!forbidden.contains(actorId)) {
+          forbidden.push(actorId);
+        }
+      }
+      for (l = 0, len2 = dinamicAllowed.length; l < len2; l++) {
+        actorId = dinamicAllowed[l];
+        forbidden.delete(actorId);
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return forbidden;
   };
   _.closeInventoryByClick = function() {
     if (this.eUI == null) {
@@ -10577,6 +12356,115 @@ if (KDCore._requireLoadLibrary === true) {
         PKD_MI.invShowCategoryItems();
       }
     }
+  };
+  //?u26
+  // * ============================ UPDATE 2.6 =========================
+  _.isItemHaveAlterDescription = function(item) {
+    var e;
+    if (item == null) {
+      return false;
+    }
+    try {
+      return this.getAlternativeDescSettingsForItem(item) != null;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return false;
+  };
+  _.getAlternativeDescSettingsForItem = function(item) {
+    var e, list;
+    try {
+      list = PKD_MI.Parameters.get_AlternativeDescriptionsList();
+      return list.find(function(i) {
+        return i.itemId === item.id;
+      });
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return null;
+    }
+  };
+  //?u28
+  // * ============================ UPDATE 2.8 =========================
+  _.showExternalItemDescriptionWindowFor = function(item, x, y, appearSpeed = 0) {
+    var _itemDescWindow, cell, e, isEqupItem;
+    try {
+      if ($gameTemp.__extDescriptionWindow != null) {
+        PKD_MI.closeExternalDescriptionWindow();
+      }
+      isEqupItem = DataManager.isArmor(item) || DataManager.isWeapon(item);
+      cell = {
+        x: x,
+        y: y,
+        item: item,
+        _isChestItem: true,
+        isCanBeUnEquiped: function() {
+          return isEqupItem === true;
+        },
+        isEnabled: function() {
+          return true;
+        }
+      };
+      if (PKD_MI.isItemHaveAlterDescription(cell.item)) {
+        _itemDescWindow = new Sprite_MI_AlternativeDescription(cell, false);
+      } else {
+        _itemDescWindow = new PKD_MI.LIBS.Sprite_MapInvHelp();
+        _itemDescWindow.setup(cell);
+        _itemDescWindow.refreshPlacement(false);
+      }
+      if (appearSpeed > 0) {
+        _itemDescWindow.appear(appearSpeed);
+      }
+      SceneManager._scene.addChild(_itemDescWindow);
+      $gameTemp.__extDescriptionWindow = _itemDescWindow;
+      return _itemDescWindow;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return null;
+    }
+  };
+  _.closeExternalDescriptionWindow = function() {
+    var e;
+    try {
+      if ($gameTemp.__extDescriptionWindow == null) {
+        return;
+      }
+      $gameTemp.__extDescriptionWindow.visible = false;
+      $gameTemp.__extDescriptionWindow.removeFromParent();
+      $gameTemp.__extDescriptionWindow = null;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      $gameTemp.__extDescriptionWindow = null;
+    }
+  };
+  _.addForbiddenActorForPartySelector = function(actorId) {
+    var e;
+    try {
+      return $gamePlayer.miAddForbiddenActorForPartySelectorList(actorId);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _.removeForbiddenActorForPartySelector = function(actorId) {
+    var e;
+    try {
+      return $gamePlayer.miRemoveForbiddenActorForPartySelectorList(actorId);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _.onSliderDropOutOkClick = function() {
+    if (_.isInventoryOpened()) {
+      _.eUI.inventory.onSliderDropOkClick();
+    }
+  };
+  _.onSliderDropOutValueChanged = function(valuePercent) {
+    return _.eUI.inventory.onSliderValueChanged(valuePercent);
   };
 })();
 
@@ -11197,6 +13085,32 @@ if (KDCore._requireLoadLibrary === true) {
     }
     return false;
   };
+  //u27
+  _.miGetWhoIsEquipped = function(item) {
+    var actor, e, items, j, len, ref;
+    try {
+      if (item == null) {
+        return 0;
+      }
+      ref = this.members();
+      for (j = 0, len = ref.length; j < len; j++) {
+        actor = ref[j];
+        if (actor == null) {
+          continue;
+        }
+        items = actor.equips().filter(function(i) {
+          return i === item;
+        });
+        if (items.length > 0) {
+          return actor.actorId();
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return 0;
+  };
   //u20
   _.getMaxWeightCapacity = function() {
     return $gameTemp._miMaxWeightCapacity || 0;
@@ -11226,6 +13140,9 @@ if (KDCore._requireLoadLibrary === true) {
       return a + (DataManager.getItemWeight(b) * $gameParty.numItems(b));
     };
     w = items.reduce(f, 0);
+    if (PKD_MI.Parameters.get_IsEquippedWeightIncluded() === true) {
+      w += this._collectWeightFromEquipments();
+    }
     return w;
   };
   _._collectWeightCapacityFromEquipment = function() {
@@ -11246,7 +13163,7 @@ if (KDCore._requireLoadLibrary === true) {
           }
           try {
             if ((item.meta != null) && (item.meta.weightStore != null)) {
-              this._lastCapacityValue += parseInt(item.meta.weightStore);
+              this._lastCapacityValue += Number(item.meta.weightStore);
             }
           } catch (error) {
             e = error;
@@ -11258,6 +13175,31 @@ if (KDCore._requireLoadLibrary === true) {
       this._refreshInventoryWAutoState();
     }
     return this._lastCapacityValue;
+  };
+  _._collectWeightFromEquipments = function() {
+    var actor, e, item, j, k, len, len1, ref, ref1, w;
+    w = 0;
+    ref = PKD_MI.partyGroup();
+    for (j = 0, len = ref.length; j < len; j++) {
+      actor = ref[j];
+      if (actor == null) {
+        continue;
+      }
+      ref1 = actor.equips();
+      for (k = 0, len1 = ref1.length; k < len1; k++) {
+        item = ref1[k];
+        if (item == null) {
+          continue;
+        }
+        try {
+          w += DataManager.getItemWeight(item);
+        } catch (error) {
+          e = error;
+          PKD_MI.warning(e);
+        }
+      }
+    }
+    return w;
   };
   _._refreshInventoryWAutoState = function() {
     var actor, j, len, ref;
@@ -11565,10 +13507,10 @@ PKD_MI.LoadExt_ExtendedLoot = function() {
       return null;
     };
   })();
+  if (!KDCore.Sprite.prototype._updateOpChanger) {
+    KDCore.Sprite.prototype._updateOpChanger = function() {};
+  }
 };
-
-// ■ END PELWindow_LootList.coffee
-//---------------------------------------------------------------------------
 
 
 // Generated by CoffeeScript 2.6.1
@@ -11754,6 +13696,38 @@ PKD_MI.LoadExt_ExtendedLoot = function() {
 })();
 
 // ■ END Game_Event.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Map.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = Game_Map.prototype;
+  _.miMakePlayerVisualDrop = function(item, count) {
+    var data;
+    if (!Imported.PKD_ExtendedLoot) {
+      return;
+    }
+    if (item == null) {
+      return;
+    }
+    if (count <= 0) {
+      return;
+    }
+    if (!KDCore.Utils.isSceneMap()) {
+      return;
+    }
+    data = [$gamePlayer.x, $gamePlayer.y + 1, KDCore.Utils.getItemTypeId(item), item.id, count];
+    SceneManager._scene.pMakeVisualDropNow(data);
+  };
+})();
+
+// ■ END Game_Map.coffee
 //---------------------------------------------------------------------------
 
 
@@ -12164,6 +14138,79 @@ PKD_MI.LoadExt_ExtendedLoot = function() {
       KDCore.warning(e);
     }
   };
+  //?UPD28 (ALL BELOW)
+  // ========================== UPDATE 2.8 ===============================
+
+  // * Используется два массива, чтобы статичный параметр плагина модифицировать!!!
+  // * Немного больше кода, но проще, чем пользователю объяснять...
+  _.miInitForbiddenActorsForPartySelectorList = function() {
+    var e;
+    try {
+      if (this._miForbiddenActorsList == null) {
+        this._miForbiddenActorsList = [];
+      }
+      if (this._miAllowedActorsList == null) {
+        return this._miAllowedActorsList = [];
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _.miGetForbiddenActorsForPartySelector = function() {
+    var e;
+    try {
+      this.miInitForbiddenActorsForPartySelectorList();
+      return this._miForbiddenActorsList;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return [];
+  };
+  _.miGetAllowedActorsForPartySelector = function() {
+    var e;
+    try {
+      this.miInitForbiddenActorsForPartySelectorList();
+      return this._miAllowedActorsList;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return [];
+  };
+  _.miAddForbiddenActorForPartySelectorList = function(actorId) {
+    var e;
+    try {
+      if (actorId == null) {
+        return;
+      }
+      this.miInitForbiddenActorsForPartySelectorList();
+      if (!this._miForbiddenActorsList.contains(actorId)) {
+        this._miForbiddenActorsList.push(actorId);
+      }
+      this._miAllowedActorsList.delete(actorId);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+  };
+  _.miRemoveForbiddenActorForPartySelectorList = function(actorId) {
+    var e;
+    try {
+      if (actorId == null) {
+        return;
+      }
+      this.miInitForbiddenActorsForPartySelectorList();
+      if (!this._miAllowedActorsList.contains(actorId)) {
+        this._miAllowedActorsList.push(actorId);
+      }
+      this._miForbiddenActorsList.delete(actorId);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+  };
 })();
 
 // ■ END Game_Player.coffee
@@ -12194,12 +14241,22 @@ PKD_MI.LoadExt_ExtendedLoot = function() {
       this.goldRefreshThread = new KDCore.TimedUpdate(10, this._onGoldTick.bind(this));
       this._categoryLastPage = {};
       this._config();
+      this._preload();
+      return;
     }
 
     _config() {
       this._moveToLastPos();
       if (!PKD_MI.Parameters.get_MapInventoryAllowDrag()) {
         return this._updateInvDrag = function() {};
+      }
+    }
+
+    _preload() {
+      var img;
+      img = PKD_MI.Parameters.get_CustomHelpWindowBackground();
+      if (String.any(img)) {
+        ImageManager.loadPKDMI(img);
       }
     }
 
@@ -12688,7 +14745,12 @@ PKD_MI.LoadExt_ExtendedLoot = function() {
 
     //u22
     _onActionItem(cell) {
+      var se;
       if (!cell.isEnabled()) {
+        se = PKD_MI.Parameters.get_DisabledCellClickSE();
+        if (String.any(se)) {
+          KDCore.Utils.playSE(se);
+        }
         return;
       }
       if (this.isSomeItemFocused()) {
@@ -12803,14 +14865,20 @@ PKD_MI.LoadExt_ExtendedLoot = function() {
     }
 
     _refreshWeight() {
-      var isOver, wa, wc;
+      var fixPoint, isOver, twc, wa, wc;
       if (!PKD_MI.Parameters.get_UsedWSystem()) {
         return;
       }
       wc = $gameParty.getCurrentWeight();
       wa = $gameParty.getMaxWeightCapacity();
       isOver = wc > wa;
-      return this.invSprite._footer.drawWeight(wc + "/" + wa, isOver);
+      if (wc % 1 === 0) {
+        fixPoint = 0;
+      } else {
+        fixPoint = 1;
+      }
+      twc = wc.toFixed(fixPoint);
+      return this.invSprite._footer.drawWeight(twc + "/" + wa, isOver);
     }
 
     //?UPD18
@@ -13025,7 +15093,23 @@ PKD_MI.LoadExt_ExtendedLoot = function() {
       if ((ref6 = this._actors[6]) != null) {
         ref6.moveLeftAndDown();
       }
-      return (ref7 = this._actors[7]) != null ? ref7.moveRightAndDown() : void 0;
+      if ((ref7 = this._actors[7]) != null) {
+        ref7.moveRightAndDown();
+      }
+      this._playAppearsSound();
+    }
+
+    _playAppearsSound() {
+      var e, se;
+      try {
+        se = PKD_MI.Parameters.getPartySelectorOpenSE();
+        if (String.any(se)) {
+          return KDCore.Utils.playSE(se);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     }
 
     close() {
@@ -13515,6 +15599,103 @@ PKD_MI.LoadExt_ExtendedLoot = function() {
         });
       }
 
+      //u26
+      get_AlternativeDescriptionsList() {
+        return this.newParser.getParam("altDescriptionsList", []);
+      }
+
+      //u26
+      get_UserDisabledCellImage() {
+        return this.newParser.getParam("userDisabledCellImage", "");
+      }
+
+      //u27
+      get_IsEquippedWeightIncluded() {
+        return this.newParser.getParam("wSystemEquipmentsIncluded", false);
+      }
+
+      //u27
+      get_ShortStatsText() {
+        return this.newParser.getParam("useShortStatsText", false);
+      }
+
+      //u27
+      get_CustomHelpWindowBackground() {
+        return this.newParser.getParam("customHelpWinBack", "");
+      }
+
+      //u27
+      get_DisabledCellClickSE() {
+        return this.newParser.getParam("disabledCellClickSe", "");
+      }
+
+      //u27
+      get_IsUseQualityIconsPerTier() {
+        return this.newParser.getParam("qualityIconsPerTier", false);
+      }
+
+      //u27
+      get_IsShowQualityLevelImageBelowIcon() {
+        return this.newParser.getParam("qualityLevelBelowIcon", false);
+      }
+
+      //u27
+      get_IsShowUseOnlyImagePerActor() {
+        return this.newParser.getParam("showUseOnlyImagePerActor", false);
+      }
+
+      //u27
+      get_UseOnleImagePosition() {
+        return this.newParser.getParam("useOnlyImagePerActorPos", {
+          x: 196,
+          y: 120
+        });
+      }
+
+      //u27
+      get_IsShowWhoEquipImage() {
+        return this.newParser.getParam("showWhoEquipThisItem", false);
+      }
+
+      //u27
+      get_WhoEquipImagePosition() {
+        return this.newParser.getParam("whoEquipImagePos", {
+          x: 0,
+          y: 0
+        });
+      }
+
+      //u27
+      get_PartySelectorSettings() {
+        return this.newParser.getParam("partySelectorVisualsSettings", {
+          actorFaceSize: 46,
+          actorFaceMargins: {
+            x: 6,
+            y: 6
+          },
+          equipIconSize: 20,
+          moveDistance: 50,
+          moveSpeed: 10,
+          fadeOutSpeed: 25,
+          fadeInSpeed: 50,
+          backgroundLayerSize: {
+            w: -1,
+            h: -1
+          },
+          backgroundLayerOpacity: 200
+        });
+      }
+
+      //u27
+      get_HotCellsCustomIconSize() {
+        return this.newParser.getParam("hotCellCustomIconSize", 0);
+      }
+
+      //u27
+      get_IsNotUseExtraImgInHotCell() {
+        return this.newParser.getParam("notUseExtraImgIconInHotCell", false);
+      }
+
     };
 
     PKD_MI.register(Parameters);
@@ -13600,6 +15781,50 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
 
 // Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
+// ■ PKD_MI.Parameters.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  // * PLUGIN PARAMETERS FOR VERSION 2.8 and above!
+
+  //@[DEFINES]
+  _ = PKD_MI.LIBS.Parameters.prototype;
+  _.getOpenInvSE = function() {
+    return this.newParser.getParam("seOnInvOpen", "");
+  };
+  _.getCloseInvSE = function() {
+    return this.newParser.getParam("seOnInvClose", "");
+  };
+  _.getPartySelectorOpenSE = function() {
+    return this.newParser.getParam("seOnPartySelectorAppears", "");
+  };
+  _.isRemoveHotCellItemIfZero = function() {
+    return this.newParser.getParam("hotCellRemoveItemAtZero", false);
+  };
+  _.isShowDropOutSlider = function() {
+    return this.newParser.getParam("isShowDropOutSlider", false);
+  };
+  _.isAllowAssignHotCellsByHotKeys = function() {
+    return this.newParser.getParam("isAllowAssignHotCellsByHotKeys", false);
+  };
+  _.isDropOutToGround = function() {
+    return this.newParser.getParam("isDropOutToGround", false);
+  };
+  _.isDropOutViaThrowOutBox = function() {
+    return this.newParser.getParam("isDropOutViaThrowOutBox", false);
+  };
+  _.isCloseInventoryWithTakeAll = function() {
+    return this.newParser.getParam("isCloseInventoryWithTakeAll", false);
+  };
+})();
+
+// ■ END PKD_MI.Parameters.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Scene_Boot.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
@@ -13646,11 +15871,13 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
   _.stop = function() {
     var e, ref;
     ALIAS__stop.call(this);
+    PKD_MI.closeExternalDescriptionWindow();
     try {
       if ((ref = this._spritesetIUI) != null) {
         ref.terminate();
       }
       this.removeChild(this._spritesetIUI);
+      PKD_MI.setUI(null);
     } catch (error) {
       e = error;
       PKD_MI.warning(e);
@@ -13673,11 +15900,17 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
     return ALIAS__processMapTouch.call(this);
   };
   
-  //?UPD18
+  //?UPD18, 26
   //@[ALIAS]
   ALIAS__isMenuCalled = _.isMenuCalled;
   _.isMenuCalled = function() {
-    if (TouchInput.isCancelled() || Input.isTriggered('menu')) {
+    if (Input.isTriggered('menu')) {
+      if (PKD_MI.isSomeIsOpen() && !PKD_MI.Parameters.isCloseOnlyByButton()) {
+        PKD_MI.closeSome();
+        return false;
+      }
+    }
+    if (TouchInput.isCancelled()) {
       if (PKD_MI.isCellUnderRightClick()) {
         return false;
       } else if (PKD_MI.isSomeIsOpen() && !PKD_MI.Parameters.isCloseOnlyByButton()) {
@@ -13739,6 +15972,33 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
 
 // Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Scene_Title.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var ALIAS__create, _;
+  //@[DEFINES]
+  _ = Scene_Title.prototype;
+  //@[ALIAS]
+  ALIAS__create = _.create;
+  _.create = function() {
+    var e;
+    try {
+      PKD_MI.setUI(null);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return ALIAS__create.call(this, ...arguments);
+  };
+})();
+
+// ■ END Scene_Title.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
 // ■ SliderController.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
@@ -13754,6 +16014,9 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
       } else if (type === 1) {
         mA = PKD_MI.onSliderChestOkClick;
         mB = PKD_MI.onSliderChestValueChanged;
+      } else if (type === 2) {
+        mA = PKD_MI.onSliderDropOutOkClick;
+        mB = PKD_MI.onSliderDropOutValueChanged;
       }
       this.contentSprite.createSlider(mA, mB);
     }
@@ -14072,11 +16335,17 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
       this.opacity = 0;
     }
 
+    _mySettings() {
+      return PKD_MI.Parameters.get_PartySelectorSettings();
+    }
+
     _init() {
-      this._moveDistance = 50;
-      this._moveSpeed = 10;
-      this._fadeOutSpeed = 25;
-      return this._fadeInSpeed = 50;
+      var s;
+      s = this._mySettings();
+      this._moveDistance = s.moveDistance;
+      this._moveSpeed = s.moveSpeed;
+      this._fadeOutSpeed = s.fadeOutSpeed;
+      return this._fadeInSpeed = s.fadeInSpeed;
     }
 
     _create() {
@@ -14106,17 +16375,21 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
     }
 
     _createActorFaceSpr() {
-      this.actorFaceSpr = KDCore.Sprite.FromBitmap(46, 46);
-      this.actorFaceSpr.move(6, 6);
+      var actorFaceMargins, actorFaceSize;
+      ({actorFaceSize, actorFaceMargins} = this._mySettings());
+      this.actorFaceSpr = KDCore.Sprite.FromBitmap(actorFaceSize, actorFaceSize);
+      this.actorFaceSpr.move(actorFaceMargins.x, actorFaceMargins.y);
       //@actorFaceSpr.bitmap.fillAll KDCore.Color.RED
       return this.addChild(this.actorFaceSpr);
     }
 
     _createDisableLayer() {
-      this.disableLayer = KDCore.Sprite.FromBitmap(46, 46);
+      var actorFaceMargins, actorFaceSize;
+      ({actorFaceSize, actorFaceMargins} = this._mySettings());
+      this.disableLayer = KDCore.Sprite.FromBitmap(actorFaceSize, actorFaceSize);
       this.disableLayer.bitmap.fillAll(KDCore.Color.BLACK);
       this.disableLayer.opacity = 200;
-      this.disableLayer.move(6, 6);
+      this.disableLayer.move(actorFaceMargins.x, actorFaceMargins.y);
       this.disableLayer.visible = false;
       return this.addChild(this.disableLayer);
     }
@@ -14208,13 +16481,14 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
     }
 
     _drawEquipIcon(iconIndex, withBack) {
-      var s;
+      var equipIconSize, s;
       s = this.settings.partySelectorEquipIcons;
-      this.iconSpr = KDCore.Sprite.FromBitmap(20);
+      ({equipIconSize} = this._mySettings());
+      this.iconSpr = KDCore.Sprite.FromBitmap(equipIconSize);
       if (withBack === true) {
-        this.iconSpr.drawIcon(0, 0, s.nothingEquippedIcon, 20);
+        this.iconSpr.drawIcon(0, 0, s.nothingEquippedIcon, equipIconSize);
       }
-      this.iconSpr.drawIcon(0, 0, iconIndex, 20);
+      this.iconSpr.drawIcon(0, 0, iconIndex, equipIconSize);
       this.iconSpr.move(s.marginX, s.marginY);
       //if @actor == $gameParty.leader()
       //    @iconSpr.move 0, s.marginY
@@ -14389,12 +16663,19 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
         return;
       }
       this._rareSpr = new Sprite();
-      return this.add(this._rareSpr);
+      if (PKD_MI.Parameters.get_IsShowQualityLevelImageBelowIcon()) {
+        this._iconSprPlace.addChildAt(this._rareSpr, 0);
+      } else {
+        this.add(this._rareSpr);
+      }
     }
 
     _createSpecial() {
       this._createSpecialSpr();
-      return this._createSpecialText();
+      this._createSpecialText();
+      if (PKD_MI.Parameters.get_IsShowWhoEquipImage()) {
+        this._createSpecialActorWhoEquips();
+      }
     }
 
     _createSpecialSpr() {
@@ -14408,6 +16689,20 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
       this._specialSprText = KDCore.Sprite.FromBitmap(this.settings.cellItemSpecialText.textBoxWidth, this.settings.cellItemSpecialText.textBoxHeight);
       this.applyTextSettingsByExtraSettings(this._specialSprText, this.settings.cellItemSpecialText);
       this._specialSpr.add(this._specialSprText);
+    }
+
+    _createSpecialActorWhoEquips() {
+      var e, pos;
+      try {
+        this._specialActorWhoEquipsSpr = new Sprite();
+        pos = PKD_MI.Parameters.get_WhoEquipImagePosition();
+        this._specialActorWhoEquipsSpr.move(pos);
+        this._specialActorWhoEquipsSpr.visible = false;
+        return this.add(this._specialActorWhoEquipsSpr);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     }
 
     _createCountText() {
@@ -14578,6 +16873,20 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
       this._cell.setButtonImages(...this._imgs2);
       this._specialSpr.bitmap = ImageManager.loadPKDMI('InventorySlotB');
       this._specialSpr.visible = true;
+      if (PKD_MI.Parameters.get_IsShowWhoEquipImage()) {
+        this._applyActorEquippedStateImage();
+      }
+    }
+
+    _applyActorEquippedStateImage() {
+      var actorId, imageName;
+      imageName = "InventorySlotB_Actor_";
+      actorId = $gameParty.miGetWhoIsEquipped(this.item);
+      if (actorId <= 0) {
+        return;
+      }
+      this._specialActorWhoEquipsSpr.bitmap = ImageManager.loadPKDMI(imageName + actorId);
+      this._specialActorWhoEquipsSpr.visible = true;
     }
 
     registerClick() {
@@ -14608,9 +16917,13 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
 
     //u20
     _clearSpeacialState() {
+      var ref;
       if (this._inSpecialState === true || this._inSpecialStateGP === true) {
         this._cell.setButtonImages(...this._imgs0);
         this._specialSpr.visible = false;
+        if ((ref = this._specialActorWhoEquipsSpr) != null) {
+          ref.visible = false;
+        }
       }
       this._inSpecialState = false;
       this._inSpecialStateGP = false;
@@ -14638,15 +16951,25 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
             return this.drawIcon(iconIndex);
           });
         }
+        this._drawIconBody(iconIndex);
+      }
+    }
+
+    _drawIconBody(iconIndex) {
+      var e;
+      try {
         if (this.customCellParams != null) {
           if (this.customCellParams.iconMode === 0) {
-            this._iconSpr.bitmap.drawIcon(0, 0, iconIndex, 32);
+            return this._iconSpr.bitmap.drawIcon(0, 0, iconIndex, 32);
           } else {
-            this._iconSpr.bitmap.drawIcon(0, 0, iconIndex, this.slotBitmap.width - 8);
+            return this._iconSpr.bitmap.drawIcon(0, 0, iconIndex, this.slotBitmap.width - 8);
           }
         } else {
-          this._iconSpr.bitmap.drawIcon(0, 0, iconIndex, 30);
+          return this._iconSpr.bitmap.drawIcon(0, 0, iconIndex, 30);
         }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
       }
     }
 
@@ -14671,15 +16994,21 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
     }
 
     _createFader() {
-      if (this.customCellParams != null) {
-        this._fader = KDCore.Sprite.FromBitmap(this.customCellParams.iconSize);
+      var faderImageName;
+      if (String.any(PKD_MI.Parameters.get_UserDisabledCellImage())) {
+        faderImageName = PKD_MI.Parameters.get_UserDisabledCellImage();
+        this._fader = new KDCore.Sprite(ImageManager.loadPKDMI(faderImageName));
       } else {
-        this._fader = KDCore.Sprite.FromBitmap(30, 30);
+        if (this.customCellParams != null) {
+          this._fader = KDCore.Sprite.FromBitmap(this.customCellParams.iconSize);
+        } else {
+          this._fader = KDCore.Sprite.FromBitmap(30, 30);
+        }
+        this._fader.bitmap.fillAll(KDCore.Color.BLACK);
+        this._fader.opacity = 120;
+        this._fader.move(4, 4);
       }
-      this._fader.bitmap.fillAll(KDCore.Color.BLACK);
-      this._fader.opacity = 120;
       this._fader.visible = false;
-      this._fader.move(4, 4);
       return this.add(this._fader);
     }
 
@@ -14766,6 +17095,7 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
         return;
       }
       $gameTemp._pkdMIHotCellMoving = -1;
+      $gameTemp._pkdMIMovedCellRef = this;
       return PKD_MI.startMoveCell(this.item);
     }
 
@@ -14874,18 +17204,17 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
         value = 0;
       }
       type = 'normal';
-      if (value < 0) {
-        type = 'lower';
-      } else if (value > 0) {
-        type = 'hight';
-        value = "+" + value;
-      }
+      //if value < 0
+      //    type = 'lower'
+      //else if value > 0
+      //    type = 'hight'
+      //    value = "+" + value
       this.baseTextLine.b().textColor = this.getColorHex(type);
       this.baseTextLine.drawTextFull(value, 'center');
     }
 
     _drawStateDiffValue(actor) {
-      var actorCurrentParam, actorParamBase, eq, equippedValue, newValue, paramId, paramValue, t, type;
+      var actorCurrentParam, actorParamBase, eq, equippedValue, head, newValue, paramId, paramValue, t, tail, type;
       paramId = this.paramValueId();
       if (paramId >= 0) {
         paramValue = this.cell.item.params[paramId];
@@ -14909,13 +17238,25 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
         type = 'lower';
       }
       if (type === 'normal') {
-        this._drawStateValue(newValue, 'normal');
+        if (PKD_MI.Parameters.get_ShortStatsText()) {
+          t = equippedValue;
+        } else {
+          t = newValue;
+        }
+        this._drawStateValue(t, 'normal');
       } else {
         t = "";
         if (type === 'lower') {
-          t = newValue + "(-" + (actorCurrentParam - newValue) + ")";
+          head = newValue;
+          tail = "-" + (actorCurrentParam - newValue);
+        } else if (type === 'hight') {
+          head = newValue;
+          tail = "+" + (newValue - actorCurrentParam);
+        }
+        if (PKD_MI.Parameters.get_ShortStatsText()) {
+          t = tail;
         } else {
-          t = newValue + "(+" + (newValue - actorCurrentParam) + ")";
+          t = head + "(" + tail + ")";
         }
         this.baseTextLine.b().textColor = this.getColorHex(type);
         this.baseTextLine.drawTextFull(t, 'center');
@@ -15434,9 +17775,25 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
 
     _create() {
       this._loadSettings();
-      this._createBackground(this.settings.width, this.settings.height);
+      this._createCommonBackground();
+      this._decideForCreateBackground(this.settings.width, this.settings.height);
       this._createContent();
       return this._createCorner();
+    }
+
+    _decideForCreateBackground(w, h) {
+      var customBackground, e;
+      try {
+        customBackground = PKD_MI.Parameters.get_CustomHelpWindowBackground();
+        if (String.any(customBackground)) {
+          return this._createCustomBackground(customBackground);
+        } else {
+          return this._createBackground(w, h);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     }
 
     _loadSettings() {
@@ -15448,14 +17805,32 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
       return PKD_MI.getUIMapInventorySettings();
     }
 
-    _createBackground(w, h) {
+    _createCommonBackground() {
       if (this._background == null) {
         this._background = new KDCore.Sprite();
         this.add(this._background);
       }
+    }
+
+    _createBackground(w, h) {
       this._background.bitmap = new Bitmap(w, h);
       this._background.bitmap.fillAll(KDCore.Color.FromHex(this.settings.backgroundColor));
       this._background.opacity = this.settings.backgroundOpacity;
+      this._usedCustomBackground = false;
+    }
+
+    _createCustomBackground(img) {
+      var e;
+      try {
+        if (!String.any(img)) {
+          return;
+        }
+        this._usedCustomBackground = true;
+        return this._background.bitmap = ImageManager.loadPKDMI(img);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     }
 
     _createCorner() {
@@ -15559,15 +17934,22 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
     }
 
     _createQLevel() {
-      var wIcon;
+      var marginX, marginY, wIcon;
       if (!PKD_MI.Parameters.get_AllowRareSystem()) {
         return;
       }
       this._textQLevelSpr = KDCore.Sprite.FromTextSettings(this.settings.itemQualityText);
+      ({marginX, marginY} = this.settings.itemQualityText);
+      this._textQLevelSpr.move(marginX, marginY);
       if (this.basicSettings.QualitySystem.qualityIcon != null) {
-        wIcon = PKD_MI.FromImgI(this.basicSettings.QualitySystem.qualityIcon);
-        wIcon.move(KDCore.Utils.jsonPos(this.settings.qualityIconPosition));
-        this.content.addChild(wIcon);
+        if (PKD_MI.Parameters.get_IsUseQualityIconsPerTier()) {
+
+        } else {
+          // * Will be drawn in Setup method
+          wIcon = PKD_MI.FromImgI(this.basicSettings.QualitySystem.qualityIcon);
+          wIcon.move(KDCore.Utils.jsonPos(this.settings.qualityIconPosition));
+          this.content.addChild(wIcon);
+        }
       }
       return this.content.addChild(this._textQLevelSpr);
     }
@@ -15606,7 +17988,11 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
       if (PKD_MI.Parameters.get_AllowEquipStats()) {
         this.prepareStats();
       }
+      if (PKD_MI.Parameters.get_IsShowUseOnlyImagePerActor()) {
+        this.drawUseOnlyActorInfo();
+      }
       this.refreshBackgroundHeight();
+      this.refreshCustomBackgroundImage();
     }
 
     drawCost() {
@@ -15857,11 +18243,18 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
     }
 
     drawQLevel() {
-      var color, qualityLevel, ref;
+      var color, marginX, marginY, qualityLevel;
       qualityLevel = DataManager.getItemQualityLevel(this.cell.item);
       color = this._getColorForQualityLevel(qualityLevel);
-      this._textQLevelSpr.b().textColor = color;
-      return (ref = this._textQLevelSpr) != null ? ref.drawTextWithSettings(this._getTextForQualityLevel(qualityLevel)) : void 0;
+      if (this._textQLevelSpr != null) {
+        this._textQLevelSpr.b().textColor = color;
+        this._textQLevelSpr.drawTextWithSettings(this._getTextForQualityLevel(qualityLevel));
+        ({marginX, marginY} = this.settings.itemQualityText);
+        this._textQLevelSpr.move(marginX, marginY);
+      }
+      if (PKD_MI.Parameters.get_IsUseQualityIconsPerTier()) {
+        return this._drawQLevelIcon(qualityLevel);
+      }
     }
 
     _getTextForQualityLevel(qualityLevel) {
@@ -15873,6 +18266,23 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
       return levelData[0];
     }
 
+    _drawQLevelIcon(qualityLevel) {
+      var defaultName, e, wIcon, wIconName;
+      try {
+        defaultName = this.basicSettings.QualitySystem.qualityIcon;
+        if (!String.any(defaultName)) {
+          return;
+        }
+        wIconName = defaultName + "_" + qualityLevel;
+        wIcon = PKD_MI.FromImgI(wIconName);
+        wIcon.move(KDCore.Utils.jsonPos(this.settings.qualityIconPosition));
+        return this.content.addChild(wIcon);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
     //u20
     _getColorForQualityLevel(qualityLevel) {
       return PKD_MI.GetColorForQuealityLevel(qualityLevel);
@@ -15880,35 +18290,42 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
 
     //u19, u23
     refreshPlacement(isFromInventory = true) {
-      var dx, dy, pos;
       if (isFromInventory && PKD_MI.Parameters.isStaticDescPosition() === true && (PKD_MI.Parameters.getStaticDescPosition() != null)) {
         this._setStaticPosition();
       } else {
-        pos = this.getSourcePos();
-        this.move(pos.x + this.settings.marginX, pos.y + this.settings.marginY);
-        dx = dy = 0;
-        if (this._background.width + this.x + 5 > Graphics.boxWidth) {
-          dx = 1;
-          this.x -= this.settings.marginX;
-        }
-        if (this._background.height + this.y + 5 > Graphics.boxHeight) {
-          dy = 1;
-          this.y -= this.settings.marginY;
-        }
-        this._background.setStaticAnchor(dx, dy);
-        this._refreshCornerPlacement(dx, dy);
+        this._setDynamicPosition();
       }
+    }
+
+    //u26
+    _setDynamicPosition() {
+      var dx, dy, pos;
+      pos = this.getSourcePos();
+      this.move(pos.x + this.settings.marginX, pos.y + this.settings.marginY);
+      dx = dy = 0;
+      if (this._background.bitmap.width + this.x + 5 > Graphics.boxWidth) {
+        dx = 1;
+        this.x -= this.settings.marginX;
+      }
+      if (this._background.bitmap.height + this.y + 5 > Graphics.boxHeight) {
+        dy = 1;
+        this.y -= this.settings.marginY;
+      }
+      this._background.setStaticAnchor(dx, dy);
+      this._refreshCornerPlacement(dx, dy);
     }
 
     //u19
     _setStaticPosition() {
-      var pos;
+      var pos, ref;
       pos = PKD_MI.Parameters.getStaticDescPosition();
       if (pos != null) {
         this.move(pos.x, pos.y);
       }
       // * В данном случае corner скрываем
-      this._corner.visible = false;
+      if ((ref = this._corner) != null) {
+        ref.visible = false;
+      }
     }
 
     getSourcePos() {
@@ -15954,6 +18371,9 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
       if (this.cell.item == null) {
         return;
       }
+      if (this._usedCustomBackground === true) {
+        return;
+      }
       try {
         h = KDCore.Utils.getValueFromMeta("invDescH", this.cell.item);
         w = KDCore.Utils.getValueFromMeta("invDescW", this.cell.item);
@@ -15965,6 +18385,40 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
             w = this.settings.width;
           }
           return this._createBackground(w, h);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    //u27
+    refreshCustomBackgroundImage() {
+      var customBackgroundImage;
+      customBackgroundImage = KDCore.Utils.getValueFromMeta("invDescBackImg", this.cell.item);
+      if (String.any(customBackgroundImage)) {
+        this._createCustomBackground(customBackgroundImage);
+      }
+    }
+
+    //u27
+    drawUseOnlyActorInfo() {
+      var e, image, pos, useOnlyActorId, useOnlySpr;
+      try {
+        if (this.cell == null) {
+          return;
+        }
+        if (this.cell.item == null) {
+          return;
+        }
+        useOnlyActorId = KDCore.Utils.getValueFromMeta("iOnlyForActor", this.cell.item);
+        // * Только если оружие ещё не экипировано
+        if (String.any(useOnlyActorId) && !this.cell.isCanBeUnEquiped()) {
+          image = "UseOnlyActor_" + useOnlyActorId;
+          useOnlySpr = PKD_MI.FromImgI(image);
+          pos = PKD_MI.Parameters.get_UseOnleImagePosition();
+          useOnlySpr.move(pos);
+          return this.content.addChild(useOnlySpr);
         }
       } catch (error) {
         e = error;
@@ -16218,7 +18672,18 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
     }
 
     playStartSE() {
-      return KDCore.Utils.playSE(this.settings.openInventorySE);
+      var e, se;
+      try {
+        se = PKD_MI.Parameters.getOpenInvSE();
+        if (String.any(se)) {
+          return KDCore.Utils.playSE(se);
+        } else {
+          return KDCore.Utils.playSE(this.settings.openInventorySE);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     }
 
     update() {
@@ -16286,6 +18751,174 @@ PKD_MI.Parameters = new PKD_MI.LIBS.Parameters();
 
 // ■ END zSprite_MapUserChestMain_PRO.coffee
 //---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+var Sprite_MI_AlternativeDescription;
+
+Sprite_MI_AlternativeDescription = class Sprite_MI_AlternativeDescription extends KDCore.Sprite {
+  constructor(cell, _isFromInventoryParam) {
+    super();
+    this.cell = cell;
+    this._isFromInventoryParam = _isFromInventoryParam;
+    this.settings = PKD_MI.getAlternativeDescSettingsForItem(this.cell.item);
+    this._loadImage();
+  }
+
+  s() {
+    return this.settings;
+  }
+
+  isLoaded() {
+    return this._background != null;
+  }
+
+  _loadImage() {
+    var b;
+    b = ImageManager.loadPKDMI(this.s().background);
+    this._backBitmap = b;
+    if (b.isReady()) {
+      return this._create();
+    } else {
+      return b.addLoadListener(this._create.bind(this));
+    }
+  }
+
+  _create() {
+    if (this._backBitmap == null) {
+      return;
+    }
+    this._createBackground();
+    this._createContent();
+    return this.refreshPlacement(this._isFromInventoryParam);
+  }
+
+  _createBackground() {
+    this._background = new KDCore.Sprite(this._backBitmap);
+    return this.add(this._background);
+  }
+
+  _createContent() {
+    this.content = new KDCore.Sprite();
+    this._createName();
+    this._createIcon();
+    this._createDescription();
+    this._background.add(this.content);
+  }
+
+  _createName() {
+    var e, name, settings;
+    try {
+      settings = this.s().titleTextSettings;
+      this.sprName = new KDCore.UI.Sprite_UIText(settings);
+      name = this.cell.item.name;
+      if (String.any(this.s().specialTitle)) {
+        name = this.s().specialTitle;
+      }
+      this.sprName.draw(name);
+      return this.content.add(this.sprName);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _createIcon() {
+    var e, extraImg, icon, settings, specialIconIndex, x, y;
+    try {
+      settings = this.s().iconSettings;
+      icon = this.cell.item.iconIndex;
+      extraImg = DataManager.getItemInvImage(this.cell.item);
+      if (String.any(extraImg)) {
+        icon = ImageManager.loadPKDMI_Icon(extraImg);
+      }
+      ({specialIconIndex} = this.s().iconSettings);
+      if (String.any(specialIconIndex) || specialIconIndex > 0) {
+        icon = specialIconIndex;
+      }
+      this.sprIcon = new KDCore.UI.Sprite_UIIcon({
+        ...settings,
+        index: icon
+      });
+      ({x, y} = settings.margins);
+      this.sprIcon.move(x, y);
+      return this.content.add(this.sprIcon);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _createDescription() {
+    var e, text;
+    try {
+      this.sprDesc = new KDCore.UI.Sprite_UITextExt(this.s().descriptionSettings);
+      if (String.any(this.s().extraDescription)) {
+        text = this.s().extraDescription;
+      } else {
+        text = this.cell.item.description;
+      }
+      this.sprDesc.draw(text);
+      this.sprDesc.draw(text); // * this is not error, better call two times a row for MV
+      return this.content.add(this.sprDesc);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  // * ==============     FROM Sprite_MapInvHelp =======================
+  showItemStats() {} // * EMPTY
+
+  delay() {
+    return 20; //return PKD_MI.LIBS.Sprite_MapInvHelp::delay.call(@, ...arguments)
+  }
+
+  refreshPlacement(isFromInventory = true) {
+    var e;
+    try {
+      return PKD_MI.LIBS.Sprite_MapInvHelp.prototype.refreshPlacement.call(this, ...arguments);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _refreshCornerPlacement() {} // * EMPTY
+
+  _setDynamicPosition() {
+    var e, x, y;
+    try {
+      ({x, y} = this.getSourcePos());
+      if (x > Graphics.width / 2) {
+        this.x = x - this._background.bitmap.width - this.s().marginX;
+      } else {
+        this.x = x + (this.s().marginX * 2);
+      }
+      this.y = Graphics.height / 2 - this._background.bitmap.height / 2;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      this.x = 0;
+      this.y = 0;
+    }
+  }
+
+  _setStaticPosition() {
+    var e;
+    try {
+      return PKD_MI.LIBS.Sprite_MapInvHelp.prototype._setStaticPosition.call(this, ...arguments);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  getSourcePos() {
+    return PKD_MI.LIBS.Sprite_MapInvHelp.prototype.getSourcePos.call(this, ...arguments);
+  }
+
+};
 
 
 // Generated by CoffeeScript 2.6.1
@@ -16507,16 +19140,25 @@ Spriteset_InvUI = class Spriteset_InvUI extends Sprite {
     if (ce > 0) {
       $gameTemp.reserveCommonEvent(ce);
     }
+    // * Sound inside open method
     this.inventory.open();
     this.openCategory($gameTemp._lastInvCategory);
   };
   _.closeInventory = function() {
-    var ce;
+    var ce, se;
     if ($gameTemp._miInvenotryPickActive === true) {
       $gameTemp._miESM = null;
       this.inventory._onItemPickUpDone(0);
     }
-    SoundManager.playCursor();
+    if (!$gameTemp.__miNotCloseSE) {
+      se = PKD_MI.Parameters.getCloseInvSE();
+      if (String.any(se)) {
+        KDCore.Utils.playSE(se);
+      } else {
+        SoundManager.playCursor();
+      }
+      $gameTemp.__miNotCloseSE = null;
+    }
     this.inventory.close();
     ce = PKD_MI.Parameters.getCloseInvCE();
     if (ce > 0) {
@@ -16584,9 +19226,15 @@ Spriteset_InvUI = class Spriteset_InvUI extends Sprite {
       if (this.isInventoryOpen()) {
         this.openCategory($gameTemp._lastInvCategory);
       }
-      if (PKD_MI.isPro()) { //?line
-        return this.refreshMapHotCells();
-      }
+      return setTimeout((() => {
+        var e;
+        try {
+          return this.refreshMapHotCells();
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }), 50);
     } catch (error) {
       e = error;
       return PKD_MI.warning(e);
@@ -17371,7 +20019,16 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     }
 
     __onAutoCloseTick() {
-      return PKD_MI.closeChest();
+      var e;
+      try {
+        PKD_MI.closeChest();
+        if (PKD_MI.Parameters.isCloseInventoryWithTakeAll()) {
+          return PKD_MI.closeInventory();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     }
 
     //u20
@@ -17943,7 +20600,7 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     this._gpInvIndexX = 0;
     next = this._loadedCatIndex + 1;
     if (PKD_MI.isNewCatsSys()) {
-      if (PKD_MI.getNewCatgoriesSize() >= next) {
+      if (PKD_MI.getNewCatgoriesSize() <= next) {
         next = 0;
       }
     }
@@ -18125,6 +20782,67 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     return this._getAllCells().find(function(c) {
       return c.gpIndex === c.index;
     });
+  };
+})();
+
+// ■ END MapInvController.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ MapInvController.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var _;
+  //@[DEFINES]
+  _ = PKD_MI.LIBS.MapInvController.prototype;
+  //u29
+  _._onThrowUpSlider = function(cell) {
+    var count, item;
+    if (this.isSomeItemFocused()) {
+      return;
+    }
+    item = cell.item;
+    count = $gameParty.numItems(item);
+    this.content.showFocusLayer();
+    this.content.showFocusedItem(cell, count);
+    this.sliderController = new PKD_MI.LIBS.SliderController(this.content, 2);
+    this._tempSliderItem = item;
+    this.content.refreshSlider(count, true);
+  };
+  _.onSliderDropOkClick = function() {
+    var count, e, item, ref;
+    try {
+      if (!this.isSomeItemFocused()) {
+        return;
+      }
+      this.clearFocus();
+      item = this._tempSliderItem;
+      count = this.content.getSliderValue();
+      this._tempSliderItem = null;
+      return (ref = PKD_MI.eUI) != null ? ref._onDropOutItem(item, count) : void 0;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _.tryHotKeyHotCellAssign = function() {
+    var cellUnderMouse, e;
+    try {
+      if (this.isSomeItemFocused()) {
+        return null;
+      }
+      cellUnderMouse = this.content.getHoveredCell();
+      if ((cellUnderMouse != null) && (cellUnderMouse.item != null)) {
+        return cellUnderMouse.item;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return null;
   };
 })();
 
@@ -19230,7 +21948,7 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     if (this._exStatsSettings == null) {
       return;
     }
-    this._createBackground(this.settings.width, this._exStatsSettings.descWindowNewHeight);
+    this._decideForCreateBackground(this.settings.width, this._exStatsSettings.descWindowNewHeight);
     // * default from 1
     this._statsAll[1].visible = this._exStatsSettings.isShowBasicStats;
     if (this.__textDescHeader != null) {
@@ -19471,6 +22189,63 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
   // * Сейчас сделано что все доступны, но выводятся только отредактированные
   _.getStatsBTable = function() {
     return [
+      {
+        // * PARAMS
+        "statText": "Max HP",
+        "dataId": 0,
+        "traitId": 21,
+        "position": [0,
+      0]
+      },
+      {
+        "statText": "Max SP",
+        "dataId": 1,
+        "traitId": 21,
+        "position": [0,
+      0]
+      },
+      {
+        "statText": "Attack",
+        "dataId": 2,
+        "traitId": 21,
+        "position": [0,
+      0]
+      },
+      {
+        "statText": "Defense",
+        "dataId": 3,
+        "traitId": 21,
+        "position": [0,
+      0]
+      },
+      {
+        "statText": "Mat. Atk",
+        "dataId": 4,
+        "traitId": 21,
+        "position": [0,
+      0]
+      },
+      {
+        "statText": "Mat. Defense",
+        "dataId": 5,
+        "traitId": 21,
+        "position": [0,
+      0]
+      },
+      {
+        "statText": "Agility",
+        "dataId": 6,
+        "traitId": 21,
+        "position": [0,
+      0]
+      },
+      {
+        "statText": "Luck",
+        "dataId": 7,
+        "traitId": 21,
+        "position": [0,
+      0]
+      },
       {
         "statText": "Hit Rate",
         "dataId": 0, // * HIT
@@ -19833,6 +22608,18 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
       this._isNoMoreItems = false;
     }
 
+    update() {
+      super.update();
+      if ((this.item != null) && !DataManager.isItem(this.item) && PKD_MI.Parameters.isRemoveHotCellItemIfZero()) {
+        if ($gameParty.numItems(this.item) === 0) {
+          this._refreshEquipmentState();
+          if (this._isEquipedItem === false) {
+            this.removeThisItemFromHotCell();
+          }
+        }
+      }
+    }
+
     setHotKey(hotKey) {
       this.hotKey = hotKey;
       return this._drawHotKey();
@@ -19842,7 +22629,7 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
       this.isHotCell = true;
       this.setItem(item);
       this._checkHotItemExists();
-      return this._drawHotKey();
+      this._drawHotKey();
     }
 
     isHotKeyTriggered() {
@@ -19853,6 +22640,32 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
         return false;
       }
       return Input.isTriggered(this.hotKey.toLowerCase());
+    }
+
+    //u27
+    drawIconExt() {
+      if (PKD_MI.Parameters.get_IsNotUseExtraImgInHotCell()) {
+        // * Always draw IconIndex
+        return this.drawIcon(this.item.iconIndex);
+      } else {
+        return PKD_MI.LIBS.Sprite_MapInvCell.prototype.drawIconExt.call(this);
+      }
+    }
+
+    //u27
+    _drawIconBody(iconIndex) {
+      var e, size;
+      if (PKD_MI.Parameters.get_HotCellsCustomIconSize() > 0) {
+        try {
+          size = PKD_MI.Parameters.get_HotCellsCustomIconSize();
+          this._iconSpr.bitmap.drawIcon(0, 0, iconIndex, size);
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+      } else {
+        PKD_MI.LIBS.Sprite_MapInvCell.prototype._drawIconBody.call(this, iconIndex);
+      }
     }
 
     _drawHotKey() {
@@ -19892,8 +22705,12 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
 
     _refreshItemState() {
       super._refreshItemState();
+      this.enableItem();
       this._checkHotItemExists();
-      return this._checkUsable();
+      this._checkUsable();
+      if ((this.item != null) && !DataManager.isItem(this.item)) {
+        this._refreshEquipmentState();
+      }
     }
 
     _checkHotItemExists() {
@@ -19908,8 +22725,13 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
         }
         if (count === 0) {
           this._isNoMoreItems = true;
-          this.drawZeroCount();
-          this.disableItem();
+          if (PKD_MI.Parameters.isRemoveHotCellItemIfZero()) {
+            this.removeThisItemFromHotCell();
+            return;
+          } else {
+            this.drawZeroCount();
+            this.disableItem();
+          }
         } else {
           if (this._isNoMoreItems === true) {
             this._isNoMoreItems = false;
@@ -19917,6 +22739,16 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
             this._onCheckUsableTick();
           }
         }
+      }
+    }
+
+    removeThisItemFromHotCell() {
+      var e;
+      try {
+        return this.clear();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
       }
     }
 
@@ -19945,6 +22777,7 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     _refreshEquipmentState() {
       var canEquip, e, equips, i, j;
       try {
+        this._isEquipedItem = false;
         canEquip = $gameParty.leader().canEquip(this.item);
         if (!canEquip) {
           this.disableItem();
@@ -19965,11 +22798,15 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     }
 
     _checkUsable() {
-      this.partyUsecases = [];
-      // * ALWAYS
-      this._onCheckUsableTick();
-      if (this._checkUsableThread == null) {
-        return this._checkUsableThread = new KDCore.TimedUpdate(5, this._onCheckUsableTick.bind(this));
+      if (DataManager.isItem(this.item)) {
+        this.partyUsecases = [];
+        // * ALWAYS
+        this._onCheckUsableTick();
+        if (this._checkUsableThread == null) {
+          this._checkUsableThread = new KDCore.TimedUpdate(5, this._onCheckUsableTick.bind(this));
+        }
+      } else {
+        this._checkUsableThread = null;
       }
     }
 
@@ -19990,14 +22827,24 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
   var _;
   //@[DEFINES]
   _ = PKD_MI.LIBS.Sprite_MainInvItems.prototype;
+  //u27 mod
   _.showFocusLayer = function() {
-    var h, w;
-    w = this.settings.invCellMarginX * 5;
-    h = this.settings.invCellMarginY * 5;
+    var h, settings, w;
+    settings = PKD_MI.Parameters.get_PartySelectorSettings();
+    if (settings.backgroundLayerSize.w < 0) {
+      w = this.settings.invCellMarginX * 5;
+    } else {
+      w = settings.backgroundLayerSize.w;
+    }
+    if (settings.backgroundLayerSize.h < 0) {
+      h = this.settings.invCellMarginY * 5;
+    } else {
+      h = settings.backgroundLayerSize.h;
+    }
     this._focusLayer = KDCore.Sprite.FromBitmap(w, h);
     //@_focusLayer.move -1, -1
     this._focusLayer.bitmap.fillAll(KDCore.Color.BLACK);
-    this._focusLayer.opacity = 180;
+    this._focusLayer.opacity = settings.backgroundLayerOpacity;
     this.content.addChild(this._focusLayer);
     return $gameTemp._pkdMICellFocused = true;
   };
@@ -20218,6 +23065,7 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
         this._createExtraOption(option);
       }
       if (this._exOptions.length > 0) {
+        this._extraOptionGpIndex = 0;
         this._updateExtraOptions = this._updateExtraOptionsMain;
         return this._createExtraOptionsEnableCheckThread();
       } else {
@@ -20229,7 +23077,7 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     }
   };
   _._createExtraOption = function(option) {
-    var button, commonEventId, e;
+    var button, commonEventId, e, gamePadOptionCursor;
     try {
       if (option == null) {
         return;
@@ -20253,7 +23101,10 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
       }
       button.miExEnableCondition = option.isEnabled;
       button.move(option.margins);
-      return button.miExTitle = option.title;
+      button.miExTitle = option.title;
+      gamePadOptionCursor = this._createGpExtraOptionCursor(option.gpCursorOffset);
+      button.addChild(gamePadOptionCursor);
+      return button._gpCursor = gamePadOptionCursor;
     } catch (error) {
       e = error;
       return KDCore.warning(e);
@@ -20283,7 +23134,39 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
   };
   _._updateExtraOptions = function() {}; // * DUMMY
   _._updateExtraOptionsMain = function() {
-    return this.exOpThread.update();
+    this.exOpThread.update();
+    this._updateGamepadKeys();
+  };
+  _._updateGamepadKeys = function() {
+    var b, button, i, index, len, ref;
+    if (!PKD_MI.isInventoryOpened()) {
+      return;
+    }
+    if (!PKD_MI.IsGamepad()) {
+      return;
+    }
+    if (KDGamepad.isKey("LTrigger")) {
+      if (this._extraOptionGpIndex > 0) {
+        this._extraOptionGpIndex--;
+      }
+    } else if (KDGamepad.isKey("RTrigger")) {
+      if (this._extraOptionGpIndex < (this._exOptions.length - 1)) {
+        this._extraOptionGpIndex++;
+      }
+    }
+    ref = this._exOptions;
+    for (index = i = 0, len = ref.length; i < len; index = ++i) {
+      b = ref[index];
+      b._gpCursor.visible = index === this._extraOptionGpIndex;
+    }
+    if (KDGamepad.isKey("Y")) {
+      button = this._exOptions[this._extraOptionGpIndex];
+      if ((button != null) && button.isEnabled()) {
+        button.click();
+      } else {
+        SoundManager.playBuzzer();
+      }
+    }
   };
   _._destroyExtraOptions = function() {
     var b, e, i, len, ref;
@@ -20307,6 +23190,31 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     } catch (error) {
       e = error;
       KDCore.warning(e);
+    }
+  };
+  _._createGpExtraOptionCursor = function(offset) {
+    var e, s;
+    try {
+      s = new Sprite(ImageManager.loadPKDMI("extraOptionsMenuGamepadCursor"));
+      s.visible = false;
+      try {
+        if ((offset == null) || (offset.x == null)) {
+          offset = {
+            x: -6,
+            y: -6
+          };
+        }
+        s.move(offset);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        s.move(0, 0);
+      }
+      return s;
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      return new Sprite();
     }
   };
 })();
@@ -20477,13 +23385,17 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     this._updateEquipStatShow();
   };
   _._createHelpWindow = function(cell, isFromInventory = true) {
-    this._itemDescWindow = new PKD_MI.LIBS.Sprite_MapInvHelp();
+    if (PKD_MI.isItemHaveAlterDescription(cell.item)) {
+      this._itemDescWindow = new Sprite_MI_AlternativeDescription(cell, isFromInventory);
+    } else {
+      this._itemDescWindow = new PKD_MI.LIBS.Sprite_MapInvHelp();
+      this._itemDescWindow.setup(cell);
+      this._itemDescWindow.refreshPlacement(isFromInventory);
+    }
     this._waitTime = this._itemDescWindow.delay();
     this._itemDescShowTimer = new KDCore.TimedUpdate(1, this._onShowTimeTick.bind(this));
     this._updateExHelpWindow = this._updateExHelpWindowMain;
     this._itemDescWindow.opacity = 0;
-    this._itemDescWindow.setup(cell);
-    this._itemDescWindow.refreshPlacement(isFromInventory);
     SceneManager._scene.addChild(this._itemDescWindow);
   };
   _._onShowTimeTick = function() {
@@ -20597,7 +23509,7 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     } else {
       this._movingItemSprite.bitmap.drawIcon(0, 0, item.iconIndex, iconSize);
     }
-    this.addChild(this._movingItemSprite);
+    SceneManager._scene.addChild(this._movingItemSprite);
     this._showThrowOutBox(); //TO
     this._resetOuterItemHoverHelp();
   };
@@ -20618,10 +23530,36 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     for (j = 0, len = ref.length; j < len; j++) {
       c = ref[j];
       if (c.isHotKeyTriggered()) {
-        PKD_MI.onMapHotCellClick(c.index);
+        if (PKD_MI.Parameters.isAllowAssignHotCellsByHotKeys()) {
+          if (this._isAssignedItemFromInventoryToHotCell(c)) {
+            return;
+          } else {
+            PKD_MI.onMapHotCellClick(c.index);
+          }
+        } else {
+          PKD_MI.onMapHotCellClick(c.index);
+        }
         return;
       }
     }
+  };
+  _._isAssignedItemFromInventoryToHotCell = function(hotCell) {
+    var existsOne, item;
+    if (!PKD_MI.isInventoryOpened()) {
+      return false;
+    }
+    item = PKD_MI.eUI.inventory.tryHotKeyHotCellAssign();
+    if (item == null) {
+      return false;
+    }
+    existsOne = this.uiExtraCells.find(function(c) {
+      return c.item === item;
+    });
+    if (existsOne != null) {
+      this.setItemToOuterCell(existsOne, null);
+    }
+    this.setItemToOuterCell(hotCell, item);
+    return true;
   };
   //?UPDX
   _._updateDrag = function() {
@@ -20640,7 +23578,7 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
   };
   //?UPDX, UPD18
   _._onRelaseDragginCell = function() {
-    var cell;
+    var cell, count;
     if (this.isAnyOuterCellUnderMouse()) {
       cell = this.uiExtraCells.find(function(c) {
         return c.isHovered();
@@ -20657,13 +23595,22 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
       if (this.isThrowOutBoxIsReadyToThrow()) { //TO
         return this.throwOutItem(); //TO
       } else {
-        if ($gameTemp._pkdMIHotCellMoving >= 0) {
-          cell = this.uiExtraCells[$gameTemp._pkdMIHotCellMoving];
-          if (cell != null) {
-            return this.setItemToOuterCell(cell, null);
+        if (PKD_MI.Parameters.isDropOutToGround() && $gameTemp._pkdMIHotCellMoving < 0 && (this._dragItem != null)) {
+          if (DataManager.isItem(this._dragItem)) {
+            count = $gameParty.numItems(this._dragItem);
+          } else {
+            count = 1;
           }
+          return this._onDropOutItem(this._dragItem, count, true);
         } else {
-          return SoundManager.playBuzzer();
+          if ($gameTemp._pkdMIHotCellMoving >= 0) {
+            cell = this.uiExtraCells[$gameTemp._pkdMIHotCellMoving];
+            if (cell != null) {
+              return this.setItemToOuterCell(cell, null);
+            }
+          } else {
+            return SoundManager.playBuzzer();
+          }
         }
       }
     }
@@ -20681,7 +23628,7 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
   };
   //?UPDX, UPD18
   _._clearMovingItemSprite = function() {
-    this.removeChild(this._movingItemSprite);
+    this._movingItemSprite.removeFromParent();
     this._movingItemSprite.visible = false;
     this._movingItemSprite = null;
     $gameTemp._pkdMICellMoving = false;
@@ -20691,8 +23638,24 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
   };
   //?UPDX
   _.setItemToOuterCell = function(outerCell, item) {
+    if (!this.isItemCanBeUsedInHotCell(item)) {
+      SoundManager.playBuzzer();
+      return;
+    }
     outerCell.setHotCellItem(item);
-    return $gamePlayer.aaPutItemToHotCell(item, outerCell.index);
+    $gamePlayer.aaPutItemToHotCell(item, outerCell.index);
+    return setTimeout((() => {
+      var e;
+      try {
+        return this.refreshMapHotCells();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }), 50);
+  };
+  _.isItemCanBeUsedInHotCell = function(item) {
+    return !KDCore.Utils.hasMeta("notForHotCell", item);
   };
   //?UPDX
   _.refreshMapHotCells = function() {
@@ -20708,8 +23671,19 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     }
     cell = this.uiExtraCells[index];
     if ((cell != null) && (cell.item != null)) {
-      return (ref = this.inventory) != null ? ref.onHotCellItemAction(cell) : void 0;
+      if ((ref = this.inventory) != null) {
+        ref.onHotCellItemAction(cell);
+      }
     }
+    setTimeout((() => {
+      var e;
+      try {
+        return this.refreshMapHotCells();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }), 50);
   };
   //u23
   _._updateOuterHoverHelp = function() {
@@ -20802,23 +23776,55 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
     return (ref = this._toSprite) != null ? ref.isReadyToThrow() : void 0;
   };
   _.throwOutItem = function() {
-    var cme, e, params, removeCount;
+    var removeCount;
+    if (PKD_MI.Parameters.isShowDropOutSlider() && $gameParty.numItems(this._dragItem) > 1) {
+      this._showTrowOutSlider();
+      return;
+    }
     removeCount = 1;
     if (Input.isPressed('shift')) {
       removeCount = $gameParty.maxItems();
     }
-    params = PKD_MI.Parameters.getThrowOutSettings();
-    KDCore.Utils.playSE(params.throwOutSE);
-    $gameParty.loseItem(this._dragItem, removeCount, true);
+    this._onDropOutItem(this._dragItem, removeCount);
+  };
+  _._onDropOutItem = function(item, count, isForceVisualDrop = false) {
+    var cme, e, params;
     try {
-      $gameTemp.miDroppedOutItemId = this._dragItem.id;
-      cme = PKD_MI.Parameters.getDropOutCommonEvent();
-      if ((cme != null) && cme > 0) {
-        $gameTemp.reserveCommonEvent(cme);
+      params = PKD_MI.Parameters.getThrowOutSettings();
+      KDCore.Utils.playSE(params.throwOutSE);
+      $gameParty.loseItem(item, count, true);
+      try {
+        $gameTemp.miDroppedOutItemId = item.id;
+        cme = PKD_MI.Parameters.getDropOutCommonEvent();
+        if ((cme != null) && cme > 0) {
+          $gameTemp.reserveCommonEvent(cme);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      if (isForceVisualDrop === true) {
+        return $gameMap.miMakePlayerVisualDrop(item, count);
+      } else {
+        // * Visual drop will be made
+        if (Imported.PKD_ExtendedLoot === true && PKD_MI.Parameters.isDropOutViaThrowOutBox()) {
+          return $gameMap.miMakePlayerVisualDrop(item, count);
+        }
       }
     } catch (error) {
       e = error;
-      KDCore.warning(e);
+      return KDCore.warning(e);
+    }
+  };
+  _._showTrowOutSlider = function() {
+    var cell, e;
+    try {
+      cell = $gameTemp._pkdMIMovedCellRef;
+      this.inventory._onThrowUpSlider(cell);
+      return $gameTemp._pkdMIMovedCellRef = null;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
     }
   };
   _._updateThrowOutBox = function() {
@@ -20842,4 +23848,4 @@ Window_ExtendedTextLine = class Window_ExtendedTextLine extends Window_Base {
 // ■ END Spriteset_InvUI.coffee
 //---------------------------------------------------------------------------
 
-//Plugin PKD_MapInventory builded by PKD PluginBuilder 2.2 - 24.11.2022
+//Plugin PKD_MapInventory builded by PKD PluginBuilder 2.2.1 - 27.06.2024

@@ -1,0 +1,57 @@
+{
+    "skillTreeGrid": {
+        "constants": {
+            "cellSpacing": "60hdp",
+            "rows": 7,
+            "cols": 4
+        },
+        "type": "screen",
+        "childrens": [{
+            "type": "group",
+            "id": "grid",
+            "animations": ["field:opacity;duration:0.25;keyframes:0=0,100=255;"],
+            "bindings": {
+                "position": { "x": "70hdp", "y": "120hdp" }
+            }
+        }]
+    },
+    "skillTreeCell": {
+        "type": "legacyButton",
+        "id": "_cellBtn",
+        "parameters": "folderName:pSimpleSkillsTree;forceSize",
+        "bindings": {
+            "size": { "width": "48hdp", "height": "48hdp" },
+            "image": "$cellImageByType"
+        }
+    },
+    "skillTreeCellIcon": {
+        "type": "image",
+        "id": "iconSpr",
+        "parameters": "folderName:pSimpleSkillsTree;",
+        "bindings": {
+            "size": { "width": "48hdp", "height": "48hdp" },
+            "icon": "$skillIconIndex"
+        },
+        "childrens": [
+            {
+                "type": "image",
+                "id": "_maskSpr",
+                "parameters": "folderName:pSimpleSkillsTree;",
+                "bindings": {
+                    "size": { "width": "100%", "height": "100%" },
+                    "image": "$skillIconMask"
+                }
+            }
+        ]
+    },
+    "skillGridLinks": {
+        "constants": {
+            "linkLength": "48hdp",
+            "lineWidth": "4hpd",
+            "lineEndPointRadius": "6hdp",
+            "learnedColor": "#cfa425",
+            "notLearnedColor": "#a7a8a8",
+            "editorLinkColor": "#eac98a"
+        }
+    }
+}

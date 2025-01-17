@@ -1,861 +1,672 @@
 /*
- * Copyright (c) 2022 Vladimir Skrypnikov (Pheonix KageDesu)
- * <http://kdworkshop.net/>
+ * Copyright (c) 2024 Vladimir Skrypnikov (Pheonix KageDesu)
+ * <https://kdworkshop.net/>
  *
-
 * License: Creative Commons 4.0 Attribution, Share Alike, Commercial
-
  */
 
+
 /*:
- * @plugindesc (v.1.0)[PRO] Simple fishing mini-game
+ * @plugindesc (v.1.2)[PRO] Simple Fishing
  * @author Pheonix KageDesu
  * @target MZ MV
- * @url http://kdworkshop.net/plugins/simple-fishing
+ * @url https://kdworkshop.net/plugins/simple-fishing
  *
+ * 
  * @help
  * ---------------------------------------------------------------------------
- *   !!! Plugin require parameters configuration !!!
+ 
  *
- *  First setup next Plugin Parameters:
- *      - Game Events
- *      - Variables
- *      - Fishing Regions
- *
- * ----------------------------------------------------------------------------
- *  How start fishing mini-game
- * 
- *  1) Player should stay on any Fishing Region (map region) (70 by default)
- *  2) You should set current player Bait ID and Rod ID
-        in the appropriate variables ID's (Variables Plugin Parameter)
-    3) Call script: InitFishingGame(); - mini-game UI will appear
-    4) In fishin game common event "On Inited" (Game Events Plugin Parameters)
-        call script: StartFishingGame();
-        (before call you can make any preparations)
-
-    ! For better understanding check Demo Project !
+ * GUIDE:
+ * https://gist.github.com/KageDesu/388693e5ec2d0e2716c08fabaf10fb8c
  *
  * ---------------------------------------------------------------------------
- * Available script calls:
+ 
  *
- * 1) InitFishingGame(); - preapare system, mini-game UI will appear
- * 2) StartFishingGame(); - start mini-game process, call ONLY AFTER 1
- * 3) PauseFishingGame(); - pause mini-game process
- * 4) StopFishingGame(); - stop and exit from fishing mini-game
- * 5) IsInFishingGame(); - return true if fishing mini-game is STARTED (2)
+ * If you like my Plugins, want more and offten updates, please support me
+ * on one of the following platforms:
  *
- * ----------------------------------------------------------------------------
- * Set image for Fish Items
- *
- * Add to Item's Note section <fishIcon:NAME> fow show fish image on UI
- *   where: NAME -  image name from img/pSimpleFishing/
- *
- * ---------------------------------------------------------------------------
- * 
- * ---------------------------------------------------------------------------
- * Contains resources designed and drawn
- * by Ekaterina N. Stadnikova (MOSCOW RUSSIA)
- * https://stadnikova-ekaterina.itch.io/
- * ===========================================================================
- * If you like my Plugins, want more and offten updates,
- * please support me on Boosty or Patreon!
- * 
- * Boosty Page:
- *      https://boosty.to/kagedesu
- * Patreon Page:
+ * Boosty:
+ *     https://boosty.to/kagedesu
+ * Patreon:
  *      https://www.patreon.com/KageDesu
- * YouTube Channel:
+ * YouTube:
  *      https://www.youtube.com/channel/UCA3R61ojF5vp5tGwJ1YqdgQ?
  *
- * You can use this plugin in your game thanks to all my Patrons!
  *
+ * License: Creative Commons 4.0 Attribution, Share Alike, Commercial
+ * 
+ * @param PKD_SimpleFishing
+ * @text Simple Fishing Settings
+ * 
  * 
 
-* License: Creative Commons 4.0 Attribution, Share Alike, Commercial
-
- *
+ * 
  *  @param gameEventsData:s
  *  @text Game Events
- *  @type struct<EventsData> 
+ *          @type struct<EventsData> 
  *  @desc Game process events handlers
- *  @default {"onGameInitedCommonEventId:i":"1","onGameStartedCommonEventId:i":"2","onGameEndCommonEventId:i":"3","onPlayerClickGood:i":"4","onPlayerCatchFish:i":"5","onPlayerClickBad:i":"6","onPlayerLoseFish:i":"7"}
+ *          @default {}
  * 
- * @param visualSettings:s
- * @text Visual Settings
- * @type struct<VisualSettings> 
- * @desc Game UI settings
- * @default {"gameBarPosition:s":"{\"x:e\":\"Graphics.width / 2 - 162\",\"y:e\":\"60\"}","gameBarSettings:s":"{\"redZoneFillOpacity:i\":\"125\",\"redZoneFillColor:str\":\"#ad189a\",\"redZoneMinWidthBeforeBadEnd:i\":\"6\"}","rodIconPosition:s":"{\"x:e\":\"Graphics.width / 2 - 38 - 50\",\"y:e\":\"110\"}","baitIconPosition:s":"{\"x:e\":\"Graphics.width / 2 - 38 + 50\",\"y:e\":\"110\"}","fishIconPosition:s":"{\"x:e\":\"Graphics.width / 2 - 62\",\"y:e\":\"Graphics.height - 224\"}","progressBarPosition:s":"{\"x:e\":\"Graphics.width / 2 - 162\",\"y:e\":\"Graphics.height - 100\"}","progressBarSettings:s":"{\"visible:bool\":\"true\",\"vertical:bool\":\"false\",\"fill\":\"progressBarFill\",\"foreground\":\"progressBarFore\",\"mask\":\"\",\"backColor:css\":\"#CCCCCC\",\"backOpacity:int\":\"125\"}"}
+ * 
+ * 
+
+ * 
  * 
  * @param variablesData:s
- * @text Variables
+ * @text Variables (Rod and bait)
  * @type struct<Variables> 
  * @desc Player variables
- * @default {"baitVariableId:i":"1","rodVariableId:i":"2"} 
+ * @default {"baitVariableId:i":"0","rodVariableId:i":"0"}
+ * 
+ * 
+
+ * 
  * 
  * @param rodsData:structA
  * @text Rods
  * @type struct<RodSettings>[]
- * @desc
  * @default ["{\"id:i\":\"1\",\"iconName:str\":\"rod1\",\"progressBarTimerMod:i\":\"1.0\",\"redBarShrinkSpeed:i\":\"10\",\"gameZoneFillSpeed:i\":\"1\",\"redBarMinWidth:i\":\"60\",\"redBarMaxWidth:i\":\"120\",\"whiteCursorMoveSpeed:i\":\"3\",\"badClickProgressPenalty:i\":\"20\",\"goodClickProgressAdd:i\":\"0\"}"]
+ * 
+ * 
+
+ * 
  * 
  * @param baitsData:structA
  * @text Baits
  * @type struct<BaitData>[]
- * @desc 
  * @default ["{\"id:i\":\"1\",\"iconName:str\":\"worm\"}"]
+ * 
+ * 
+
+ * 
  * 
  * @param regionsData:structA
  * @text Fishing Regions
  * @type struct<RegionData>[]
- * @desc Fishing regions settings
- * @default ["{\"region:i\":\"70\",\"fishes:structA\":\"[\\\"{\\\\\\\"id:i\\\\\\\":\\\\\\\"34\\\\\\\",\\\\\\\"appearChance:i\\\\\\\":\\\\\\\"20\\\\\\\",\\\\\\\"progressBarFillSpeed:i\\\\\\\":\\\\\\\"10\\\\\\\",\\\\\\\"goodClickProgressAdd:i\\\\\\\":\\\\\\\"10\\\\\\\",\\\\\\\"baits:structA\\\\\\\":\\\\\\\"[\\\\\\\\\\\\\\\"{\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"id:i\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"1\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"addToChance:i\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"40\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"}\\\\\\\\\\\\\\\"]\\\\\\\"}\\\",\\\"{\\\\\\\"id:i\\\\\\\":\\\\\\\"35\\\\\\\",\\\\\\\"appearChance:i\\\\\\\":\\\\\\\"10\\\\\\\",\\\\\\\"progressBarFillSpeed:i\\\\\\\":\\\\\\\"40\\\\\\\",\\\\\\\"goodClickProgressAdd:i\\\\\\\":\\\\\\\"12\\\\\\\",\\\\\\\"baits:structA\\\\\\\":\\\\\\\"[\\\\\\\\\\\\\\\"{\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"id:i\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"1\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"addToChance:i\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"10\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"}\\\\\\\\\\\\\\\"]\\\\\\\"}\\\"]\"}"]
+ * @default []
  * 
- * @param spacer|endHolder @text‏‏‎ ‎@desc ===============================================
  * 
- */
 
+ * 
+ * 
+ * @param showFishCaughtMessage:b
+ * @text Show Fish Caught Message
+ * @type boolean
+ * @default true
+ * 
+ * 
+
+ * 
+ * 
+ * @param autoRestart:b
+ * @text Auto Restart
+ * @type boolean
+ * @default false
+ * @desc Auto restart fishing mini game after game over (catch or loose fish)
+ * 
+ * 
+
+ * 
+ * 
+ * @param ignoreParametersCheck:b
+ * @text Ignore Parameters Check
+ * @type boolean
+ * @default false
+ * @desc Ignore parameters check on plugin load
+ * 
+ * 
+
+ * 
+ * 
+ * @param spacer|endHolder @text‏‏‎ ‎@desc ===============================================`;
+ * 
+
+ */
 /*:ru
- * @plugindesc (v.1.0)[PRO] Мини-игра рыбалка
+ * @plugindesc (v.1.2)[PRO] Simple Fishing
  * @author Pheonix KageDesu
  * @target MZ MV
- * @url http://kdworkshop.net/plugins/simple-fishing
+ * @url https://kdworkshop.net/plugins/simple-fishing
  *
+ * 
  * @help
  * ---------------------------------------------------------------------------
- *   !!! Плагин требует настройки параметров !!!
+ 
  *
- *  Настройке в первую очередь данные Параметры плагина:
- *      - События
- *      - Переменные
- *      - Регионы
- *
- * ----------------------------------------------------------------------------
- *  Как начать мини-игру рыбалка:
- * 
- *  1) Игрок должен стоять на клетке с регионом рыбалки
-        (настроенного в параметрах плагина Регионы)
- *  2) Надо установить номер удочки и наживки в переменные
-        (указанные в Переменные параметре плагина)
-    3) Вызвать скрипт: InitFishingGame(); - появится интерфейс игры
-    4) В игровом событии "On Inited" (см. События параметр плагина)
-        вызвать скрипт: StartFishingGame();
-
-    ! Для лучшего понимания сперва поиграйте в демку !
+ * РУКОВОДСТВО:
+ * https://gist.github.com/KageDesu/388693e5ec2d0e2716c08fabaf10fb8c
  *
  * ---------------------------------------------------------------------------
- * Вызовы скриптов
+ 
  *
- * 1) InitFishingGame(); - подготовка системы, появится интерфейс игры
- * 2) StartFishingGame(); - начать игру, вызывать ПОСЛЕ 1
- * 3) PauseFishingGame(); - приостановить игру
- * 4) StopFishingGame(); - закончить игру (полностью)
- * 5) IsInFishingGame(); - вернёт TRUE (истинну), если игра уже начата (2)
+ * Если вам нравятся мои плагины, вы хотите больше и частых обновлений,
+ * пожалуйста, поддержите меня на одной из следующих платформ:
  *
- * ----------------------------------------------------------------------------
- * Установка изображения для Рыбы
- *
- * Добавьте для предмета - рыбы следующую заметку <fishIcon:ИМЯ>
- *   где: ИМЯ -  имя файла картинки из папки img/pSimpleFishing/
- *
- * ---------------------------------------------------------------------------
- * 
- * ---------------------------------------------------------------------------
- * Плагин содержит изображения от:
- * Екатерина Стадникова
- * https://boosty.to/little_piggy
- * ===========================================================================
- * Поддержите меня на Boosty и получите доступ к PRO версии данного плагина
- *  и многим другим моим плагинам
- * 
- * https://boosty.to/kagedesu
- *
+ * Boosty:
+ *     https://boosty.to/kagedesu
+ * Patreon:
+ *      https://www.patreon.com/KageDesu
  * YouTube:
  *      https://www.youtube.com/channel/UCA3R61ojF5vp5tGwJ1YqdgQ?
  *
- * 
-
-* Лицензия: Creative Commons 4.0 Attribution, Share Alike, Commercial
-
-* Вы можете использовать плагин в коммерческих проектах на единственном
-* условие, что этот плагин был приобретен на законных основаниях
-* (через покупку на сайте https://boosty.to/kagedesu).
-
  *
- *  @param gameEventsData:s
- *  @text События
- *  @type struct<EventsData> 
- *  @desc Обработка событий игрового процесса
- *  @default {"onGameInitedCommonEventId:i":"1","onGameStartedCommonEventId:i":"2","onGameEndCommonEventId:i":"3","onPlayerClickGood:i":"4","onPlayerCatchFish:i":"5","onPlayerClickBad:i":"6","onPlayerLoseFish:i":"7"}
+ * License: Creative Commons 4.0 Attribution, Share Alike, Commercial
  * 
- * @param visualSettings:s
- * @text Интерфейс
- * @type struct<VisualSettings> 
- * @desc Настройки UI интрфейса игры
- * @default {"gameBarPosition:s":"{\"x:e\":\"Graphics.width / 2 - 162\",\"y:e\":\"60\"}","gameBarSettings:s":"{\"redZoneFillOpacity:i\":\"125\",\"redZoneFillColor:str\":\"#ad189a\",\"redZoneMinWidthBeforeBadEnd:i\":\"6\"}","rodIconPosition:s":"{\"x:e\":\"Graphics.width / 2 - 38 - 50\",\"y:e\":\"110\"}","baitIconPosition:s":"{\"x:e\":\"Graphics.width / 2 - 38 + 50\",\"y:e\":\"110\"}","fishIconPosition:s":"{\"x:e\":\"Graphics.width / 2 - 62\",\"y:e\":\"Graphics.height - 224\"}","progressBarPosition:s":"{\"x:e\":\"Graphics.width / 2 - 162\",\"y:e\":\"Graphics.height - 100\"}","progressBarSettings:s":"{\"visible:bool\":\"true\",\"vertical:bool\":\"false\",\"fill\":\"progressBarFill\",\"foreground\":\"progressBarFore\",\"mask\":\"\",\"backColor:css\":\"#CCCCCC\",\"backOpacity:int\":\"125\"}"}
+ * @param PKD_SimpleFishing
+ * @text Simple Fishing Settings
+ * 
+ * 
+
+ * 
+ *  @param gameEventsData:s
+ *      @text Игровые события
+ *      @type struct<EventsData> 
+ *      @desc Обработчики игровых событий
+ *      @default {}
+ * 
+ * 
+ * 
+
+ * 
  * 
  * @param variablesData:s
- * @text Переменные
+ * @text Переменные (Удочка)
  * @type struct<Variables> 
- * @desc Переменные с данными игрока
- * @default {"baitVariableId:i":"1","rodVariableId:i":"2"} 
+ * @desc Переменные игрока
+ * @default {"baitVariableId:i":"0","rodVariableId:i":"0"}
+ * 
+ * 
+
+ * 
  * 
  * @param rodsData:structA
  * @text Удочки
  * @type struct<RodSettings>[]
- * @desc
  * @default ["{\"id:i\":\"1\",\"iconName:str\":\"rod1\",\"progressBarTimerMod:i\":\"1.0\",\"redBarShrinkSpeed:i\":\"10\",\"gameZoneFillSpeed:i\":\"1\",\"redBarMinWidth:i\":\"60\",\"redBarMaxWidth:i\":\"120\",\"whiteCursorMoveSpeed:i\":\"3\",\"badClickProgressPenalty:i\":\"20\",\"goodClickProgressAdd:i\":\"0\"}"]
  * 
+ * 
+
+ * 
+ * 
  * @param baitsData:structA
- * @text Наживки
+ * @text Приманки
  * @type struct<BaitData>[]
- * @desc 
  * @default ["{\"id:i\":\"1\",\"iconName:str\":\"worm\"}"]
  * 
+ * 
+
+ * 
+ * 
  * @param regionsData:structA
- * @text Регионы
+ * @text Рыболовные регионы
  * @type struct<RegionData>[]
- * @desc Настройки регионов для рыбалка
- * @default ["{\"region:i\":\"70\",\"fishes:structA\":\"[\\\"{\\\\\\\"id:i\\\\\\\":\\\\\\\"34\\\\\\\",\\\\\\\"appearChance:i\\\\\\\":\\\\\\\"20\\\\\\\",\\\\\\\"progressBarFillSpeed:i\\\\\\\":\\\\\\\"10\\\\\\\",\\\\\\\"goodClickProgressAdd:i\\\\\\\":\\\\\\\"10\\\\\\\",\\\\\\\"baits:structA\\\\\\\":\\\\\\\"[\\\\\\\\\\\\\\\"{\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"id:i\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"1\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"addToChance:i\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"40\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"}\\\\\\\\\\\\\\\"]\\\\\\\"}\\\",\\\"{\\\\\\\"id:i\\\\\\\":\\\\\\\"35\\\\\\\",\\\\\\\"appearChance:i\\\\\\\":\\\\\\\"10\\\\\\\",\\\\\\\"progressBarFillSpeed:i\\\\\\\":\\\\\\\"40\\\\\\\",\\\\\\\"goodClickProgressAdd:i\\\\\\\":\\\\\\\"12\\\\\\\",\\\\\\\"baits:structA\\\\\\\":\\\\\\\"[\\\\\\\\\\\\\\\"{\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"id:i\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"1\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"addToChance:i\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\":\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"10\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"}\\\\\\\\\\\\\\\"]\\\\\\\"}\\\"]\"}"]
+ * @default []
  * 
- * @param spacer|endHolder @text‏‏‎ ‎@desc ===============================================
  * 
+
+ * 
+ * 
+ * @param showFishCaughtMessage:b
+ * @text Показывать сообщение о пойманной рыбе
+ * @type boolean
+ * @default true
+ * 
+ * 
+
+ * 
+ * 
+ * @param autoRestart:b
+ * @text Автоматический рестарт
+ * @type boolean
+ * @default false
+ * @desc Автоматический рестарт мини-игры после окончания (поймана или потеряна рыба)
+ * 
+ * 
+
+ * 
+ * 
+ * @param ignoreParametersCheck:b
+ * @text Игнорировать проверку параметров
+ * @type boolean
+ * @default false
+ * @desc Игнорировать проверку параметров при загрузке плагина
+ * 
+ * 
+
+ * 
+ * 
+ * @param spacer|endHolder @text‏‏‎ ‎@desc ===============================================`;
+ * 
+
+ */
+/*:zh-cn
+ * @plugindesc (v.1.2)[PRO] Simple Fishing
+ * @author Pheonix KageDesu
+ * @target MZ MV
+ * @url https://kdworkshop.net/plugins/simple-fishing
+ *
+ * 
+ * @help
+ * ---------------------------------------------------------------------------
+ 
+ *
+ * 指南:
+ * https://gist.github.com/KageDesu/388693e5ec2d0e2716c08fabaf10fb8c
+ *
+ * ---------------------------------------------------------------------------
+ 
+ *
+ * 如果 您喜欢我的插件，想要更多和更频繁的更新，请在以下平台上支持我：
+ *
+ * Boosty:
+ *     https://boosty.to/kagedesu
+ * Patreon:
+ *      https://www.patreon.com/KageDesu
+ * YouTube:
+ *      https://www.youtube.com/channel/UCA3R61ojF5vp5tGwJ1YqdgQ?
+ *
+ *
+ * License: Creative Commons 4.0 Attribution, Share Alike, Commercial
+ * 
+ * @param PKD_SimpleFishing
+ * @text Simple Fishing Settings
+ * 
+ * 
+
+ * 
+ *  @param gameEventsData:s
+ *          @text 游戏事件
+ *  @type struct<EventsData> 
+ *          @desc 游戏过程事件处理程序
+ *  @default {}
+ * 
+ * 
+ * 
+
+ * 
+ * 
+ * @param variablesData:s
+ * @text 变量 (钓竿 和 鱼饵)
+ * @type struct<Variables> 
+ * @desc 玩家变量
+ * @default {"baitVariableId:i":"0","rodVariableId:i":"0"}
+ * 
+ * 
+
+ * 
+ * 
+ * @param rodsData:structA
+ * @text 钓竿
+ * @type struct<RodSettings>[]
+ * @default ["{\"id:i\":\"1\",\"iconName:str\":\"rod1\",\"progressBarTimerMod:i\":\"1.0\",\"redBarShrinkSpeed:i\":\"10\",\"gameZoneFillSpeed:i\":\"1\",\"redBarMinWidth:i\":\"60\",\"redBarMaxWidth:i\":\"120\",\"whiteCursorMoveSpeed:i\":\"3\",\"badClickProgressPenalty:i\":\"20\",\"goodClickProgressAdd:i\":\"0\"}"]
+ * 
+ * 
+
+ * 
+ * 
+ * @param baitsData:structA
+ * @text 鱼饵
+ * @type struct<BaitData>[]
+ * @default ["{\"id:i\":\"1\",\"iconName:str\":\"worm\"}"]
+ * 
+ * 
+
+ * 
+ * 
+ * @param regionsData:structA
+ * @text 钓鱼区域
+ * @type struct<RegionData>[]
+ * @default []
+ * 
+ * 
+
+ * 
+ * 
+ * @param showFishCaughtMessage:b
+ * @text 显示捕获的鱼消息
+ * @type boolean
+ * @default true
+ * 
+ * 
+
+ * 
+ * 
+ * @param autoRestart:b
+ * @text 自动重新启动
+ * @type boolean
+ * @default false
+ * @desc 在游戏结束后自动重新启动钓鱼小游戏（捕获或失去鱼）
+ * 
+ * 
+
+ * 
+ * 
+ * @param ignoreParametersCheck:b
+ * @text 忽略参数检查
+ * @type boolean
+ * @default false
+ * @desc 在加载插件时忽略参数检查
+ * 
+ * 
+
+ * 
+ * 
+ * @param spacer|endHolder @text‏‏‎ ‎@desc ===============================================`;
+ * 
+
  */
 /*~struct~EventsData:
 
  @param onGameInitedCommonEventId:i
  @text On Inited
- @type common_event
- @desc Called after fishing game UI is appear, but game not started yet
- @default 1 
+   @type common_event
+ @desc Called after fishing interface appeared, but before game started
+   @default 1 
+
+
 
 
  @param onGameStartedCommonEventId:i
  @text On Started
- @type common_event
+         @type common_event
  @desc Called after fishing game is started
- @default 2 
+         @default 2 
+
+
 
 
  @param onGameEndCommonEventId:i
  @text On End
- @type common_event
+         @type common_event
  @desc Called after fishing game is ended
- @default 3 
+         @default 3 
+
+
 
 
  @param onPlayerClickGood:i
  @text On Click Good
- @type common_event
+      @type common_event
  @desc Called when player made click in game zone
- @default 4 
+         @default 4 
+
+
 
 
  @param onPlayerCatchFish:i
  @text On Catch Fish
- @type common_event
+             @type common_event
  @desc Called when fish progress bar is filled 100%
- @default 5 
+         @default 5 
+
+
 
 
  @param onPlayerClickBad:i
  @text On Click Bad
- @type common_event
+             @type common_event
  @desc Called when player made click outer game zone (wrong)
- @default 6 
+         @default 6 
+
+
 
 
  @param onPlayerLoseFish:i
  @text On Lost Fish
- @type common_event
+             @type common_event
  @desc Callend when player lost fish (progress bar is below 0%)
- @default 7 
+         @default 7 
+
+
+
+
+ @param onNoAnyFishInRegion:i
+ @text On No Fish
+             @type common_event
+ @desc Called when no any fish in region
+         @default 8
 
 */
 
-/*~struct~EventsData:ru
-
- @param onGameInitedCommonEventId:i
- @text On Inited
- @type common_event
- @desc Вызвается когда появился интерфейс мини-игры (после вызова InitFishingGame())
- @default 1 
-
-
- @param onGameStartedCommonEventId:i
- @text On Started
- @type common_event
- @desc Вызывается когда мини-игра запущена (после вызова StartFishingGame())
- @default 2 
-
-
- @param onGameEndCommonEventId:i
- @text On End
- @type common_event
- @desc Вызвается когда мини-игра закончена (после вызова StopFishingGame() или выхода из игры кнопкой)
- @default 3 
-
-
- @param onPlayerClickGood:i
- @text On Click Good
- @type common_event
- @desc Когда игрок нажал кнопку в правильной зоне
- @default 4 
-
-
- @param onPlayerCatchFish:i
- @text On Catch Fish
- @type common_event
- @desc Когда игрок поймал рыбу (прогресс заполнен на 100%)
- @default 5 
-
-
- @param onPlayerClickBad:i
- @text On Click Bad
- @type common_event
- @desc Когда игрок нажал кнопку вне зоны
- @default 6 
-
-
- @param onPlayerLoseFish:i
- @text On Lost Fish
- @type common_event
- @desc Когда игрок потерял рыбу (прогресс упал до 0%)
- @default 7 
-
-*/
 
 /*~struct~Variables:
 
     @param baitVariableId:i
     @text Bait Variable
-    @type variable
+            @type variable
     @default 1
     @desc Required! Variable where you set current player's bait ID
+        
+
+
 
     @param rodVariableId:i
     @text Rod Variable
-    @type variable
+            @type variable
     @default 2
     @desc Required! Variable where you set current player's rod ID
-
-*/
-
-/*~struct~Variables:ru
-
-    @param baitVariableId:i
-    @text Bait Variable
-    @type variable
-    @default 1
-    @desc Номер переменной в которой будет храниться номер текущей приманки игрока (Bait ID)
-
-    @param rodVariableId:i
-    @text Rod Variable
-    @type variable
-    @default 2
-    @desc Номер переменной в которой будет храниться номер текущей удочки игрока (Rod ID)
-
-*/
-
-
-/*~struct~CGauge:
- * @param visible:bool
- * @text Is Visible?
- * @type boolean
- * @default true
- * @desc Will be this gauge visible?
- *
- * @param vertical:bool
- * @text Is Vertical?
- * @type boolean
- * @default false
- * @desc Gauge will use vertical fill?
- * 
- * @param fill
- * @text Fill Image
- * @type file
- * @dir img/pSimpleFishing/
- * @require 1
- * @default
- * @desc Gaguge fill image, required!
- * 
- * @param foreground
- * @text Foreground Image
- * @type file
- * @dir img/pSimpleFishing/
- * @require 1
- * @default
- * @desc Image above gauge fill, optional
- * 
- * @param mask
- * @text Mask Image
- * @type file
- * @dir img/pSimpleFishing/
- * @require 1
- * @default
- * @desc Whole gauge image mask, optional
- * 
- * @param backColor:css
- * @type string
- * @text Background Color
- * @default #000000
- * @desc Text color in HEX format (#000000)
- * 
- * @param backOpacity:int
- * @type number
- * @min 0
- * @max 255
- * @text Background Opacity
- * @default 255
- * @desc from 0 to 255, 0 - transparent, 255 - opaque
- */
-
-/*~struct~GameBarSettings:
-
- @param redZoneFillOpacity:i
- @text Opacity
- @type number 
- @min 1
- @max 255
- @desc Game zone fill opacity (from 0 (transparent) to 255 (opaque))
- @default 125 
-
- @param redZoneFillColor:str
- @text Color
- @desc Game zone fill color (in HEX format)
- @default #ad189a 
-
-
- @param redZoneMinWidthBeforeBadEnd:i
- @text Min Width
- @type number 
- @min 1
- @max 60
- @desc Game zone min width in PX (before player lost)
- @default 6 
-
-*/
-
-/*~struct~GameBarSettings:ru
-
- @param redZoneFillOpacity:i
- @text Opacity
- @type number 
- @min 1
- @max 255
- @desc Прозрачность игровой зоны (от 0 (прозрачный) до 255 (видимый))
- @default 125 
-
- @param redZoneFillColor:str
- @text Color
- @desc Цвет игровой зоны (hex)
- @default #ad189a 
-
-
- @param redZoneMinWidthBeforeBadEnd:i
- @text Min Width
- @type number 
- @min 1
- @max 60
- @desc Минимальная ширина игровой зоны в пикселях, когда нажатие уже не регестрируется (проигрыш)
- @default 6 
-
-*/
-
-/*~struct~XY2:
- * @param x:e
- * @text X
- * @type text
- * @default 0
- * @desc Number or script (example: Graphics.width / 2)
- *
- * @param y:e
- * @text Y
- * @type text
- * @default 0
- * @desc Number or script (example: $gameVariables.value(12) * 2)
- */
-
-/*~struct~VisualSettings:
-
- @param gameBarPosition:s
- @text Game Bar Position
- @type struct<XY2> 
- @desc 
- @default {} 
-
-
- @param gameBarSettings:s
- @parent gameBarPosition:s
- @text Zone Settings
- @type struct<GameBarSettings> 
- @desc 
- @default {} 
-
-
- @param rodIconPosition:s
- @text Rod Image Position
- @type struct<XY2> 
- @desc 
- @default {} 
-
-
- @param baitIconPosition:s
- @text Bait Image Position
- @type struct<XY2> 
- @desc 
- @default {} 
-
-
- @param fishIconPosition:s
- @text Fish Image Position
- @type struct<XY2> 
- @desc 
- @default {} 
-
-
- @param progressBarPosition:s
- @text Progress Bar Position
- @type struct<XY2> 
- @desc 
- @default {} 
-
-
- @param progressBarSettings:s
- @text Visual Settings
- @parent progressBarPosition:s
- @type struct<CGauge> 
- @desc 
- @default {} 
-*/
-
-/*~struct~VisualSettings:ru
-
- @param gameBarPosition:s
- @text Game Bar Position
- @type struct<XY2> 
- @desc Позиция игровой шкалы
- @default {} 
-
-
- @param gameBarSettings:s
- @parent gameBarPosition:s
- @text Zone Settings
- @type struct<GameBarSettings> 
- @desc Настройки игровой зоны
- @default {} 
-
-
- @param rodIconPosition:s
- @text Rod Image Position
- @type struct<XY2> 
- @desc Позиция изображения удочки
- @default {} 
-
-
- @param baitIconPosition:s
- @text Bait Image Position
- @type struct<XY2> 
- @desc Позиция изображения наживки
- @default {} 
-
-
- @param fishIconPosition:s
- @text Fish Image Position
- @type struct<XY2> 
- @desc Позиция изображения рыбы
- @default {} 
-
-
- @param progressBarPosition:s
- @text Progress Bar Position
- @type struct<XY2> 
- @desc Позиция изображения шкалы прогресса
- @default {} 
-
-
- @param progressBarSettings:s
- @text Visual Settings
- @parent progressBarPosition:s
- @type struct<CGauge> 
- @desc Настройки шкалы прогресса
- @default {} 
+        
 */
 
 /*~struct~RodSettings:
  @param id:i
  @text Rod ID
- @type number 
+      @type number 
  @min 1
  @desc Unique Rod ID, you should set this value to Rod Variable for use this Rod
- @default 1 
+             @default 1 
+
+
 
 
  @param iconName:str
  @text Image
- @type file
+             @type file
  @dir img/pSimpleFishing/
  @require 1
  @default
  @desc Rod image on game UI
+            
+
+
 
  @param progressBarTimerMod:i
  @text Progress Bar Multiplayer
- @type number 
+      @type number 
  @min 0.1
  @decimals 1
  @desc Catching fish progress bar fill speed multiplayer. Total speed will be MULT by this value. 1 - no changes.
+             
  @default 1
+
+
+
 
  @param redBarShrinkSpeed:i
  @text Timer Delay
- @type number 
+             @type number 
  @min 1
  @desc Game Zone timer delay before shrink (in frames)
- @default 10
+             @default 10
+
+
+
 
  @param gameZoneFillSpeed:i
  @parent redBarShrinkSpeed:i
  @text Shrink step
- @type number 
+             @type number 
  @min 1
  @desc Game Zone shrink step in PX per timer tick
- @default 1 
+             @default 1 
+
+
+
 
  @param redBarMinWidth:i
  @parent redBarShrinkSpeed:i
  @text Min Width
- @type number 
+             @type number 
  @min 10
  @desc Min width of game zone in PX
- @default 60 
+             @default 60 
+
+
+
 
  @param redBarMaxWidth:i
  @parent redBarShrinkSpeed:i
  @text Max Width
- @type number 
+             @type number 
  @min 20
  @desc Max width of game zone in PX
- @default 120 
+             @default 120 
+
+
+
 
  @param whiteCursorMoveSpeed:i
  @text Cursor Step
- @type number 
+             @type number 
  @min 1
  @desc Cursor move step in PX for each frame. More value => faster move speed.
- @default 3 
+             @default 3 
+
+
+
 
  @param badClickProgressPenalty:i
  @parent whiteCursorMoveSpeed:i
  @text Penalty %
- @type number 
+             @type number 
  @min 0
  @max 99
  @desc Penalty in % (-) to progress bar when player miss click
- @default 20 
+             @default 20 
+
+
+
 
  @param goodClickProgressAdd:i
  @parent whiteCursorMoveSpeed:i
  @text Bonus %
- @type number 
+             @type number 
  @min 0
  @max 99
  @desc Bonus in % (+) to progress bar when player click in game zone
- @default 0 
-*/
+             @default 0 
 
-/*~struct~RodSettings:ru
- @param id:i
- @text Rod ID
- @type number 
- @min 1
- @desc Номер удочки, должен быть уникальным. Устанавливается в соответсвующую переменную перед игрой 
- @default 1 
-
-
- @param iconName:str
- @text Image
- @type file
- @dir img/pSimpleFishing/
- @require 1
- @default
- @desc Изображение удочки
-
- @param progressBarTimerMod:i
- @text Progress Bar Multiplayer
- @type number 
- @min 0.1
- @decimals 1
- @desc Множитель заполнения шкалы прогресса. Общая скорость заполенния будет УМНОЖЕНА на это число. 1 - без изменений.
- @default 1
-
- @param redBarShrinkSpeed:i
- @text Timer Delay
- @type number 
- @min 1
- @desc Задержка (в кадрах) перед каждым шагом сужения игровой зоны
- @default 10
-
- @param gameZoneFillSpeed:i
- @parent redBarShrinkSpeed:i
- @text Shrink step
- @type number 
- @min 1
- @desc Шаг сужения игровой зоны в пикселях
- @default 1 
-
- @param redBarMinWidth:i
- @parent redBarShrinkSpeed:i
- @text Min Width
- @type number 
- @min 10
- @desc Минимальная ширина игровой зоны в пикселях
- @default 60 
-
- @param redBarMaxWidth:i
- @parent redBarShrinkSpeed:i
- @text Max Width
- @type number 
- @min 20
- @desc Максимальная ширина игровой зоны в пикселях
- @default 120 
-
- @param whiteCursorMoveSpeed:i
- @text Cursor Step
- @type number 
- @min 1
- @desc Шаг движения курсора в пикселях. БОЛЬШЕ значение = БЫСТРЕЕ двигается курсор.
- @default 3 
-
- @param badClickProgressPenalty:i
- @parent whiteCursorMoveSpeed:i
- @text Penalty %
- @type number 
- @min 0
- @max 99
- @desc Штраф в % отнятый у шкалы програсса, если игрок НЕ попал в игровую зону
- @default 20 
-
- @param goodClickProgressAdd:i
- @parent whiteCursorMoveSpeed:i
- @text Bonus %
- @type number 
- @min 0
- @max 99
- @desc Бонус в % добавленный к шкале програссе, если игрок попал в игровую зону
- @default 0 
 */
 
 /*~struct~BaitData:
  @param id:i
  @text Bait ID
- @type number 
+      @type number 
  @min 1
  @desc You should set this value to variable Bait Variable for use this Bait
- @default 1 
+             @default 1 
+
+
+
 
  @param iconName:str
  @text Image
- @type file
+             @type file
  @dir img/pSimpleFishing/
  @require 1
  @default
  @desc Bait image on game UI
-*/
+            */
 
-/*~struct~BaitData:ru
- @param id:i
- @text Bait ID
- @type number 
+/*~struct~RegionData:
+
+ @param region:i
+ @text Region Number
+         @type number 
  @min 1
- @desc Номер наживки (нужно его задавать в переменную перед началом игры)
- @default 1 
+ @max 255
+ @desc The region for which these settings will be used
+         @default 1 
 
- @param iconName:str
- @text Image
- @type file
- @dir img/pSimpleFishing/
- @require 1
- @default
- @desc Изображение наживки в игре
+
+
+
+ @param fishes:structA
+ @text Fishes
+         @type struct<FishData>[] 
+ @desc Settings of fish that can be caught in this region
+         @default []
+
 */
 
 /*~struct~FishData:
 
  @param id:i
  @text Fish Item
- @type item 
+      @type item 
  @desc Player will receive this item (x1) when caught this fish
+            
+
+
 
  @param appearChance:i
  @text Chance %
- @type number 
+             @type number 
  @min 0
  @max 100
  @desc Basic chance (without any Baits) for that fish will appear in region.
- @default 20
+             @default 20
+
+
 
 
  @param progressBarFillSpeed:i
  @text Speed
- @type number 
+             @type number 
  @min 1
  @max 1000
  @desc Catch fish progress bar fill speed. Less value = more quick filling.
- @default 1 
+             @default 1 
+
+
+
 
  @param goodClickProgressAdd:i
  @text Click Bonus
- @type number 
+             @type number 
  @min 0
  @max 100
  @desc Bonus in % to progress bar fill when player made right click (in game zone)
- @default 10
+             @default 10
+
+
+
 
  @param baits:structA
  @text Baits
- @type struct<FishPerBait>[] 
- @desc Baits for fish
+             @type struct<FishPerBait>[]
  @default []
 
-*/
-
-/*~struct~FishData:ru
-
- @param id:i
- @text Fish Item
- @type item 
- @desc Предемет, который игрок получит, поймав данную рыбу (а также ID рыбы)
-
- @param appearChance:i
- @text Chance %
- @type number 
- @min 0
- @max 100
- @desc Базовый шанс что данная рыба клюент (в %)
- @default 20
 
 
- @param progressBarFillSpeed:i
- @text Speed
- @type number 
- @min 1
- @max 1000
- @desc Скорось заполнения шкалы прогресса. МЕНЬШЕ занчение = БОЛЬШЕ скорость. (вот так вот)
- @default 1 
 
- @param goodClickProgressAdd:i
- @text Click Bonus
- @type number 
- @min 0
- @max 100
- @desc Бонус в % добавленный к шкале програссе, если игрок попал в игровую зону
- @default 10
+ @param appearSwitchId:int
+   @text Switch ID
+                  @type switch
+   @desc If this switch is ON, fish will appear in region.
+                  @default 0
 
- @param baits:structA
- @text Baits
- @type struct<FishPerBait>[] 
- @desc Любимые наживки
- @default []
+
+
+
+   @param appearConditionScript
+   @text Condition Script
+                  @desc If this script return true, fish will appear in region.
+                  @default
+
+
+   
 
 */
 
@@ -863,7059 +674,10614 @@
 
  @param id:i
  @text Bait ID
- @type number 
+      @type number 
  @min 1
  @desc Bait ID (number)
- @default 1
+             @default 1
+
+
 
 
  @param addToChance:i
  @text Chance in %
- @type number 
+             @type number 
  @min 0
  @max 100
  @desc The chance that this fish will appear for this bait
- @default 40
+             @default 40
+
+*/
+
+
+/*~struct~EventsData:ru
+
+ @param onGameInitedCommonEventId:i
+  @text При инициализации
+  @type common_event
+  @desc Вызывается после появления интерфейса рыбалки, но до начала игры
+  @default 1 
+
+
+
+
+ @param onGameStartedCommonEventId:i
+     @text При начале
+     @type common_event
+     @desc Вызывается после начала игры в рыбалку
+     @default 2 
+
+
+
+
+ @param onGameEndCommonEventId:i
+     @text При окончании
+     @type common_event
+     @desc Вызывается после окончания игры в рыбалку
+     @default 3 
+
+
+
+
+ @param onPlayerClickGood:i
+  @text При правильном клике
+     @type common_event
+     @desc Вызывается, когда игрок сделал клик в игровой зоне
+     @default 4 
+
+
+
+
+ @param onPlayerCatchFish:i
+     @text При пойманной рыбе
+         @type common_event
+     @desc Вызывается, когда полоса прогресса рыбы заполнена на 100%
+     @default 5 
+
+
+
+
+ @param onPlayerClickBad:i
+     @text При неправильном клике
+         @type common_event
+     @desc Вызывается, когда игрок сделал клик вне игровой зоны (неправильно)
+     @default 6 
+
+
+
+
+ @param onPlayerLoseFish:i
+     @text При потере рыбы
+         @type common_event
+     @desc Вызывается, когда игрок потерял рыбу (полоса прогресса ниже 0%)
+     @default 7 
+
+
+
+
+ @param onNoAnyFishInRegion:i
+     @text При отсутствии рыбы
+         @type common_event
+     @desc Вызывается, когда в регионе нет ни одной рыбы
+     @default 8
+
+*/
+
+
+/*~struct~Variables:ru
+
+    @param baitVariableId:i
+        @text Переменная наживки
+        @type variable
+    @default 1
+        @desc Обязательно! Переменная, в которой вы устанавливаете текущий ID наживки игрока
+    
+
+
+
+    @param rodVariableId:i
+        @text Переменная удилища
+        @type variable
+    @default 2
+        @desc Обязательно! Переменная, в которой вы устанавливаете текущий ID удочки игрока
+    
+*/
+
+/*~struct~RodSettings:ru
+ @param id:i
+  @text ID Удилища
+     @type number 
+ @min 1
+     @desc Уникальный ID удилища, вы должны установить это значение в переменную удилища для использования этого удилища
+         @default 1 
+
+
+
+
+ @param iconName:str
+     @text Изображение
+         @type file
+ @dir img/pSimpleFishing/
+ @require 1
+ @default
+     @desc Изображение удилища на игровом интерфейсе
+        
+
+
+
+ @param progressBarTimerMod:i
+  @text Множитель прогресс бара
+     @type number 
+ @min 0.1
+ @decimals 1
+     @desc Скорость заполнения полосы прогресса ловли рыбы умножается на это значение. Общая скорость будет умножена на это значение. 1 - без изменений.
+         
+ @default 1
+
+
+
+
+ @param redBarShrinkSpeed:i
+     @text Задержка таймера
+         @type number 
+ @min 1
+     @desc Задержка таймера игровой зоны перед уменьшением (в кадрах)
+         @default 10
+
+
+
+
+ @param gameZoneFillSpeed:i
+ @parent redBarShrinkSpeed:i
+     @text Шаг уменьшения
+         @type number 
+ @min 1
+     @desc Шаг уменьшения игровой зоны в PX за тик таймера
+         @default 1 
+
+
+
+
+ @param redBarMinWidth:i
+ @parent redBarShrinkSpeed:i
+     @text Минимальная ширина
+         @type number 
+ @min 10
+     @desc Минимальная ширина игровой зоны в PX
+         @default 60 
+
+
+
+
+ @param redBarMaxWidth:i
+ @parent redBarShrinkSpeed:i
+     @text Максимальная ширина
+         @type number 
+ @min 20
+     @desc Максимальная ширина игровой зоны в PX
+         @default 120 
+
+
+
+
+ @param whiteCursorMoveSpeed:i
+     @text Шаг курсора
+         @type number 
+ @min 1
+     @desc Шаг перемещения курсора в PX за каждый кадр. Больше значение => быстрее скорость движения.
+         @default 3 
+
+
+
+
+ @param badClickProgressPenalty:i
+ @parent whiteCursorMoveSpeed:i
+     @text Штраф %
+         @type number 
+ @min 0
+ @max 99
+     @desc Штраф в % (-) к полосе прогресса, когда игрок промахивается
+         @default 20 
+
+
+
+
+ @param goodClickProgressAdd:i
+ @parent whiteCursorMoveSpeed:i
+     @text Бонус %
+         @type number 
+ @min 0
+ @max 99
+     @desc Бонус в % (+) к полосе прогресса, когда игрок кликает в игровой зоне
+         @default 0 
+
+*/
+
+/*~struct~BaitData:ru
+ @param id:i
+  @text ID приманки
+     @type number 
+ @min 1
+     @desc Вы должны установить это значение в переменную Bait Variable для использования этой приманки
+         @default 1 
+
+
+
+
+ @param iconName:str
+     @text Изображение
+         @type file
+ @dir img/pSimpleFishing/
+ @require 1
+ @default
+     @desc Изображение приманки на игровом интерфейсе
+        */
+
+/*~struct~RegionData:ru
+
+ @param region:i
+     @text Номер региона
+     @type number 
+ @min 1
+ @max 255
+     @desc Регион, для которого будут использованы эти настройки
+     @default 1 
+
+
+
+
+ @param fishes:structA
+     @text Рыбы
+     @type struct<FishData>[] 
+     @desc Настройки рыб, которых можно поймать в этом регионе
+     @default []
+
+*/
+
+/*~struct~FishData:ru
+
+ @param id:i
+  @text Предмет рыбы
+     @type item 
+     @desc Игрок получит этот предмет (x1), когда поймает эту рыбу
+        
+
+
+
+ @param appearChance:i
+     @text Шанс %
+         @type number 
+ @min 0
+ @max 100
+     @desc Базовый шанс (без приманок) того, что рыба появится в регионе.
+         @default 20
+
+
+
+
+ @param progressBarFillSpeed:i
+     @text Скорость
+         @type number 
+ @min 1
+ @max 1000
+     @desc Скорость заполнения полосы прогресса рыбы. Меньшее значение = более быстрое заполнение.
+         @default 1 
+
+
+
+
+ @param goodClickProgressAdd:i
+     @text Бонус за клик
+         @type number 
+ @min 0
+ @max 100
+     @desc Бонус в % к заполнению полосы прогресса, когда игрок сделал правильный клик (в игровой зоне)
+         @default 10
+
+
+
+
+ @param baits:structA
+     @text Приманки
+         @type struct<FishPerBait>[]
+ @default []
+
+
+
+
+ @param appearSwitchId:int
+         @text ID Переключателя
+            @type switch
+         @desc Если этот переключатель ВКЛ, рыба появится в регионе.
+            @default 0
+
+
+
+
+   @param appearConditionScript
+         @text Скрипт условия
+                  @desc Если этот скрипт вернет true, рыба появится в регионе.
+            @default
+
+
+   
 
 */
 
 /*~struct~FishPerBait:ru
 
  @param id:i
- @text Bait ID
- @type number 
+  @text ID приманки
+     @type number 
  @min 1
- @desc Номер наживки
- @default 1
+     @desc ID приманки (число)
+         @default 1
+
+
 
 
  @param addToChance:i
- @text Chance in %
+ @text Шанс в %
+    @text Шанс в %
+         @type number 
+ @min 0
+ @max 100
+     @desc Шанс, что эта рыба появится для этой приманки
+         @default 40
+
+*/
+
+
+/*~struct~EventsData:zh-ch
+
+ @param onGameInitedCommonEventId:i
+   @text 初始化时
+ @type common_event
+   @desc 在钓鱼游戏界面出现后调用，但游戏尚未开始
+ @default 1 
+
+
+
+
+ @param onGameStartedCommonEventId:i
+         @text 在开始时
+ @type common_event
+         @desc 在开始钓鱼游戏后调用
+ @default 2 
+
+
+
+
+ @param onGameEndCommonEventId:i
+         @text 在结束时
+ @type common_event
+         @desc 在结束钓鱼游戏后调用
+ @default 3 
+
+
+
+
+ @param onPlayerClickGood:i
+      @text 在正确点击时
+ @type common_event
+         @desc 当玩家在游戏区域内点击时调用
+ @default 4 
+
+
+
+
+ @param onPlayerCatchFish:i
+             @text 在捕获鱼时
+ @type common_event
+         @desc 当鱼的进度条填满100％时调用
+ @default 5 
+
+
+
+
+ @param onPlayerClickBad:i
+             @text 在错误点击时
+ @type common_event
+         @desc 当玩家在游戏区域外点击时调用（错误）
+ @default 6 
+
+
+
+
+ @param onPlayerLoseFish:i
+             @text 在失去鱼时
+ @type common_event
+         @desc 当玩家失去鱼时调用（进度条低于0％）
+ @default 7 
+
+
+
+
+ @param onNoAnyFishInRegion:i
+             @text 在没有鱼时
+ @type common_event
+         @desc 当区域中没有任何鱼时调用
+ @default 8
+
+*/
+
+
+/*~struct~Variables:zh-ch
+
+    @param baitVariableId:i
+            @text 鱼饵变量
+    @type variable
+    @default 1
+            @desc 必需！您设置当前玩家鱼饵ID的变量
+
+
+
+
+    @param rodVariableId:i
+            @text 钓竿变量
+    @type variable
+    @default 2
+            @desc 必需！您设置当前玩家钓竿ID的变量
+
+*/
+
+/*~struct~RodSettings:zh-ch
+ @param id:i
+      @text 钓竿ID
+ @type number 
+ @min 1
+             @desc 唯一的钓竿ID，您应该将此值设置为钓竿变量，以使用此钓竿
+ @default 1 
+
+
+
+
+ @param iconName:str
+             @text 图片
+ @type file
+ @dir img/pSimpleFishing/
+ @require 1
+ @default
+             @desc 游戏UI上的钓竿图像
+
+
+
+
+ @param progressBarTimerMod:i
+      @text 进度条乘数
+ @type number 
+ @min 0.1
+ @decimals 1
+             @desc 捕鱼进度条填充速度乘数。 总速度将乘以此值。 1-没有变化。
+ 
+ @default 1
+
+
+
+
+ @param redBarShrinkSpeed:i
+             @text 计时器延迟
+ @type number 
+ @min 1
+             @desc 游戏区域在缩小之前的计时器延迟（以帧为单位）
+ @default 10
+
+
+
+
+ @param gameZoneFillSpeed:i
+ @parent redBarShrinkSpeed:i
+             @text 缩小步骤
+ @type number 
+ @min 1
+             @desc 游戏区域每个计时器滴答的缩小步骤
+ @default 1 
+
+
+
+
+ @param redBarMinWidth:i
+ @parent redBarShrinkSpeed:i
+             @text 最小宽度
+ @type number 
+ @min 10
+             @desc 游戏区域的最小宽度（PX）
+ @default 60 
+
+
+
+
+ @param redBarMaxWidth:i
+ @parent redBarShrinkSpeed:i
+             @text 最大宽度
+ @type number 
+ @min 20
+             @desc 游戏区域的最大宽度（PX）
+ @default 120 
+
+
+
+
+ @param whiteCursorMoveSpeed:i
+             @text 光标步骤
+ @type number 
+ @min 1
+             @desc 每帧的光标移动步长（PX）。 更大的值=>更快的移动速度。
+ @default 3 
+
+
+
+
+ @param badClickProgressPenalty:i
+ @parent whiteCursorMoveSpeed:i
+             @text 罚款 %
+ @type number 
+ @min 0
+ @max 99
+             @desc 玩家错过点击时对进度条的惩罚（-）
+ @default 20 
+
+
+
+
+ @param goodClickProgressAdd:i
+ @parent whiteCursorMoveSpeed:i
+             @text 奖金 %
+ @type number 
+ @min 0
+ @max 99
+             @desc 玩家在游戏区域内点击时对进度条的奖励（+）
+ @default 0 
+
+*/
+
+/*~struct~BaitData:zh-ch
+ @param id:i
+      @text 鱼饵ID
+ @type number 
+ @min 1
+             @desc 您应该将此值设置为变量鱼饵变量，以使用此鱼饵
+ @default 1 
+
+
+
+
+ @param iconName:str
+             @text 图片
+ @type file
+ @dir img/pSimpleFishing/
+ @require 1
+ @default
+             @desc 游戏UI上的鱼饵图像
+*/
+
+/*~struct~RegionData:zh-ch
+
+ @param region:i
+         @text 区域编号
+ @type number 
+ @min 1
+ @max 255
+         @desc 将使用这些设置的区域
+ @default 1 
+
+
+
+
+ @param fishes:structA
+         @text 鱼
+ @type struct<FishData>[] 
+         @desc 可以在此区域捕获的鱼的设置
+ @default []
+
+*/
+
+/*~struct~FishData:zh-ch
+
+ @param id:i
+      @text 鱼物品
+ @type item 
+             @desc 玩家捕捉到这条鱼时将获得此物品（x1）
+
+
+
+
+ @param appearChance:i
+             @text 机会 %
  @type number 
  @min 0
  @max 100
- @desc Шанс в % что данная рыба клюнет на эту наживку
+             @desc 该鱼在该区域出现的基本机会（不包括任何鱼饵）。
+ @default 20
+
+
+
+
+ @param progressBarFillSpeed:i
+             @text 速度
+ @type number 
+ @min 1
+ @max 1000
+             @desc 捕鱼进度条填充速度。较小的值=填充速度更快。
+ @default 1 
+
+
+
+
+ @param goodClickProgressAdd:i
+             @text 点击奖励
+ @type number 
+ @min 0
+ @max 100
+             @desc 玩家在游戏区域内进行正确点击时，进度条填充的百分比奖励
+ @default 10
+
+
+
+
+ @param baits:structA
+             @text 鱼饵
+ @type struct<FishPerBait>[]
+ @default []
+
+
+
+
+ @param appearSwitchId:int
+                  @text 开关ID
+   @type switch
+                  @desc 如果此开关为ON，则鱼将出现在该区域。
+   @default 0
+
+
+
+
+   @param appearConditionScript
+                  @text 条件脚本
+                  @desc 如果此脚本返回true，则鱼将出现在该区域。
+   @default
+
+
+   
+
+*/
+
+/*~struct~FishPerBait:zh-ch
+
+ @param id:i
+      @text 鱼饵ID
+ @type number 
+ @min 1
+             @desc 鱼饵ID（数字）
+ @default 1
+
+
+
+
+ @param addToChance:i
+ @text 机会 %
+            @text 机会 %
+ @type number 
+ @min 0
+ @max 100
+             @desc 这种鱼出现的机会
  @default 40
 
 */
 
-/*~struct~RegionData:
-
- @param region:i
- @text Region Number
- @type number 
- @min 1
- @max 255
- @desc The region for which these settings will be used
- @default 1 
-
- @param fishes:structA
- @text Fishes
- @type struct<FishData>[] 
- @desc Settings of fish that can be caught in this region
- @default []
-
-*/
-
-/*~struct~RegionData:ru
-
- @param region:i
- @text Region Number
- @type number 
- @min 1
- @max 255
- @desc Номер региона на карте
- @default 1 
-
- @param fishes:structA
- @text Fishes
- @type struct<FishData>[] 
- @desc Настройки рыбы, которую можно поймать в этом региона (игрок должен стоять на клекте карты с этим регионом)
- @default []
-
-*/
-
-
-// * Дата начала разработки плагина: 14.03.2022
-
-var Imported = Imported || {};
-Imported.PKD_SimpleFishing = true;
-
-var PKD_SimpleFishing = {};
-PKD_SimpleFishing.version = 100;
-
-PKD_SimpleFishing.link = function (library) {
-    this[library.name] = library;
-};
-
-//?VERSION
-PKD_SimpleFishing.isPro = function() { return false; };
-
-// * For parameters
-PKD_SimpleFishing.PP = {};
-
-// * Загрзука параметров
-PKD_SimpleFishing.LoadPluginSettings = () => {
-    PKD_SimpleFishing.PP._loader = new KDCore.ParamLoader("rodsData:structA");
-};
-
-
-/*
-# ==========================================================================
-# ==========================================================================
-#
-#   EMBEDDED PHEONIX KAGEDESU PLUGINS CORE LIBRARY
-#   (This plugin may not use the entire code of this library)
-#
-# ==========================================================================
-# ==========================================================================
- * 
- * 
- */
 
 
 
-// Generated by CoffeeScript 2.6.1
-// ==========================================================================
-//╒═════════════════════════════════════════════════════════════════════════╛
-// ■ KDCore.coffee
-//╒═════════════════════════════════════════════════════════════════════════╛
-//---------------------------------------------------------------------------
-// * LIBRARY WITH MZ AND MZ SUPPORT
-//! {OUTER FILE}
 
-//?rev 10.05.22
-var KDCore;
-
-window.Imported = window.Imported || {};
-
-Imported.KDCore = true;
-
-KDCore = KDCore || {};
-
-// * Двузначные числа нельзя в версии, сравнение идёт по первой цифре поулчается (3.43 - нельзя, можно 3.4.3)
-//%[МЕНЯТЬ ПРИ ИЗМЕНЕНИИ]
-KDCore._fileVersion = '2.8.4';
-
-// * Методы и библиотеки данной версии
-KDCore._loader = 'loader_' + KDCore._fileVersion;
-
-KDCore[KDCore._loader] = [];
-
-// * Добавить библиотеку на загрузку
-KDCore.registerLibraryToLoad = function(lib) {
-  return KDCore[KDCore._loader].push(lib);
-};
-
-if ((KDCore.Version != null) && KDCore.Version >= KDCore._fileVersion) {
-  // * ПРОПУСКАЕМ ЗАГРУЗКУ, так как уже загруженна более новая
-  console.log('XDev KDCore ' + KDCore._fileVersion + ' skipped by new or exists version');
-  KDCore._requireLoadLibrary = false;
-} else {
-  KDCore.Version = KDCore._fileVersion;
-  KDCore.LIBS = KDCore.LIBS || {};
-  KDCore.register = function(library) {
-    return this.LIBS[library.name] = library;
-  };
-  window.KDCore = KDCore;
-  // * ТРЕБУЕТСЯ ЗАГРУЗКА БИБЛИОТЕК
-  KDCore._requireLoadLibrary = true;
-}
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  Array.prototype.delete = function() {
-    var L, a, ax, what;
-    what = void 0;
-    a = arguments;
-    L = a.length;
-    ax = void 0;
-    while (L && this.length) {
-      what = a[--L];
-      while ((ax = this.indexOf(what)) !== -1) {
-        this.splice(ax, 1);
-      }
+var Imported;
+(function (Imported) {
+    Imported.PKD_SimpleFishing = true;
+})(Imported || (Imported = {}));
+//%[IDEA] Сделать универсальный Notify из Sprite_FishCatchNotifyText, чтобы можно было показывать любой текск
+var PKD_SimpleFishing;
+(function (PKD_SimpleFishing) {
+    PKD_SimpleFishing.Version = "1.2";
+    /**
+     * Get NUI file from plugin
+     * @param {string} name - Name of file
+     * @returns {any} - File content
+    */
+    function GetNUIFile(name) {
+        return window["$PKD_SimpleFishing_" + name];
     }
-    return this;
-  };
-  Array.prototype.max = function() {
-    return Math.max.apply(null, this);
-  };
-  Array.prototype.min = function() {
-    return Math.min.apply(null, this);
-  };
-  Array.prototype.sample = function() {
-    if (this.length === 0) {
-      return [];
-    }
-    return this[KDCore.SDK.rand(0, this.length - 1)];
-  };
-  Array.prototype.first = function() {
-    return this[0];
-  };
-  Array.prototype.last = function() {
-    return this[this.length - 1];
-  };
-  Array.prototype.shuffle = function() {
-    var k, n, v;
-    n = this.length;
-    while (n > 1) {
-      n--;
-      k = KDCore.SDK.rand(0, n + 1);
-      v = this[k];
-      this[k] = this[n];
-      this[n] = v;
-    }
-  };
-  Array.prototype.count = function() {
-    return this.length;
-  };
-  Array.prototype.isEmpty = function() {
-    return this.length === 0;
-  };
-  // * Ищет элемент, у которого поле ID == id
-  Array.prototype.getById = function(id) {
-    return this.getByField('id', id);
-  };
-  // * Ищет элемент, у которого поле FIELD (имя поля) == value
-  return Array.prototype.getByField = function(field, value) {
-    var e;
-    try {
-      return this.find(function(item) {
-        return item[field] === value;
-      });
-    } catch (error) {
-      e = error;
-      console.warn(e);
-      return null;
-    }
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  Number.prototype.do = function(method) {
-    return KDCore.SDK.times(this, method);
-  };
-  Number.prototype.clamp = function(min, max) {
-    return Math.min(Math.max(this, min), max);
-  };
-  return Number.prototype.any = function(number) {
-    return (number != null) && number > 0;
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  String.prototype.toCss = function() {
-    return KDCore.Color.FromHex(this).CSS;
-  };
-  String.prototype.toCSS = function() {
-    return this.toCss();
-  };
-  String.prototype.isEmpty = function() {
-    return this.length === 0 || !this.trim();
-  };
-  String.isNullOrEmpty = function(str) {
-    if (str != null) {
-      return str.toString().isEmpty();
-    } else {
-      return true;
-    }
-  };
-  String.any = function(str) {
-    return !String.isNullOrEmpty(str);
-  };
-  return String.prototype.replaceAll = function(search, replacement) {
-    var target;
-    target = this;
-    return target.split(search).join(replacement);
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  KDCore.isMV = function() {
-    return Utils.RPGMAKER_NAME.contains("MV");
-  };
-  KDCore.isMZ = function() {
-    return !KDCore.isMV();
-  };
-  KDCore.warning = function(msg, error) {
-    if (msg != null) {
-      console.warn(msg);
-    }
-    if (error != null) {
-      console.warn(error);
-    }
-  };
-  KDCore.makeid = function(length) {
-    var characters, charactersLength, i, result;
-    result = '';
-    characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    charactersLength = characters.length;
-    i = 0;
-    while (i < length) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-      i++;
-    }
-    return result;
-  };
-  return KDCore.makeId = function() {
-    return KDCore.makeid(...arguments);
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var SDK;
-  //?[DEPRECATED]
-  // * SDK
-  //------------------------------------------------------------------------------
-  SDK = function() {
-    throw new Error('This is a static class');
-  };
-  SDK.rand = function(min, max) {
-    return Math.round(Math.random() * (max - min)) + min;
-  };
-  SDK.setConstantToObject = function(object, constantName, constantValue) {
-    object[constantName] = constantValue;
-    if (typeof object[constantName] === 'object') {
-      Object.freeze(object[constantName]);
-    }
-    Object.defineProperty(object, constantName, {
-      writable: false
-    });
-  };
-  SDK.convertBitmapToBase64Data = function(bitmap) {
-    return bitmap._canvas.toDataURL('image/png');
-  };
-  SDK.times = function(times, method) {
-    var i, results;
-    i = 0;
-    results = [];
-    while (i < times) {
-      method(i);
-      results.push(i++);
-    }
-    return results;
-  };
-  SDK.toGlobalCoord = function(layer, coordSymbol = 'x') {
-    var node, t;
-    t = layer[coordSymbol];
-    node = layer;
-    while (node) {
-      t -= node[coordSymbol];
-      node = node.parent;
-    }
-    return (t * -1) + layer[coordSymbol];
-  };
-  SDK.canvasToLocalX = function(layer, x) {
-    while (layer) {
-      x -= layer.x;
-      layer = layer.parent;
-    }
-    return x;
-  };
-  SDK.canvasToLocalY = function(layer, y) {
-    while (layer) {
-      y -= layer.y;
-      layer = layer.parent;
-    }
-    return y;
-  };
-  SDK.isInt = function(n) {
-    return Number(n) === n && n % 1 === 0;
-  };
-  SDK.isFloat = function(n) {
-    return Number(n) === n && n % 1 !== 0;
-  };
-  SDK.checkSwitch = function(switchValue) {
-    if (switchValue === 'A' || switchValue === 'B' || switchValue === 'C' || switchValue === 'D') {
-      return true;
-    }
-    return false;
-  };
-  SDK.toNumber = function(string, none = 0) {
-    var number;
-    if (string == null) {
-      return none;
-    }
-    number = Number(string);
-    if (isNaN(number)) {
-      return none;
-    }
-    return number;
-  };
-  SDK.isString = function(value) {
-    return typeof value === "string";
-  };
-  SDK.isArray = function(value) {
-    return Array.isArray(value);
-  };
-  //@[EXTEND]
-  return KDCore.SDK = SDK;
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var __alias_Bitmap_blt_kdCore, __alias_Bitmap_fillAll_kdCore;
-  //@[ALIAS]
-  __alias_Bitmap_fillAll_kdCore = Bitmap.prototype.fillAll;
-  Bitmap.prototype.fillAll = function(color) {
-    if (color instanceof KDCore.Color) {
-      return this.fillRect(0, 0, this.width, this.height, color.CSS);
-    } else {
-      return __alias_Bitmap_fillAll_kdCore.call(this, color);
-    }
-  };
-  //@[ALIAS]
-  __alias_Bitmap_blt_kdCore = Bitmap.prototype.blt;
-  Bitmap.prototype.blt = function(source, sx, sy, sw, sh, dx, dy, dw, dh) {
-    if (this._needModBltDWH > 0) {
-      dh = dw = this._needModBltDWH;
-      __alias_Bitmap_blt_kdCore.call(this, source, sx, sy, sw, sh, dx, dy, dw, dh);
-      this._needModBltDWH = null;
-    } else {
-      __alias_Bitmap_blt_kdCore.call(this, ...arguments);
-    }
-  };
-  Bitmap.prototype.drawIcon = function(x, y, icon, size = 32) {
-    var bitmap;
-    bitmap = null;
-    if (icon instanceof Bitmap) {
-      bitmap = icon;
-    } else {
-      bitmap = KDCore.BitmapSrc.LoadFromIconIndex(icon).bitmap;
-    }
-    return this.drawOnMe(bitmap, x, y, size, size);
-  };
-  Bitmap.prototype.drawOnMe = function(bitmap, x = 0, y = 0, sw = 0, sh = 0) {
-    if (sw <= 0) {
-      sw = bitmap.width;
-    }
-    if (sh <= 0) {
-      sh = bitmap.height;
-    }
-    this.blt(bitmap, 0, 0, bitmap.width, bitmap.height, x, y, sw, sh);
-  };
-  Bitmap.prototype.drawInMe = function(bitmap) {
-    return Bitmap.prototype.drawOnMe(bitmap, 0, 0, this.width, this.height);
-  };
-  return Bitmap.prototype.drawTextFull = function(text, position = 'center') {
-    return this.drawText(text, 0, 0, this.width, this.height, position);
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var _input_onKeyDown, _input_onKeyUp, i, j, k, l;
-  Input.KeyMapperPKD = {};
-//Numbers
-  for (i = j = 48; j <= 57; i = ++j) {
-    Input.KeyMapperPKD[i] = String.fromCharCode(i);
-  }
-//Letters Upper
-  for (i = k = 65; k <= 90; i = ++k) {
-    Input.KeyMapperPKD[i] = String.fromCharCode(i).toLowerCase();
-  }
-//Letters Lower (for key code events)
-  for (i = l = 97; l <= 122; i = ++l) {
-    Input.KeyMapperPKD[i] = String.fromCharCode(i).toLowerCase();
-  }
-  
-  //@[ALIAS]
-  _input_onKeyDown = Input._onKeyDown;
-  Input._onKeyDown = function(event) {
-    _input_onKeyDown.call(this, event);
-    if (Input.keyMapper[event.keyCode]) {
-      return;
-    }
-    Input._setStateWithMapperPKD(event.keyCode);
-  };
-  //@[ALIAS]
-  _input_onKeyUp = Input._onKeyUp;
-  Input._onKeyUp = function(event) {
-    _input_onKeyUp.call(this, event);
-    if (Input.keyMapper[event.keyCode]) {
-      return;
-    }
-    Input._setStateWithMapperPKD(event.keyCode, false);
-  };
-  //?NEW
-  Input._setStateWithMapperPKD = function(keyCode, state = true) {
-    var symbol;
-    symbol = Input.KeyMapperPKD[keyCode];
-    if (symbol != null) {
-      return this._currentState[symbol] = state;
-    }
-  };
-  //?NEW
-  Input.isCancel = function() {
-    return Input.isTriggered('cancel') || TouchInput.isCancelled();
-  };
-  //?NEW
-  return TouchInput.toPoint = function() {
-    return new KDCore.Point(TouchInput.x, TouchInput.y);
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  PluginManager.getPluginParametersByRoot = function(rootName) {
-    var pluginParameters, property;
-    for (property in this._parameters) {
-      if (this._parameters.hasOwnProperty(property)) {
-        pluginParameters = this._parameters[property];
-        if (PluginManager.isPluginParametersContentKey(pluginParameters, rootName)) {
-          return pluginParameters;
-        }
-      }
-    }
-    return PluginManager.parameters(rootName);
-  };
-  return PluginManager.isPluginParametersContentKey = function(pluginParameters, key) {
-    return pluginParameters[key] != null;
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var ___Sprite_alias_Move_KDCORE_2;
-  Sprite.prototype.moveToCenter = function(dx = 0, dy = 0) {
-    return this.move(-this.bitmap.width / 2 + dx, -this.bitmap.height / 2 + dy);
-  };
-  Sprite.prototype.setStaticAnchor = function(floatX = 1, floatY = 1) {
-    this.x -= Math.round(this.width * floatX);
-    this.y -= Math.round(this.height * floatY);
-  };
-  Sprite.prototype.moveToParentCenter = function() {
-    if (!this.parent) {
-      return;
-    }
-    return this.move(this.parent.width / 2, this.parent.height / 2);
-  };
-  ___Sprite_alias_Move_KDCORE_2 = Sprite.prototype.move;
-  Sprite.prototype.move = function(x, y) {
-    if (x instanceof Array) {
-      return ___Sprite_alias_Move_KDCORE_2.call(this, x[0], x[1]);
-    } else if (x instanceof KDCore.Point || ((x != null ? x.x : void 0) != null)) {
-      return ___Sprite_alias_Move_KDCORE_2.call(this, x.x, x.y);
-    } else if ((x != null) && (x._x != null)) {
-      return ___Sprite_alias_Move_KDCORE_2.call(this, x._x, x._y);
-    } else {
-      return ___Sprite_alias_Move_KDCORE_2.call(this, x, y);
-    }
-  };
-  Sprite.prototype.isContainsPoint = function(point) {
-    var rect, rx, ry;
-    if (this.width === 0 || this.height === 0) {
-      return false;
-    }
-    rx = KDCore.SDK.toGlobalCoord(this, 'x');
-    ry = KDCore.SDK.toGlobalCoord(this, 'y');
-    rect = this._getProperFullRect(rx, ry);
-    return rect.contains(point.x, point.y);
-  };
-  // * Возвращает Rect с учётом Scale и Anchor спрайта
-  Sprite.prototype._getProperFullRect = function(rx, ry) {
-    var height, width, x, y;
-    width = this.width * Math.abs(this.scale.x);
-    height = this.height * Math.abs(this.scale.y);
-    x = rx - this.anchor.x * width;
-    y = ry - this.anchor.y * height;
-    if (this.anchor.x === 0 && this.scale.x < 0) {
-      x += this.width * this.scale.x;
-    }
-    if (this.anchor.y === 0 && this.scale.y < 0) {
-      y += this.height * this.scale.y;
-    }
-    return new PIXI.Rectangle(x, y, width, height);
-  };
-  Sprite.prototype.fillAll = function(color) {
-    if (color != null) {
-      return this.bitmap.fillAll(color);
-    } else {
-      return this.fillAll(KDCore.Color.WHITE);
-    }
-  };
-  return Sprite.prototype.removeFromParent = function() {
-    if (this.parent != null) {
-      return this.parent.removeChild(this);
-    }
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  return TouchInput.toMapPoint = function() {
-    return this.toPoint().convertToMap();
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  KDCore.Utils = KDCore.Utils || {};
-  return (function() {
-    var _;
-    _ = KDCore.Utils;
-    _.getJDataById = function(id, source) {
-      var d, j, len;
-      for (j = 0, len = source.length; j < len; j++) {
-        d = source[j];
-        if (d.id === id) {
-          return d;
-        }
-      }
-      return null;
-    };
-    _.hasMeta = function(symbol, obj) {
-      return (obj.meta != null) && (obj.meta[symbol] != null);
-    };
-    _.getValueFromMeta = function(symbol, obj) {
-      if (!_.hasMeta(symbol, obj)) {
-        return null;
-      }
-      return obj.meta[symbol];
-    };
-    _.getNumberFromMeta = function(symbol, obj) {
-      var value;
-      if (!_.hasMeta(symbol, obj)) {
-        return null;
-      }
-      if (obj.meta[symbol] === true) {
-        return 0;
-      } else {
-        value = KDCore.SDK.toNumber(obj.meta[symbol], 0);
-      }
-      return value;
-    };
-    _.isSceneMap = function() {
-      try {
-        return !SceneManager.isSceneChanging() && SceneManager._scene instanceof Scene_Map;
-      } catch (error) {
-        return false;
-      }
-    };
-    _.isSceneBattle = function() {
-      try {
-        return !SceneManager.isSceneChanging() && SceneManager._scene instanceof Scene_Battle;
-      } catch (error) {
-        return false;
-      }
-    };
-    _.getEventCommentValue = function(commentCode, list) {
-      var comment, e, i, item;
-      try {
-        if (list && list.length > 1) {
-          i = 0;
-          while (i < list.length) {
-            item = list[i++];
-            if (!item) {
-              continue;
-            }
-            if (item.code === 108) {
-              comment = item.parameters[0];
-              if (comment.contains(commentCode)) {
-                return comment;
-              }
-            }
-          }
-        }
-      } catch (error) {
-        e = error;
-        console.warn(e);
-      }
-      return null;
-    };
-    _.getEventCommentValueArray = function(commentCode, list) {
-      var comment, comments, e, i, item;
-      try {
-        comments = [];
-        if (list && list.length > 1) {
-          i = 0;
-          while (i < list.length) {
-            item = list[i++];
-            if (!item) {
-              continue;
-            }
-            if (item.code === 108) {
-              comment = item.parameters[0];
-              if (comment.contains(commentCode)) {
-                comments.push(comment);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        e = error;
-        console.warn(e);
-      }
-      return comments;
-    };
-    _.getPositionPointFromJSON = function(jsonSettings) {
-      return _.convertPositionPointFromJSON(jsonSettings.position);
-    };
-    _.convertPositionPointFromJSON = function(position) {
-      var e, x, y;
-      try {
-        x = position[0];
-        y = position[1];
-        if (!KDCore.SDK.isInt(x)) {
-          x = eval(x);
-        }
-        if (!KDCore.SDK.isInt(y)) {
-          y = eval(y);
-        }
-        return new KDCore.Point(x, y);
-      } catch (error) {
-        e = error;
-        console.warn('Utils.getPositionPointFromJSON', e);
-        return KDCore.Point.Empty;
-      }
-    };
-    _.jsonPos = function(jsonPosition) {
-      return _.convertPositionPointFromJSON(jsonPosition);
-    };
-    _.jsonPosXY = function(jsonPosition) {
-      var e, x, y;
-      try {
-        ({x, y} = jsonPosition);
-        return new KDCore.Point(eval(x), eval(y));
-      } catch (error) {
-        e = error;
-        console.warn('Utils.jsonPosXY', e);
-        return KDCore.Point.Empty;
-      }
-    };
-    _.getVar = function(id) {
-      return $gameVariables.value(id);
-    };
-    _.setVar = function(id, value) {
-      return $gameVariables.setValue(id, value);
-    };
-    _.addToVar = function(id, value) {
-      var prevVal;
-      prevVal = _.getVar(id);
-      return _.setVar(id, prevVal + value);
-    };
-    _.playSE = function(seFileName, pitch = 100, volume = 100) {
-      var sound;
-      if (seFileName == null) {
-        return;
-      }
-      if (seFileName === "") {
-        return;
-      }
-      sound = {
-        name: seFileName,
-        pan: 0,
-        pitch: pitch,
-        volume: volume
-      };
-      AudioManager.playStaticSe(sound);
-    };
-    _.getItemTypeId = function(item) {
-      if (DataManager.isWeapon(item)) {
-        return 1;
-      } else if (DataManager.isArmor(item)) {
-        return 2;
-      }
-      return 0;
-    };
-    _.getItemByType = function(itemId, typeId) {
-      var data, e;
-      try {
-        if ((typeId != null) && !isFinite(typeId) && KDCore.SDK.isString(typeId) && String.any(typeId)) {
-          if (typeId[0] === "w") {
-            typeId = 1;
-          } else if (typeId[0] === "a") {
-            typeId = 2;
-          } else {
-            typeId = 0;
-          }
-        }
-        data = [$dataItems, $dataWeapons, $dataArmors];
-        return data[typeId][itemId];
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-        return null;
-      }
-    };
-    _.loadFont = function(name) {
-      if (!KDCore.isMZ()) {
-        return;
-      }
-      if (String.isNullOrEmpty(name)) {
-        return;
-      }
-      if (FontManager._states[name] != null) {
-        return;
-      }
-      FontManager.load(name, name + ".ttf");
-    };
-    _.convertTimeShort = function(seconds) {
-      var e;
-      try {
-        if (seconds > 59) {
-          return Math.floor(seconds / 60) + 'm';
-        } else {
-          return seconds;
-        }
-      } catch (error) {
-        e = error;
-        console.warn(e);
-        return seconds;
-      }
-    };
-    _.isPointInScreen = function(point, margin = 10) {
-      var maxH, maxW, screenMargin, x, y;
-      ({x, y} = point);
-      maxW = Graphics.width;
-      maxH = Graphics.height;
-      // * Граница от краёв экрана
-      screenMargin = margin;
-      if (x < screenMargin) {
-        return false;
-      }
-      if (y < screenMargin) {
-        return false;
-      }
-      if (x > (maxW - screenMargin)) {
-        return false;
-      }
-      if (y > (maxH - screenMargin)) {
-        return false;
-      }
-      return true;
-    };
-    // * Ассинхронная загрузка изображения, возвращает bitmap, когда загружен
-    // * Пример использования loadImageAsync(a, b).then(метод)
-    // в метод будет передан bitmap первым аргументом
-    _.loadImageAsync = async function(folder, filename) {
-      var promise;
-      promise = new Promise(function(resolve, reject) {
-        var b;
-        b = ImageManager.loadBitmap("img/" + folder + "/", filename);
-        return b.addLoadListener(function() {
-          return resolve(b);
-        });
-      });
-      return (await promise);
-    };
-    // * Преобразовать расширенное значение
-    // * Значение может быть X -> X
-    // * "X" -> X (цифра)
-    // * "X,Y,Z,..." -> [X, Y, Z]
-    // * "[X, Y, Z,...]" -> [X, Y, Z]
-    // * "X|V" -> из переменной X
-    // * [Y] -> случайное число из массива (рекурсивно)
-    //@[2.8.1] since
-    _.getEValue = function(value) {
-      var e, items, randomValue, variableId;
-      try {
-        if (value == null) {
-          return null;
-        }
-        if (KDCore.SDK.isString(value)) {
-          if (isFinite(value)) { // * Число представленно строкой
-            return Number(value);
-          }
-          // * Массив представлен строкой (может быть без квадратных скобок)
-          if (value.contains(',') || (value.contains("[") && value.contains("]"))) {
-            value = value.replace("[", "");
-            value = value.replace("]", "");
-            // * Преобразуем в число или строку (например если extended |V)
-            items = value.split(",").map(function(item) {
-              var itemT;
-              itemT = item.trim();
-              if (isFinite(itemT)) {
-                return Number(itemT);
-              } else {
-                return itemT;
-              }
-            });
-            // * Вызываем снова эту функцию, но уже с массивом
-            return KDCore.Utils.getEValue(items);
-          }
-          if (value.contains("|V")) {
-            variableId = parseInt(value);
-            return $gameVariables.value(variableId);
-          }
-          return value; // * Просто значение в итоге
-        } else if (KDCore.SDK.isArray(value)) {
-          randomValue = value.sample();
-          return KDCore.Utils.getEValue(randomValue);
-        } else {
-          return value;
-        }
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-        return value;
-      }
-    };
-    //@[2.8.2] since
-    _.isChanceIsGood = function(chance) {
-      var e;
-      try {
-        if (chance > 1) {
-          chance /= 100;
-        }
-        return chance > Math.random();
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-        return false;
-      }
-    };
-    //@[2.8.2] since
-    //KEY:w:3:1:50 , KEY:i:10:2:1|V
-    //OUTPUT: [GameItem, COUNT]
-    _.parseItemFromConditionStr = function(conditionLine) {
-      var amount, e, itemChance, itemId, parts, typeId;
-      try {
-        if (!conditionLine.contains(":")) {
-          return null;
-        }
-        parts = conditionLine.split(":");
-        typeId = parts[1];
-        itemId = KDCore.Utils.getEValue(parts[2]);
-        amount = KDCore.Utils.getEValue(parts[3]);
-        if (amount <= 0) {
-          return null;
-        }
+    PKD_SimpleFishing.GetNUIFile = GetNUIFile;
+    /**
+     * Link object to plugin scope level
+     * @param {any} obj - Object to link
+     * @param {string} name? - Name of object (optional)
+     * @returns {void}
+     *
+    */
+    function Link(obj, name) {
         try {
-          itemChance = String.any(parts[4]) ? parts[4] : 100;
-          itemChance = KDCore.Utils.getEValue(itemChance) / 100;
-        } catch (error) {
-          e = error;
-          KDCore.warning(e);
-          itemChance = 0;
-        }
-        if (itemChance <= 0) {
-          return null;
-        }
-        if (KDCore.Utils.isChanceIsGood(itemChance)) {
-          return [KDCore.Utils.getItemByType(itemId, typeId), amount];
-        } else {
-          return null;
-        }
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-        return null;
-      }
-    };
-  })();
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  return Window_Base.prototype.drawFaceWithCustomSize = function(faceName, faceIndex, x, y, finalSize) {
-    this.contents._needModBltDWH = finalSize;
-    this.drawFace(faceName, faceIndex, x, y);
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  return (function() {    // * Input Extension: KDGamepad
-    //------------------------------------------------------------------------------
-    // * Поддержка расширенного управления через геймпад (свой модуль)
-    var ALIAS___updateGamepadState, _;
-    //@[DEFINES]
-    _ = Input;
-    // * Активировать работу модуля KDGamepad
-    _.activateExtendedKDGamepad = function() {
-      return _._kdIsGamepadExtended = true;
-    };
-    //@[ALIAS]
-    ALIAS___updateGamepadState = _._updateGamepadState;
-    _._updateGamepadState = function(gamepad) {
-      if (Input._kdIsGamepadExtended === true) {
-        KDGamepad.update();
-      }
-      if ((typeof $gameTemp !== "undefined" && $gameTemp !== null ? $gameTemp.__kdgpStopDefaultGamepad : void 0) === true) {
-        return;
-      }
-      // * Режим перемещения без DPad
-      // * В оригинале игрок также ходит по DPad клавишам, что может быть не удобно
-      // * например при работе с инвентарём
-      if (KDGamepad.isNoDPadMoving()) {
-        if (KDGamepad.isDPadAny()) {
-          Input.clear();
-          return;
-        }
-      }
-      ALIAS___updateGamepadState.call(this, gamepad);
-    };
-    window.KDGamepad = function() {
-      return new Error("This is static class");
-    };
-    window.addEventListener("gamepadconnected", function(event) {
-      var e;
-      try {
-        return KDGamepad.refresh();
-      } catch (error) {
-        // * Можно напрямую
-        //unless KDGamepad.isExists()
-        //    if event.gamepad? and event.gamepad.mapping == 'standard'
-        //        KDGamepad.init(event.gamepad)
-        e = error;
-        KDCore.warning(e);
-        return KDGamepad.stop();
-      }
-    });
-    window.addEventListener("gamepaddisconnected", function(event) {
-      var e;
-      if (!KDGamepad.isExists()) {
-        return;
-      }
-      try {
-        if ((event.gamepad != null) && event.gamepad === KDGamepad.gamepad) {
-          return KDGamepad.stop();
-        }
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-        return KDGamepad.stop();
-      }
-    });
-    KDGamepad.stopDefaultGamepad = function() {
-      $gameTemp.__kdgpStopDefaultGamepad = true;
-    };
-    KDGamepad.resumeDefaultGamepad = function() {
-      $gameTemp.__kdgpStopDefaultGamepad = null;
-    };
-    // * Ссылка на геймпад
-    KDGamepad.gamepad = null;
-    // * Подключён ли Gamepad ?
-    KDGamepad.isExists = function() {
-      return KDGamepad.gamepad != null;
-    };
-    // * Инициализация состояния кнопок
-    // * Этот метод вызывается автоматически из Refresh или при подключении Gamepad
-    KDGamepad.init = function(gamepad) {
-      KDGamepad.gamepad = gamepad;
-      this._isActive = true;
-      this.buttonNames = [
-        'A', // 0
-        'B', // 1
-        'X', // 2
-        'Y', // 3
-        'LB', // 4
-        'RB', // 5
-        'LTrigger', // 6
-        'RTrigger', // 7
-        'Back', // 8
-        'Start', // 9
-        'LStick', // 10
-        'RStick', // 11
-        'dUp', // 12
-        'dDown', // 13
-        'dLeft', // 14
-        'dRight' // 15
-      ];
-      this.reset();
-    };
-    // * Аналог Input.clear
-    KDGamepad.clear = function() {
-      return KDGamepad.reset();
-    };
-    // * Сбросить состояние кнопок
-    KDGamepad.reset = function() {
-      this.leftStick = {
-        x: 0,
-        y: 0
-      };
-      this.rightStick = {
-        x: 0,
-        y: 0
-      };
-      this.buttons = {};
-      this.buttonsPressed = {};
-      this.prevButtons = {};
-    };
-    
-    // * Остановить учёт геймпада
-    KDGamepad.stop = function() {
-      KDGamepad.reset();
-      KDGamepad.gamepad = null;
-    };
-    // * Функция проверки что нажата кнопка на геймпаде
-    KDGamepad._buttonPressed = function(gamepad, index) {
-      var b, e;
-      try {
-        if (!gamepad || !gamepad.buttons || index >= gamepad.buttons.length) {
-          return false;
-        }
-        b = gamepad.buttons[index];
-        if (b == null) {
-          return false;
-        }
-        if (typeof b === 'object') {
-          // * Можно упростить
-          return b.pressed;
-        }
-        return b === 1.0;
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-        return false;
-      }
-    };
-    // * Каждый кадр (обновление состояний)
-    KDGamepad.update = function() {
-      var e, gp, i, isDown, j, len, name, ref;
-      if (!KDGamepad.isActive()) {
-        return;
-      }
-      KDGamepad.refresh();
-      if (!KDGamepad.isExists()) {
-        return;
-      }
-      try {
-        gp = KDGamepad.gamepad;
-        ref = this.buttonNames;
-        // * Проверка состояний кнопок
-        for (i = j = 0, len = ref.length; j < len; i = ++j) {
-          name = ref[i];
-          this.buttons[name] = false;
-          isDown = KDGamepad._buttonPressed(gp, i);
-          if (isDown === true) {
-            this.prevButtons[name] = true;
-          } else {
-            // * Срабатываение только при нажал - отпустил
-            if (this.prevButtons[name] === true) {
-              this.buttons[name] = true;
-              this.prevButtons[name] = false;
+            if ((name === null || name === void 0 ? void 0 : name.length) > 0) {
+                PKD_SimpleFishing[name] = obj;
             }
-          }
-        }
-        // * Проверка стиков
-        this.leftStick.x = gp.axes[0];
-        this.leftStick.y = gp.axes[1];
-        this.rightStick.x = gp.axes[2];
-        this.rightStick.y = gp.axes[3];
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-        KDGamepad.stop();
-      }
-    };
-    // * Обновить и проверить состояние Gamepad
-    // * Надо каждый раз это вызывать
-    KDGamepad.refresh = function() {
-      var e, gamepads, gp, i, isGamepadRefreshed, j, ref;
-      try {
-        isGamepadRefreshed = false;
-        if (navigator.getGamepads) {
-          gamepads = navigator.getGamepads();
-        } else if (navigator.webkitGetGamepads) {
-          gamepads = navigator.webkitGetGamepads();
-        }
-        if (gamepads != null) {
-          for (i = j = 0, ref = gamepads.length; (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
-            gp = gamepads[i];
-            if ((gp != null) && gp.mapping === 'standard') {
-              isGamepadRefreshed = true;
-              if (KDGamepad.buttonNames != null) {
-                KDGamepad.gamepad = gp;
-              } else {
-                KDGamepad.init(gp);
-              }
-              break;
+            else {
+                let _name = obj.name;
+                if ((_name === null || _name === void 0 ? void 0 : _name.length) > 0) {
+                    PKD_SimpleFishing[obj.name] = obj;
+                }
+                else {
+                    console.warn("You try link object with empty name");
+                }
             }
-          }
         }
-        if (!isGamepadRefreshed) {
-          // * Если не был найден не один gamepad - отключаем систему
-          KDGamepad.stop();
+        catch (error) {
+            console.warn(error);
         }
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-        KDGamepad.stop();
-      }
-    };
-    // * Любое нажатие кнопки
-    KDGamepad.isKeyAny = function(name) {
-      return KDGamepad.isKey(name) || KDGamepad.isKeyPressed(name);
-    };
-    // * Нажата ли кнопка (trigger нажал - отпустил)
-    KDGamepad.isKey = function(name) {
-      if (!KDGamepad.isExists()) {
-        return false;
-      }
-      if (this.buttons == null) {
-        return false;
-      }
-      return this.buttons[name] === true;
-    };
-    // * Нажата ли кнопка (continues зажата)
-    KDGamepad.isKeyPressed = function(name) {
-      if (!KDGamepad.isExists()) {
-        return false;
-      }
-      if (this.buttons == null) {
-        return false;
-      }
-      return this.prevButtons[name] === true;
-    };
-    KDGamepad.isDPadAny = function() {
-      return KDGamepad.isKeyAny("dLeft") || KDGamepad.isKeyAny("dRight") || KDGamepad.isKeyAny("dUp") || KDGamepad.isKeyAny("dDown");
-    };
-    KDGamepad.isActive = function() {
-      return this._isActive === true;
-    };
-    // * Временно отключить обработку KDGamepad
-    KDGamepad.setActive = function(_isActive) {
-      this._isActive = _isActive;
-      if (KDGamepad.isActive()) {
-        KDGamepad.refresh();
-      } else {
-        KDGamepad.stop();
-      }
-    };
-    // * Отключить перемещение игрока на DPad
-    KDGamepad.setNoDPadMovingMode = function(_noDpadMoving) {
-      this._noDpadMoving = _noDpadMoving;
-    };
-    return KDGamepad.isNoDPadMoving = function() {
-      return this._noDpadMoving === true;
-    };
-  })();
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var BitmapSrc;
-  BitmapSrc = (function() {
-    //?[DEPRECATED]
-    class BitmapSrc {
-      constructor() {
-        this.bitmap = null;
-      }
-
-      static LoadFromIconIndex(iconIndex) {
-        var bs, icon_bitmap, iconset, ph, pw, sx, sy;
-        bs = new BitmapSrc();
-        if (BitmapSrc.CACHE[iconIndex] == null) {
-          iconset = ImageManager.loadSystem('IconSet');
-          if (KDCore.isMV()) {
-            pw = Window_Base._iconWidth;
-            ph = Window_Base._iconHeight;
-          } else {
-            pw = ImageManager.iconWidth;
-            ph = ImageManager.iconHeight;
-          }
-          sx = iconIndex % 16 * pw;
-          sy = Math.floor(iconIndex / 16) * ph;
-          icon_bitmap = new Bitmap(pw, ph);
-          icon_bitmap.addLoadListener(function() {
-            icon_bitmap.blt(iconset, sx, sy, pw, ph, 0, 0);
-          });
-          BitmapSrc.CACHE[iconIndex] = icon_bitmap;
-        }
-        bs.bitmap = BitmapSrc.CACHE[iconIndex];
-        return bs;
-      }
-
-      static LoadFromImageFolder(filename) {
-        var bs;
-        bs = new BitmapSrc();
-        bs.bitmap = ImageManager.loadPicture(filename);
-        return bs;
-      }
-
-      static LoadFromBase64(data, name) {
-        var bs;
-        bs = new BitmapSrc();
-        if (name != null) {
-          if (BitmapSrc.CACHE[name] != null) {
-            bs.bitmap = BitmapSrc.CACHE[name];
-          } else {
-            BitmapSrc.CACHE[name] = Bitmap.load(data);
-            bs.bitmap = BitmapSrc.CACHE[name];
-          }
-        } else {
-          bs.bitmap = Bitmap.load(data);
-        }
-        return bs;
-      }
-
-      static LoadFromMemory(symbol) {
-        var bs;
-        bs = new BitmapSrc();
-        if (BitmapSrc.CACHE[symbol] != null) {
-          bs.bitmap = BitmapSrc.CACHE[symbol];
-        } else {
-          bs.bitmap = ImageManager.loadEmptyBitmap();
-        }
-        return bs;
-      }
-
-    };
-
-    BitmapSrc.CACHE = {};
-
-    return BitmapSrc;
-
-  }).call(this);
-  //@[EXTEND]
-  return KDCore.BitmapSrc = BitmapSrc;
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var Changer;
-  // * Класс который может плавно изменять какой-либо параметр
-  // * Работает в стиле chain методов
-
-    // * ------------------ ПРИМЕР ----------------------------------
-
-    // * Меняем прозрачность 4 раза, туда-сюда, затем выводим done в консоль
-
-    //@changer = new AA.Changer(someSprite)
-  //@changer.change('opacity').from(255)
-  //            .to(0).step(5).speed(1).delay(30).repeat(4).reverse()
-  //            .start().done(() -> console.log('done'))
-  //@changer.update()
-
-    // * -------------------------------------------------------------
-  Changer = class Changer {
-    constructor(obj) {
-      this.obj = obj;
-      // * Количество кадров, в которые будет обновление
-      this._field = null; // * название поля
-      this._speed = 1; // * frames
-      this._step = 1; // * шаг изменения значения
-      this._from = 0; // * Начальное значение
-      this._to = 0; // * Конечное значение
-      this._thread = null;
-      this._orienation = true; // * Направление + или - step (true = +)
-      this._delay = 0; // * Задержка старта
-      this._changer = null; // * Ссылка на следующий changer
-      this._isRepeat = false; // * Надо ли поторить себя снова
-      this._onDoneMethod = null; // * Метод будет выполнен в конце (при завершении)
-      this._isPrepared = false; // * Элемента был подготовлен (установлено значение from)
     }
+    PKD_SimpleFishing.Link = Link;
+})(PKD_SimpleFishing || (PKD_SimpleFishing = {}));
+window["PKD_SimpleFishing"] = PKD_SimpleFishing;
 
-    start() {
-      if (this._field == null) {
-        return;
-      }
-      if (this._from === this._to) {
-        return;
-      }
-      if (this._delay > 0) {
-        this._delayThread = new KDCore.TimedUpdate(this._delay, this._startThread.bind(this));
-        this._delayThread.once();
-      } else {
-        this._startThread();
-      }
-      return this;
+
+(function(){
+
+
+
+//build: 4 
+var KDNUI;
+(function (KDNUI) {
+    /**
+     * The version of the KDNUI Library.
+     * @type {string}
+     */
+    KDNUI.Version = "1.5";
+    /**
+     * Add NUI file to the list of files to be loaded.
+     * @type {string} - The folder where the file is located.
+     * @type {string} - The name of the file (without extension).
+     */
+    function RegisterNUIFile(folder, filnename) {
+        let _name = "$" + folder + "_" + filnename;
+        let src = folder + "/" + filnename + ".json";
+        /* @ts-ignore */
+        DataManager._databaseFiles.push({ name: _name, src: src });
     }
-
-    isStarted() {
-      return (this._thread != null) || (this._delayThread != null);
-    }
-
-    from(_from) {
-      this._from = _from;
-      return this;
-    }
-
-    to(_to) {
-      this._to = _to;
-      return this;
-    }
-
-    step(_step) {
-      this._step = _step;
-      return this;
-    }
-
-    speed(_speed) {
-      this._speed = _speed;
-      return this;
-    }
-
-    change(_field) {
-      this._field = _field;
-      return this;
-    }
-
-    // * Снова повторить (не совместим с then)
-    // * Если ничего не указать, или <= 0 -> то бескончно
-    repeat(_repeatCount = 0) {
-      this._repeatCount = _repeatCount;
-      if (this._repeatCount <= 0) {
-        this._repeatCount = null;
-      }
-      this._isRepeat = true;
-      this._changer = null;
-      return this;
-    }
-
-    // * Снова повторить, но поменять местами to и from (работает только с repeat >= 2)
-    reverse() {
-      this._isReverse = true;
-      return this;
-    }
-
-    isDone() {
-      if (!this._isPrepared) {
-        // * Чтобы не было выхода пока ждёт Delay
-        return false;
-      }
-      // * Если от 255 до 0 (например)
-      if (this._orienation === false) {
-        // * То может быть меньше нуля (т.к. @step динамический)
-        return this.value() <= this._to;
-      } else {
-        return this.value() >= this._to;
-      }
-    }
-
-    value() {
-      return this.obj[this._field];
-    }
-
-    stop() {
-      this._thread = null;
-      this._delayThread = null;
-      if (this._changer == null) {
-        // * Если есть связанный Changer, то не выполняем метод завршения
-        return this._callDoneMethod();
-      }
-    }
-
-    // * При ожидании, значения устанавливаются не сразу
-    delay(_delay) {
-      this._delay = _delay;
-      return this;
-    }
-
-    // * Выполнить другой Changer после этого
-    // * Не совместим с Repeat
-    // * НЕЛЬЗЯ зацикливать, не будет работать
-    // * Соединённый не надо обновлять вне, он обновляется в этом
-    then(_changer) {
-      this._changer = _changer;
-      this._isRepeat = false;
-      return this;
-    }
-
-    // * Этот метод будт выполнене в конце
-    done(_onDoneMethod) {
-      this._onDoneMethod = _onDoneMethod;
-      return this;
-    }
-
-    // * Шаг можно выполнить и в ручную
-    makeStep() {
-      if (!this.isStarted()) {
-        this._prepare();
-      }
-      this._makeStep();
-      return this;
-    }
-
-    update() {
-      var ref;
-      if (this.isStarted()) {
-        if (this._delay > 0) {
-          if ((ref = this._delayThread) != null) {
-            ref.update();
-          }
-        }
-        if (this._thread != null) {
-          this._updateMainThread();
-        }
-      } else {
-        // * Если хоть раз был запущен
-        if (this._isBeenStarted === true) {
-          if (this._changer != null) {
-            this._updateChainedChanger();
-          }
-        }
-      }
-    }
-
-  };
-  (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ Changer.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = Changer.prototype;
-    _._prepare = function() {
-      if (this._field == null) {
-        return;
-      }
-      this._orienation = this._from < this._to;
-      if (!this._orienation) {
-        this._step *= -1;
-      }
-      // * Устанавливаем начальное значение
-      this.obj[this._field] = this._from;
-      this._isPrepared = true;
-    };
-    _._makeStep = function() {
-      var value;
-      if (this.isDone()) {
-        return;
-      }
-      value = this.value();
-      value += this._step;
-      this.obj[this._field] = value;
-    };
-    _._startThread = function() {
-      this._prepare();
-      if (this.isDone()) {
-        return;
-      }
-      this._thread = new KDCore.TimedUpdate(this._speed, this._makeStep.bind(this));
-      return this._isBeenStarted = true;
-    };
-    _._updateChainedChanger = function() {
-      if (this._changer.isStarted()) {
-        this._changer.update();
-        if (this._changer.isDone()) {
-          this._callDoneMethod();
-          this._changer.stop();
-          return this._changer = null;
-        }
-      } else {
-        return this._changer.start();
-      }
-    };
-    _._restart = function() {
-      if (!this._isCanRepeatMore()) {
-        return;
-      }
-      if (this._repeatCount == null) {
-        // * Если указано! число повторений, то onDone метод не вызываем
-        this._callDoneMethod();
-      }
-      if (this._isReverse === true) {
-        this._swapFromTo();
-      }
-      this._prepare();
-      return this.start();
-    };
-    _._swapFromTo = function() {
-      var t;
-      t = this._from;
-      this._from = this._to;
-      this._to = t;
-      // * Инвентируем число step
-      this._step *= -1;
-    };
-    _._callDoneMethod = function() {
-      if (this._onDoneMethod != null) {
-        return this._onDoneMethod();
-      }
-    };
-    _._isCanRepeatMore = function() {
-      if (this._repeatCount == null) {
-        return true;
-      }
-      this._repeatCount--;
-      if (this._repeatCount <= 0) {
-        this.stop();
-        return false;
-      }
-      return true;
-    };
-    _._updateMainThread = function() {
-      this._thread.update();
-      if (this.isDone()) {
-        if (this._isRepeat === true) {
-          this._restart();
-        } else {
-          if (this._changer != null) {
-            this._updateChainedChanger();
-          }
-          this.stop();
-        }
-      }
-    };
-  })();
-  // ■ END Changer.coffee
-  //---------------------------------------------------------------------------
-
-  //@[EXTEND]
-  return KDCore.Changer = Changer;
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var Color;
-  Color = (function() {
-    class Color {
-      constructor(r1 = 255, g1 = 255, b1 = 255, a1 = 255) {
-        this.r = r1;
-        this.g = g1;
-        this.b = b1;
-        this.a = a1;
-      }
-
-      getLightestColor(lightLevel) {
-        var bf, newColor, p;
-        bf = 0.3 * this.R + 0.59 * this.G + 0.11 * this.B;
-        p = 0;
-        newColor = [0, 0, 0, 0];
-        if (bf - lightLevel >= 0) {
-          if (bf >= 0) {
-            p = Math.abs(bf - lightLevel) / lightLevel;
-          }
-          newColor = this.ARR.map(function(c) {
-            return c - (p * c);
-          });
-        } else {
-          if (bf >= 0) {
-            p = (lightLevel - bf) / (255 - bf);
-          }
-          newColor = this.ARR.map(function(c) {
-            return [(255 - c) * p + c, 255].min();
-          });
-        }
-        return new Color(newColor[0], newColor[1], newColor[2], newColor[3]);
-      }
-
-      clone() {
-        return this.reAlpha(this.a);
-      }
-
-      reAlpha(newAlpha) {
-        return new Color(this.r, this.g, this.b, newAlpha || 255);
-      }
-
-      static AddConstantColor(name, color) {
-        color.toHex();
-        color.toArray();
-        color.toCSS();
-        KDCore.SDK.setConstantToObject(Color, name, color);
-      }
-
-      toHex() {
-        var b, g, r;
-        if (this._colorHex != null) {
-          return this._colorHex;
-        }
-        r = Math.floor(this.r).toString(16).padZero(2);
-        g = Math.floor(this.g).toString(16).padZero(2);
-        b = Math.floor(this.b).toString(16).padZero(2);
-        return this._colorHex = '#' + r + g + b;
-      }
-
-      toArray() {
-        if (this._colorArray != null) {
-          return this._colorArray;
-        }
-        return this._colorArray = [this.r, this.g, this.b, this.a];
-      }
-
-      toCSS() {
-        var na, nb, ng, nr;
-        if (this._colorCss != null) {
-          return this._colorCss;
-        }
-        nr = Math.round(this.r);
-        ng = Math.round(this.g);
-        nb = Math.round(this.b);
-        na = this.a / 255;
-        return this._colorCss = `rgba(${nr},${ng},${nb},${na})`;
-      }
-
-      toNumber() {
-        return Number(this.toHex().replace("#", "0x"));
-      }
-
-      static Random() {
-        var a, b, c;
-        a = KDCore.SDK.rand(1, 254);
-        b = KDCore.SDK.rand(1, 254);
-        c = KDCore.SDK.rand(1, 254);
-        return new Color(a, b, c, 255);
-      }
-
-      static FromHex(hexString) {
-        var color, result;
-        result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexString);
-        color = null;
-        if (result != null) {
-          color = {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-          };
-        }
-        if (color != null) {
-          return new Color(color.r, color.g, color.b, 255);
-        } else {
-          return Color.NONE;
-        }
-      }
-
-    };
-
-    Object.defineProperties(Color.prototype, {
-      R: {
-        get: function() {
-          return this.r;
-        },
-        configurable: true
-      },
-      G: {
-        get: function() {
-          return this.g;
-        },
-        configurable: true
-      },
-      B: {
-        get: function() {
-          return this.b;
-        },
-        configurable: true
-      },
-      A: {
-        get: function() {
-          return this.a;
-        },
-        configurable: true
-      },
-      ARR: {
-        get: function() {
-          return this.toArray();
-        },
-        configurable: true
-      },
-      CSS: {
-        get: function() {
-          return this.toCSS();
-        },
-        configurable: true
-      },
-      HEX: {
-        get: function() {
-          return this.toHex();
-        },
-        configurable: true
-      },
-      OX: {
-        get: function() {
-          return this.toNumber();
-        },
-        configurable: true
-      }
-    });
-
-    Color.AddConstantColor('NONE', new Color(0, 0, 0, 0));
-
-    Color.AddConstantColor('BLACK', new Color(0, 0, 0, 255));
-
-    Color.AddConstantColor('WHITE', new Color(255, 255, 255, 255));
-
-    Color.AddConstantColor('RED', new Color(255, 0, 0, 255));
-
-    Color.AddConstantColor('GREEN', new Color(0, 255, 0, 255));
-
-    Color.AddConstantColor('BLUE', new Color(0, 0, 255, 255));
-
-    Color.AddConstantColor('AQUA', new Color(128, 255, 255, 255));
-
-    Color.AddConstantColor('MAGENTA', new Color(128, 0, 128, 255));
-
-    Color.AddConstantColor('YELLOW', new Color(255, 255, 0, 255));
-
-    Color.AddConstantColor('ORANGE', new Color(255, 128, 0, 255));
-
-    return Color;
-
-  }).call(this);
-  //@[EXTEND]
-  return KDCore.Color = Color;
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var Color, DevLog, __TMP_LOGS__;
-  Color = KDCore.Color;
-  __TMP_LOGS__ = [];
-  DevLog = class DevLog {
-    constructor(prefix = "") {
-      this.prefix = prefix;
-      this._isShow = typeof DEV !== 'undefined';
-      this._color = Color.BLACK;
-      this._backColor = Color.WHITE;
-      __TMP_LOGS__.push(this);
-    }
-
-    on() {
-      this._isShow = true;
-      return this;
-    }
-
-    off() {
-      this._isShow = false;
-      return this;
-    }
-
-    applyRandomColors() {
-      this.applyRandomWithoutBackgroundColors();
-      this.setBackColor(Color.Random());
-      return this;
-    }
-
-    applyRandomWithoutBackgroundColors() {
-      this.setColor(Color.Random());
-      return this;
-    }
-
-    setColor(color) {
-      this._color = color;
-      return this;
-    }
-
-    setBackColor(backColor) {
-      this._backColor = backColor;
-      return this;
-    }
-
-    applyLibraryColors() {
-      this.setColors(new Color(22, 120, 138, 0), Color.BLACK);
-      return this;
-    }
-
-    setColors(color, backColor) {
-      this.setColor(color);
-      this.setBackColor(backColor);
-      return this;
-    }
-
-    applyExtensionColors() {
-      this.setColors(new Color(22, 143, 137, 0), Color.BLACK.getLightestColor(60));
-      return this;
-    }
-
-    applyWarningColors() {
-      this.setColors(Color.ORANGE, Color.BLACK.getLightestColor(100));
-      return this;
-    }
-
-    p(text) {
-      if (!this._isShow) {
-        return;
-      }
-      if (text == null) {
-        console.log("");
-      }
-      this._printText(text);
-    }
-
-    _printText(text) {
-      text = this.prefix + " : " + text;
-      if (this._isUsingColor()) {
-        return this._printTextWithColors(text);
-      } else {
-        return console.log(text);
-      }
-    }
-
-    _isUsingColor() {
-      return this._color !== Color.BLACK || this._backColor !== Color.WHITE;
-    }
-
-    _printTextWithColors(text) {
-      var args;
-      args = ['%c' + text, `color: ${this._color.HEX} ; background: ${this._backColor.HEX};`];
-      return window.console.log.apply(console, args);
-    }
-
-    static CreateForLib(library) {
-      var dlog;
-      dlog = new DevLog(library.name);
-      dlog.applyLibraryColors();
-      return dlog;
-    }
-
-    static EnableAllLogs() {
-      return __TMP_LOGS__.forEach(function(log) {
-        return log.on();
-      });
-    }
-
-  };
-  //@[EXTEND]
-  return KDCore.DevLog = DevLog;
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  //@[AUTO EXTEND]
-  //?[DEPRECATED]
-  return KDCore.ParametersManager = class ParametersManager {
-    constructor(pluginName) {
-      this.pluginName = pluginName;
-      this._cache = {};
-      this._parameters = PluginManager.getPluginParametersByRoot(this.pluginName);
-    }
-
-    isLoaded() {
-      return (this._parameters != null) && this._parameters.hasOwnProperty(this.pluginName);
-    }
-
-    isHasParameter(name) {
-      return this._parameters[name] != null;
-    }
-
-    getString(name) {
-      return this._parameters[name];
-    }
-
-    convertField(object, fieldName) {
-      var e;
-      try {
-        object[fieldName] = JSON.parse(object[fieldName] || 'false');
-      } catch (error) {
-        e = error;
-        console.error('Error while convert field ' + e.name);
-        object[fieldName] = false;
-      }
-      return object;
-    }
-
-    convertImage(object, fieldName) {
-      return object[fieldName] = this.loadImage(object[fieldName]);
-    }
-
-    loadImage(filename, smooth) {
-      var e, path;
-      try {
-        if (filename) {
-          path = filename.split('/');
-          filename = path.last();
-          path = path.first() + '/';
-          return ImageManager.loadBitmap('img/' + path, filename, 0, smooth || true);
-        } else {
-          return ImageManager.loadEmptyBitmap();
-        }
-      } catch (error) {
-        e = error;
-        console.error(e);
-        return ImageManager.loadEmptyBitmap();
-      }
-    }
-
-    getFromCacheOrInit(name, func) {
-      var object;
-      if (!this.isInCache(name)) {
-        if (func != null) {
-          object = func.call(this);
-          this.putInCache(name, object);
-        }
-      }
-      return this.getFromCache(name);
-    }
-
-    isInCache(name) {
-      return this._cache.hasOwnProperty(name);
-    }
-
-    putInCache(name, object) {
-      return this._cache[name] = object;
-    }
-
-    getFromCache(name) {
-      return this._cache[name];
-    }
-
-    getNumber(name) {
-      var number;
-      number = this.getObject(name);
-      if (KDCore.SDK.isInt(number)) {
-        return number;
-      }
-      return 0;
-    }
-
-    getObject(name) {
-      if (this.isHasParameter(name)) {
-        return JSON.parse(this.getString(name) || '{}');
-      } else {
-        return {};
-      }
-    }
-
-    getBoolean(name) {
-      if (this.isHasParameter(name)) {
-        return JSON.parse(this.getString(name) || false);
-      } else {
-        return false;
-      }
-    }
-
-    getBooleanFromCacheWithDefault(name, defaultValue) {
-      if (this.isHasParameter(name)) {
-        return this.getBooleanFromCache(name);
-      } else {
-        return defaultValue;
-      }
-    }
-
-    getNumberFromCacheWithDefault(name, defaultValue) {
-      if (this.isHasParameter(name)) {
-        return this.getNumberFromCache(name);
-      } else {
-        return defaultValue;
-      }
-    }
-
-    getStringFromCacheWithDefault(name, defaultValue) {
-      if (this.isHasParameter(name)) {
-        return this.getStringFromCache(name);
-      } else {
-        return defaultValue;
-      }
-    }
-
-    getBooleanFromCache(name) {
-      return this.getFromCacheOrInit(name, function() {
-        return this.getBoolean(name);
-      });
-    }
-
-    getNumberFromCache(name) {
-      return this.getFromCacheOrInit(name, function() {
-        return this.getNumber(name);
-      });
-    }
-
-    getStringFromCache(name) {
-      return this.getFromCacheOrInit(name, function() {
-        return this.getString(name);
-      });
-    }
-
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  //@[AUTO EXTEND]
-  return KDCore.ParamLoader = class ParamLoader {
-    constructor(pluginName) {
-      this.pluginName = pluginName;
-      this.paramsRaw = PluginManager.getPluginParametersByRoot(this.pluginName);
-      this.params = this.parseParameters(this.paramsRaw);
-    }
-
-    parseParameters(paramSet) {
-      var clearKey, key, params, typeKey, value;
-      params = {};
-      for (key in paramSet) {
-        value = paramSet[key];
-        clearKey = this.parseKey(key);
-        typeKey = this.parseKeyType(key);
-        params[clearKey] = this.parseParamItem(typeKey, value);
-      }
-      return params;
-    }
-
-    parseKey(keyRaw) {
-      return keyRaw.split(":")[0];
-    }
-
-    parseKeyType(keyRaw) {
-      return keyRaw.split(":")[1];
-    }
-
-    // * Проверка, загружены ли параметры плагина
-    isLoaded() {
-      return (this.paramsRaw != null) && this.paramsRaw.hasOwnProperty(this.pluginName);
-    }
-
-    // * Имя параметра без ключа
-    isHasParameter(paramName) {
-      return this.params[paramName] != null;
-    }
-
-    
-      // * Возвращает значение параметра (def - по умолчанию, если не найден)
-    getParam(paramName, def) {
-      if (this.isHasParameter(paramName)) {
-        return this.params[paramName];
-      } else {
-        return def;
-      }
-    }
-
-    // * Данные ключи должны идти после названия параметра через :
-    // * Пример: @param ShowDelay:int, @param TestBool:bool
-    // * Текстовые параметры, которые надо вернуть как есть, можно без типа (text, file, combo, ...)
-    parseParamItem(type, item) {
-      var e;
-      if (type == null) {
-        return item;
-      }
-      try {
-        switch (type) {
-          case "int":
-          case "i":
-            return parseInt(item);
-          case "intA": // * массив чисел
-            if (String.any(item)) {
-              return JsonEx.parse(item).map((e) => {
-                return this.parseParamItem("int", e);
-              });
-            } else {
-              return [];
-            }
-            break;
-          case "bool":
-          case "b":
-          case "e":
-            return eval(item);
-          case "struct":
-          case "s":
-            if (String.any(item)) {
-              return this.parseParameters(JsonEx.parse(item));
-            } else {
-              return null;
-            }
-            break;
-          case "structA": // * массив структур
-            return JsonEx.parse(item).map((e) => {
-              return this.parseParameters(JsonEx.parse(e));
-            });
-          case "str":
-            return item;
-          case "strA":
-            if (String.any(item)) {
-              return JsonEx.parse(item).map((e) => {
-                return this.parseParamItem("str", e);
-              });
-            } else {
-              return [];
-            }
-            break;
-          case "note": // * если несколько строк в тексте
-            return JsonEx.parse(item);
-          case "css":
-            return item.toCss();
-          case "color":
-            return KDCore.Color.FromHex(item);
-          default:
-            return item;
-        }
-      } catch (error) {
-        e = error;
-        console.warn(e);
-        return item;
-      }
-    }
-
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var Point;
-  Point = (function() {
-    class Point {
-      constructor(_x = 0, _y = 0) {
-        this._x = _x;
-        this._y = _y;
-      }
-
-      clone() {
-        return new Point(this._x, this._y);
-      }
-
-      toString() {
-        return "[" + this._x + " ; " + this._y + "]";
-      }
-
-      isSame(anotherPoint) {
-        return this.x === anotherPoint.x && this.y === anotherPoint.y;
-      }
-
-      convertToCanvas() {
-        return new Point(Graphics.pageToCanvasX(this._x), Graphics.pageToCanvasY(this._y));
-      }
-
-      convertToMap() {
-        return new Point($gameMap.canvasToMapX(this._x), $gameMap.canvasToMapY(this._y));
-      }
-
-      convertToScreen() {
-        return new Point(this.screenX(), this.screenY());
-      }
-
-      screenX() {
-        var t, tw;
-        t = $gameMap.adjustX(this._x);
-        tw = $gameMap.tileWidth();
-        return Math.round(t * tw + tw / 2);
-      }
-
-      screenY() {
-        var t, th;
-        t = $gameMap.adjustY(this._y);
-        th = $gameMap.tileHeight();
-        return Math.round(t * th + th);
-      }
-
-      round() {
-        return new Point(Math.round(this._x), Math.round(this._y));
-      }
-
-      floor() {
-        return new Point(Math.floor(this._x), Math.floor(this._y));
-      }
-
-      mapPointOnScreen() {
-        var nx, ny;
-        nx = (this._x * $gameMap.tileWidth()) - ($gameMap.displayX() * $gameMap.tileWidth());
-        ny = (this._y * $gameMap.tileHeight()) - ($gameMap.displayY() * $gameMap.tileHeight());
-        return new Point(nx, ny);
-      }
-
-      multiplyBy(val) {
-        return new Point(this._x * val, this._y * val);
-      }
-
-      simple() {
-        return new PIXI.Point(this.x, this.y);
-      }
-
-      delta(point) {
-        var dx, dy;
-        dx = point.x - this._x;
-        dy = point.y - this._y;
-        return new KDCore.Point(dx, dy);
-      }
-
-      static _getEmpty() {
-        if (Point._emptyPoint == null) {
-          Point._emptyPoint = new Point(0, 0);
-        }
-        return Point._emptyPoint;
-      }
-
-    };
-
-    Object.defineProperties(Point.prototype, {
-      x: {
-        get: function() {
-          return this._x;
-        },
-        configurable: true
-      },
-      y: {
-        get: function() {
-          return this._y;
-        },
-        configurable: true
-      }
-    });
-
-    Object.defineProperties(Point, {
-      Empty: {
-        get: function() {
-          return Point._getEmpty();
-        },
-        configurable: false
-      }
-    });
-
-    Array.prototype.toPoint = function() {
-      return new Point(this[0], this[1]);
-    };
-
-    Sprite.prototype.toPoint = function() {
-      return new Point(this.x, this.y);
-    };
-
-    Game_CharacterBase.prototype.toPoint = function() {
-      return new Point(this.x, this.y);
-    };
-
-    return Point;
-
-  }).call(this);
-  //@[EXTEND]
-  return KDCore.Point = Point;
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  return KDCore.Sprite = (function(superClass) {
-    //@[AUTO EXTEND]
-    class Sprite extends superClass {
-      constructor() {
-        super(...arguments);
-      }
-
-      b() {
-        return this.bitmap;
-      }
-
-      clear() {
-        return this.bitmap.clear();
-      }
-
-      add(child) {
-        return this.addChild(child);
-      }
-
-      bNew(w, h) {
-        if (h == null) {
-          h = w;
-        }
-        return this.bitmap = new Bitmap(w, h);
-      }
-
-      bImg(filename, sourceFolder) {
-        var getterFunc;
-        getterFunc = function(filename) {
-          return ImageManager.loadPicture(filename);
-        };
-        if (sourceFolder != null) {
-          getterFunc = function(filename) {
-            return ImageManager.loadBitmap("img/" + sourceFolder + "/", filename);
-          };
-        }
-        return this.bitmap = getterFunc(filename);
-      }
-
-      onReady(method) {
-        if (method != null) {
-          return this.bitmap.addLoadListener(method);
-        }
-      }
-
-      drawText() {
-        return this.bitmap.drawText(...arguments);
-      }
-
-      drawTextFull(text, position = "center") {
-        if (this.textSettingsPosition != null) {
-          position = this.textSettingsPosition;
-        }
-        return this.bitmap.drawTextFull(text, position);
-      }
-
-      //?DEPRECATED
-      drawTextWithSettings(text) {
-        this.clear();
-        this.drawTextFull(text, this.textSettingsPosition);
-      }
-
-      //? x, y, icon, size
-      drawIcon() {
-        return this.bitmap.drawIcon(...arguments);
-      }
-
-      moveByJson(settings) {
-        var pos;
-        pos = KDCore.Utils.getPositionPointFromJSON(settings);
-        return this.move(pos.x, pos.y);
-      }
-
-      applyTextSettingsByJson(sprite, settings) {
-        this.applyTextSettingsByExtraSettings(sprite, settings.text);
-      }
-
-      applyTextSettingsByExtraSettings(sprite, s) {
-        sprite.move(s.marginX, s.marginY);
-        sprite.b().fontSize = s.fontSize;
-        sprite.b().textColor = KDCore.Color.FromHex(s.textColor).CSS;
-        sprite.b().outlineWidth = s.outlineWidth;
-        if (s.outlineColor != null) {
-          sprite.b().outlineColor = KDCore.Color.FromHex(s.outlineColor).CSS;
-        }
-        if (s.fontFace != null) {
-          sprite.b().fontFace = s.fontFace;
-        }
-        sprite.b().fontItalic = s.fontItalic;
-        sprite.visible = s.visible;
-      }
-
-      isReady() {
-        var i, j, ref;
-        if (this.bitmap != null) {
-          if (!this.bitmap.isReady()) {
-            return false;
-          }
-        }
-        for (i = j = 0, ref = this.children.length; (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
-          if (!this.children[i].bitmap.isReady()) {
-            return false;
-          }
-        }
-        return true;
-      }
-
-      inPosition(point) {
-        return this.isContainsPoint(point);
-      }
-
-      isUnderMouse() {
-        return this.inPosition(TouchInput);
-      }
-
-      // * Из параметров плагина
-      applyFontParam(font) {
-        var b;
-        if (font == null) {
-          return;
-        }
-        b = this.b();
-        if (font.size != null) {
-          b.fontSize = font.size;
-        }
-        if (!String.isNullOrEmpty(font.face)) {
-          b.fontFace = font.face;
-        }
-        if (font.italic != null) {
-          b.fontItalic = font.italic;
-        }
-      }
-
-      applyOutlineParam(outline) {
-        var b;
-        if (outline == null) {
-          return;
-        }
-        b = this.b();
-        if (outline.width != null) {
-          b.outlineWidth = outline.width;
-        }
-        if (!String.isNullOrEmpty(outline.color)) {
-          b.outlineColor = outline.color;
-        }
-      }
-
-      static FromImg(filename, sourceFolder) {
-        var s;
-        s = new KDCore.Sprite();
-        s.bImg(filename, sourceFolder);
-        return s;
-      }
-
-      static FromBitmap(w, h) {
-        var s;
-        s = new KDCore.Sprite();
-        s.bNew(w, h);
-        return s;
-      }
-
-      static FromTextSettings(settings) {
-        var s;
-        s = KDCore.Sprite.FromBitmap(settings.textBoxWidth, settings.textBoxHeight);
-        s.applyTextSettingsByExtraSettings(s, settings);
-        s.textSettingsPosition = settings.position;
-        return s;
-      }
-
-      // * Загрузчик из параметров плагина (безопасный)
-      static FromParams(pluginParams) {
-        var e, margins, s, size;
+    KDNUI.RegisterNUIFile = RegisterNUIFile;
+    /**
+     * Creates a `KNSprite` instance from a given scheme and optionally attaches it to a parent or owner.
+     *
+     * @param scheme - The scheme to create the sprite from. It can be either a `NUIScheme` or a record of `NUIScheme`.
+     * @param owner - (Optional) The owner object to bind the sprite to.
+     * @param parent - (Optional) The parent `Sprite` to attach the created sprite to.
+     * @returns The created `KNSprite` instance or `null` if creation fails.
+     *
+     * @remarks
+     * - If the `scheme` contains a `type`, it uses `KNBuilder.Make` to create the sprite.
+     * - If the `scheme` is a record of `NUIScheme`, it uses `KNBuilder.Factory` to create the sprite.
+     * - If a `parent` is provided, the created sprite is added as a child to the parent.
+     * - If no `parent` is provided but an `owner` with an `addChild` method is provided, the sprite is added as a child to the owner.
+     * - The created sprite's bindings are refreshed with the owner.
+     * - If an error occurs during creation, a warning is logged and a new `KNSprite` instance is returned.
+     */
+    function FromScheme(scheme, owner, parent) {
         try {
-          size = pluginParams.size;
-          s = KDCore.Sprite.FromBitmap(size.w, size.h);
-          s.textSettingsPosition = pluginParams.alignment;
-          margins = pluginParams.margins;
-          if (margins != null) {
-            s.move(margins.x, margins.y);
-          }
-          s.applyFontParam(pluginParams.font);
-          s.applyOutlineParam(pluginParams.outline);
-          if (!String.isNullOrEmpty(pluginParams.textColor)) {
-            s.b().textColor = pluginParams.textColor;
-          }
-          if (pluginParams.visible != null) {
-            s.visible = pluginParams.visible;
-          }
-          return s;
-        } catch (error) {
-          e = error;
-          console.warn('Something wrong with Text Settings!', e);
-          return KDCore.Sprite.FromBitmap(60, 30);
-        }
-      }
-
-    };
-
-    return Sprite;
-
-  }).call(this, Sprite);
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  //@[AUTO EXTEND]
-  return KDCore.TimedUpdate = class TimedUpdate {
-    constructor(interval, method) {
-      this.interval = interval;
-      this.method = method;
-      this._timer = 0;
-      this._once = false;
-    }
-
-    update() {
-      if (this.interval == null) {
-        return;
-      }
-      if (this._timer++ >= this.interval) {
-        this.call();
-        this._timer = 0;
-        if (this._once === true) {
-          return this.stop();
-        }
-      }
-    }
-
-    once() {
-      return this._once = true;
-    }
-
-    onUpdate(method) {
-      this.method = method;
-    }
-
-    stop() {
-      return this.interval = null;
-    }
-
-    isAlive() {
-      return this.interval != null;
-    }
-
-    // * Рандомизировать интервал @interval (-min, +max)
-    applyTimeRange(min, max) {
-      var value;
-      if (!this.isAlive()) {
-        return;
-      }
-      value = KDCore.SDK.rand(min, max);
-      return this.interval += value;
-    }
-
-    call() {
-      if (this.method != null) {
-        return this.method();
-      }
-    }
-
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  
-    // * Button (Sprite_XButton)
-
-    //@[AUTO EXTEND]
-  //?DEPRECATED
-  return KDCore.Button = class Button extends Sprite {
-    constructor() {
-      super();
-      this._mouseIn = false;
-      this._touching = false;
-      this._slowUpdateActive = false;
-      this._localMode = false;
-      this._images = [];
-      this._checkAlpha = false;
-      this._textSprite = null;
-      this._textPosition = 0;
-      this._override = false; // * TouchClick in game messages not work anymore if TRUE
-      this._clickHandlers = [];
-      this._manualHided = false;
-      this._manualDisabled = false;
-      this._condition = null; // * Условие для Visible
-      this._condition2 = null; // * Условие для Enable \ Disable
-      this._disabled = false;
-      this._infoData = null;
-      this._isNeedShowText = false;
-      return;
-    }
-
-    isMouseInButton() {
-      return this._mouseIn === true;
-    }
-
-    isActive() {
-      return this.visible === true;
-    }
-
-    activateSlowUpdate() {
-      return this._slowUpdateActive = true;
-    }
-
-    setLocalMode() {
-      this._realX = this.x;
-      this._realY = this.y;
-      return this._localMode = true;
-    }
-
-    setAlphaMode() {
-      return this._checkAlpha = true;
-    }
-
-    // * above, below
-    setTextPosition(position) {
-      return this._textPosition = position;
-    }
-
-    setHelpText(text, size) {
-      return this._createText(text, size);
-    }
-
-    setInfoData(data) {
-      return this._infoData = data;
-    }
-
-    setOverrideMode() {
-      return this._override = true;
-    }
-
-    isOverride() {
-      return this._override === true && this.isActive() && this.touchInButton();
-    }
-
-    isDisabled() {
-      return this._disabled === true;
-    }
-
-    isEnabled() {
-      return !this.isDisabled();
-    }
-
-    isNeedShowText() {
-      return this._isNeedShowText === true;
-    }
-
-    addClickHandler(method) {
-      return this._clickHandlers.push(method);
-    }
-
-    clearClickHandlers() {
-      return this._clickHandlers = [];
-    }
-
-    isLocalMode() {
-      return this._localMode === true;
-    }
-
-    setCondition(method) {
-      return this._condition = method;
-    }
-
-    setConditionForDisable(method) {
-      return this._condition2 = method;
-    }
-
-    getInfoData() {
-      return this._infoData;
-    }
-
-    simulateClick() { //?NEW
-      return this.applyClickedState();
-    }
-
-    simulateClickManual() { //?NEW
-      this.simulateClick();
-      return setTimeout((() => {
-        try {
-          return this.applyNormalState();
-        } catch (error) {
-
-        }
-      }), 50);
-    }
-
-    prepare() { //?NEW
-      return this.slowUpdate();
-    }
-
-    realX() {
-      if (this.isLocalMode()) {
-        return this._realX;
-      } else {
-        return this.x;
-      }
-    }
-
-    realY() {
-      if (this.isLocalMode()) {
-        return this._realY;
-      } else {
-        return this.y;
-      }
-    }
-
-    show() {
-      this.visible = true;
-      return this._manualHided = false;
-    }
-
-    hide() {
-      this.visible = false;
-      return this._manualHided = true;
-    }
-
-    disable() {
-      this._disabled = true;
-      this._manualDisabled = true;
-      this.refreshEnDisState();
-      return this._mouseIn = false;
-    }
-
-    enable() {
-      this._disabled = false;
-      this._manualDisabled = false;
-      return this.refreshEnDisState();
-    }
-
-    update() {
-      super.update();
-      if (this._destroyed === true) {
-        return;
-      }
-      this.updateMouseClick();
-      this.updatePosition();
-      if (!this._slowUpdateActive) {
-        this.slowUpdate();
-      }
-      return this.updateComplexTextVisible();
-    }
-
-    slowUpdate() {
-      if (this._destroyed === true) {
-        return;
-      }
-      this.updateMouseTracking();
-      this.updateConditionForVisible();
-      return this.updateConditionForEnabling();
-    }
-
-    updateMouseTracking() {
-      if (!this.isActive()) {
-        return;
-      }
-      if (this.isDisabled()) {
-        return;
-      }
-      if (this.cursorInButton()) {
-        this._onMouseEnter();
-        return this._mouseIn = true;
-      } else {
-        this._onMouseLeave();
-        return this._mouseIn = false;
-      }
-    }
-
-    // * In MZ TouchInput always have X,Y
-    cursorInButton() {
-      return this.touchInButton();
-    }
-
-    xyInButton(x, y) {
-      var inRect, rect, rx, ry;
-      rx = KDCore.SDK.toGlobalCoord(this, 'x');
-      ry = KDCore.SDK.toGlobalCoord(this, 'y');
-      rect = new PIXI.Rectangle(rx, ry, this._realWidth(), this._realHeight());
-      inRect = rect.contains(x, y);
-      if (inRect === true && this._checkAlpha === true) {
-        return this._checkAlphaPixel(x - rx, y - ry);
-      } else {
-        return inRect;
-      }
-    }
-
-    _realWidth() {
-      if (this._hasImage()) {
-        return this._mainImage().width;
-      } else {
-        return this.width;
-      }
-    }
-
-    _hasImage() {
-      return this._mainImage() != null;
-    }
-
-    _mainImage() {
-      return this._images[0];
-    }
-
-    _realHeight() {
-      if (this._hasImage()) {
-        return this._mainImage().height;
-      } else {
-        return this.height;
-      }
-    }
-
-    _checkAlphaPixel(x, y) {
-      var pixel;
-      pixel = this._hasImage() ? this._mainImage().bitmap.getAlphaPixel(x, y) : this.bitmap.getAlphaPixel(x, y);
-      return pixel >= 200;
-    }
-
-    _onMouseEnter() {
-      if (this._mouseIn === true) {
-        return;
-      }
-      if (!this.isDisabled()) {
-        this.applyCoverState();
-      }
-      this._showText();
-      if (this.getInfoData() != null) {
-        return this._startComplexTimer();
-      }
-    }
-
-    _onMouseLeave() {
-      if (this._mouseIn === false) {
-        return;
-      }
-      if (!this.isDisabled()) {
-        this.applyNormalState();
-      }
-      this._hideText();
-      return this._stopComplexTimer();
-    }
-
-    _showText() {
-      if (this._textSprite == null) {
-        return;
-      }
-      this._updateTextPosition();
-      return this._textSprite.visible = true;
-    }
-
-    _hideText() {
-      if (this._textSprite == null) {
-        return;
-      }
-      return this._textSprite.visible = false;
-    }
-
-    _startComplexTimer() {
-      this._stopComplexTimer();
-      return this._cTimer = setTimeout((() => {
-        if (this._mouseIn === true) {
-          return this._isNeedShowText = true;
-        }
-      }), 1000);
-    }
-
-    _stopComplexTimer() {
-      if (this._cTimer != null) {
-        clearTimeout(this._cTimer);
-      }
-      return this._isNeedShowText = false;
-    }
-
-    updateMouseClick() {
-      if (!this.isActive()) {
-        this._unTouch();
-        return;
-      }
-      if (this.isDisabled()) {
-        return;
-      }
-      if (TouchInput.isTriggered() && this.touchInButton()) {
-        this._touching = true;
-        this.applyClickedState();
-      }
-      if (this._touching === true) {
-        if (TouchInput.isReleased() || !this.touchInButton()) {
-          this._unTouch();
-          if (TouchInput.isReleased()) {
-            return this.callClickHandler();
-          }
-        }
-      }
-    }
-
-    _unTouch() {
-      this._touching = false;
-      if (this.touchInButton()) {
-        return this.applyCoverState();
-      } else {
-        return this.applyNormalState();
-      }
-    }
-
-    touchInButton() {
-      return this.xyInButton(TouchInput.x, TouchInput.y);
-    }
-
-    callClickHandler() {
-      if (this._clickHandlers.length > 0) {
-        return this._clickHandlers.forEach(function(method) {
-          return method();
-        });
-      }
-    }
-
-    updatePosition() {
-      var p;
-      if (!this._localMode) {
-        return;
-      }
-      p = new KDCore.Point(this._realX, this._realY);
-      return this.move(p.screenX(), p.screenY());
-    }
-
-    updateConditionForVisible() {
-      var result;
-      if (this._condition == null) {
-        return;
-      }
-      if (this._manualHided === true) {
-        return;
-      }
-      try {
-        result = this._condition();
-        return this.visible = !result;
-      } catch (error) {
-        console.warn('wrong condition in button');
-        return this.visible = true;
-      }
-    }
-
-    updateConditionForEnabling() {
-      if (!this._condition2) {
-        return;
-      }
-      if (this._manualDisabled === true) {
-        return;
-      }
-      try {
-        this._disabled = this._condition2();
-        return this.refreshEnDisState();
-      } catch (error) {
-        console.warn('wrong condition in button for enable state');
-        return this.disable();
-      }
-    }
-
-    setButtonImages(img1, img2, img3, img4) {
-      if (this._images != null) {
-        this._images.forEach(function(img) {
-          if (img != null) {
-            return img.parent.removeChild(img);
-          }
-        });
-      }
-      this._images = [new Sprite(img1), img2 != null ? new Sprite(img2) : void 0, img3 != null ? new Sprite(img3) : void 0, img4 != null ? new Sprite(img4) : void 0];
-      this._images.forEach((img) => {
-        if (img != null) {
-          return this.addChild(img);
-        }
-      });
-      return this.applyNormalState();
-    }
-
-    applyNormalState() {
-      var ref;
-      this.refreshImages();
-      return (ref = this._images[0]) != null ? ref.visible = true : void 0;
-    }
-
-    refreshImages() {
-      return this._images.forEach(function(img) {
-        return img != null ? img.visible = false : void 0;
-      });
-    }
-
-    applyCoverState() {
-      this.refreshImages();
-      if (this._images[1] != null) {
-        return this._images[1].visible = true;
-      } else {
-        return this.applyNormalState();
-      }
-    }
-
-    applyClickedState() {
-      this.refreshImages();
-      if (this._images[2] != null) {
-        return this._images[2].visible = true;
-      } else {
-        return this.applyNormalState();
-      }
-    }
-
-    _createText(text, size) {
-      var h, w;
-      if (this._textSprite) {
-        this.removeChild(this._textSprite);
-      }
-      w = Math.round(((size / 10) + 1) * 5 * text.length);
-      h = size + 4;
-      this._textSprite = new Sprite(new Bitmap(w, h));
-      this._textSprite.bitmap.fontSize = size;
-      this._textSprite.bitmap.drawText(text, 0, h / 2, w, 1, 'center');
-      this._textSprite.visible = false;
-      return this.addChild(this._textSprite);
-    }
-
-    _updateTextPosition() {
-      var nx, ny;
-      if (!this._textSprite) {
-        return;
-      }
-      nx = this._realWidth() / 2 - this._textSprite.width / 2;
-      if (this._textPosition === 0) {
-        ny = -this._textSprite.height;
-      } else {
-        ny = this._realHeight() + this._textSprite.height / 2;
-      }
-      return this._textSprite.move(nx, ny);
-    }
-
-    applyDisableState() {
-      var ref;
-      this.refreshImages();
-      return (ref = this._images[3]) != null ? ref.visible = true : void 0;
-    }
-
-    refreshEnDisState() {
-      if (this.isDisabled()) {
-        this.applyDisableState();
-        return this._hideText();
-      } else {
-        if (this._mouseIn === false) {
-          return this.applyNormalState();
-        }
-      }
-    }
-
-    //else
-    //    do @applyCoverState
-    updateComplexTextVisible() {}
-
-    applyScale(mod) {
-      var i, img, len, ref;
-      ref = this._images;
-      for (i = 0, len = ref.length; i < len; i++) {
-        img = ref[i];
-        if (img != null) {
-          img.scale.x = mod;
-          img.scale.y = mod;
-        }
-      }
-    }
-
-    static FromSet(imgName, sourceFolder = null) {
-      var button, getterFunc, img0, img1;
-      getterFunc = function(filename) {
-        return ImageManager.loadPicture(filename);
-      };
-      if (sourceFolder != null) {
-        getterFunc = function(filename) {
-          return ImageManager.loadBitmap("img/" + sourceFolder + "/", filename);
-        };
-      }
-      img0 = getterFunc(imgName + "_00");
-      img1 = getterFunc(imgName + "_01");
-      button = new KDCore.Button();
-      button.setButtonImages(img0, img1, img0, img0);
-      return button;
-    }
-
-    static FromSetFull(imgName, sourceFolder = null) {
-      var button, getterFunc, img0, img1, img2, img3;
-      getterFunc = function(filename) {
-        return ImageManager.loadPicture(filename);
-      };
-      if (sourceFolder != null) {
-        getterFunc = function(filename) {
-          return ImageManager.loadBitmap("img/" + sourceFolder + "/", filename);
-        };
-      }
-      img0 = getterFunc(imgName + "_00");
-      img1 = getterFunc(imgName + "_01");
-      img2 = getterFunc(imgName + "_02");
-      img3 = getterFunc(imgName + "_03");
-      button = new KDCore.Button();
-      button.setButtonImages(img0, img1, img2, img3);
-      return button;
-    }
-
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var Sprite_ButtonsGroup;
-  // * Класс для реализации набора кнопок переключателей (Tabs)
-  // * Когда только одна кнопка может быть нажата (выбрана)
-
-    //rev 07.10.21
-  Sprite_ButtonsGroup = class Sprite_ButtonsGroup extends KDCore.Sprite {
-    // buttonsArray = [
-    //       {image: NAME, position: [X,Y]}, ...
-    //    ]
-    constructor(buttonsArray, activeIndex, clickCallback) {
-      var button, i, len;
-      super();
-      this.clickCallback = clickCallback;
-      this._buttons = [];
-      for (i = 0, len = buttonsArray.length; i < len; i++) {
-        button = buttonsArray[i];
-        this._createButton(button);
-      }
-      this._onButtonClick(activeIndex);
-      return;
-    }
-
-    getSelectedIndex() {
-      return this._buttons.findIndex(function(btn) {
-        return !btn.isEnabled();
-      });
-    }
-
-  };
-  (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = Sprite_ButtonsGroup.prototype;
-    _._createButton = function({image, position}) {
-      var btn, index, method;
-      // * Так как кнопки работают как переключатели, то 03 должен быть всегда
-      index = this._buttons.length;
-      btn = new KDCore.ButtonM(image, true, "Alpha");
-      btn.move(position);
-      method = () => {
-        return this._onButtonClick(index);
-      };
-      btn.addClickHandler(method);
-      this._buttons.push(btn);
-      this.add(btn);
-    };
-    _._onButtonClick = function(index = 0) {
-      var ref;
-      this._resetAllButtons();
-      if ((ref = this._buttons[index]) != null) {
-        ref.disable(); // * Нажата
-      }
-      if (this.clickCallback != null) {
-        this.clickCallback();
-      }
-    };
-    _._resetAllButtons = function() {
-      var btn, i, len, ref;
-      ref = this._buttons;
-      for (i = 0, len = ref.length; i < len; i++) {
-        btn = ref[i];
-        if (btn != null) {
-          btn.enable();
-        }
-      }
-    };
-  })();
-  // ■ END PRIVATE
-  //---------------------------------------------------------------------------
-  return KDCore.Sprite_ButtonsGroup = Sprite_ButtonsGroup;
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad((function() {
-  var Sprite_TilingFrame;
-  Sprite_TilingFrame = class Sprite_TilingFrame extends KDCore.Sprite {
-    constructor(width, height, skinBitmap) {
-      super();
-      this.width = width;
-      this.height = height;
-      this.skinBitmap = skinBitmap;
-      this._createParts();
-      this._refreshAll();
-    }
-
-    _createParts() {
-      var i, j;
-      this.backSprite = new Sprite();
-      this.addChild(this.backSprite);
-      this.content = new Sprite();
-      this.addChild(this.content);
-      this._outFrame = new Sprite();
-      for (i = j = 0; j < 8; i = ++j) {
-        this._outFrame.addChild(new Sprite());
-      }
-      return this.addChild(this._outFrame);
-    }
-
-    // * Отступ, чтобы за рамку не выходить
-    _fillPadding() {
-      return 2;
-    }
-
-    // * Размер частей на картинке
-    _fillImagePartWidth() {
-      return 96;
-    }
-
-    _fillImagePartHeight() {
-      return 96;
-    }
-
-    // * Толщина рамки
-    _frameThickness() {
-      return 12;
-    }
-
-    _refreshAll() {
-      this._refreshBack();
-      return this._refreshTFrame();
-    }
-
-    _refreshBack() {
-      var fh, fw, h, m, sprite, w;
-      m = this._fillPadding();
-      w = Math.max(0, this.width - m * 2);
-      h = Math.max(0, this.height - m * 2);
-      sprite = this.backSprite;
-      sprite.bitmap = this.skinBitmap;
-      // * Координаты фона из картинки
-      fw = this._fillImagePartWidth();
-      fh = this._fillImagePartHeight();
-      sprite.setFrame(0, 0, fw, fh);
-      sprite.move(m, m);
-      sprite.scale.x = w / fw;
-      return sprite.scale.y = h / fh;
-    }
-
-    _refreshTFrame() {
-      var drect, fh, fw, j, len, m, ref, spr, srect;
-      fw = this._fillImagePartWidth();
-      fh = this._fillImagePartHeight();
-      // * Положение назначения
-      drect = {
-        x: 0,
-        y: 0,
-        width: this.width,
-        height: this.height
-      };
-      // * Координаты рамки на картинке
-      srect = {
-        x: fw,
-        y: 0,
-        width: fw,
-        height: fh
-      };
-      m = this._frameThickness(); // * Толщина
-      ref = this._outFrame.children;
-      for (j = 0, len = ref.length; j < len; j++) {
-        spr = ref[j];
-        spr.bitmap = this.skinBitmap;
-      }
-      if (KDCore.isMZ()) {
-        Window.prototype._setRectPartsGeometry.call(this, this._outFrame, srect, drect, m);
-      } else {
-        this._setRectPartsGeometry(this._outFrame, srect, drect, m);
-      }
-    }
-
-    // * Этот метод существует в MZ, но нет в MV
-    //? From MZ
-    _setRectPartsGeometry(sprite, srect, drect, m) {
-      var child, children, dh, dmh, dmw, dw, dx, dy, j, len, sh, smh, smw, sw, sx, sy;
-      sx = srect.x;
-      sy = srect.y;
-      sw = srect.width;
-      sh = srect.height;
-      dx = drect.x;
-      dy = drect.y;
-      dw = drect.width;
-      dh = drect.height;
-      smw = sw - m * 2;
-      smh = sh - m * 2;
-      dmw = dw - m * 2;
-      dmh = dh - m * 2;
-      children = sprite.children;
-      sprite.setFrame(0, 0, dw, dh);
-      sprite.move(dx, dy);
-      // corner
-      children[0].setFrame(sx, sy, m, m);
-      children[1].setFrame(sx + sw - m, sy, m, m);
-      children[2].setFrame(sx, sy + sw - m, m, m);
-      children[3].setFrame(sx + sw - m, sy + sw - m, m, m);
-      children[0].move(0, 0);
-      children[1].move(dw - m, 0);
-      children[2].move(0, dh - m);
-      children[3].move(dw - m, dh - m);
-      // edge
-      children[4].move(m, 0);
-      children[5].move(m, dh - m);
-      children[6].move(0, m);
-      children[7].move(dw - m, m);
-      children[4].setFrame(sx + m, sy, smw, m);
-      children[5].setFrame(sx + m, sy + sw - m, smw, m);
-      children[6].setFrame(sx, sy + m, m, smh);
-      children[7].setFrame(sx + sw - m, sy + m, m, smh);
-      children[4].scale.x = dmw / smw;
-      children[5].scale.x = dmw / smw;
-      children[6].scale.y = dmh / smh;
-      children[7].scale.y = dmh / smh;
-      // center
-      if (children[8] != null) {
-        children[8].setFrame(sx + m, sy + m, smw, smh);
-        children[8].move(m, m);
-        children[8].scale.x = dmw / smw;
-        children[8].scale.y = dmh / smh;
-      }
-      for (j = 0, len = children.length; j < len; j++) {
-        child = children[j];
-        child.visible = dw > 0 && dh > 0;
-      }
-    }
-
-  };
-  return KDCore.Sprite_TilingFrame = Sprite_TilingFrame;
-}));
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var Window_ExtTextLineBase;
-  // * Данное окно используется как основа для Sprite_UITextExt
-  //rev 07.10.21
-  Window_ExtTextLineBase = class Window_ExtTextLineBase extends Window_Base {
-    constructor(rect, fontSettings) {
-      super(rect);
-      this.fontSettings = fontSettings;
-      this.createContents();
-      // * Всегда прозрачное окно
-      this.setBackgroundType(2);
-    }
-
-    // * Нет отступов
-    updatePadding() {
-      return this.padding = 0;
-    }
-
-    // * Нет отступов
-    itemPadding() {
-      return 0;
-    }
-
-    textPadding() {
-      return 0;
-    }
-
-    standardPadding() {
-      return 0;
-    }
-
-    contentsWidth() {
-      return this.width;
-    }
-
-    contentsHeight() {
-      return this.height;
-    }
-
-    // * Более гибкая настройка размера текста при { }
-    makeFontBigger() {
-      return this.contents.fontSize += 1;
-    }
-
-    makeFontSmaller() {
-      if (this.contents.fontSize > 1) {
-        return this.contents.fontSize -= 1;
-      }
-    }
-
-    // * Применение своих шрифта и размера текста
-    resetFontSettings() {
-      super.resetFontSettings();
-      if (this.fontSettings == null) {
-        return;
-      }
-      if (String.any(this.fontSettings.face)) {
-        this.contents.fontFace = this.fontSettings.face;
-      }
-      if (this.fontSettings.size > 0) {
-        this.contents.fontSize = this.fontSettings.size;
-      }
-      if (this.fontSettings.italic != null) {
-        this.contents.fontItalic = this.fontSettings.italic;
-      }
-    }
-
-  };
-  return KDCore.Window_ExtTextLineBase = Window_ExtTextLineBase;
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  // * Button M
-  //------------------------------------------------------------------------------
-  //@[AUTO EXTEND]
-  // * Button Mini - упрощённый класс Sprite_XButton (KDCore.Button)
-
-    // * Принимает название файла изображения кнопки без _00
-  // * Названия изображения должны быть в стандартном формате _00, _01, [_03]
-  // * _02 - не используются в этом классе
-
-    // * Класс использует глобальную временную переменную для определения находится ли мышь в зоне кнопки
-
-    // * Если isFull - true, значит нужен _03
-  KDCore.ButtonM = class ButtonM extends KDCore.Sprite {
-    constructor(filename, isFull = false, sourceFolder = null) {
-      super();
-      this._bitmaps = [];
-      this._disabled = false;
-      this._isTriggered = false;
-      // * Когда произошло нажатие на кнопку
-      this._handler = null;
-      this._isCanBeClicked = true;
-      this._isManualHoverMode = false;
-      this._isManualSelected = false;
-      this._loadBitmaps(filename, isFull, sourceFolder);
-      this._setImageState(0);
-      this._createThread();
-    }
-
-    setManualHover() {
-      return this._isManualHoverMode = true;
-    }
-
-    disableManualHover() {
-      return this._isManualHoverMode = false;
-    }
-
-    setManualSelected(_isManualSelected) {
-      this._isManualSelected = _isManualSelected;
-    }
-
-    enableClick() {
-      return this._isCanBeClicked = true;
-    }
-
-    disableClick() {
-      return this._isCanBeClicked = false;
-    }
-
-    desaturate() {
-      this.filters = [new PIXI.filters.ColorMatrixFilter()];
-      this.filters[0].desaturate();
-    }
-
-    isMouseIn() {
-      if (this._isManualHoverMode === true) {
-        return this._isManualSelected;
-      } else {
-        return this.isUnderMouse() && this.visible === true;
-      }
-    }
-
-    isActive() {
-      if (this._isCanBeClicked === false) {
-        return false;
-      }
-      if (this.parent != null) {
-        return this.parent.visible === true && this.visible === true;
-      } else {
-        return this.visible === true;
-      }
-    }
-
-    isDisabled() {
-      return this._disabled === true;
-    }
-
-    addClickHandler(_handler) {
-      this._handler = _handler;
-    }
-
-    clearClickHandler() {
-      return this._handler = null;
-    }
-
-    // * Воспроизводит визуальный эффект нажатия
-    simulateClick() {
-      if (!this.isActive()) {
-        return;
-      }
-      if (this.isDisabled()) {
-        return;
-      }
-      if (this.isMouseIn()) {
-        return;
-      }
-      this._startSimulation();
-    }
-
-    isEnabled() {
-      return !this.isDisabled();
-    }
-
-    refreshState(isEnable = true) {
-      if (isEnable === true) {
-        if (this.isDisabled()) {
-          this.enable();
-        }
-      } else {
-        if (this.isEnabled()) {
-          this.disable();
-        }
-      }
-    }
-
-    disable() {
-      this._disabled = true;
-      return this._setImageState(2);
-    }
-
-    enable() {
-      this._disabled = false;
-      return this._setImageState(0);
-    }
-
-    click() {
-      if (this._handler != null) {
-        return this._handler();
-      }
-    }
-
-    update() {
-      super.update();
-      return this._updateMain();
-    }
-
-  };
-  return (function() {    
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ ButtonM Implementation
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _, alias_SM_isAnyButtonPressed, alias_SM_onMapLoaded;
-    //@[DEFINES]
-    _ = KDCore.ButtonM.prototype;
-    _._loadBitmaps = function(filename, isFull = false, sourceFolder = null) {
-      var getterFunc;
-      getterFunc = this._getGetter(sourceFolder);
-      this._bitmaps.push(getterFunc(filename + '_00'));
-      this._bitmaps.push(getterFunc(filename + '_01'));
-      if (isFull) {
-        this._bitmaps.push(getterFunc(filename + '_03'));
-      }
-    };
-    _._getGetter = function(sourceFolder = null) {
-      var getterFunc;
-      getterFunc = function(filename) {
-        return ImageManager.loadPicture(filename);
-      };
-      if (sourceFolder !== null) {
-        getterFunc = function(filename) {
-          return ImageManager.loadBitmap('img/' + sourceFolder + '/', filename);
-        };
-      }
-      return getterFunc;
-    };
-    _._setImageState = function(index = 0) {
-      if (this._bitmaps[index] == null) {
-        index = 0;
-      }
-      this.bitmap = this._bitmaps[index];
-      this._lastState = index;
-    };
-    _._createThread = function() {
-      this.hoverThread = new KDCore.TimedUpdate(3, this._updateHover.bind(this));
-      this.hoverThread.applyTimeRange(-1, 1);
-      this.hoverThread.call();
-    };
-    //?[DYNAMIC]
-    _._updateMain = function() {
-      this._updateMouseLogic();
-      if (!this.isActive()) {
-        if (($gameTemp.kdButtonUnderMouse != null) && $gameTemp.kdButtonUnderMouse === this) {
-          return $gameTemp.kdButtonUnderMouse = null;
-        }
-      }
-    };
-    _._updateMouseLogic = function() {
-      this.hoverThread.update();
-      return this._updateMouseClick();
-    };
-    _._updateHover = function() {
-      if (!this.isActive()) {
-        return;
-      }
-      // * чтобы эффект нажатия не прекратить
-      if (this._isTriggered === true) {
-        return;
-      }
-      if (this.isMouseIn()) {
-        if (this._lastState !== 1) {
-          if (!this.isDisabled()) {
-            this._setImageState(1);
-          }
-          $gameTemp.kdButtonUnderMouse = this;
-        }
-      } else {
-        if (this._lastState !== 0) {
-          if (!this.isDisabled()) {
-            this._setImageState(0);
-          }
-          if ($gameTemp.kdButtonUnderMouse === this) {
-            $gameTemp.kdButtonUnderMouse = null;
-          }
-        } else if ($gameTemp.kdButtonUnderMouse === this) {
-          $gameTemp.kdButtonUnderMouse = null;
-        }
-      }
-    };
-    _._updateMouseClick = function() {
-      if (!this.isActive()) {
-        return;
-      }
-      if (this.isDisabled()) {
-        return;
-      }
-      if (TouchInput.isTriggered() && this.isMouseIn()) {
-        this._isTriggered = true;
-        this._setImageState(0);
-      }
-      if (this._isTriggered === true) {
-        if (TouchInput.isReleased()) {
-          this._isTriggered = false;
-          if (this.isMouseIn()) {
-            this.click();
-          }
-        }
-      }
-    };
-    _._startSimulation = function() {
-      this._setImageState(1);
-      this._simulateThread = new KDCore.TimedUpdate(10, () => {
-        return this._setImageState(0);
-      });
-      this._simulateThread.once();
-      return this._updateMain = this._updateMouseClickSimulated;
-    };
-    _._updateMouseClickSimulated = function() {
-      this._simulateThread.update();
-      if (!this._simulateThread.isAlive()) {
-        this._simulateThread = null;
-        this._updateMain = this._updateMouseLogic;
-      }
-    };
-    // * Теперь при нажатии на любую кнопку, игрок не будет ходить по карте
-
-    //@[ALIAS]
-    alias_SM_isAnyButtonPressed = Scene_Map.prototype.isAnyButtonPressed;
-    Scene_Map.prototype.isAnyButtonPressed = function() {
-      if ($gameTemp.kdButtonUnderMouse != null) {
-        return true;
-      } else {
-        return alias_SM_isAnyButtonPressed.call(this);
-      }
-    };
-    //TODO: Добавить доп. проверку?
-    //@[ALIAS]
-    alias_SM_onMapLoaded = Scene_Map.prototype.onMapLoaded;
-    Scene_Map.prototype.onMapLoaded = function() {
-      $gameTemp.kdButtonUnderMouse = null;
-      setTimeout((function() {
-        return $gameTemp.kdButtonUnderMouse = null;
-      }), 50);
-      return alias_SM_onMapLoaded.call(this);
-    };
-  })();
-});
-
-// ■ END ButtonM Implementation
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  // * Button Mini User - класс с определением файла каждого состояния отдельно
-  // * Принимает теже аргументы, только заместо имени файла, три изображения (имени)
-  // ? states = { main, hover, disabled }
-  return KDCore.ButtonMU = class ButtonMU extends KDCore.ButtonM {
-    constructor() {
-      super(...arguments);
-    }
-
-    //$[OVER]
-    _loadBitmaps(states, isFull = true, sourceFolder = null) {
-      var getterFunc;
-      getterFunc = this._getGetter(sourceFolder);
-      this._bitmaps.push(getterFunc(states.main));
-      this._bitmaps.push(getterFunc(states.hover));
-      // * Optional 03
-      if (String.any(states.disabled)) {
-        this._bitmaps.push(getterFunc(states.disabled));
-      }
-    }
-
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var Sprite_TilingLine;
-  Sprite_TilingLine = class Sprite_TilingLine extends KDCore.Sprite_TilingFrame {
-    constructor() {
-      super(...arguments);
-    }
-
-    //$[OVER BASE ALL BELOW]
-    _fillPadding() {
-      return 0;
-    }
-
-    _refreshTFrame() {} // * EMPTY
-
-    _fillImagePartWidth() {
-      return 4;
-    }
-
-    _fillImagePartHeight() {
-      return 26;
-    }
-
-  };
-  return KDCore.Sprite_TilingLine = Sprite_TilingLine;
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  // * Пространство имён для всех UIElements
-  KDCore.UI = KDCore.UI || {};
-  (function() {    // * Общий класс для всех UI элементов
-    //?rev 13.10.20
-    var Sprite_UIElement;
-    Sprite_UIElement = (function() {
-      // * ABSTRACT значит что класс сам по себе ничего не создаёт, не хранит данные
-      //@[ABSTRACT]
-      class Sprite_UIElement extends KDCore.Sprite {
-        constructor(params) {
-          super();
-          this.params = params;
-          this._init();
-        }
-
-        // * Стандартный набор настроек
-        defaultParams() {
-          return {
-            visible: true
-          };
-        }
-
-        // * Общий метод (есть у всех элементов)
-        // * По умолчанию вызывает drawText, но потомки могут переопределить
-        draw() {
-          return this.drawText(...arguments);
-        }
-
-        // * Общий метод
-        drawText() {} // * EMPTY
-
-        
-          // * Если изначально невидимый (из параметров), то не активный вообще
-        isActive() {
-          return this.params.visible === true;
-        }
-
-        rootImageFolder() {
-          return Sprite_UIElement.RootImageFolder;
-        }
-
-        // * Сделать чёрно белым
-        desaturate() {
-          this.filters = [new PIXI.filters.ColorMatrixFilter()];
-          this.filters[0].desaturate();
-        }
-
-        // * Общий метод (можно ли редактировать визуально)
-        isCanBeEdited() {
-          return false;
-        }
-
-        // * Общий метод (надо ли скрывать при игровом сообщнии)
-        isHaveHideWithMessageFlag() {
-          return false;
-        }
-
-        // * Общий метод (находится ли объект под мышкой)
-        isUnderMouse() {
-          var ref;
-          return (ref = this.zeroChild()) != null ? ref.isUnderMouse() : void 0;
-        }
-
-        // * Параметры первого элемента (если он есть)
-        realWidth() {
-          var child;
-          child = this.zeroChild();
-          if (child != null) {
-            if (child instanceof KDCore.UI.Sprite_UIElement) {
-              return child.realWidth();
-            } else {
-              return child.width;
+            let element;
+            if (KDX.any(scheme) && KDX.any(scheme['type'])) {
+                element = KNBuilder.Make(scheme, owner, parent);
             }
-          }
-          return 0;
-        }
-
-        realHeight() {
-          var child;
-          child = this.zeroChild();
-          if (child != null) {
-            if (child instanceof KDCore.UI.Sprite_UIElement) {
-              return child.realHeight();
-            } else {
-              return child.height;
+            else if (KDX.any(scheme)) {
+                element = KNBuilder.Factory(scheme, owner, 100)[0];
             }
-          }
-          return 0;
-        }
-
-        // * Первый "физический" элемент (спрайт)
-        zeroChild() {
-          return this.children[0];
-        }
-
-        // * Метод восстановления значения на стандартные настройки
-        reset(property) {
-          var e;
-          try {
-            switch (property) {
-              case "position":
-                this._resetPosition();
-                break;
-              default:
-                this[property] = this.params[property];
+            if (KDX.any(element)) {
+                if (KDX.any(parent)) {
+                    parent.addChild(element);
+                }
+                else {
+                    if (KDX.any(owner) && owner['addChild']) {
+                        owner['addChild'](element);
+                    }
+                }
+                element.refreshBindings(owner, true);
+                return element;
             }
-          } catch (error) {
-            e = error;
-            KDCore.warning(e);
-          }
         }
-
-      };
-
-      // * Корневая директория для изображений
-      Sprite_UIElement.RootImageFolder = "Alpha";
-
-      return Sprite_UIElement;
-
-    }).call(this);
-    KDCore.UI.Sprite_UIElement = Sprite_UIElement;
-  })();
-  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = KDCore.UI.Sprite_UIElement.prototype;
-    _._init = function() {
-      var e;
-      this._prepare();
-      try {
-        return this._createContent();
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-        // * Если при создании произошла ошибка, отключаем элемент
-        return this.isActive = function() {
-          return false;
-        };
-      }
-    };
-    
-    // * Подготовка элемента (проверка параметров)
-    _._prepare = function() {
-      if (this.params == null) {
-        this.params = this.defaultParams();
-      }
-      return this.visible = this.params.visible;
-    };
-    // * Наследники создают свои элементы в этом методе
-    _._createContent = function() {}; // * EMPTY
-    
-    // * Сброс позиции
-    _._resetPosition = function() {
-      var e, x, y;
-      if (this.params.position == null) {
-        return;
-      }
-      try {
-        ({x, y} = this.params.position);
-        this.move(x, y);
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-      }
-    };
-  })();
-});
-
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  (function() {
-    var Sprite_UIButton;
-    // * Кнопка на экране, можно нажимать
-    Sprite_UIButton = class Sprite_UIButton extends KDCore.UI.Sprite_UIElement {
-      constructor() {
-        super(...arguments);
-      }
-
-      // * Стандартный набор настроек
-      defaultParams() {
-        return {
-          visible: true,
-          image: "Button_Inventory",
-          isHaveDisabled: true,
-          click: "console.log('click')" // * число или код
-        };
-      }
-
-      // * Кнопка не поддерживает перерисовку
-      draw() {} // * EMPTY
-
-      disable() {
-        var ref;
-        return (ref = this.button) != null ? ref.disable() : void 0;
-      }
-
-      enable() {
-        var ref;
-        return (ref = this.button) != null ? ref.enable() : void 0;
-      }
-
-      setState(isEnabled) {
-        if (isEnabled) {
-          return this.enable();
-        } else {
-          return this.disable();
+        catch (error) {
+            console.warn(error);
         }
-      }
-
-      
-        // * Просто вызов метода
-      call() {
-        var ref;
-        return (ref = this.button) != null ? ref.click() : void 0;
-      }
-
-      // * Вызов метода с симуляцией нажатия
-      click() {
-        var ref, ref1;
-        if ((ref = this.button) != null) {
-          ref.click();
-        }
-        return (ref1 = this.button) != null ? ref1.simulateClick() : void 0;
-      }
-
-    };
-    KDCore.UI.Sprite_UIButton = Sprite_UIButton;
-  })();
-  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
+        return new KNSprite();
+    }
+    KDNUI.FromScheme = FromScheme;
+})(KDNUI || (KDNUI = {}));
+(function () {
+    if (Utils.RPGMAKER_NAME.includes("MV"))
+        return;
+    // * В версии RPG Maker MZ 1.5.0 появился баг что картинки не успевают прогрузится
+    // * Данный фикс, возвращает старое поведение
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ Bitmap.ts
     //╒═════════════════════════════════════════════════════════════════════════╛
     //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = KDCore.UI.Sprite_UIButton.prototype;
-    //$[OVER]
-    _._createContent = function() {
-      if (this.params.image.isEmpty()) {
-        KDCore.warning('You try create Button without image');
-        return;
-      }
-      this.button = new KDCore.ButtonM(this.params.image, this.params.isHaveDisabled, this.rootImageFolder());
-      this.add(this.button);
-      return this._registerClickMethod();
-    };
-    _._registerClickMethod = function() {
-      var commonEventId, e, method, ref, script;
-      if (!String.any(this.params.click)) {
-        return;
-      }
-      method = null;
-      try {
-        // * Если число, то значит общее событие
-        if (isFinite(this.params.click)) {
-          commonEventId = parseInt(this.params.click);
-          if (commonEventId > 0) {
-            method = function() {
-              return $gameTemp.reserveCommonEvent(commonEventId);
-            };
-          }
-        } else {
-          // * Иначе скрипт
-          script = this.params.click;
-          method = function() {
-            return eval(script);
-          };
-        }
-        return this.button.addClickHandler(method);
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-        return (ref = this.button) != null ? ref.clearClickHandler() : void 0;
-      }
-    };
-  })();
-});
-
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  (function() {    // * Рисует лицо персонажа (из папки Faces)
-    var Sprite_UIFace;
-    Sprite_UIFace = class Sprite_UIFace extends KDCore.UI.Sprite_UIElement {
-      constructor() {
-        super(...arguments);
-      }
-
-      // * Стандартный набор настроек
-      defaultParams() {
-        return {
-          visible: true,
-          faceName: "Actor1",
-          faceIndex: 0,
-          mirror: false,
-          size: 144
-        };
-      }
-
-      draw() {
-        return this.drawFace(...arguments);
-      }
-
-      drawFace(faceName, faceIndex) {
-        return this._drawFaceWhenReady(faceName, faceIndex);
-      }
-
-    };
-    KDCore.UI.Sprite_UIFace = Sprite_UIFace;
-  })();
-  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = KDCore.UI.Sprite_UIFace.prototype;
-    //$[OVER]
-    _._createContent = function() {
-      return this._createFaceSprite();
-    };
-    _._createFaceSprite = function() {
-      this._faceSpr = KDCore.Sprite.FromBitmap(this.params.size);
-      if (this.params.mirror === true) {
-        this._flipFaceSpr();
-      }
-      this.add(this._faceSpr);
-      this._drawFaceWhenReady(this.params.faceName, this.params.faceIndex);
-    };
-    _._flipFaceSpr = function() {
-      this._faceSpr.scale.x = -1;
-      this._faceSpr.x = this.params.size;
-    };
-    _._drawFaceWhenReady = function(name, index = 0) {
-      var ref;
-      if ((ref = this._faceSpr) != null) {
-        ref.clear();
-      }
-      if (!String.any(name)) {
-        return;
-      }
-      if (index < 0) {
-        return;
-      }
-      this._drawOnReady = {name, index};
-      this._faceSourceBitmap = ImageManager.loadFace(name);
-      this._faceSourceBitmap.addLoadListener(this._drawFace.bind(this));
-      this._drawFace();
-    };
-    _._drawFace = function() {
-      var fh, fw, size, sx, sy;
-      if (this._faceSpr == null) {
-        return;
-      }
-      this._faceSpr.clear();
-      if (!String.any(this._drawOnReady.name)) {
-        return;
-      }
-      fw = ImageManager.faceWidth;
-      fh = ImageManager.faceHeight;
-      size = this.params.size;
-      sx = (this._drawOnReady.index % 4) * fw;
-      sy = Math.floor(this._drawOnReady.index / 4) * fh;
-      this._faceSpr.bitmap.blt(this._faceSourceBitmap, sx, sy, fw, fh, 0, 0, size, size);
-    };
-  })();
-});
-
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  (function() {
-    var Sprite_UIGauge;
-    Sprite_UIGauge = class Sprite_UIGauge extends KDCore.UI.Sprite_UIElement {
-      constructor() {
-        super(...arguments);
-      }
-
-      // * Стандартный набор настроек
-      defaultParams() {
-        return {
-          visible: true,
-          fill: "",
-          foreground: "",
-          mask: "",
-          backColor: "#000000".toCss(),
-          backOpacity: 255,
-          vertical: false
-        };
-      }
-
-      draw() {
-        return this.drawGauge(...arguments);
-      }
-
-      drawGauge(percent = 1) {
-        this._lastValue = percent;
-        return this._drawGauge(percent);
-      }
-
-      isVertical() {
-        return this.params.vertical === true;
-      }
-
-    };
-    KDCore.UI.Sprite_UIGauge = Sprite_UIGauge;
-  })();
-  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = KDCore.UI.Sprite_UIGauge.prototype;
-    //$[OVER]
-    _._createContent = function() {
-      // * Загружается главное изображение, затем уже все остальные, т.к. нужны размеры
-      return this._loadFillImage();
-    };
-    _._loadFillImage = function() {
-      // * Главное изображение, поэтому если не указано, то ничего
-      if (this.params.fill.isEmpty()) {
-        KDCore.warning('You try create Gauge without fill image');
-        return;
-      }
-      KDCore.Utils.loadImageAsync(this.rootImageFolder(), this.params.fill).then(this._createParts.bind(this));
-    };
-    // * Получаем изображение заполнения и создаём части (т.к. есть размеры)
-    _._createParts = function(fillBitmap) {
-      this.fillBitmap = fillBitmap;
-      this._createBackground();
-      this._createFillLayer();
-      this._loadForeground();
-      this._loadMask();
-      return this._onReady();
-    };
-    _._createBackground = function() {
-      this.background = KDCore.Sprite.FromBitmap(this.fillBitmap.width, this.fillBitmap.height);
-      this.background.b().fillAll(this.params.backColor);
-      this.background.opacity = this.params.backOpacity;
-      return this.add(this.background);
-    };
-    _._createFillLayer = function() {
-      this.fillLayer = KDCore.Sprite.FromBitmap(this.fillBitmap.width, this.fillBitmap.height);
-      return this.add(this.fillLayer);
-    };
-    _._loadForeground = function() {
-      var fore;
-      if (String.isNullOrEmpty(this.params.foreground)) {
-        return;
-      }
-      fore = KDCore.Sprite.FromImg(this.params.foreground, this.rootImageFolder());
-      return this.add(fore);
-    };
-    _._loadMask = function() {
-      var mask;
-      if (String.isNullOrEmpty(this.params.mask)) {
-        return;
-      }
-      mask = KDCore.Sprite.FromImg(this.params.mask, this.rootImageFolder());
-      this.mask = mask;
-      return this.add(mask);
-    };
-    // * Если что-то было до готовности, нарисовать
-    _._onReady = function() {
-      this.drawGauge(this._lastValue);
-    };
-    _._drawGauge = function(percent) {
-      if (this.fillLayer == null) {
-        return;
-      }
-      this.fillLayer.clear();
-      if (this.isVertical()) {
-        return this._drawVerGauge(percent);
-      } else {
-        return this._drawHorGauge(percent);
-      }
-    };
-    _._drawHorGauge = function(percent) {
-      var w;
-      w = this.fillBitmap.width * percent;
-      return this.fillLayer.b().blt(this.fillBitmap, 0, 0, w, this.fillLayer.height, 0, 0);
-    };
-    _._drawVerGauge = function(percent) {
-      var h, hy;
-      h = this.fillBitmap.height * percent;
-      hy = this.fillBitmap.height - h;
-      this.fillLayer.b().blt(this.fillBitmap, 0, 0, this.fillLayer.width, h, 0, hy);
-    };
-  })();
-});
-
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  (function() {
-    var Sprite_UIIcon;
-    Sprite_UIIcon = class Sprite_UIIcon extends KDCore.UI.Sprite_UIElement {
-      constructor() {
-        super(...arguments);
-      }
-
-      // * Стандартный набор настроек
-      defaultParams() {
-        return {
-          visible: true,
-          index: 0,
-          size: 32
-        };
-      }
-
-      draw() {
-        return this.drawIcon(...arguments);
-      }
-
-      drawIcon(index = 0) {
-        this._lastValue = index;
-        return this._drawIcon(index);
-      }
-
-    };
-    KDCore.UI.Sprite_UIIcon = Sprite_UIIcon;
-  })();
-  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = KDCore.UI.Sprite_UIIcon.prototype;
-    //$[OVER]
-    _._createContent = function() {
-      this._createIcon();
-      return this._drawIcon(this.params.index);
-    };
-    _._createIcon = function() {
-      this._icon = KDCore.Sprite.FromBitmap(this.params.size, this.params.size);
-      this.add(this._icon);
-      return this._onReady();
-    };
-    _._onReady = function() {
-      return this.drawIcon(this._lastValue);
-    };
-    _._drawIcon = function(index) {
-      this._icon.clear();
-      if (KDCore.SDK.isString(index)) {
-        this._drawImageIcon(index);
-      } else {
-        if (index <= 0) {
-          return;
-        }
-        this._icon.drawIcon(0, 0, index, this.params.size);
-      }
-    };
-    _._drawImageIcon = function(imageName) {
-      return KDCore.Utils.loadImageAsync(this.rootImageFolder(), imageName).then((bitmap) => {
-        return this._icon.drawIcon(0, 0, bitmap, this.params.size);
-      });
-    };
-  })();
-});
-
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  (function() {
-    var Sprite_UIImage;
-    Sprite_UIImage = class Sprite_UIImage extends KDCore.UI.Sprite_UIElement {
-      constructor() {
-        super(...arguments);
-      }
-
-      // * Стандартный набор настроек
-      defaultParams() {
-        return {
-          visible: true,
-          image: ""
-        };
-      }
-
-      draw() {
-        return this.drawImage(...arguments);
-      }
-
-      drawImage(image) {
-        return this._drawImage(image);
-      }
-
-    };
-    KDCore.UI.Sprite_UIImage = Sprite_UIImage;
-  })();
-  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = KDCore.UI.Sprite_UIImage.prototype;
-    //$[OVER]
-    _._createContent = function() {
-      return this._drawImage(this.params.image);
-    };
-    _._drawImage = function(image) {
-      this._clearImage();
-      if (!String.isNullOrEmpty(image)) {
-        this._image = KDCore.Sprite.FromImg(image, this.rootImageFolder());
-        this.add(this._image);
-      }
-    };
-    _._clearImage = function() {
-      if (this._image == null) {
-        return;
-      }
-      this._image.visible = false;
-      this.removeChild(this._image);
-      return this._image = null;
-    };
-  })();
-});
-
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  (function() {
-    var Sprite_UIRect;
-    Sprite_UIRect = class Sprite_UIRect extends KDCore.UI.Sprite_UIElement {
-      constructor() {
-        super(...arguments);
-      }
-
-      // * Стандартный набор настроек
-      defaultParams() {
-        return {
-          visible: true,
-          size: {
-            w: 60,
-            h: 20
-          },
-          fillColor: "#FFFFFF".toCss(),
-          fillOpacity: 255,
-          borderColor: "#000000".toCss(),
-          borderThickness: 1,
-          borderOpacity: 255
-        };
-      }
-
-      draw() {
-        return this.fill(...arguments);
-      }
-
-      fill(color, opacity = 255) {
-        return this._fill(color, opacity);
-      }
-
-      drawBorder(color, thickness = 1, opacity = 255) {
-        return this._drawBorder(color, thickness, opacity);
-      }
-
-    };
-    KDCore.UI.Sprite_UIRect = Sprite_UIRect;
-  })();
-  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = KDCore.UI.Sprite_UIRect.prototype;
-    //$[OVER]
-    _._createContent = function() {
-      if (String.any(this.params.fillColor)) {
-        this._createFill();
-        this.fill(this.params.fillColor, this.params.fillOpacity);
-      }
-      if (String.any(this.params.borderColor) && this.params.borderThickness > 0) {
-        this._createBorder();
-        return this.drawBorder(this.params.borderColor, this.params.borderThickness, this.params.borderOpacity);
-      }
-    };
-    _._createFill = function() {
-      this._fillSpr = KDCore.Sprite.FromBitmap(this.params.size.w, this.params.size.h);
-      return this.addChild(this._fillSpr);
-    };
-    _._createBorder = function() {
-      this._borderSprite = KDCore.Sprite.FromBitmap(this.params.size.w, this.params.size.h);
-      return this.addChild(this._borderSprite);
-    };
-    _._fill = function(color, opacity) {
-      if (this._fillSpr == null) {
-        return;
-      }
-      this._fillSpr.fillAll(color);
-      this._fillSpr.opacity = opacity;
-    };
-    _._drawBorder = function(color, thickness, opacity) {
-      var b;
-      if (this._borderSprite == null) {
-        return;
-      }
-      this._borderSprite.clear();
-      b = this._borderSprite.b();
-      // * Top line
-      b.fillRect(0, 0, b.width, thickness, color);
-      // * Bottom line
-      b.fillRect(0, b.height - thickness, b.width, thickness, color);
-      // * Left line
-      b.fillRect(0, 0, thickness, b.height, color);
-      // * Right line
-      b.fillRect(b.width - thickness, 0, thickness, b.height, color);
-      return this._borderSprite.opacity = opacity;
-    };
-  })();
-});
-
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  (function() {    //rev 30.12.21
-    var Sprite_UIText;
-    Sprite_UIText = class Sprite_UIText extends KDCore.UI.Sprite_UIElement {
-      constructor() {
-        super(...arguments);
-      }
-
-      // * Стандартный набор настроек
-      defaultParams() {
-        return {
-          visible: true,
-          size: {
-            w: 60,
-            h: 20
-          },
-          alignment: "center",
-          font: {
-            face: null,
-            size: 18,
-            italic: false
-          },
-          margins: {
-            x: 0,
-            y: 0
-          },
-          outline: {
-            color: null,
-            width: 2
-          },
-          textColor: "#FFFFFF".toCss()
-        };
-      }
-
-      //?DYNAMIC
-      // * Сперва рисуем по готовности, а как загрузился спрайт, меняем
-      drawText(text) {
-        return this._drawTextWhenReady(text);
-      }
-
-      // * Сборка текста с учётом формата
-      drawTextWithFormat(/*format string, arguments parameters... */) {
-        var text;
-        text = this._convertFormatedString(...arguments);
-        this.drawText(text);
-      }
-
-      // * Пишет текст с определённым цветом (один раз)
-      drawTextColor(text, colorCss) {
-        if (this._textSpr == null) {
-          return;
-        }
-        this._textSpr.b().textColor = colorCss;
-        this.drawText(text);
-        this._textSpr.b().textColor = this.params.textColor;
-      }
-
-    };
-    KDCore.UI.Sprite_UIText = Sprite_UIText;
-  })();
-  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = KDCore.UI.Sprite_UIText.prototype;
-    //$[OVER]
-    _._createContent = function() {
-      return this._createTextSprite();
-    };
-    _._createTextSprite = function() {
-      this._textSpr = KDCore.Sprite.FromParams(this.params);
-      this._textSpr.onReady(this._onReady.bind(this));
-      return this.add(this._textSpr);
-    };
-    // * Выполнить по готовности
-    _._onReady = function() {
-      // * Переключить метод, так как уже готов
-      this.drawText = this._drawText;
-      // * Написать то что нужно было до готовности (если есть)
-      if (this._drawOnReady == null) {
-        return;
-      }
-      this.drawText(this._drawOnReady);
-      this._drawOnReady = null;
-    };
-    _._drawText = function(text) {
-      if (this._textSpr == null) {
-        return;
-      }
-      this._textSpr.clear();
-      if (text != null) {
-        this._textSpr.drawTextFull(text);
-      }
-    };
-    // * Написать текст когда будет готов
-    _._drawTextWhenReady = function(text) {
-      this._drawOnReady = text;
-      return this._drawText(text);
-    };
-    
-    // * Заменить вхождения %1, %2 на значения параметров
-    _._convertFormatedString = function(/*text, args...*/) {
-      var e, i, j, ref, text;
-      try {
-        text = arguments[0];
-        for (i = j = 1, ref = arguments.length; (1 <= ref ? j < ref : j > ref); i = 1 <= ref ? ++j : --j) {
-          try {
-            if (arguments[i] == null) {
-              continue;
-            }
-            text = text.replace("%" + i, arguments[i]);
-          } catch (error) {
-            e = error;
-            KDCore.UI.warning(e);
-            text = "[wrong format text input]";
-          }
-        }
-        return text;
-      } catch (error) {
-        e = error;
-        KDCore.UI.warning(e);
-        return "[wrong format text input]";
-      }
-    };
-  })();
-});
-
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  (function() {    //rev 30.12.21
-    var Sprite_UITextExt;
-    Sprite_UITextExt = class Sprite_UITextExt extends KDCore.UI.Sprite_UIText {
-      constructor() {
-        super(...arguments);
-      }
-
-      // * Стандартный набор настроек
-      defaultParams() {
-        return {
-          visible: true,
-          size: {
-            w: 200,
-            h: 60
-          },
-          font: {
-            face: null,
-            size: 14,
-            italic: false
-          },
-          margins: {
-            x: 0,
-            y: 0
-          },
-          // * новые параметры (KDCore 2.7)
-          //?null могут быть
-          singleLine: false,
-          forceCentered: false
-        };
-      }
-
-      //$[OVER]
-      // * Данный метод не поддерживается, так как тут основа не Sprite, а Window
-      drawTextColor() {
-        return this.drawText(...arguments);
-      }
-
-    };
-    KDCore.UI.Sprite_UITextExt = Sprite_UITextExt;
-  })();
-  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = KDCore.UI.Sprite_UITextExt.prototype;
-    //$[OVER]
-    _._createTextSprite = function() {
-      var rect;
-      rect = new Rectangle(0, 0, this.params.size.w, this.params.size.h);
-      this._textSpr = new KDCore.Window_ExtTextLineBase(rect, this.params.font);
-      this._textSpr.x = this.params.margins.x || 0;
-      this._textSpr.y = this.params.margins.y || 0;
-      this.add(this._textSpr);
-      // * На следующий кадр, чтобы не было потери текста (опасно)
-      //setTimeout (=> @_onReady() ), 10
-      this._onReady(); // * Сразу
-    };
-    
-    //$[OVER]
-    _._drawText = function(text) {
-      if (this._textSpr == null) {
-        return;
-      }
-      this._textSpr.contents.clear();
-      if (this.params.forceCentered === true) {
-        this._textSpr.drawTextExInCenter(text, 0, 0, this._textSpr.width, this._textSpr.height);
-      } else {
-        if (this.params.singleLine === true) {
-          this._textSpr.drawTextEx(text, 0, 0, this._textSpr.width);
-        } else {
-          // * По умолчанию
-          this._textSpr.drawTextExWithWordWrap(text, 0, 0, this._textSpr.width);
-        }
-      }
-    };
-  })();
-});
-
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  (function() {
-    var Sprite_UITextWithBack;
-    Sprite_UITextWithBack = class Sprite_UITextWithBack extends KDCore.UI.Sprite_UIElement {
-      constructor() {
-        super(...arguments);
-      }
-
-      // * Стандартный набор настроек
-      defaultParams() {
-        return {
-          visible: true,
-          text: {
-            visible: true,
-            size: {
-              w: 60,
-              h: 20
-            },
-            alignment: "center",
-            font: {
-              face: null,
-              size: 18,
-              italic: false
-            },
-            margins: {
-              x: 0,
-              y: 0
-            },
-            outline: {
-              color: null,
-              width: 2
-            },
-            textColor: "#000000".toCss()
-          },
-          rect: {
-            visible: true,
-            size: {
-              w: 60,
-              h: 20
-            },
-            fillColor: "#FFFFFF".toCss(),
-            fillOpacity: 255,
-            borderColor: "#000000".toCss(),
-            borderThickness: 1,
-            borderOpacity: 255
-          },
-          textMargins: {
-            x: 0,
-            y: 0
-          }
-        };
-      }
-
-      draw() {
-        return this.drawText(...arguments);
-      }
-
-      // * Aргументы смотри в Sprite_UIText
-      drawText() {
-        return this.text.draw(...arguments);
-      }
-
-      drawTextColor() {
-        return this.text.drawTextColor(...arguments);
-      }
-
-      // * Аргументы смотри в Sprite_UIRect
-      fill() {
-        return this.rect.fill(...arguments);
-      }
-
-      drawBorder() {
-        return this.rect.drawBorder(...arguments);
-      }
-
-      //$[OVER]
-      isUnderMouse() {
-        return this.rect.isUnderMouse();
-      }
-
-    };
-    KDCore.UI.Sprite_UITextWithBack = Sprite_UITextWithBack;
-  })();
-  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = KDCore.UI.Sprite_UITextWithBack.prototype;
-    //$[OVER]
-    _._createContent = function() {
-      this._createRect();
-      return this._createText();
-    };
-    _._createRect = function() {
-      this.rect = new KDCore.UI.Sprite_UIRect(this.params.rect);
-      return this.addChild(this.rect);
-    };
-    _._createText = function() {
-      var x, y;
-      this.text = new KDCore.UI.Sprite_UIText(this.params.text);
-      ({x, y} = this.params.textMargins);
-      this.text.move(x, y);
-      return this.addChild(this.text);
-    };
-  })();
-});
-
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  (function() {
-    var Sprite_UIColorGauge;
-    Sprite_UIColorGauge = class Sprite_UIColorGauge extends KDCore.UI.Sprite_UIGauge {
-      constructor() {
-        super(...arguments);
-      }
-
-      // * Стандартный набор настроек
-      defaultParams() {
-        return {
-          visible: true,
-          size: {
-            w: 100,
-            h: 40
-          },
-          fill: "#FFFFFF", // * В отличии от Gauge, тут цвет, а не картинка
-          foreground: "", // картинка
-          mask: "", // картинка
-          backColor: "#000000".toCss(),
-          backOpacity: 255,
-          vertical: false
-        };
-      }
-
-    };
-    KDCore.UI.Sprite_UIColorGauge = Sprite_UIColorGauge;
-  })();
-  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = KDCore.UI.Sprite_UIColorGauge.prototype;
-    //$[OVER]
-    // * Заместо изображения используем простой Bitmap с заливкой цвета
-    _._loadFillImage = function() {
-      var fillBitmap;
-      fillBitmap = new Bitmap(this.params.size.w, this.params.size.h);
-      fillBitmap.fillAll(this.params.fill);
-      this._createParts(fillBitmap);
-    };
-  })();
-});
-
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var ALIAS__processEscapeCharacter, _;
-  //@[DEFINES]
-  _ = Window_Base.prototype;
-  //@[ALIAS]
-  ALIAS__processEscapeCharacter = _.processEscapeCharacter;
-  _.processEscapeCharacter = function(code, textState) {
-    switch (code) {
-      case 'CHEX':
-        this.pProcessColorChangeHex(this.pObtainEscapeParamHexColor(textState));
-        break;
-      case 'ISZ':
-        this.pProcessDrawIconSized(this.pObtainEscapeParamIconArr(textState), textState);
-        break;
-      case 'PSZ':
-        this.pProcessDrawPictureSized(this.pObtainEscapeParamImgArr(textState), textState, false);
-        break;
-      case 'PSB':
-        this.pProcessDrawPictureSized(this.pObtainEscapeParamImgArr(textState), textState, true);
-        break;
-      default:
-        ALIAS__processEscapeCharacter.call(this, code, textState);
-    }
-  };
-  //?NEW
-  _.pObtainEscapeParamHexColor = function(textState) {
-    var arr, regExp, textPart;
-    regExp = /^\[(#?([0-9a-fA-F]{2}){3}|([0-9a-fA-F]){3})\]/;
-    textPart = textState.text.slice(textState.index);
-    arr = regExp.exec(textPart);
-    if (arr != null) {
-      textState.index += arr[0].length;
-      return arr[1];
-    } else {
-      return "";
-    }
-  };
-  //?NEW
-  _.pObtainEscapeParamIconArr = function(textState) {
-    var arr, params, regExp, textPart;
-    regExp = /^\[(\d+,\s*\d+,\s*-?\d+,\s*-?\d+)\]/;
-    textPart = textState.text.slice(textState.index);
-    arr = regExp.exec(textPart);
-    if (arr != null) {
-      textState.index += arr[0].length;
-      if (arr[1] != null) {
-        params = arr[1].split(",").map(function(i) {
-          return parseInt(i.trim());
-        });
-        return params;
-      }
-    }
-    return [];
-  };
-  //?NEW
-  _.pObtainEscapeParamImgArr = function(textState) {
-    var arr, params, regExp, textPart;
-    regExp = /^\[(\w+,\s*\d+,\s*\d+,\s*-?\d+,\s*-?\d+)\]/;
-    textPart = textState.text.slice(textState.index);
-    arr = regExp.exec(textPart);
-    if (arr != null) {
-      textState.index += arr[0].length;
-      if (arr[1] != null) {
-        params = arr[1].split(",").map(function(i) {
-          if (isFinite(i)) {
-            return parseInt(i.trim());
-          } else {
-            return i;
-          }
-        });
-        return params;
-      }
-    }
-    return [];
-  };
-  //?NEW
-  _.pProcessColorChangeHex = function(colorHex) {
-    var e;
-    try {
-      this.changeTextColor(colorHex);
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
-      this.resetTextColor();
-    }
-  };
-  //?NEW
-  //?params: [INDEX, SIZE, DX, DY]
-  _.pProcessDrawIconSized = function(params, textState) {
-    var dx, dy, e, iconIndex, size, staticMargin, x, y;
-    try {
-      if (params == null) {
-        return;
-      }
-      if (params.isEmpty()) {
-        return;
-      }
-      size = params[1];
-      if (params[1] == null) {
-        size = ImageManager.iconWidth;
-      }
-      if (params[2] == null) {
-        params[2] = 0;
-      }
-      if (params[3] == null) {
-        params[3] = 0;
-      }
-      iconIndex = params[0];
-      dx = params[2];
-      dy = params[3];
-      staticMargin = 2;
-      x = textState.x + staticMargin + dx;
-      y = textState.y + staticMargin + dy;
-      // * Только в режиме рисования
-      if (textState.drawing === true) {
-        this.contents.drawIcon(x, y, iconIndex, size);
-      }
-      textState.x += size + (staticMargin * 2) + dx;
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
-    }
-  };
-  //?NEW
-  //?params: [NAME, W, H, DX, DY]
-  _.pProcessDrawPictureSized = function(params, textState, isUnderText = false) {
-    var drawBitmap, drawProcess, e, height, name, source, width, x, y;
-    try {
-      if (params == null) {
-        return;
-      }
-      if (params.isEmpty()) {
-        return;
-      }
-      name = params[0];
-      if (!String.any(name)) {
-        return;
-      }
-      width = params[1];
-      height = params[2];
-      if (params[3] == null) {
-        params[3] = 0;
-      }
-      if (params[4] == null) {
-        params[4] = 0;
-      }
-      x = textState.x + 2 + params[3];
-      y = textState.y + 2 + params[4];
-      drawBitmap = this.contents;
-      source = this.pGetSourceImageForDrawPictureSized(name);
-      if (textState.drawing === true) {
-        drawProcess = function() {
-          var e;
-          try {
-            if (drawBitmap == null) {
-              return;
-            }
-            return drawBitmap.drawOnMe(source, x, y, width, height);
-          } catch (error) {
-            e = error;
-            return KDCore.warning(e);
-          }
-        };
-        source.addLoadListener(drawProcess);
-      }
-      if (isUnderText !== true) {
-        // * Вариант, что текст не будет "перескакивать" за ширину картинки а пойдёт поверх (т.е. фоновая картинка)
-        // * Если картине не preload, то может "вылезти" на текст потом, так как рисоваться будет позже
-        textState.x += width + 4 + params[3];
-      }
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
-    }
-  };
-  // * Данный метод вынесен отдельно, чтобы можно было переопределять папки
-  return _.pGetSourceImageForDrawPictureSized = function(name) {
-    return ImageManager.loadPicture(name);
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var FloatingWindow;
-  
-    // * Общий класс для всех окон на карте
-  /*parameters
-      {
-          draggable: true,
-          closeButton: true,
-          moveToCenter: true,
-          alwaysOnTop: true,
-          header: true
-      }
-  */
-  FloatingWindow = class FloatingWindow extends KDCore.Sprite {
-    constructor(mainParent, windowW, windowH, parameters) {
-      super();
-      this.mainParent = mainParent;
-      this.windowW = windowW;
-      this.windowH = windowH;
-      this.parameters = parameters;
-      this._init();
-      return;
-    }
-
-    static StaticSettings() {
-      return {
-        draggable: false,
-        closeButton: false,
-        moveToCenter: false,
-        alwaysOnTop: false,
-        header: false
-      };
-    }
-
-    // * Статическое окно с дочерним
-    static StaticWindow(parent, sub) {
-      var p, w;
-      p = KDCore.FloatingWindow.StaticSettings();
-      w = new KDCore.FloatingWindow(parent, sub.width, sub.height, p);
-      w.setSubWindow(sub);
-      w.open();
-      return w;
-    }
-
-    isActive() {
-      return this.visible === true;
-    }
-
-    isReady() {
-      return this._isReady === true;
-    }
-
-    isMouseIn() {
-      return this.inPosition(TouchInput);
-    }
-
-    isOpen() {
-      return this.isActive();
-    }
-
-    // * Дочернее окно (если есть)
-    sub() {
-      return this._subw;
-    }
-
-    setOnReadyHandler(_readyHandler) {
-      this._readyHandler = _readyHandler;
-      if ((this._readyHandler != null) && this._isReady === true) {
-        return this._readyHandler();
-      }
-    }
-
-    isDraggable() {
-      return this._isDraggable === true && (this._headerSpr != null) && this._headerSpr.visible === true && this.isOpen();
-    }
-
-    setCloseHandler(_closeHandler) {
-      this._closeHandler = _closeHandler;
-    }
-
-    callCloseHandler() {
-      if (this._closeHandler != null) {
-        return this._closeHandler();
-      }
-    }
-
-    setDraggingHandler(_dragHandler) {
-      this._dragHandler = _dragHandler;
-    }
-
-    setDragEndHandler(_dragEndHandler) {
-      this._dragEndHandler = _dragEndHandler;
-    }
-
-    hideHeader() {} //TODO:
-
-    hideCloseButton() {} //TODO:
-
-    
-      // * Сдвиг заголовка по X, чтобы рамку не задевал
-    headerMarginX() {
-      return 2;
-    }
-
-    // * Сдвиг заголовка по Y, чтобы рамку не задевал
-    headerMarginY() {
-      return 0;
-    }
-
-    // * Стандартная позиция кнопки "закрыть"
-    closeButtonPosition() {
-      return {
-        x: this.width - 24,
-        y: 4
-      };
-    }
-
-    open() {
-      if (this.isOpen()) {
-        return;
-      }
-      this._open();
-      this._afterOpen();
-    }
-
-    close() {
-      if (!this.isOpen()) {
-        return;
-      }
-      this._close();
-      this._afterClose();
-    }
-
-    rootImageFolder() {
-      return "Alpha/Windows";
-    }
-
-    update() {
-      super.update();
-      this._updateMouseCheckThread();
-      this._updateDragging();
-    }
-
-    // * Добавить спрайт на специальный слой контента
-    addContent(sprite) {
-      return this._contentLayer.addChild(sprite);
-    }
-
-    // * Добавить дочернее окно
-    setSubWindow(w) {
-      this._subw = w;
-      this.addContent(w);
-    }
-
-    destroy() {
-      this._close();
-      return Sprite.prototype.destroy.call(this);
-    }
-
-  };
-  (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ PRIVATE.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    //@[DEFINES]
-    _ = FloatingWindow.prototype;
-    _._init = function() {
-      var ref;
-      // * Окно всегда закрыто
-      this.visible = false;
-      // * Контент прогрузился?
-      this._isReady = false;
-      this._applyParameters();
-      if (this._isAlwaysOnTop === false) {
-        // * Если не всегда поверх окон, то добавляем сразу к родителю (один раз)
-        if ((ref = this.mainParent) != null) {
-          ref.addChild(this);
-        }
-      }
-      this._initFloatingSystem();
-      this._createLayers();
-      this._loadWindowFrame();
-    };
-    // * Тут ничего не создавать, не двигать, так как
-    // * конент создаётся Async, см. метод _createCustomElements
-    _._applyParameters = function() {
-      var p;
-      this._applyDefaults();
-      if (this.parameters == null) {
-        return;
-      }
-      p = this.parameters;
-      if (p.draggable != null) {
-        this._isDraggable = p.draggable;
-      }
-      if (p.moveToCenter != null) {
-        this._isMoveToCenter = p.moveToCenter;
-      }
-      if (p.header != null) {
-        this._isHeaderVisible = p.header;
-      }
-      if (p.closeButton != null) {
-        this._isHaveCloseButton = p.closeButton;
-      }
-      if (p.alwaysOnTop != null) {
-        this._isAlwaysOnTop = p.alwaysOnTop;
-      }
-    };
-    _._applyDefaults = function() {
-      // * Окно можно перетаскивать мышкой (по умолчанию - да)
-      this._isDraggable = true;
-      this._isMoveToCenter = true;
-      this._isHeaderVisible = true;
-      this._isHaveCloseButton = true;
-      this._isAlwaysOnTop = true;
-    };
-    _._initFloatingSystem = function() {
-      if ($gameTemp._floatingWindows == null) {
-        // * Создаём массив окон, он нужен для правильного
-        // закрытия окон (по очереди) и перемещения drag and drop
-        // с учётом верхнего окна
-        $gameTemp._floatingWindows = [];
-      }
-      // * Вспомогательная переменная, чтобы не вызывать методы каждый кадр
-      this._mouseIn = false;
-      // * Тоже вспомогательная переменная
-      this._dragging = false;
-    };
-    _._moveToStartPosition = function() {
-      if (this._isMoveToCenter === true) {
-        return this.moveToCenter(Graphics.width / 2, Graphics.height / 2);
-      }
-    };
-    _._closeButtonClick = function() {
-      // * При исчезании, кнопка не успевает себя "удалить"
-      $gameTemp.kdButtonUnderMouse = null;
-      this.callCloseHandler();
-      return this.close();
-    };
-    (function() {      // * DRAGGING
-      // -----------------------------------------------------------------------
-      _._updateDragging = function() {
-        if (!this.isDraggable()) {
-          return;
-        }
-        // * Если мы уже двигаем окно, но мышка вышла за границы, то можно дальше двигать
-        // * Только если мышка не в окне и не двигали ранее, то не проверяем
-        if (this._mouseIn === false && this._dragging === false) {
-          return;
-        }
-        // * Если существует объект который сейчас dragging
-        if ($gameTemp.pkdDraggableInstance != null) {
-          // * Если этот объект не этот объект, то выходим из метода
-          if ($gameTemp.pkdDraggableInstance !== this) {
+    (() => {
+        //@[DEFINES]
+        const _ = Bitmap.prototype;
+        if (Bitmap['_isExtenedByKDNUI'])
             return;
-          }
-        }
-        if (TouchInput.isLongPressed()) {
-          if (this._dragging === false) {
-            this._onDragStart();
-          } else {
-            this._onDragging();
-          }
-        } else {
-          this._stopDragging();
-        }
-      };
-      _._onDragStart = function() {
-        // * Проверка, в области Header или нет
-        if (!this._isMouseInHeader()) {
-          return;
-        }
-        // * Разница в координатах курсора и объекта, чтобы убрать эффект "прыжка"
-        this.opacity = 200;
-        this._deltaXY = this.getDeltaXY();
-        this._dragging = true;
-        // * Устанавливаем глобальную ссылку на объект перемещения
-        $gameTemp.pkdDraggableInstance = this;
-      };
-      _.getDeltaXY = function() {
-        var p;
-        p = new KDCore.Point(this.x, this.y);
-        return p.delta(TouchInput);
-      };
-      _._onDragging = function() {
-        // * Защита от перетаскивания за края экрана
-        if (!this._isNewMousePositionOnScreen()) {
-          return;
-        }
-        this.move(TouchInput.x - this._deltaXY.x, TouchInput.y - this._deltaXY.y);
-        if (this._dragHandler != null) {
-          return this._dragHandler();
-        }
-      };
-      _._stopDragging = function() {
-        if (this._dragging === true) {
-          this._dragging = false;
-          this.opacity = 255;
-          this._clearDraggableGlocalInstance();
-          if (this._dragEndHandler != null) {
-            this._dragEndHandler();
-          }
-        }
-      };
-      // * Освобождаем глобальную ссылку
-      _._clearDraggableGlocalInstance = function() {
-        if ($gameTemp.pkdDraggableInstance === this) {
-          return $gameTemp.pkdDraggableInstance = null;
-        }
-      };
-      _._isMouseInHeader = function() {
-        if (this._headerSpr == null) {
-          return false;
-        }
-        return this._headerSpr.isContainsPoint(TouchInput);
-      };
-      _._isNewMousePositionOnScreen = function() {
-        return KDCore.Utils.isPointInScreen(TouchInput, 10);
-      };
-    })();
-    (function() {      // -----------------------------------------------------------------------
-
-      // * CREATE ELEMENTS
-      // -----------------------------------------------------------------------
-      
-      // * Слои нужны, так как изображения загружаються асинхронно
-      _._createLayers = function() {
-        this._mainLayer = new Sprite();
-        this._contentLayer = new Sprite();
-        this._headerLayer = new Sprite();
-        this._closeButtonLayer = new Sprite();
-        this.addChild(this._mainLayer);
-        this.addChild(this._contentLayer);
-        this.addChild(this._headerLayer);
-        this.addChild(this._closeButtonLayer);
-      };
-      _._loadWindowFrame = function() {
-        return KDCore.Utils.loadImageAsync(this.rootImageFolder(), "windowFrame").then(this._createWindow.bind(this));
-      };
-      _._createWindow = function(frameImage) {
-        this.bitmap = new Bitmap(this.windowW, this.windowH);
-        this.wFrame = new KDCore.Sprite_TilingFrame(this.windowW, this.windowH, frameImage);
-        this._mainLayer.addChild(this.wFrame);
-        this._createParts();
-      };
-      _._createParts = function() {
-        this._loadHeader();
-        if (this._isHaveCloseButton === true) {
-          this._createCloseButton();
-        }
-        this._moveToStartPosition();
-        this._createCustomElements();
-        // * Окно готово
-        this._isReady = true;
-        if (this._readyHandler != null) {
-          this._readyHandler();
-        }
-      };
-      _._loadHeader = function() {
-        return KDCore.Utils.loadImageAsync(this.rootImageFolder(), "headerLine").then(this._createHeader.bind(this));
-      };
-      _._createHeader = function(headerLineImage) {
-        var w;
-        w = this.windowW - (this.headerMarginX() * 2);
-        this._headerSpr = new KDCore.Sprite_TilingLine(w, headerLineImage.height, headerLineImage);
-        this._headerSpr.x = this.headerMarginX();
-        this._headerSpr.y = this.headerMarginY();
-        this._headerLayer.addChild(this._headerSpr);
-        if (this._isHeaderVisible === true) {
-          // * Сдвигаем контент, чтобы было начало под заголовком
-          this._contentLayer.y += headerLineImage.height + this.headerMarginY();
-        } else {
-          this._headerSpr.visible = false;
-        }
-      };
-      _._createCloseButton = function() {
-        this._closeButton = new KDCore.ButtonM("windowCloseButton", false, this.rootImageFolder());
-        this._closeButtonLayer.addChild(this._closeButton);
-        this._closeButton.move(this.closeButtonPosition());
-        this._closeButton.addClickHandler(this._closeButtonClick.bind(this));
-      };
-      // * Наследники создают свои элементы в этом методе
-      // * Есть специальный метод addContent()
-      _._createCustomElements = function() {}; // * EMPTY
-    })();
-    (function() {      // -----------------------------------------------------------------------
-
-      // * MOUSE
-      // -----------------------------------------------------------------------
-      
-      // * Определение если мышка в области окна
-      //TODO: Есть проблема при открытии окна сразу под курсором
-      _._registerMouseInOut = function() {
-        if (!this.isOpen()) {
-          return;
-        }
-        if (this.isMouseIn()) {
-          if (this._mouseIn === false) {
-            this._mouseIn = true;
-            this._onMouseIn();
-          }
-        } else {
-          if (this._mouseIn === true) {
-            this._mouseIn = false;
-            this._onMouseOut();
-          }
-        }
-      };
-      // * Используется похожая система что и в KDCore.ButtonM
-      _._onMouseIn = function() {
-        return $gameTemp.floatingWindowUnderMouse = this;
-      };
-      _._onMouseOut = function() {
-        if ($gameTemp.floatingWindowUnderMouse === this) {
-          return $gameTemp.floatingWindowUnderMouse = null;
-        }
-      };
-      // * Будем проверять мышка ли в окне только при открытом окне
-      _._createMouseCheckThread = function() {
-        this._mouseCheckThread = new KDCore.TimedUpdate(1, this._registerMouseInOut.bind(this));
-        this._updateMouseCheckThread = () => {
-          return this._mouseCheckThread.update();
-        };
-        return this._mouseCheckThread.call();
-      };
-      // * Когда окно закрывается, никаких проверок, обнуляем метод
-      _._destroyMouseCheckThread = function() {
-        this._mouseCheckThread = null;
-        return this._updateMouseCheckThread = function() {};
-      };
-      //?DYNAMIC
-      _._updateMouseCheckThread = function() {}; // * EMPTY
-    })();
-    (function() {      // -----------------------------------------------------------------------
-
-      // * OPEN OR CLOSE
-      // -----------------------------------------------------------------------
-      _._open = function() {
-        var ref;
-        this.visible = true;
-        $gameTemp._floatingWindows.push(this);
-        if (this._isAlwaysOnTop === true) {
-          // * Окно, которое открывается, всегда снова выше остальных (опция)
-          if ((ref = this.mainParent) != null) {
-            ref.addChild(this);
-          }
-        }
-        return this._createMouseCheckThread();
-      };
-      _._afterOpen = function() {}; // * EMPTY
-      _._close = function() {
-        this.visible = false;
-        if (this._isAlwaysOnTop === true) {
-          this.removeFromParent();
-        }
-        this._clearDraggableGlocalInstance();
-        $gameTemp._floatingWindows.delete(this);
-        this._onMouseOut();
-        return this._destroyMouseCheckThread();
-      };
-      _._afterClose = function() {}; // * EMPTY
-    })();
-  })();
-  (function() {    // ■ END PRIVATE.coffee
-    //---------------------------------------------------------------------------
-
-    // * Если окно под курсором, нельзя нажимать на карте для движения игрока
-    // -----------------------------------------------------------------------
-    (function() {      //╒═════════════════════════════════════════════════════════════════════════╛
-      // ■ Scene_Map.coffee
-      //╒═════════════════════════════════════════════════════════════════════════╛
-      //---------------------------------------------------------------------------
-      var ALIAS__isAnyButtonPressed, ALIAS__processMapTouch, _;
-      
-      //@[DEFINES]
-      _ = Scene_Map.prototype;
-      if (KDCore.isMZ()) {
+        Bitmap['_isExtenedByKDNUI'] = true;
         //@[ALIAS]
-        ALIAS__isAnyButtonPressed = _.isAnyButtonPressed;
-        _.isAnyButtonPressed = function() {
-          if ($gameTemp.floatingWindowUnderMouse != null) {
+        /*@ts-ignore*/
+        const ALIAS___startLoading = _._startLoading;
+        _['_startLoading'] = function (...args) {
+            /*@ts-ignore*/
+            if (Utils.hasEncryptedImages()) {
+                ALIAS___startLoading.call(this, ...args);
+            }
+            else {
+                this._image = new Image();
+                this._image.onload = this._onLoad.bind(this);
+                this._image.onerror = this._onError.bind(this);
+                this._destroyCanvas();
+                this._loadingState = 'loading';
+                this._image.src = this._url;
+            }
+        };
+    })();
+    // ■ END Bitmap.ts
+    //---------------------------------------------------------------------------
+})();
+/**
+* All available NUI elements types.
+*/
+var KNItemsTypes;
+(function (KNItemsTypes) {
+    KNItemsTypes["rect"] = "rect";
+    KNItemsTypes["circle"] = "circle";
+    KNItemsTypes["plane"] = "plane";
+    KNItemsTypes["text"] = "text";
+    KNItemsTypes["image"] = "image";
+    KNItemsTypes["group"] = "group";
+    KNItemsTypes["screen"] = "screen";
+    KNItemsTypes["textPro"] = "textPro";
+    KNItemsTypes["button"] = "button";
+    KNItemsTypes["imageButton"] = "imageButton";
+    KNItemsTypes["list"] = "list";
+    KNItemsTypes["face"] = "face";
+    KNItemsTypes["gauge"] = "gauge";
+})(KNItemsTypes || (KNItemsTypes = {}));
+var KNSpriteEffects;
+(function (KNSpriteEffects) {
+    KNSpriteEffects["Blur"] = "blur";
+    KNSpriteEffects["Shadow"] = "shadow";
+    KNSpriteEffects["Outline"] = "outline";
+    KNSpriteEffects["Glow"] = "glow";
+    KNSpriteEffects["Tint"] = "tint";
+    KNSpriteEffects["Desaturate"] = "desaturate";
+})(KNSpriteEffects || (KNSpriteEffects = {}));
+var KBitmap;
+(function (KBitmap) {
+    let _loadedIconsCache = {};
+    let _emptyBitmap = null;
+    /**
+     * Draws an icon onto the specified bitmap at the given coordinates.
+     *
+     * @param inputBitmap - The bitmap on which the icon will be drawn.
+     * @param icon - The icon to draw, which can be either an icon index (number) or a Bitmap.
+     * @param x - The x-coordinate where the icon will be drawn.
+     * @param y - The y-coordinate where the icon will be drawn.
+     * @param size - The size of the icon to draw. Defaults to 32.
+     *
+     * @throws Will log a warning to the console if an error occurs during the drawing process.
+     */
+    function DrawIcon(inputBitmap, icon, x, y, size = 32) {
+        try {
+            let bitmapToDraw = null;
+            if (icon instanceof Bitmap) {
+                bitmapToDraw = icon;
+            }
+            else {
+                bitmapToDraw = GetIconBitmap(icon);
+            }
+            DrawInside(inputBitmap, bitmapToDraw, x, y, size, size);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    KBitmap.DrawIcon = DrawIcon;
+    /**
+     * Draws a bitmap inside another bitmap at the specified coordinates.
+     *
+     * @param inputBitmap - The bitmap where the other bitmap will be drawn.
+     * @param bitmapToDraw - The bitmap to draw inside the input bitmap.
+     * @param x - The x-coordinate where the bitmap will be drawn.
+     * @param y - The y-coordinate where the bitmap will be drawn.
+     * @param sw - The width to scale the drawn bitmap to. Defaults to the width of the bitmap to draw.
+     * @param sh - The height to scale the drawn bitmap to. Defaults to the height of the bitmap to draw.
+     *
+     * @throws Will log a warning to the console if an error occurs during the drawing process.
+     */
+    function DrawInside(inputBitmap, bitmapToDraw, x, y, sw = 0, sh = 0) {
+        try {
+            if (sw <= 0)
+                sw = bitmapToDraw.width;
+            if (sh <= 0)
+                sh = bitmapToDraw.height;
+            inputBitmap.blt(bitmapToDraw, 0, 0, bitmapToDraw.width, bitmapToDraw.height, x, y, sw, sh);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    KBitmap.DrawInside = DrawInside;
+    /**
+     * Fills the input bitmap with the contents of another bitmap.
+     *
+     * @param inputBitmap - The bitmap to be filled.
+     * @param bitmapToFill - The bitmap used to fill the input bitmap.
+     */
+    function FillWith(inputBitmap, bitmapToFill) {
+        try {
+            DrawInside(inputBitmap, bitmapToFill, 0, 0, inputBitmap.width, inputBitmap.height);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    KBitmap.FillWith = FillWith;
+    /**
+     * Draws the specified text on the given bitmap at the specified position.
+     *
+     * @param inputBitmap - The bitmap on which the text will be drawn.
+     * @param text - The text to be drawn on the bitmap.
+     * @param position - The position where the text will be aligned. Can be 'center', 'left', or 'right'.
+     *
+     * @throws Will log a warning to the console if an error occurs during the drawing process.
+     */
+    function DrawTextFull(inputBitmap, text, position) {
+        try {
+            inputBitmap.drawText(text, 0, 0, inputBitmap.width, inputBitmap.height, position);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    KBitmap.DrawTextFull = DrawTextFull;
+    /**
+     * Returns a singleton instance of an empty Bitmap.
+     * If the instance does not exist, it creates a new Bitmap.
+     *
+     * @returns {Bitmap} A singleton instance of an empty Bitmap.
+     */
+    function GetEmptyBitmap() {
+        if (!_emptyBitmap) {
+            _emptyBitmap = new Bitmap();
+        }
+        return _emptyBitmap;
+    }
+    KBitmap.GetEmptyBitmap = GetEmptyBitmap;
+    /**
+     * Retrieves the bitmap for a specified icon index. If the icon is not already cached,
+     * it loads the icon from the system icon set, caches it, and then returns the bitmap.
+     * If an error occurs during this process, an empty bitmap is returned.
+     *
+     * @param {number} iconIndex - The index of the icon to retrieve.
+     * @returns {Bitmap} The bitmap of the specified icon, or an empty bitmap if an error occurs.
+     */
+    function GetIconBitmap(iconIndex) {
+        try {
+            if (!_loadedIconsCache[iconIndex]) {
+                let iconset = ImageManager.loadSystem("IconSet");
+                let pw = 0;
+                let ph = 0;
+                if (KDX.isMV()) {
+                    /* @ts-ignore */
+                    pw = Window_Base._iconWidth;
+                    /* @ts-ignore */
+                    ph = Window_Base._iconHeight;
+                }
+                else {
+                    pw = ImageManager.iconWidth;
+                    ph = ImageManager.iconHeight;
+                }
+                let sx = iconIndex % 16 * pw;
+                let sy = Math.floor(iconIndex / 16) * ph;
+                let iconBitmap = new Bitmap(pw, ph);
+                iconBitmap.blt(iconset, sx, sy, pw, ph, 0, 0);
+                _loadedIconsCache[iconIndex] = iconBitmap;
+            }
+            return _loadedIconsCache[iconIndex];
+        }
+        catch (error) {
+            console.warn(error);
+            return GetEmptyBitmap();
+        }
+    }
+})(KBitmap || (KBitmap = {}));
+var KColor;
+(function (KColor) {
+    /**
+     * Generates a random hexadecimal color code.
+     *
+     * @returns A string representing a random color code in the format "#RRGGBB".
+     */
+    function Random() {
+        return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+    }
+    KColor.Random = Random;
+    /**
+     * Generates a lighter shade of the given hex color by a specified factor.
+     *
+     * @param {string} hex - The hex color code to lighten.
+     * @param {number} [factor=0.2] - The factor by which to lighten the color. Default is 0.2.
+     * @returns {string} The hex color code of the lighter shade.
+     * @throws Will log a warning and return `#000000` if the input hex color is invalid.
+     */
+    function LighterColor(hex, factor = 0.2) {
+        try {
+            let [r, g, b] = HexToColor(hex);
+            r = Math.min(255, r + 255 * factor);
+            g = Math.min(255, g + 255 * factor);
+            b = Math.min(255, b + 255 * factor);
+            return HexFromColor(r, g, b);
+        }
+        catch (error) {
+            console.warn(error);
+            return `#000000`;
+        }
+    }
+    KColor.LighterColor = LighterColor;
+    /**
+     * Darkens a given hex color by a specified factor.
+     *
+     * @param {string} hex - The hex color code to be darkened.
+     * @param {number} [factor=0.2] - The factor by which to darken the color. Default is 0.2.
+     * @returns {string} - The darkened hex color code.
+     *
+     * @throws Will log a warning and return `#000000` if the input hex color is invalid.
+     */
+    function DarkerColor(hex, factor = 0.2) {
+        try {
+            let [r, g, b] = HexToColor(hex);
+            r = Math.max(0, r - 255 * factor);
+            g = Math.max(0, g - 255 * factor);
+            b = Math.max(0, b - 255 * factor);
+            return HexFromColor(r, g, b);
+        }
+        catch (error) {
+            console.warn(error);
+            return `#000000`;
+        }
+    }
+    KColor.DarkerColor = DarkerColor;
+    /**
+     * Converts RGB color values to a hexadecimal color string.
+     *
+     * @param r - The red component of the color, an integer between 0 and 255.
+     * @param g - The green component of the color, an integer between 0 and 255.
+     * @param b - The blue component of the color, an integer between 0 and 255.
+     * @returns A string representing the hexadecimal color, prefixed with '#'.
+     *          If an error occurs, returns "#000000".
+     */
+    function HexFromColor(r, g, b) {
+        try {
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        }
+        catch (error) {
+            console.warn(error);
+            return "#000000";
+        }
+    }
+    KColor.HexFromColor = HexFromColor;
+    /**
+     * Converts a short hexadecimal color code to a long hexadecimal color code.
+     *
+     * @param hex - The short hexadecimal color code (e.g., "#RGB").
+     * @returns The long hexadecimal color code (e.g., "#RRGGBB"). If the input is already a long hexadecimal color code, it returns the input as is.
+     *
+     * @throws Will log a warning and return "#000000" if an error occurs during conversion.
+     */
+    function ToLongHex(hex) {
+        try {
+            if (hex.length == 4) {
+                let r = hex[1];
+                let g = hex[2];
+                let b = hex[3];
+                return `#${r}${r}${g}${g}${b}${b}`;
+            }
+            return hex;
+        }
+        catch (error) {
+            console.warn(error);
+            return "#000000";
+        }
+    }
+    KColor.ToLongHex = ToLongHex;
+    /**
+     * Converts a hexadecimal color string to an RGB array.
+     *
+     * @param {string} hex - The hexadecimal color string (e.g., "#FFFFFF" or "FFFFFF").
+     * @returns {number[]} An array containing the RGB values [r, g, b].
+     *                      If the conversion fails, returns [0, 0, 0].
+     * @throws Will log a warning to the console if the conversion fails.
+     */
+    function HexToColor(hex) {
+        try {
+            let _hex = ToLongHex(hex);
+            let r = parseInt(_hex.substring(1, 3), 16);
+            let g = parseInt(_hex.substring(3, 5), 16);
+            let b = parseInt(_hex.substring(5, 7), 16);
+            return [r, g, b];
+        }
+        catch (error) {
+            console.warn(error);
+            return [0, 0, 0];
+        }
+    }
+    KColor.HexToColor = HexToColor;
+    /**
+     * Converts a hexadecimal color string to a color number.
+     *
+     * @param hex - The hexadecimal color string (e.g., "#RRGGBB" or "RRGGBB").
+     * @returns The color number representation of the given hexadecimal color.
+     */
+    function HexToColorNumber(hex) {
+        let [r, g, b] = HexToColor(hex);
+        return r << 16 | g << 8 | b;
+    }
+    KColor.HexToColorNumber = HexToColorNumber;
+    /**
+     * Converts a hexadecimal color code to a CSS color string.
+     *
+     * @param {string} hex - The hexadecimal color code to convert.
+     * @param {number} [alpha] - Optional alpha value for the color (0 to 1).
+     * @returns {string} The CSS color string in `rgb` or `rgba` format.
+     * @throws Will log a warning and return `rgb(0,0,0)` if the conversion fails.
+     */
+    function HexToCss(hex, alpha) {
+        try {
+            if (alpha) {
+                return `rgba(${HexToColor(hex).join(",")},${alpha})`;
+            }
+            return `rgb(${HexToColor(hex).join(",")})`;
+        }
+        catch (error) {
+            console.warn(error);
+            return `rgb(0,0,0)`;
+        }
+    }
+    KColor.HexToCss = HexToCss;
+})(KColor || (KColor = {}));
+var KNBuilder;
+(function (KNBuilder) {
+    function Factory(schemes, owner, extraRefreshAfterMs = 0) {
+        let items = [];
+        for (let key in schemes) {
+            let item = Make(schemes[key], owner);
+            if (KDX.any(item)) {
+                items.push(item);
+            }
+        }
+        // * Refresh all bindings
+        for (let item of items) {
+            item.refreshBindings(owner, true);
+        }
+        // * Обновить привязки через MS ещё раз
+        if (extraRefreshAfterMs > 0) {
+            setTimeout(() => {
+                try {
+                    for (let item of items) {
+                        item === null || item === void 0 ? void 0 : item.refreshBindings(owner, true);
+                    }
+                }
+                catch (error) {
+                    console.warn(error);
+                }
+            }, extraRefreshAfterMs);
+        }
+        return items;
+    }
+    KNBuilder.Factory = Factory;
+    function Make(scheme, owner, parent) {
+        if (!scheme)
+            return null;
+        if (!scheme.type)
+            return null;
+        try {
+            if (!isShouldCreate(scheme, owner))
+                return null;
+            let { type, parameters } = extractTypeAndParameters(scheme);
+            //console.log(type);
+            //console.log(parameters);
+            let item = createItemByType(type, parameters);
+            if (!item)
+                return null;
+            // * Parent нужен чтобы работали настройки положения (center, %) и т.д.
+            if (KDX.any(parent)) {
+                parent.addChild(item);
+            }
+            else {
+                // * Owner - это не только главный родитель, но и к кому мы прописываем все поля по ID
+                if (KDX.any(owner) && owner instanceof Sprite) {
+                    owner.addChild(item);
+                }
+            }
+            // * Сохраняем схему (но только этого элемента, без "детей")
+            item.setJsonSchema(Object.assign({}, scheme, { children: [] }));
+            // * Константы доступны не только у каждого элемента в схеме, но и у общего родителя
+            if (KDX.any(scheme.constants)) {
+                item.addUIConstants(scheme.constants);
+                if (KDX.any(owner) && owner instanceof KNSprite) {
+                    owner.addUIConstants(scheme.constants);
+                }
+            }
+            // * Обновляем все связи (переменные) в элементе
+            item.refreshBindings(owner, true);
+            // * Применяем эффекты
+            if (KDX.any(scheme.effects)) {
+                try {
+                    ApplyEffects(item, scheme.effects);
+                }
+                catch (error) {
+                    console.warn(error);
+                }
+            }
+            // * Если есть дети, то создаем их
+            if (KDX.any(scheme.childrens)) {
+                for (let childScheme of scheme.childrens) {
+                    // * Дети всегда имеют родителя - этот элемент (а не owner)
+                    Make(childScheme, owner, item);
+                }
+            }
+            // * Если у элемента есть ID, то сохраняем его в общий объект
+            if (KDX.any(scheme.id)) {
+                item['id'] = scheme.id;
+                if (KDX.any(owner)) {
+                    owner[scheme.id] = item;
+                }
+            }
+            // * Если у элемента есть родитель, то добавляем его в родительский элемент
+            try {
+                if (KDX.any(scheme.parent)) {
+                    let parent = scheme.parent;
+                    if (KDX.any(owner) && owner[parent] && owner[parent] instanceof Sprite) {
+                        owner[parent].addChild(item);
+                    }
+                }
+            }
+            catch (error) {
+                console.warn(error);
+            }
+            // * Обновляем все связи (переменные) в элементе ещё раз (после всех детей)
+            item.refreshBindings(owner, true);
+            // * Применяем анимации
+            if (KDX.any(scheme.animations)) {
+                try {
+                    applyAnimations(item, scheme.animations);
+                }
+                catch (error) {
+                    console.warn(error);
+                }
+            }
+            return item;
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return null;
+    }
+    KNBuilder.Make = Make;
+    function extractTypeAndParameters(scheme) {
+        let type = scheme.type;
+        let parameters = {};
+        try {
+            // * Shortcut type:X;parameters:Y
+            if (type.includes("type:")) {
+                //console.log("Convert shortcut");
+                let shortcutData = NBindingsConverter.ConvertShortcut(scheme.type);
+                //console.log(shortcutData);
+                if (shortcutData) {
+                    type = shortcutData.type;
+                    parameters = shortcutData.parameters;
+                }
+            }
+            else {
+                parameters = scheme.parameters;
+            }
+            if (typeof parameters === "string" && KString.any(parameters)) {
+                //console.log("Convert parameters");
+                parameters = NBindingsConverter.ConvertShortcut(parameters);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return { type: type, parameters: parameters };
+    }
+    function isShouldCreate(scheme, owner) {
+        if (!KDX.any(scheme.createIf))
             return true;
-          } else {
-            return ALIAS__isAnyButtonPressed.call(this);
-          }
-        };
-      } else {
-        //@[ALIAS]
-        ALIAS__processMapTouch = _.processMapTouch;
-        _.processMapTouch = function() {
-          if ($gameTemp.floatingWindowUnderMouse != null) {
+        if (typeof scheme.createIf === "boolean")
+            return scheme.createIf;
+        if (typeof scheme.createIf === "string" && KString.any(scheme.createIf)) {
+            let value = NBindingsConverter.ConvertBindingValue(owner, scheme.createIf);
+            if (!value) {
+                return false;
+            }
+        }
+        return true;
+    }
+    function createItemByType(type, parameters = {}) {
+        switch (type) {
+            case "rect": return new KNSprite_BaseRect(parameters);
+            case "circle": return new KNSprite_BaseCircle(parameters);
+            case "plane": return new KNSprite_Plane(parameters);
+            case "text": return new KNSprite_Text(parameters);
+            case "image": return new KNSprite_Image(parameters);
+            case "group": return new KNSprite_Group(parameters);
+            case "screen": return new KNSprite_Screen();
+            case "textPro": return new KNSprite_TextPro(parameters);
+            case "button": return new KNSprite_Button(parameters);
+            case "imageButton": return new KNSprite_ImageButton(parameters);
+            case "list": return new KNSprite_ItemsList(parameters);
+            case "face": return new KNSprite_ActorFace(parameters);
+            case "gauge": return new KNSprite_Gauge(parameters);
+            default: {
+                console.warn("Unknown NUI element type: " + type);
+                return null;
+            }
+        }
+    }
+    function ApplyEffects(item, effects) {
+        try {
+            if (!KDX.any(item))
+                return;
+            if (!KDX.any(effects))
+                return;
+            for (let effect of effects) {
+                if (KString.isString(effect)) {
+                    try {
+                        let effectData = NBindingsConverter.ConvertShortcut(effect);
+                        if (effectData['color'] && KString.isString(effectData['color'])) {
+                            effectData['color'] = KColor.HexToColorNumber(effectData['color']);
+                        }
+                        if (effectData['shadow']) {
+                            item.addShadowEffect(effectData);
+                            continue;
+                        }
+                        if (effectData['blur']) {
+                            item.addBlurEffect(effectData);
+                            continue;
+                        }
+                        if (effectData['outline']) {
+                            item.addOutlineEffect(effectData);
+                            continue;
+                        }
+                        if (effectData['glow']) {
+                            item.addGlowEffect(effectData);
+                            continue;
+                        }
+                        if (effectData['tint']) {
+                            item.addTintEffect(effectData);
+                        }
+                        if (effectData['desaturate']) {
+                            item.addDesaturateEffect();
+                        }
+                    }
+                    catch (error) {
+                        console.warn(error);
+                    }
+                }
+                else {
+                    try {
+                        item.addEffect(effect);
+                    }
+                    catch (error) {
+                        console.warn(error);
+                    }
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    KNBuilder.ApplyEffects = ApplyEffects;
+    function applyAnimations(item, animations) {
+        try {
+            if (KDX.any(animations)) {
+                for (let animation of animations) {
+                    item.addAnimationRule(animation);
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+})(KNBuilder || (KNBuilder = {}));
+class KSprite extends Sprite {
+    constructor(bitmap) {
+        super(bitmap);
+        this._alphaCheckThreshold = 100;
+    }
+    static FromRect(width, height, color = "#FFFFFF") {
+        let sprite = new KSprite(new Bitmap(width, height));
+        sprite.fillAll(color);
+        return sprite;
+    }
+    getGlobalPositionNew() {
+        let bounds = this.getBounds();
+        let p = { x: bounds.x, y: bounds.y };
+        return p;
+    }
+    getLocalPosition() {
+        let bounds = this.getLocalBounds();
+        let p = { x: bounds.x, y: bounds.y };
+        return p;
+    }
+    getGlobalRect() {
+        let bounds = this.getBounds();
+        return new Rectangle(bounds.x, bounds.y, bounds.width, bounds.height);
+    }
+    getLocalRect() {
+        let localBounds = this.getLocalBounds();
+        let globalBounds = this.getBounds();
+        return new Rectangle(localBounds.x, localBounds.y, globalBounds.width, globalBounds.height);
+    }
+    toLocalPoint(point) {
+        return this.worldTransform.applyInverse(point);
+    }
+    toGlobalPoint(point) {
+        return this.worldTransform.apply(point);
+    }
+    isContainGlobalPoint(point) {
+        let rect = this.getGlobalRect();
+        return rect.contains(point.x, point.y);
+    }
+    isCursorInside() {
+        return this.isContainGlobalPoint(TouchInput);
+    }
+    isNeedCheckAlphaPixels() {
+        return false;
+    }
+    isHoveredByCursor() {
+        if (!this.isNeedCheckAlphaPixels())
+            return this.isCursorInside();
+        if (!this.bitmap)
+            return false;
+        if (!this.bitmap.isReady())
+            return false;
+        try {
+            let localPoint = this.toLocalPoint(new Point(TouchInput.x, TouchInput.y));
+            let localBounds = this.getLocalBounds();
+            let x = Math.floor(localPoint.x - localBounds.x);
+            let y = Math.floor(localPoint.y - localBounds.y);
+            if (x < 0 || y < 0)
+                return false;
+            if (x >= this.bitmap.width || y >= this.bitmap.height)
+                return false;
+            let alpha = Number(this.bitmap.getAlphaPixel(x, y));
+            return alpha > this._alphaCheckThreshold;
+        }
+        catch (error) {
+            console.warn(error);
+            return false;
+        }
+    }
+    removeFromParent() {
+        if (this.parent) {
+            this.parent.removeChild(this);
+        }
+    }
+    isVisible() {
+        return this.worldVisible == true;
+    }
+    fillAll(color = "#FFFFFF") {
+        if (this.bitmap) {
+            this.bitmap.fillAll(color);
+        }
+    }
+    setCommonAnchor(x, y) {
+        try {
+            if (y === undefined)
+                y = x;
+            this.anchor.set(x, y);
+            // * Set the anchor for each children
+            for (let child of this.children) {
+                if (!child)
+                    continue;
+                if (child['setCommonAnchor']) {
+                    child['setCommonAnchor'](x, y);
+                }
+                else {
+                    if (!child['anchor'])
+                        continue;
+                    /*@ts-ignore*/
+                    child.anchor.set(x, y);
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    onBitmapLoaded(callback) {
+        if (this.bitmap && this.bitmap.isReady()) {
+            callback();
+        }
+        else {
+            this.bitmap.addLoadListener(() => {
+                callback();
+            });
+        }
+    }
+}
+var KDNUI;
+(function (KDNUI) {
+    let EasingFunc;
+    (function (EasingFunc) {
+        EasingFunc["Linear"] = "linear";
+        EasingFunc["EaseInQuad"] = "easeInQuad";
+        EasingFunc["EaseOutQuad"] = "easeOutQuad";
+        EasingFunc["EaseInOutQuad"] = "easeInOutQuad";
+        EasingFunc["EaseInCubic"] = "easeInCubic";
+        EasingFunc["EaseOutCubic"] = "easeOutCubic";
+        EasingFunc["EaseInOutCubic"] = "easeInOutCubic";
+    })(EasingFunc = KDNUI.EasingFunc || (KDNUI.EasingFunc = {}));
+    class EasingFuncs {
+        /**
+         * Linear easing function.
+         * @param t Current time
+         * @param b Start value
+         * @param c Change in value
+         * @param d Duration
+         * @returns The calculated value
+         */
+        static linear(t, b, c, d) {
+            return c * t / d + b;
+        }
+        /**
+         * Ease in quadratic function.
+         * @param t Current time
+         * @param b Start value
+         * @param c Change in value
+         * @param d Duration
+         * @returns The calculated value
+         */
+        static easeInQuad(t, b, c, d) {
+            t /= d;
+            return c * t * t + b;
+        }
+        /**
+         * Ease out quadratic function.
+         * @param t Current time
+         * @param b Start value
+         * @param c Change in value
+         * @param d Duration
+         * @returns The calculated value
+         */
+        static easeOutQuad(t, b, c, d) {
+            t /= d;
+            return -c * t * (t - 2) + b;
+        }
+        /**
+         * Ease in and out quadratic function.
+         * @param t Current time
+         * @param b Start value
+         * @param c Change in value
+         * @param d Duration
+         * @returns The calculated value
+         */
+        static easeInOutQuad(t, b, c, d) {
+            t /= d / 2;
+            if (t < 1)
+                return c / 2 * t * t + b;
+            t--;
+            return -c / 2 * (t * (t - 2) - 1) + b;
+        }
+        /**
+         * Ease in cubic function.
+         * @param t Current time
+         * @param b Start value
+         * @param c Change in value
+         * @param d Duration
+         * @returns The calculated value
+         */
+        static easeInCubic(t, b, c, d) {
+            t /= d;
+            return c * t * t * t + b;
+        }
+        /**
+         * Ease out cubic function.
+         * @param t Current time
+         * @param b Start value
+         * @param c Change in value
+         * @param d Duration
+         * @returns The calculated value
+         */
+        static easeOutCubic(t, b, c, d) {
+            t = t / d - 1;
+            return c * (t * t * t + 1) + b;
+        }
+        /**
+         * Ease in and out cubic function.
+         * @param t Current time
+         * @param b Start value
+         * @param c Change in value
+         * @param d Duration
+         * @returns The calculated value
+         */
+        static easeInOutCubic(t, b, c, d) {
+            t /= d / 2;
+            if (t < 1)
+                return c / 2 * t * t * t + b;
+            t -= 2;
+            return c / 2 * (t * t * t + 2) + b;
+        }
+    }
+    KDNUI.EasingFuncs = EasingFuncs;
+})(KDNUI || (KDNUI = {}));
+var NUtils;
+(function (NUtils) {
+    function GetSpriteRealSize(forField, sprite) {
+        try {
+            if (!sprite) {
+                return 0;
+            }
+            if (forField == "width" || forField == "x") {
+                if (sprite["realWidth"])
+                    return sprite["realWidth"]();
+                else
+                    return sprite.width;
+            }
+            if (forField == "height" || forField == "y") {
+                if (sprite["realHeight"])
+                    return sprite["realHeight"]();
+                else
+                    return sprite.height;
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return 0;
+    }
+    NUtils.GetSpriteRealSize = GetSpriteRealSize;
+    function ConvertDimension(value) {
+        try {
+            if (typeof value == "string") {
+                value = NBindingsConverter.ConvertAllDimensionValues(value);
+                if (KString.any(value))
+                    return Number(value);
+            }
+            else {
+                return value;
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return 0;
+    }
+    NUtils.ConvertDimension = ConvertDimension;
+})(NUtils || (NUtils = {}));
+var KDNUI;
+(function (KDNUI) {
+    class AnimationKeyFrame {
+        /**
+         * Creates an instance of AnimationKeyFrame.
+         * @param startValue The starting value of the animation.
+         * @param endValue The ending value of the animation.
+         * @param duration The duration of the animation in seconds.
+         * @param func The easing function name.
+         */
+        constructor(startValue, endValue, duration = 1, func = 'linear') {
+            this.startValue = startValue;
+            this.endValue = endValue;
+            this._t = 0;
+            this._d = duration * 60; // Convert to Frames
+            this._c = this.endValue - this.startValue; // Change
+            this.func = func || 'linear';
+        }
+        /**
+         * Resets the animation timer.
+         */
+        reset() {
+            this._t = 0;
+        }
+        /**
+         * Updates the animation timer.
+         */
+        update() {
+            if (this._t < this._d) {
+                this._t += 1;
+            }
+        }
+        /**
+         * Checks if the animation has ended.
+         * @returns True if the animation has ended, otherwise false.
+         */
+        isEnd() {
+            return this._t >= this._d || this._d <= 0;
+        }
+        /**
+         * Gets the current value of the animation.
+         * @returns The current value of the animation.
+         */
+        getValue() {
+            if (this._d <= 0) {
+                return this.endValue;
+            }
+            else {
+                return this.easingFunc()(this._t, this.startValue, this._c, this._d);
+            }
+        }
+        /**
+         * Gets the easing function based on the function name.
+         * @returns {KDNUI.IEasingFunction} The easing function.
+         */
+        easingFunc() {
+            if (this.func && KDNUI.EasingFuncs[this.func]) {
+                return KDNUI.EasingFuncs[this.func];
+            }
+            else {
+                console.warn(`Easing func ${this.func} not found!`);
+                return this.linear;
+            }
+        }
+        /**
+         * Default linear easing function.
+         * @param t Current time
+         * @param b Start value
+         * @param c Change in value
+         * @param d Duration
+         * @returns The calculated value
+         */
+        linear(t, b, c, d) {
+            return c * t / d + b;
+        }
+    }
+    KDNUI.AnimationKeyFrame = AnimationKeyFrame;
+})(KDNUI || (KDNUI = {}));
+var KDNUI;
+(function (KDNUI) {
+    class AnimationKeyLine {
+        /**
+         * Creates an instance of AnimationKeyLine.
+         * @param keyFramesList The list of keyframes.
+         * @param totalDuration The total duration of the animation.
+         * @param func The easing function name.
+         */
+        constructor(keyFramesList, totalDuration = 1, func = 'linear') {
+            this.totalDuration = totalDuration;
+            this.keyFrames = this._parseKeyFrames(keyFramesList, func);
+            this.repeatsLeftBase = 0;
+            this.repeatsLeft = 0;
+            this.keyIndex = 0;
+            this._relativeValue = 0;
+            this._isStarted = false;
+        }
+        /**
+         * Sets the relative value.
+         * @param _relativeValue The relative value.
+         */
+        setRelativeValue(_relativeValue) {
+            this._relativeValue = _relativeValue;
+        }
+        /**
+         * Sets the number of repeats.
+         * @param repeatsLeftBase The number of repeats.
+         */
+        setRepeatsCount(repeatsLeftBase) {
+            this.repeatsLeftBase = repeatsLeftBase;
+            this.repeatsLeft = repeatsLeftBase;
+        }
+        /**
+         * Sets the animation to loop indefinitely.
+         */
+        setLoop() {
+            this.setRepeatsCount(-1);
+        }
+        /**
+         * Starts the animation with an optional delay.
+         * @param startDelay The delay before starting the animation.
+         */
+        start(startDelay = 0) {
+            if (startDelay === 0) {
+                this._isStarted = true;
+            }
+            else {
+                this._startTimer = startDelay * 60;
+            }
+        }
+        /**
+         * Pauses the animation.
+         */
+        pause() {
+            this._isStarted = false;
+            this._startTimer = null;
+        }
+        /**
+         * Checks if the animation has started.
+         * @returns True if the animation has started, otherwise false.
+         */
+        isStarted() {
+            return this._isStarted === true;
+        }
+        /**
+         * Completes the animation.
+         */
+        complete() {
+            this.keyIndex = this.keyFrames.length;
+            this.repeatsLeft = 0;
+        }
+        /**
+         * Resets the animation.
+         */
+        reset() {
+            this.repeatsLeft = this.repeatsLeftBase;
+            this._resetKeyframes();
+        }
+        /**
+         * Updates the animation.
+         */
+        update() {
+            if (this._startTimer != null) {
+                this._updateStartTimer();
+            }
+            if (!this.isStarted())
+                return;
+            if (this.isEnd()) {
+                if (this.repeatsLeft === 0) {
+                    return; // No repeats at all
+                }
+                else if (this.repeatsLeft < 0) { // Infinite Loop
+                    this._resetKeyframes();
+                }
+                else {
+                    this.repeatsLeft -= 1;
+                    this._resetKeyframes();
+                }
+            }
+            this.keyFrames[this.keyIndex].update();
+            if (this.keyFrames[this.keyIndex].isEnd()) {
+                this.keyIndex++;
+            }
+        }
+        /**
+         * Checks if the animation has ended.
+         * @returns True if the animation has ended, otherwise false.
+         */
+        isEnd() {
+            return this.keyIndex > this.keyFrames.length - 1;
+        }
+        /**
+         * Gets the current value of the animation.
+         * @returns The current value of the animation.
+         */
+        getValue() {
+            let value;
+            if (this.isEnd()) {
+                value = this.keyFrames[this.keyFrames.length - 1].getValue();
+            }
+            else {
+                value = this.keyFrames[this.keyIndex].getValue();
+            }
+            return value + this._relativeValue;
+        }
+        /**
+         * Parses the keyframes.
+         * @param keyframes The keyframes to parse.
+         * @param func The easing function name.
+         * @returns The parsed keyframes.
+         */
+        _parseKeyFrames(keyframes, func) {
+            const keyframesOutput = [];
+            const endValues = [];
+            const keys = [];
+            let index = 0;
+            try {
+                for (const key in keyframes) {
+                    if (keyframes.hasOwnProperty(key)) {
+                        let startValue;
+                        if (endValues.length > 0) {
+                            startValue = endValues[index - 1];
+                        }
+                        else {
+                            startValue = 0;
+                        }
+                        const value = NUtils.ConvertDimension(keyframes[key]);
+                        const endValue = value;
+                        let duration;
+                        if (key === "0") {
+                            duration = 0;
+                        }
+                        else {
+                            const prevKey = keys[index - 1];
+                            duration = this._calculateDuration(prevKey, key);
+                        }
+                        const kf = new KDNUI.AnimationKeyFrame(startValue, endValue, duration, func);
+                        keys[index] = key;
+                        endValues[index] = value;
+                        keyframesOutput.push(kf);
+                        index++;
+                    }
+                }
+            }
+            catch (e) {
+                console.warn(e);
+            }
+            return keyframesOutput;
+        }
+        /**
+         * Calculates the duration between two keyframes.
+         * @param rateA The start rate.
+         * @param rateB The end rate.
+         * @returns The calculated duration.
+         */
+        _calculateDuration(rateA, rateB) {
+            try {
+                const rateANum = Number(rateA) / 100.0;
+                const rateBNum = Number(rateB) / 100.0;
+                const timeA = this.totalDuration * rateANum;
+                const timeB = this.totalDuration * rateBNum;
+                const d = timeB - timeA;
+                return d;
+            }
+            catch (e) {
+                console.warn(e);
+                return 0;
+            }
+        }
+        /**
+         * Resets the keyframes.
+         */
+        _resetKeyframes() {
+            try {
+                this.keyIndex = 0;
+                for (const f of this.keyFrames) {
+                    f.reset();
+                }
+            }
+            catch (e) {
+                console.warn(e);
+            }
+        }
+        /**
+         * Updates the start timer.
+         */
+        _updateStartTimer() {
+            try {
+                if (this._startTimer == null)
+                    return;
+                this._startTimer -= 1;
+                if (this._startTimer <= 0) {
+                    this._isStarted = true;
+                    this._startTimer = null;
+                }
+            }
+            catch (e) {
+                console.warn(e);
+            }
+        }
+    }
+    KDNUI.AnimationKeyLine = AnimationKeyLine;
+})(KDNUI || (KDNUI = {}));
+var KDNUI;
+(function (KDNUI) {
+    class AnimationRule {
+        /**
+         * Creates an instance of AnimationRule.
+         * @param animationConfig The animation configuration.
+         * @param obj The object to apply the animation to.
+         */
+        constructor(animationConfig, obj) {
+            if (typeof animationConfig === "string") {
+                animationConfig = NBindingsConverter.ConvertShortcut(animationConfig);
+            }
+            this.animationConfig = Object.assign(AnimationRule.DefaultConfig(), animationConfig);
+            const { condition } = this.animationConfig;
+            if (KString.any(condition)) {
+                if (eval(condition) === false) {
+                    return;
+                }
+            }
+            const { keyframes, duration, func, repeats, delay } = this.animationConfig;
+            this.prepareKeyFrames(keyframes, obj);
+            this.keyLine = new KDNUI.AnimationKeyLine(keyframes, duration, func);
+            this.keyLine.setRepeatsCount(repeats !== null && repeats !== void 0 ? repeats : 0);
+            if (obj && this.animationConfig.field === "_scaleFactor") {
+                this.prepareObject(obj);
+            }
+            if (this.animationConfig.relative === true && obj) {
+                this.keyLine.setRelativeValue(obj[this.animationConfig.field]);
+            }
+            this.keyLine.start(delay);
+            if (obj && delay <= 0) {
+                this.applyAnimation(obj);
+            }
+        }
+        // * DefaultSettings in JSON format (for easy copy-paste)
+        /**
+         * Gets the default configuration for the animation.
+         * @returns The default configuration.
+         */
+        static DefaultConfig() {
+            return {
+                "field": "opacity",
+                "duration": 1,
+                "func": "linear",
+                "delay": 0,
+                "repeats": 0,
+                "relative": false,
+                "keyframes": {
+                    "0": 0,
+                    "100": 255
+                },
+                "condition": null
+            };
+        }
+        /**
+         * Prepares the keyframes for the animation.
+         * @param keyframes The keyframes to prepare.
+         * @param obj The object to apply the animation to.
+         */
+        prepareKeyFrames(keyframes, obj) {
+            for (const key in keyframes) {
+                if (keyframes.hasOwnProperty(key)) {
+                    if (keyframes[key] === "@") {
+                        if (obj && obj[this.animationConfig.field] != null) {
+                            keyframes[key] = obj[this.animationConfig.field];
+                        }
+                        else {
+                            keyframes[key] = 0;
+                        }
+                    }
+                }
+            }
+        }
+        /**
+         * Sets the end callback for the animation.
+         * @param onEndCallback The callback to call when the animation ends.
+         */
+        setEndCallback(onEndCallback) {
+            this.onEndCallback = onEndCallback;
+        }
+        /**
+         * Checks if there is an end callback.
+         * @returns True if there is an end callback, otherwise false.
+         */
+        isHaveEndCallback() {
+            try {
+                // Callback works only for single-shot animations
+                if (this.animationConfig.repeats !== 0) {
+                    return false;
+                }
+                return this.onEndCallback != null;
+            }
+            catch (e) {
+                console.warn(e);
+                return false;
+            }
+        }
+        /**
+         * Updates the animation.
+         */
+        update() {
+            var _a;
+            if (!this.keyLine)
+                return;
+            this.keyLine.update();
+            if (this.isHaveEndCallback() && this.keyLine.isEnd()) {
+                try {
+                    (_a = this.onEndCallback) === null || _a === void 0 ? void 0 : _a.call(this);
+                }
+                catch (e) {
+                    console.warn(e);
+                }
+                this.onEndCallback = null;
+            }
+        }
+        /**
+         * Applies the animation to the object.
+         * @param obj The object to apply the animation to.
+         */
+        applyAnimation(obj) {
+            try {
+                if (!obj || !this.keyLine)
+                    return;
+                obj[this.animationConfig.field] = this.keyLine.getValue();
+            }
+            catch (e) {
+                console.warn(e);
+            }
+        }
+        /**
+         * Prepares the object for the animation.
+         * @param obj The object to prepare.
+         */
+        prepareObject(obj) {
+            try {
+                if (obj && obj.onBeforeChangeScaleFactor) {
+                    obj.onBeforeChangeScaleFactor();
+                }
+            }
+            catch (e) {
+                console.warn(e);
+            }
+        }
+    }
+    KDNUI.AnimationRule = AnimationRule;
+})(KDNUI || (KDNUI = {}));
+class KFilteredSprite extends KSprite {
+    constructor() {
+        super();
+        this._activeFilters = {};
+    }
+    addEffect(effectSettings) {
+        try {
+            switch (effectSettings.type) {
+                case KNSpriteEffects.Blur:
+                    this.addBlurEffect(effectSettings.settings);
+                    break;
+                case KNSpriteEffects.Shadow:
+                    this.addShadowEffect(effectSettings.settings);
+                    break;
+                case KNSpriteEffects.Outline:
+                    this.addOutlineEffect(effectSettings.settings);
+                    break;
+                case KNSpriteEffects.Glow:
+                    this.addGlowEffect(effectSettings.settings);
+                    break;
+                case KNSpriteEffects.Tint:
+                    this.addTintEffect(effectSettings.settings);
+                    break;
+                case KNSpriteEffects.Desaturate:
+                    this.addDesaturateEffect();
+                    break;
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    addBlurEffect(settings = {}) {
+        try {
+            if (!PIXI.filters['BlurFilter']) {
+                console.warn("The blur effect is not available in the current version of PIXI.js.");
+                return;
+            }
+            let strength = settings.strength || 8;
+            let quality = settings.quality || 4;
+            let filterObject = new PIXI.filters.BlurFilter(strength, quality);
+            this._addFilter(KNSpriteEffects.Blur, filterObject);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    // * MZ only
+    addShadowEffect(settings = {}) {
+        try {
+            if (!PIXI.filters['DropShadowFilter']) {
+                console.warn("The shadow effect is not available in the current version of PIXI.js.");
+                return;
+            }
+            if (KDX.isMV()) {
+                console.warn("The shadow effect is not available in MV.");
+                return;
+            }
+            let rotation = settings.rotation || 45;
+            let color = settings.color || 0x000000;
+            let alpha = settings.alpha || 0.5;
+            let distance = settings.distance || 5;
+            let shadowOnly = settings.shadowOnly || false;
+            let blur = settings.blur || 2;
+            let quality = settings.quality || 3;
+            /*@ts-ignore*/
+            let filterObject = new PIXI.filters.DropShadowFilter({
+                rotation,
+                color,
+                alpha,
+                distance,
+                shadowOnly,
+                blur,
+                quality
+            });
+            this._addFilter(KNSpriteEffects.Shadow, filterObject);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    // * MZ only
+    addOutlineEffect(settings = {}) {
+        try {
+            if (!PIXI.filters['OutlineFilter']) {
+                console.warn("The outline effect is not available in the current version of PIXI.js.");
+                return;
+            }
+            if (KDX.isMV()) {
+                console.warn("The outline effect is not available in MV.");
+                return;
+            }
+            let thickness = settings.thickness || 1;
+            let color = settings.color || 0xffffff;
+            let quality = settings.quality || 0.1;
+            let knockout = settings.knockout || false;
+            /*@ts-ignore*/
+            let filterObject = new PIXI.filters.OutlineFilter(thickness, color, quality, true, knockout);
+            this._addFilter(KNSpriteEffects.Outline, filterObject);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    addGlowEffect(settings = {}) {
+        try {
+            if (!PIXI.filters['GlowFilter']) {
+                console.warn("The glow effect is not available in the current version of PIXI.js.");
+                return;
+            }
+            let color = settings.color || 0xffffff;
+            let distance = settings.distance || 10;
+            let outerStrength = settings.outerStrength || 4;
+            let innerStrength = settings.innerStrength || 0;
+            let quality = settings.quality || 0.1;
+            let knockout = settings.knockout || false;
+            /*@ts-ignore*/
+            let filterObject = new PIXI.filters.GlowFilter({ distance, outerStrength, innerStrength, color, quality, knockout });
+            this._addFilter(KNSpriteEffects.Glow, filterObject);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    addTintEffect(settings = {}) {
+        try {
+            if (!PIXI.filters['ColorOverlayFilter']) {
+                console.warn("The tint effect is not available in the current version of PIXI.js.");
+                return;
+            }
+            let color = settings.color || 0xffffff;
+            let alpha = settings.alpha || 0.5;
+            /*@ts-ignore*/
+            let filterObject = new PIXI.filters.ColorOverlayFilter(color, alpha);
+            this._addFilter(KNSpriteEffects.Tint, filterObject);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    addDesaturateEffect() {
+        try {
+            if (!PIXI.filters['ColorMatrixFilter']) {
+                console.warn("The desaturate effect is not available in the current version of PIXI.js.");
+                return;
+            }
+            let filterObject = new PIXI.filters.ColorMatrixFilter();
+            filterObject.desaturate();
+            this._addFilter(KNSpriteEffects.Desaturate, filterObject);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    removeEffect(effectType) {
+        try {
+            this._removeFilter(effectType);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _removeFilter(filter) {
+        try {
+            let filterObj = this._activeFilters[filter];
+            if (filterObj) {
+                if (KDX.isMV()) {
+                    /*@ts-ignore*/
+                    this._filters = this._filters.filter(f => f !== filterObj);
+                }
+                else {
+                    this.filters = this.filters.filter(f => f !== filterObj);
+                }
+            }
+            delete this._activeFilters[filter];
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _addFilter(filter, filterObject) {
+        try {
+            if (this._activeFilters[filter]) {
+                this._removeFilter(filter);
+            }
+            if (KDX.isMV()) {
+                /*@ts-ignore*/
+                if (!this._filters) {
+                    this._filters = [];
+                }
+            }
+            else {
+                if (!this.filters) {
+                    this.filters = [];
+                }
+            }
+            if (KDX.isMV()) {
+                /*@ts-ignore*/
+                this._filters.push(filterObject);
+            }
+            else {
+                this.filters.push(filterObject);
+            }
+            this._activeFilters[filter] = filterObject;
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+}
+let globalHandledSprite = null;
+class KHandledSprite extends KFilteredSprite {
+    static GlobalHandledSprite() {
+        return globalHandledSprite;
+    }
+    static DeactivateGlobalHandledSprite(reference = null) {
+        if (globalHandledSprite && globalHandledSprite != reference) {
+            globalHandledSprite._deactivateHandler();
+        }
+    }
+    constructor() {
+        super();
+        this._handledIndex = 0;
+        this._handleManagerActive = false;
+        this._handlerActive = false;
+    }
+    get handledIndex() {
+        return this._handledIndex;
+    }
+    set handledIndex(value) {
+        this._handledIndex = value;
+    }
+    addChild(child) {
+        super.addChild(child);
+        if (child instanceof KHandledSprite) {
+            if (child.isSupportKeyboardHandle()) {
+                child.handledIndex = this._pGetAllHandlers().length - 1;
+            }
+        }
+        return child;
+    }
+    destroy(options) {
+        this._deactivateHandler();
+        super.destroy(options);
+    }
+    update() {
+        super.update();
+        if (this.isHandlerActive()) {
+            this._handleKeyboardInputs();
+        }
+    }
+    // * This should be TRUE if element can be selected (activated) or navigated by keyboard
+    isSupportKeyboardHandle() {
+        return false;
+    }
+    isVerticalKeyboardNavigation() {
+        return true;
+    }
+    isFreeKeyboardNavigation() {
+        return false;
+    }
+    isHandlerActive() {
+        return this._handleManagerActive || this._handlerActive;
+    }
+    isAnyHandlerSelected() {
+        return globalHandledSprite != null;
+    }
+    activateHandlerManagment() {
+        if (this.isFreeKeyboardNavigation()) {
+            this._handleUpAction = this._freeSelectionUpHandler.bind(this);
+            this._handleDownAction = this._freeSelectionDownHandler.bind(this);
+            this._handleLeftAction = this._freeSelectionLeftHandler.bind(this);
+            this._handleRightAction = this._freeSelectionRightHandler.bind(this);
+        }
+        else {
+            this._handleUpAction = this._selectPreviousHandlerItem.bind(this);
+            this._handleDownAction = this._selectNextHandlerItem.bind(this);
+        }
+        this._handleManagerActive = true;
+    }
+    deactivateHandlerManagment() {
+        this._handleManagerActive = false;
+        if (globalHandledSprite == this) {
+            this._deactivateHandler();
+        }
+        this._handleUpAction = null;
+        this._handleDownAction = null;
+        this._handleLeftAction = null;
+        this._handleRightAction = null;
+    }
+    _handleKeyboardInputs() {
+        try {
+            if (Input.isTriggered('left')) {
+                this._handleKeyLeft();
+            }
+            else if (Input.isTriggered('right')) {
+                this._handleKeyRight();
+            }
+            else if (Input.isTriggered('up')) {
+                this._handleKeyUp();
+            }
+            else if (Input.isTriggered('down')) {
+                this._handleKeyDown();
+            }
+            else if (Input.isTriggered('ok')) {
+                this._handleKeyOk();
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _handleKeyLeft(ignoreNavigation = false) {
+        try {
+            if (this.isVerticalKeyboardNavigation() || ignoreNavigation) {
+                if (this._handleLeftAction) {
+                    this._handleLeftAction();
+                    this._onActionHandled();
+                }
+            }
+            else {
+                this._handleKeyUp(true);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _handleKeyRight(ignoreNavigation = false) {
+        try {
+            if (this.isVerticalKeyboardNavigation() || ignoreNavigation) {
+                if (this._handleRightAction) {
+                    this._handleRightAction();
+                    this._onActionHandled();
+                }
+            }
+            else {
+                this._handleKeyDown(true);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _handleKeyUp(ignoreNavigation = false) {
+        try {
+            if (this.isVerticalKeyboardNavigation() || ignoreNavigation) {
+                if (this._handleUpAction) {
+                    this._handleUpAction();
+                    this._onActionHandled();
+                }
+            }
+            else {
+                this._handleKeyLeft(true);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _handleKeyDown(ignoreNavigation = false) {
+        try {
+            if (this.isVerticalKeyboardNavigation() || ignoreNavigation) {
+                if (this._handleDownAction) {
+                    this._handleDownAction();
+                    this._onActionHandled();
+                }
+            }
+            else {
+                this._handleKeyRight(true);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _handleKeyOk() {
+        try {
+            if (this._handleOkAction) {
+                this._handleOkAction();
+                this._onActionHandled();
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _onActionHandled() {
+        Input.clear();
+    }
+    _selectPreviousHandlerItem() {
+        if (!this.isAnyHandlerSelected()) {
+            this._trySelectHandler(0);
+        }
+        else {
+            this._trySelectHandler(this._selectedHandlerIndex() - 1);
+        }
+    }
+    _selectedHandlerIndex() {
+        return globalHandledSprite.handledIndex;
+    }
+    _trySelectHandler(index) {
+        let handlers = this._pGetAllHandlers();
+        let handler = handlers.find(h => h.handledIndex == index);
+        if (handler) {
+            handler._activateHandler();
+        }
+        this._onActionHandled();
+    }
+    _pGetAllHandlers() {
+        let handlers = [];
+        for (let child of this.children) {
+            if (child instanceof KHandledSprite) {
+                if (child.isSupportKeyboardHandle()) {
+                    handlers.push(child);
+                }
+            }
+        }
+        return handlers;
+    }
+    _selectNextHandlerItem() {
+        if (!this.isAnyHandlerSelected()) {
+            this._trySelectHandler(0);
+        }
+        else {
+            this._trySelectHandler(this._selectedHandlerIndex() + 1);
+        }
+    }
+    _activateHandler() {
+        if (globalHandledSprite && globalHandledSprite != this) {
+            globalHandledSprite._deactivateHandler();
+        }
+        globalHandledSprite = this;
+        this._handlerActive = true;
+        this._activateHandlerVisually();
+    }
+    _activateHandlerVisually() {
+        this.addGlowEffect({ distance: 15, outerStrength: 4 });
+    }
+    _deactivateHandler() {
+        if (globalHandledSprite == this) {
+            globalHandledSprite = null;
+        }
+        this._handlerActive = false;
+        this._deactivateHandlerVisually();
+    }
+    _deactivateHandlerVisually() {
+        this.removeEffect(KNSpriteEffects.Glow);
+    }
+    _getClosestItemToYx(x, y, fromItems) {
+        let items = [];
+        if (y >= 0) {
+            items = fromItems.filter(i => i.y > y);
+        }
+        else {
+            items = fromItems.filter(i => i.y < Math.abs(y));
+        }
+        if (items.length == 0) {
+            return null;
+        }
+        let itemsInRow = items.filter(i => i.x == x);
+        if (itemsInRow.length > 0) {
+            itemsInRow.sort((a, b) => a.y - b.y);
+            return itemsInRow[0];
+        }
+        else {
+            let distances = [];
+            let rY = Math.abs(y);
+            let index = 0;
+            for (let item of items) {
+                distances.push([index, Math.abs(item.x - x) + Math.abs(item.y - rY)]);
+                index++;
+            }
+            distances.sort((a, b) => a[1] - b[1]);
+            return items[distances[0][0]];
+        }
+    }
+    _getClosestItemToXy(x, y, fromItems) {
+        let items = [];
+        if (x >= 0) {
+            items = fromItems.filter(i => i.x > x);
+        }
+        else {
+            items = fromItems.filter(i => i.x < Math.abs(x));
+        }
+        if (items.length == 0) {
+            return null;
+        }
+        let itemsInRow = items.filter(i => i.y == y);
+        if (itemsInRow.length > 0) {
+            itemsInRow.sort((a, b) => a.x - b.x);
+            return itemsInRow[0];
+        }
+        else {
+            let distances = [];
+            let rX = Math.abs(x);
+            let index = 0;
+            for (let item of items) {
+                distances.push([index, Math.abs(item.x - rX) + Math.abs(item.y - y)]);
+                index++;
+            }
+            distances.sort((a, b) => a[1] - b[1]);
+            return items[distances[0][0]];
+        }
+    }
+    _freeSelectionUpHandler() {
+        try {
+            let allItems = this._pGetAllHandlers();
+            if (allItems.length == 0) {
+                return;
+            }
+            if (this.isAnyHandlerSelected()) {
+                let item = this._getClosestItemToYx(globalHandledSprite.x, -globalHandledSprite.y, allItems);
+                if (item) {
+                    item._activateHandler();
+                }
+            }
+            else {
+                allItems[0]._activateHandler();
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        this._onActionHandled();
+    }
+    _freeSelectionDownHandler() {
+        try {
+            let allItems = this._pGetAllHandlers();
+            if (allItems.length == 0) {
+                return;
+            }
+            if (this.isAnyHandlerSelected()) {
+                let item = this._getClosestItemToYx(globalHandledSprite.x, globalHandledSprite.y, allItems);
+                if (item) {
+                    item._activateHandler();
+                }
+            }
+            else {
+                allItems[0]._activateHandler();
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        this._onActionHandled();
+    }
+    _freeSelectionLeftHandler() {
+        try {
+            let allItems = this._pGetAllHandlers();
+            if (allItems.length == 0) {
+                return;
+            }
+            if (this.isAnyHandlerSelected()) {
+                let item = this._getClosestItemToXy(-globalHandledSprite.x, globalHandledSprite.y, allItems);
+                if (item) {
+                    item._activateHandler();
+                }
+            }
+            else {
+                allItems[0]._activateHandler();
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        this._onActionHandled();
+    }
+    _freeSelectionRightHandler() {
+        try {
+            let allItems = this._pGetAllHandlers();
+            if (allItems.length == 0) {
+                return;
+            }
+            if (this.isAnyHandlerSelected()) {
+                let item = this._getClosestItemToXy(globalHandledSprite.x, globalHandledSprite.y, allItems);
+                if (item) {
+                    item._activateHandler();
+                }
+            }
+            else {
+                allItems[0]._activateHandler();
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        this._onActionHandled();
+    }
+}
+var NBindingsConverter;
+(function (NBindingsConverter) {
+    function ConvertBindingValue(sourceElement, bindingValue, element = null) {
+        try {
+            // * ["%1 %2", value1, value2]
+            if (Array.isArray(bindingValue)) {
+                let bindingValuesArray = bindingValue;
+                let sourceText = bindingValuesArray[0];
+                if (!KString.any(sourceText))
+                    return "";
+                for (let i = 1; i < bindingValuesArray.length; i++) {
+                    if (KString.any(bindingValuesArray[i])) {
+                        try {
+                            let value = _convertSingleBindingValue(sourceElement, bindingValuesArray[i], element);
+                            if (KString.any(value)) {
+                                sourceText = sourceText.replace(`%${i}`, value);
+                            }
+                        }
+                        catch (error) {
+                            console.warn(error);
+                        }
+                    }
+                }
+                return sourceText;
+            }
+            else {
+                return _convertSingleBindingValue(sourceElement, bindingValue, element);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return bindingValue.toString();
+    }
+    NBindingsConverter.ConvertBindingValue = ConvertBindingValue;
+    function _convertSingleBindingValue(sourceElement, bindingValue, element = null) {
+        try {
+            if (typeof bindingValue != "string") {
+                return bindingValue;
+            }
+            // * CONVERT DIMENSION VALUES (HDP and DP)
+            bindingValue = ConvertAllDimensionValues(bindingValue);
+            // * FORCE EVAL
+            if (bindingValue[0] == '@') {
+                let evalString = bindingValue.replace("@", "");
+                return eval(evalString);
+            }
+            // * EXTRA $ calculations (POST EVAL)
+            if (bindingValue[0] == '~') {
+                if (bindingValue.includes("$")) {
+                    let regex = new RegExp("(\\$[\\w+.]*)", "g");
+                    let result = regex.exec(bindingValue);
+                    if (result) {
+                        let captured = result[1];
+                        if (KDX.any(captured)) {
+                            let resultValue = _convertSingleBindingValue$(sourceElement, captured, element);
+                            if (!KDX.any(resultValue)) {
+                                return null;
+                            }
+                            if (typeof resultValue == "function") {
+                                return resultValue;
+                            }
+                            else {
+                                if (KDX.any(resultValue)) {
+                                    bindingValue = bindingValue.replace(captured, resultValue);
+                                    return ConvertBindingValue(sourceElement, bindingValue, element);
+                                }
+                                else {
+                                    return null;
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    let evalString = bindingValue.replace("~", "");
+                    return eval(evalString);
+                }
+            }
+            // * DEFAULT OLD STYLE SIMPLE $
+            if (bindingValue.includes('$')) {
+                return _convertSingleBindingValue$(sourceElement, bindingValue, element);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return bindingValue;
+    }
+    function ConvertAllDimensionValues(value) {
+        if (value.includes('hdp')) {
+            let regex = new RegExp("(\\d+)hdp", "g");
+            let result = regex.exec(value);
+            while (result) {
+                let dpValue = parseInt(result[1]);
+                let converted = ConvertDimenstionToPixels(dpValue, true);
+                value = value.replace(result[0], converted.toString());
+                result = regex.exec(value);
+            }
+        }
+        if (value.includes('dp')) {
+            let regex = new RegExp("(\\d+)dp", "g");
+            let result = regex.exec(value);
+            while (result) {
+                let dpValue = parseInt(result[1]);
+                let converted = ConvertDimenstionToPixels(dpValue, false);
+                value = value.replace(result[0], converted.toString());
+                result = regex.exec(value);
+            }
+        }
+        return value;
+    }
+    NBindingsConverter.ConvertAllDimensionValues = ConvertAllDimensionValues;
+    function _convertSingleBindingValue$(sourceElement, bindingValue, element) {
+        try {
+            let field = bindingValue.replace("$", "");
+            if (field.includes(".")) { // * example: $parent.width
+                let parts = field.split(".");
+                // * Только одно вхождение (одна точка)
+                field = parts[0];
+                let subField = parts[1];
+                if (!KString.any(field) && KString.any(subField)) {
+                    if (element) {
+                        return _convertSingleBindingValue$(element, "$" + subField, element);
+                    }
+                    else {
+                        return null;
+                    }
+                }
+                if (KString.any(field) && !KString.any(subField)) {
+                    return _convertSingleBindingValue$(sourceElement, "$" + field, element);
+                }
+                if (sourceElement) {
+                    let subData = _getSourceElementFieldValue(sourceElement, field);
+                    return _convertSingleBindingValue$(subData, "$" + subField, element);
+                }
+                else {
+                    return null;
+                }
+            }
+            else {
+                return _getSourceElementFieldValue(sourceElement, field);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return null;
+    }
+    function _getSourceElementFieldValue(sourceElement, field) {
+        try {
+            if (sourceElement && sourceElement[field]) {
+                if (typeof sourceElement[field] == "function") {
+                    return sourceElement[field]();
+                }
+                else {
+                    return sourceElement[field];
+                }
+            }
+            else {
+                return null; // * We can't find value
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return null;
+    }
+    function ConvertDimenstionToPixels(value = 0, isHalf = false) {
+        try {
+            if (Graphics.width == 816 && Graphics.height == 624) {
+                return value;
+            }
+            let modX = Graphics.width / 816;
+            let modY = Graphics.height / 624;
+            let mod = (modX + modY) / 2;
+            if (mod == 0)
+                return 0;
+            if (isHalf) {
+                if (mod < 1) {
+                    let d = 1 - mod;
+                    mod += d / 2;
+                }
+                else if (mod > 1) {
+                    let d = mod - 1;
+                    mod = 1 + (d / 2);
+                }
+            }
+            return Math.round(value * mod);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return 0;
+    }
+    NBindingsConverter.ConvertDimenstionToPixels = ConvertDimenstionToPixels;
+    function ConvertPercentageValues(value, forField, spriteParent) {
+        try {
+            if (value.includes("%")) {
+                let regex = new RegExp("(\\d+)%", "g");
+                let result = regex.exec(value);
+                while (result) {
+                    let percentageValue = parseInt(result[1]);
+                    let resultValue = 0;
+                    if (spriteParent) {
+                        let parentRefSize = NUtils.GetSpriteRealSize(forField, spriteParent);
+                        resultValue = parentRefSize * (percentageValue / 100.0);
+                    }
+                    value = value.replace(result[0], resultValue.toString());
+                    result = regex.exec(value);
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return value;
+    }
+    NBindingsConverter.ConvertPercentageValues = ConvertPercentageValues;
+    /**
+     * Converts a shortcut string to a configuration object.
+     * @param shortcut The shortcut string to convert.
+     * @param outerSep The outer separator (default is ";").
+     * @param innerSep The inner separator (default is ":").
+     * @returns The configuration object.
+     */
+    function ConvertShortcut(shortcut, outerSep = ";", innerSep = ":") {
+        try {
+            const config = {};
+            const values = shortcut.split(outerSep);
+            for (const value of values) {
+                if (!String(value).trim())
+                    continue;
+                const pair = value.split(innerSep);
+                const valueName = pair[0];
+                let valueData = pair[1];
+                if (valueData && valueData.includes("=")) {
+                    valueData = _convertValueDataFromShortcut(valueData);
+                }
+                else {
+                    if (valueData == null) {
+                        valueData = true;
+                    }
+                    else {
+                        if (isFinite(valueData))
+                            valueData = Number(valueData);
+                    }
+                }
+                config[valueName] = valueData;
+            }
+            return config;
+        }
+        catch (e) {
+            console.warn(e);
+            return {};
+        }
+    }
+    NBindingsConverter.ConvertShortcut = ConvertShortcut;
+    /**
+     * Converts a value data string from a shortcut format to an object.
+     * @param valueData The value data string to convert.
+     * @returns The converted object.
+     */
+    function _convertValueDataFromShortcut(valueData) {
+        try {
+            if (valueData.includes("|")) {
+                const data = {};
+                const outerItems = valueData.split("|");
+                for (const item of outerItems) {
+                    const p = item.split("=");
+                    const n = p.shift();
+                    let v = p;
+                    if (v.length === 0) {
+                        v = true;
+                    }
+                    else {
+                        if (v.length === 1) {
+                            v = v[0];
+                            if (isFinite(v))
+                                v = Number(v);
+                        }
+                        else {
+                            v = _convertValueDataFromShortcut(v.join("="));
+                        }
+                    }
+                    if (n)
+                        data[n] = v;
+                }
+                return data;
+            }
+            const data = ConvertShortcut(valueData, ",", "=");
+            return data;
+        }
+        catch (e) {
+            console.warn(e);
+            return {};
+        }
+    }
+})(NBindingsConverter || (NBindingsConverter = {}));
+let globalUnderMouseSprite = null;
+function IsAnyKNButtonUnderMouse() {
+    if (!globalUnderMouseSprite) {
+        return false;
+    }
+    if (globalUnderMouseSprite) {
+        if (!globalUnderMouseSprite.parent) {
+            globalUnderMouseSprite = null;
+            return false;
+        }
+        if (!globalUnderMouseSprite.worldVisible) {
+            return false;
+        }
+    }
+    return true;
+}
+class KClickableSprite extends KHandledSprite {
+    constructor() {
+        super(...arguments);
+        this._isHovered = false;
+        this._isPressed = false;
+        this._isDisabled = false;
+    }
+    static GlobalUnderMouseSprite() {
+        return globalUnderMouseSprite;
+    }
+    static DeactivateGlobalUnderMouseSprite(reference = null) {
+        if (globalUnderMouseSprite && globalUnderMouseSprite != reference) {
+            globalUnderMouseSprite._clearClickState();
+        }
+        else {
+            globalUnderMouseSprite = null;
+        }
+    }
+    _activateHandler() {
+        KClickableSprite.DeactivateGlobalUnderMouseSprite(this);
+        super._activateHandler();
+    }
+    isCanHandleTouch() {
+        return false;
+    }
+    isClickEnabled() {
+        return this.worldVisible;
+    }
+    isDisabled() {
+        return this._isDisabled;
+    }
+    isPressed() {
+        return this._isPressed;
+    }
+    isHovered() {
+        return this._isHovered;
+    }
+    isFocused() {
+        return this.isHandlerActive();
+    }
+    update() {
+        super.update();
+        if (this.isCanHandleTouch()) {
+            this._updateTouch();
+        }
+    }
+    onMouseEnter() {
+        this._activateHandler();
+        //console.log("Mouse enter");
+    }
+    onMouseExit() {
+        this._deactivateHandler();
+        //console.log("Mouse exit");
+    }
+    onClick() {
+        this._handleKeyOk();
+        //console.log("Click");
+    }
+    onPress() {
+        //console.log("Press");
+    }
+    onReleased() {
+        //console.log("Released");
+    }
+    setClickHandler(handler) {
+        this._handleOkAction = handler;
+    }
+    _handleKeyOk() {
+        if (this.isDisabled()) {
             return;
-          }
-          return ALIAS__processMapTouch.call(this);
-        };
-      }
-    })();
-  })();
-  //@[EXTEND]
-  // ■ END Scene_Map.coffee
-  //---------------------------------------------------------------------------
-  return KDCore.FloatingWindow = FloatingWindow;
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var HUI;
-  // * Html UI Manager
-  // * Набор инструментов для работы с HTML элементами интерфейса
-  HUI = function() {};
-  (function() {
-    var _;
-    //@[DEFINES]
-    _ = HUI;
-    _.init = function() {
-      // * Данный набор инструментов могут использовать многие плагины, поэтому проверка
-      if (this.isInited()) {
-        return;
-      }
-      this._createMainParentInHtml();
-      this._extendGraphicsClass();
-      this.refresh();
-    };
-    // * Был ли создан (инициализирован) основной элемент
-    _.isInited = function() {
-      return this.parent() != null;
-    };
-    // * Основной элемент родитель для всех элементов UI
-    _.parent = function() {
-      return this._parent;
-    };
-    _.refresh = function() {
-      if (!this.isInited()) {
-        return;
-      }
-      Graphics._centerElement(this._parent);
-      this._parent.style.zIndex = 2;
-      this._parent.style.width = Graphics._canvas.style.width;
-      this._parent.style.height = Graphics._canvas.style.height;
-    };
-    _.addCSS = function(name, folder = "css") {
-      var head;
-      if (!this.isInited()) {
-        this.init();
-      }
-      head = document.getElementsByTagName("head")[0];
-      if (head != null) {
-        head.insertAdjacentHTML("beforeend", "<link rel=\"stylesheet\" href=\"$0/$1.css\" />".replace("$0", folder).replace("$1", name));
-      }
-    };
-    _.addElement = function(id, html, classes = null) {
-      var cls, element, i, len;
-      if (!this.isInited()) {
-        this.init();
-      }
-      element = document.createElement("div");
-      element.id = id;
-      element.innerHTML = html;
-      if (classes != null) {
-        for (i = 0, len = classes.length; i < len; i++) {
-          cls = classes[i];
-          element.classList.add(cls);
         }
-      }
-      this._parent.appendChild(element);
-      return element;
-    };
-    // * Может быть NULL
-    _.getElement = function(id) {
-      return document.getElementById(id);
-    };
-    _.removeElement = function(element) {
-      if (element == null) {
-        return;
-      }
-      if (KDCore.SDK.isString(element)) {
-        this.removeElementById(element);
-      } else {
-        this.removeElementById(element.id);
-      }
-    };
-    _.removeElementById = function(elementId) {
-      var element;
-      if (!this.isInited()) {
-        return;
-      }
-      element = this.getElement(elementId);
-      if (element != null) {
-        this._parent.removeChild(element);
-      }
-    };
-    // * PRIVATE ------------------------------------------------------------------
-    _._createMainParentInHtml = function() {
-      this._parent = document.createElement("div");
-      this._parent.id = "KDCoreMain";
-      document.body.appendChild(this._parent);
-    };
-    _._extendGraphicsClass = function() {
-      var ALIAS___updateCanvas;
-      //@[ALIAS]
-      ALIAS___updateCanvas = Graphics._updateCanvas;
-      Graphics._updateCanvas = function() {
-        ALIAS___updateCanvas.call(this);
-        return KDCore.HUI.refresh();
-      };
-    };
-  })();
-  //@[EXTEND]
-  return KDCore.HUI = HUI;
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var ALIAS___onMouseUp, ALIAS___onRightButtonDown, ALIAS__clear, ALIAS__update, _;
-  // * Right mouse pressed
-  // * Определение когда правая (вторая) кнопка мыши зажата и удерживается
-
-  //@[DEFINES]
-  _ = TouchInput;
-  //@[ALIAS]
-  ALIAS__clear = _.clear;
-  _.clear = function() {
-    ALIAS__clear.call(this);
-    this._kdMousePressed2 = false;
-    this._kdPressedTime2 = 0;
-  };
-  //@[ALIAS]
-  ALIAS___onRightButtonDown = _._onRightButtonDown;
-  _._onRightButtonDown = function(event) {
-    var check;
-    ALIAS___onRightButtonDown.call(this, event);
-    // * Это значит что ALIAS метод прошёл (верные X и Y в Canvas)
-    if (KDCore.isMZ()) {
-      check = this._newState.cancelled === true;
-    } else {
-      check = this._events.cancelled === true;
+        if (this.isClickEnabled()) {
+            super._handleKeyOk();
+        }
     }
-    if (check === true) {
-      this._kdMousePressed2 = true;
-      this._kdPressedTime2 = 0;
+    _updateTouch() {
+        if (this.isClickEnabled()) {
+            if (this.isHoveredByCursor()) {
+                /*@ts-ignore*/
+                if (!this.isHovered() && !TouchInput.isPressed()) {
+                    this._isHovered = true;
+                    if (!this.isDisabled()) {
+                        this.onMouseEnter();
+                    }
+                    globalUnderMouseSprite = this;
+                    KHandledSprite.DeactivateGlobalHandledSprite(this);
+                }
+            }
+            else {
+                if (this.isHovered()) {
+                    this._clearClickState();
+                    if (!this.isDisabled()) {
+                        this.onMouseExit();
+                    }
+                }
+            }
+            if (TouchInput.isPressed() && this.isHovered() && !this.isDisabled()) {
+                if (!this.isPressed()) {
+                    this._isPressed = true;
+                    this.onPress();
+                }
+            }
+            if (TouchInput.isReleased() && this.isPressed() && !this.isDisabled()) {
+                this._isPressed = false;
+                this.onReleased();
+                if (this.isHovered()) {
+                    this.onClick();
+                }
+            }
+        }
+        else {
+            this._clearClickState();
+        }
     }
-  };
-  //@[ALIAS]
-  ALIAS___onMouseUp = _._onMouseUp;
-  _._onMouseUp = function(event) {
-    ALIAS___onMouseUp.call(this, event);
-    if (event.button === 2) {
-      this._kdMousePressed2 = false;
+    _clearClickState() {
+        this._isHovered = false;
+        this._isPressed = false;
+        if (globalUnderMouseSprite == this) {
+            globalUnderMouseSprite = null;
+        }
     }
-  };
-  //@[ALIAS]
-  ALIAS__update = _.update;
-  _.update = function() {
-    ALIAS__update.call(this);
-    if (this.kdIsPressed2()) {
-      return this._kdPressedTime2++;
+    destroy(options) {
+        this._clearClickState();
+        super.destroy(options);
     }
-  };
-  //?[NEW]
-  return _.kdIsPressed2 = function() {
-    return this._kdMousePressed2 === true;
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  // * Методы из RPG Maker MZ которых нет в RPG Maker MV
-  if (KDCore.isMZ()) {
-    return;
-  }
-  (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ Scene_Base.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    
-    //@[DEFINES]
-    _ = Scene_Base.prototype;
-    _.calcWindowHeight = function(numLines, selectable) {
-      if (selectable === true) {
-        return Window_Selectable.prototype.fittingHeight(numLines);
-      } else {
-        return Window_Base.prototype.fittingHeight(numLines);
-      }
-    };
-  })();
-  (function() {    // ■ END Scene_Base.coffee
-    //---------------------------------------------------------------------------
-
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ Window_Selectable.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    
-    //@[DEFINES]
-    _ = Window_Selectable.prototype;
-    _.itemLineRect = function(index) {
-      return this.itemRect(index);
-    };
-  })();
-  (function() {    // ■ END Window_Selectable.coffee
-    //---------------------------------------------------------------------------
-
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ Window_Base.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var ALIAS__initialize, ALIAS__processEscapeCharacter, _;
-    //@[DEFINES]
-    _ = Window_Base.prototype;
-    // * Чтоб можно было Rectangle принимать в конструктор
-    //@[ALIAS]
-    ALIAS__initialize = _.initialize;
-    _.initialize = function(x, y, w, h) {
-      if (x instanceof PIXI.Rectangle || x instanceof Rectangle) {
-        return ALIAS__initialize.call(this, x.x, x.y, x.width, x.height);
-      } else {
-        return ALIAS__initialize.call(this, ...arguments);
-      }
-    };
-    
-    // * В MZ используется FS для изменения размера шрифта в тексте
-    //@[ALIAS]
-    ALIAS__processEscapeCharacter = _.processEscapeCharacter;
-    _.processEscapeCharacter = function(code, textState) {
-      if (code === "FS") {
-        this.contents.fontSize = this.obtainEscapeParam(textState);
-      } else {
-        ALIAS__processEscapeCharacter.call(this, code, textState);
-      }
-    };
-  })();
-  (function() {    // ■ END Window_Base.coffee
-    //---------------------------------------------------------------------------
-
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ Spriteset_Map.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    
-    //@[DEFINES]
-    _ = Spriteset_Map.prototype;
-    _.findTargetSprite = function(target) {
-      return this._characterSprites.find(function(sprite) {
-        return sprite.checkCharacter(target);
-      });
-    };
-  })();
-  return (function() {    // ■ END Spriteset_Map.coffee
-    //---------------------------------------------------------------------------
-
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    // ■ Sprite_Character.coffee
-    //╒═════════════════════════════════════════════════════════════════════════╛
-    //---------------------------------------------------------------------------
-    var _;
-    
-    //@[DEFINES]
-    _ = Sprite_Character.prototype;
-    _.checkCharacter = function(character) {
-      return this._character === character;
-    };
-  })();
-});
-
-// ■ END Sprite_Character.coffee
+}
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Scene_Map.ts
+//╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var alias_SM_processMapTouch, alias_TIOMM;
-  //?SMouse better alternative
-  if (KDCore.isMZ()) {
-    return;
-  }
-  // * Для ButtonM
-  //@[ALIAS]
-  alias_SM_processMapTouch = Scene_Map.prototype.processMapTouch;
-  Scene_Map.prototype.processMapTouch = function() {
-    if ($gameTemp.kdButtonUnderMouse != null) {
-      if ($gameTemp.kdButtonUnderMouse.parent == null) {
-        return $gameTemp.kdButtonUnderMouse = null;
-      } else {
-
-      }
-    } else {
-      return alias_SM_processMapTouch.call(this);
-    }
-  };
-  //@[ALIAS]
-  alias_TIOMM = TouchInput._onMouseMove;
-  TouchInput._onMouseMove = function(event) {
-    var x, y;
-    alias_TIOMM.call(this, event);
-    x = Graphics.pageToCanvasX(event.pageX);
-    y = Graphics.pageToCanvasY(event.pageY);
-    if (Graphics.isInsideCanvas(x, y)) {
-      return this._onHover(x, y);
-    }
-  };
-  
-  //?NEW, from MZ
-  return TouchInput._onHover = function(_x, _y) {
-    this._x = _x;
-    this._y = _y;
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var ALIAS__clear, ALIAS__update, _;
-  if (KDCore.isMZ()) {
-    return;
-  }
-  //@[DEFINES]
-  _ = Input;
-  //@[ALIAS]
-  ALIAS__clear = _.clear;
-  _.clear = function() {
-    ALIAS__clear.call(this);
-    return this._virtualButton = null;
-  };
-  //@[ALIAS]
-  ALIAS__update = _.update;
-  _.update = function() {
-    ALIAS__update.call(this);
-    if (this._virtualButton == null) {
-      return;
-    }
-    this._latestButton = this._virtualButton;
-    this._pressedTime = 0;
-    return this._virtualButton = null;
-  };
-  return _.virtualClick = function(buttonName) {
-    return this._virtualButton = buttonName;
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  var alias_WBDTEX_KDCore29122021;
-  // * <center>, для RPG Maker MZ и если нету Visu Message Core
-  if (KDCore.isMZ()) {
-    alias_WBDTEX_KDCore29122021 = Window_Base.prototype.drawTextEx;
-    Window_Base.prototype.drawTextEx = function(text, x, y, width) {
-      var e, newText;
-      try {
-        if (Imported.VisuMZ_1_MessageCore !== true) { // * В Visu уже есть <center>
-          if (String.any(text) && text.contains("<center>")) {
-            if (text[0] === "<" && text[1] === "c") { // * Должен быть в начале строки
-              newText = text.replace("<center>", "");
-              this.drawTextExInCenter(newText, x, y, width);
-              return;
-            }
-          }
+(() => {
+    //@[DEFINES]
+    const _ = Scene_Map.prototype;
+    //@[ALIAS]
+    const ALIAS__isAnyButtonPressed = _.isAnyButtonPressed;
+    _.isAnyButtonPressed = function () {
+        if (IsAnyKNButtonUnderMouse()) {
+            return true;
         }
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-      }
-      alias_WBDTEX_KDCore29122021.call(this, ...arguments);
+        return ALIAS__isAnyButtonPressed.call(this);
     };
-  }
-  //?NEW
-  Window_Base.prototype.drawTextExInCenter = function(text, x, y, width, height) {
-    var e, newX, newY, textSize;
-    try {
-      if (KDCore.isMV()) { // * В MV нет поддержки данного метода
-        this.drawTextEx(...arguments);
-        return;
-      }
-      textSize = this.textSizeEx(text);
-      newX = x + width / 2 - textSize.width / 2;
-      if ((height != null) && height > 0) {
-        newY = y + height / 2 - textSize.height / 2;
-      } else {
-        newY = y;
-      }
-      this.drawTextEx(text, newX, newY, width);
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
-      this.drawTextEx(text, x, y, width);
-    }
-  };
-  //?NEW
-  Window_Base.prototype.drawTextExWithWordWrap = function(text, x, y, width, maxLines) {
-    var maxWidth, wrappedText;
-    maxWidth = this.contentsWidth();
-    wrappedText = Window_Message.prototype.pWordWrap.call(this, text, width || maxWidth, maxLines);
-    this.drawTextEx(wrappedText, x, y, width);
-  };
-  //?NEW
-  return Window_Message.prototype.pWordWrap = function(text, maxWidth, maxLines) {
-    var i, j, k, l, line, lines, newLines, ref, ref1, result, spaceLeft, spaceWidth, wordWidth, wordWidthWithSpace, words;
-    lines = text.split('\n');
-    maxWidth = maxWidth;
-    spaceWidth = this.contents.measureTextWidth(' ');
-    result = '';
-    newLines = 1;
-    for (i = k = 0, ref = lines.length; (0 <= ref ? k < ref : k > ref); i = 0 <= ref ? ++k : --k) {
-      spaceLeft = maxWidth;
-      line = lines[i];
-      words = line.split(' ');
-      for (j = l = 0, ref1 = words.length; (0 <= ref1 ? l < ref1 : l > ref1); j = 0 <= ref1 ? ++l : --l) {
-        wordWidth = this.contents.measureTextWidth(words[j]);
-        wordWidthWithSpace = wordWidth + spaceWidth;
-        if (j === 0 || wordWidthWithSpace > spaceLeft) {
-          if (j > 0) {
-            if (maxLines === newLines) {
-              return result;
+    //@[ALIAS]
+    const ALIAS__start = _.start;
+    _.start = function () {
+        globalUnderMouseSprite = null;
+        ALIAS__start.call(this);
+    };
+    if (Utils.RPGMAKER_NAME.includes("MV")) {
+        //@[ALIAS]
+        const ALIAS__processMapTouch = _.processMapTouch;
+        _.processMapTouch = function () {
+            if (IsAnyKNButtonUnderMouse()) {
+                return;
             }
-            result += '\n';
-            newLines++;
-          }
-          result += words[j];
-          spaceLeft = maxWidth - wordWidth;
-          if (j === 0 && line.match(/\\n\w*\s*<\s*\\n\[\w*\s*\]\s*>*/gi)) {
-            spaceLeft += 200;
-          }
-        } else {
-          spaceLeft -= wordWidthWithSpace;
-          result += ' ' + words[j];
-        }
-      }
-      if (i < lines.length - 1) {
-        result += '\n';
-      }
+            ALIAS__processMapTouch.call(this);
+        };
     }
-    return result;
-  };
-});
-
-
-// Generated by CoffeeScript 2.6.1
-// * Последний файл (после всех классов)
-// * Загружает библиотеки
-var i, len, lib, ref, text;
-
-if (KDCore._requireLoadLibrary === true) {
-  ref = KDCore[KDCore._loader];
-  for (i = 0, len = ref.length; i < len; i++) {
-    lib = ref[i];
-    lib();
-  }
-  KDCore[KDCore._loader] = [];
-  text = "%c  KDCore is loaded " + KDCore.Version;
-  console.log(text, 'background: #222; color: #82b2ff');
+})();
+// ■ END Scene_Map.ts
+//---------------------------------------------------------------------------
+class KNSprite extends KClickableSprite {
+    constructor() {
+        super();
+        this._scaleFactor = null;
+        this._isNotHaveBounds = false;
+        this._requiredFuncs = null;
+        this._loadListeners = null;
+        this._animationRules = null;
+        this._uiJsonSchema = null;
+        this._dataBindingsCache = null;
+        this._uiConstants = null;
+    }
+    isNotHaveBounds() {
+        return this._isNotHaveBounds == true;
+    }
+    isLoaded() {
+        return true;
+    }
+    isShouldAlwaysKeepCentered() {
+        return this._anchoredCenterX != null;
+    }
+    realWidth() {
+        try {
+            if (this.isNotHaveBounds()) {
+                return 0;
+            }
+            if (this.width == 0) {
+                let child = this.children[0];
+                if (child) {
+                    if (child["realWidth"])
+                        return child["realWidth"]();
+                    else
+                        return child.width;
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return this.width;
+    }
+    realHeight() {
+        try {
+            if (this.isNotHaveBounds()) {
+                return 0;
+            }
+            if (this.height == 0) {
+                let child = this.children[0];
+                if (child) {
+                    if (child["realHeight"])
+                        return child["realHeight"]();
+                    else
+                        return child.height;
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return this.height;
+    }
+    setJsonSchema(schema) {
+        this._uiJsonSchema = schema;
+    }
+    getJsonSchema() {
+        return this._uiJsonSchema;
+    }
+    addUIConstants(constants) {
+        if (!this._uiConstants) {
+            this._uiConstants = {};
+        }
+        this._uiConstants = Object.assign(this._uiConstants, constants);
+    }
+    uiConstant(key, defaultValue = undefined) {
+        if (!this._uiConstants) {
+            this._uiConstants = {};
+        }
+        if (KDX.any(this._uiConstants[key])) {
+            return this._uiConstants[key];
+        }
+        else {
+            return defaultValue;
+        }
+    }
+    dataBindings() {
+        if (!this._dataBindingsCache) {
+            this._dataBindingsCache = {
+                x: (v) => this.setPosition(v, this.y),
+                y: (v) => this.setPosition(this.x, v),
+                position: (v) => this.setPosition(v.x, v.y),
+                visible: (v) => { this.visible = v; },
+                opacity: (v) => { if (v) {
+                    this.opacity = v;
+                } },
+                scale: (v) => { if (v) {
+                    this.scale.set(v);
+                } },
+                rotation: (v) => { if (v) {
+                    this.rotation = v;
+                } },
+                physicalBounds: (v) => { this._isNotHaveBounds = !v; },
+                anchor: (v) => { if (v) {
+                    this.setCommonAnchor(v);
+                } },
+                animation: (v) => { if (v) {
+                    this.addAnimationRule(v);
+                } },
+                centeredScale: (v) => { if (v) {
+                    this.setCenteredScale(v);
+                } }
+            };
+        }
+        return this._dataBindingsCache;
+    }
+    refreshBindings(dataObject = null, resursive = true) {
+        let _isUseDataObjectForChildrens = true;
+        if (!dataObject) {
+            dataObject = this;
+            _isUseDataObjectForChildrens = false;
+        }
+        if (this._uiJsonSchema) {
+            let { bindings } = this._uiJsonSchema;
+            if (bindings) {
+                for (let key in this.dataBindings()) {
+                    if (!bindings[key]) {
+                        continue;
+                    }
+                    try {
+                        let value = NBindingsConverter.ConvertBindingValue(dataObject, bindings[key], this);
+                        this.callBinding(key, value);
+                    }
+                    catch (error) {
+                        console.warn(error);
+                    }
+                }
+            }
+        }
+        if (resursive) {
+            for (let child of this.children) {
+                if (!child)
+                    continue;
+                try {
+                    if (child['refreshBindings']) {
+                        if (_isUseDataObjectForChildrens) {
+                            child['refreshBindings'](dataObject, resursive);
+                        }
+                        else {
+                            child['refreshBindings'](null, resursive);
+                        }
+                    }
+                }
+                catch (error) {
+                    console.warn(error);
+                }
+            }
+        }
+    }
+    callBinding(key, value) {
+        try {
+            let bindings = this.dataBindings();
+            if (bindings[key]) {
+                bindings[key](value);
+            }
+            else {
+                console.warn("Binding not found", key);
+            }
+        }
+        catch (error) {
+            console.warn("Binding call error", error);
+        }
+    }
+    addAnimationRule(rule) {
+        try {
+            if (!this._animationRules) {
+                this._animationRules = [];
+            }
+            let animationRule = new KDNUI.AnimationRule(rule, this);
+            this._animationRules.push(animationRule);
+            return animationRule;
+        }
+        catch (error) {
+            console.warn(error);
+            return null;
+        }
+    }
+    setAnimationRule(rule) {
+        try {
+            this._animationRules = []; // * Clear all rules
+            if (rule) {
+                return this.addAnimationRule(rule);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return null;
+    }
+    addLoadListener(func) {
+        try {
+            if (this.isLoaded()) {
+                func();
+            }
+            else {
+                this._addLoadListener(func);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setCenteredScale(value) {
+        if (!this.isLoaded()) {
+            this.requireFunc("setCenteredScale", arguments);
+            return;
+        }
+        this._refreshAnchoredCenter();
+        this._scaleFactor = value;
+    }
+    // * For Animation Rule (callback)
+    onBeforeChangeScaleFactor() {
+        try {
+            if (this.isShouldAlwaysKeepCentered()) {
+                this._refreshAnchoredCenter();
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    // * Examples: setPosition(10, 10), setPosition("center") - for both x and y
+    setPosition(x, y, bindedObject) {
+        try {
+            if (!this.isLoaded()) {
+                this.requireFunc("setPosition", arguments);
+                return;
+            }
+            if (typeof x == "string") {
+                if (y == null || y == undefined) { // * If single string argument X, then Y = X
+                    y = x;
+                }
+                x = this.convertStringSizeValue(x, "x", bindedObject);
+            }
+            if (y == null || y == undefined) {
+                y = this.y;
+            }
+            if (typeof y == "string") {
+                y = this.convertStringSizeValue(y, "y", bindedObject);
+            }
+            if (!isNaN(x) && !isNaN(y)) {
+                this.move(x, y);
+            }
+            else {
+                console.warn("Invalid position values X, Y ", x, y);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+            this.move(0, 0);
+        }
+    }
+    update() {
+        super.update();
+        this._updateAnimationRules();
+        if (this._scaleFactor != null) {
+            this._updateScaleFactor(); // * For Centered Scale
+        }
+    }
+    convertStringSizeValue(value, forField, owner) {
+        try {
+            if (typeof value == "number") {
+                return value;
+            }
+            /* @ts-ignore */
+            if (isFinite(value)) {
+                return Number(value);
+            }
+            if (typeof value != "string") {
+                return 0;
+            }
+            if (value[0] == '$' || value[0] == '@') {
+                let v = NBindingsConverter.ConvertBindingValue(owner, value, this);
+                return this.convertStringSizeValue(v, forField, owner);
+            }
+            if (value.includes("prevX")) {
+                value = value.replace("prevX", this.getPreviousChildData("x"));
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            if (value.includes("prevY")) {
+                value = value.replace("prevY", this.getPreviousChildData("y"));
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            if (value.includes("prevHeight")) {
+                value = value.replace("prevHeight", this.getPreviousChildData("height"));
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            if (value.includes("prevWidth")) {
+                value = value.replace("prevWidth", this.getPreviousChildData("width"));
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            if (value.includes("prevEndX")) {
+                value = value.replace("prevEndX", "prevX + prevWidth");
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            if (value.includes("prevEndY")) {
+                value = value.replace("prevEndY", "prevY + prevHeight");
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            if (value.includes("end")) {
+                value = value.replace("end", "100%");
+            }
+            if (value.includes("begin")) {
+                if (forField == "y") {
+                    value = value.replace("begin", "-height");
+                }
+                else {
+                    value = value.replace("begin", "-width");
+                }
+            }
+            if (value.includes("right")) {
+                value = value.replace("right", "100% - width");
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            if (value.includes("left")) {
+                value = value.replace("left", "0");
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            if (value.includes("top")) {
+                value = value.replace("top", "0");
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            if (value.includes("bottom")) {
+                value = value.replace("bottom", "100% - height");
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            // * Replace all %
+            if (value.includes("%")) {
+                if (this.parent) {
+                    value = NBindingsConverter.ConvertPercentageValues(value, forField, this.parent);
+                }
+                else {
+                    value = NBindingsConverter.ConvertPercentageValues(value, forField, this);
+                }
+            }
+            // * Replace HDP and DP
+            value = NBindingsConverter.ConvertAllDimensionValues(value);
+            if (value.includes('center')) {
+                let v = this.convertStringSizeValue('50%', forField, owner);
+                let exValue = NUtils.GetSpriteRealSize(forField, this);
+                exValue = v - (exValue / 2);
+                value = value.replace('center', exValue.toString());
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            if (value.includes('height')) {
+                let exValue = NUtils.GetSpriteRealSize('height', this);
+                value = value.replace('height', exValue.toString());
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            if (value.includes('width')) {
+                let exValue = NUtils.GetSpriteRealSize('width', this);
+                value = value.replace('width', exValue.toString());
+                return this.convertStringSizeValue(value, forField, owner);
+            }
+            let v = eval(value);
+            return this.convertStringSizeValue(v, forField, owner);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return 0;
+    }
+    getPreviousChildData(forField) {
+        try {
+            if (!this.parent)
+                return 0;
+            if (this.parent.children.length <= 1)
+                return 0;
+            let myIndex = this.parent.children.indexOf(this);
+            let prevChild = this.parent.children[myIndex - 1];
+            if (!prevChild)
+                return 0;
+            if (forField == "x") {
+                return prevChild.x;
+            }
+            if (forField == "y") {
+                return prevChild.y;
+            }
+            return NUtils.GetSpriteRealSize(forField, prevChild);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return 0;
+    }
+    requireFunc(funcName, args) {
+        try {
+            if (!this._requiredFuncs) {
+                this._requiredFuncs = [];
+            }
+            this._requiredFuncs.push([funcName, args]);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    executeRequiredFuncs() {
+        var _a;
+        try {
+            if (!this._requiredFuncs) {
+                return;
+            }
+            for (let i = 0; i < this._requiredFuncs.length; i++) {
+                let funcName = this._requiredFuncs[i][0];
+                let args = this._requiredFuncs[i][1];
+                try {
+                    (_a = this[funcName]) === null || _a === void 0 ? void 0 : _a.apply(this, args);
+                }
+                catch (error) {
+                    console.warn(error);
+                }
+            }
+            this._requiredFuncs = null;
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    executeLoadListeners() {
+        try {
+            if (!this._loadListeners) {
+                return;
+            }
+            for (let i = 0; i < this._loadListeners.length; i++) {
+                try {
+                    this._loadListeners[i]();
+                }
+                catch (error) {
+                    console.warn(error);
+                }
+            }
+            this._loadListeners = null;
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _addLoadListener(func) {
+        try {
+            if (!this._loadListeners) {
+                this._loadListeners = [];
+            }
+            this._loadListeners.push(func);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _updateAnimationRules() {
+        try {
+            if (!this._animationRules) {
+                return;
+            }
+            for (let i = 0; i < this._animationRules.length; i++) {
+                this._animationRules[i].update();
+                this._animationRules[i].applyAnimation(this);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _refreshAnchoredCenter() {
+        try {
+            if (this._lastCenterBaseX != this.x || this._lastCenterBaseY != this.y) {
+                this._lastCenterBaseX = this.x;
+                this._lastCenterBaseY = this.y;
+            }
+            this._anchoredCenterX = this._lastCenterBaseX + (this.realWidth() / 2);
+            this._anchoredCenterY = this._lastCenterBaseY + (this.realHeight() / 2);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _refreshRelativeToCenterPosition() {
+        try {
+            if (this._anchoredCenterX != null) {
+                this.x = this._anchoredCenterX - (this.realWidth() * this.scale.x / 2);
+                this.y = this._anchoredCenterY - (this.realHeight() * this.scale.y / 2);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _updateScaleFactor() {
+        try {
+            if (this.scale.x != this._scaleFactor || this.scale.y != this._scaleFactor) {
+                this.scale.set(this._scaleFactor);
+                if (this.isShouldAlwaysKeepCentered()) {
+                    this._refreshRelativeToCenterPosition();
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+}
+// * NUI 1.2
+// * rev 10.09.24
+// * "type": "face"
+class KNSprite_ActorFace extends KNSprite {
+    /**
+     * Creates an instance of Sprite_ActorFace.
+     * @param settings The settings for the sprite.
+     */
+    constructor(settings) {
+        super();
+        this.settings = Object.assign({}, KNSprite_ActorFace.DefaultSettings(), settings);
+        this._create();
+        this.draw(this.settings.faceName, this.settings.faceIndex);
+        this.flipX(this.settings.mirror);
+    }
+    /**
+     * Checks if the sprite is loaded.
+     * @returns True if the sprite is loaded, otherwise false.
+     */
+    isLoaded() {
+        return true;
+    }
+    /**
+     * Gets the default settings for the sprite.
+     * @returns The default settings.
+     */
+    static DefaultSettings() {
+        return {
+            "faceName": "",
+            "faceIndex": 0,
+            "size": 144,
+            "mirror": false
+        };
+    }
+    /**
+     * Gets the real width of the sprite.
+     * @returns The real width.
+     */
+    realWidth() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return this.settings.size;
+    }
+    /**
+     * Gets the real height of the sprite.
+     * @returns The real height.
+     */
+    realHeight() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return this.settings.size;
+    }
+    /**
+     * Gets the data bindings for the sprite.
+     * @returns The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            // * For compatibility with old format
+            size: (v) => this.setSize(v),
+            faceSize: (v) => this.setSize(v),
+            faceName: (v) => this.draw(v, this.settings.faceIndex),
+            faceIndex: (v) => this.draw(this.settings.faceName, v),
+            mirror: (v) => this.flipX(v)
+        });
+    }
+    /**
+     * Sets the size of the sprite.
+     * @param size The size to set.
+     */
+    setSize(size = 144) {
+        try {
+            size = this.convertStringSizeValue(size, 'width', this);
+            if (size != null)
+                this.settings.size = size;
+            this._onResize();
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the face image.
+     * @param faceName The name of the face image.
+     * @param faceIndex The index of the face image.
+     */
+    draw(faceName = "", faceIndex = 0) {
+        try {
+            this.settings.faceName = faceName;
+            this.settings.faceIndex = faceIndex;
+            if (faceName === "") {
+                this.image.bitmap.clear();
+                return;
+            }
+            this._drawFaceImage(faceName);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Flips the sprite horizontally.
+     * @param isMirror Whether to flip the sprite.
+     */
+    flipX(isMirror) {
+        try {
+            if (isMirror) {
+                this.image.scale.x = -1;
+                this.image.x = this.settings.size;
+            }
+            else {
+                this.image.scale.x = 1;
+                this.image.x = 0;
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Creates the sprite.
+     */
+    _create() {
+        try {
+            this.image = new KSprite(new Bitmap(1, 1));
+            this.addChild(this.image);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the face image.
+     * @param faceName The name of the face image.
+     */
+    _drawFaceImage(faceName) {
+        try {
+            this._srcBitmap = ImageManager.loadFace(faceName);
+            this._srcBitmap.addLoadListener(this._onBitmapLoaded.bind(this));
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Called when the bitmap is loaded.
+     */
+    _onBitmapLoaded() {
+        try {
+            this._onResize();
+            this.executeRequiredFuncs();
+            this.executeLoadListeners();
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Resizes the sprite.
+     */
+    _onResize() {
+        try {
+            this.image.bitmap = new Bitmap(this.realWidth(), this.realHeight());
+            if (!this._srcBitmap)
+                return;
+            const b = this._srcBitmap;
+            let fw, fh;
+            if (KDX.isMZ()) {
+                fw = ImageManager.faceWidth;
+                fh = ImageManager.faceHeight;
+            }
+            else {
+                /* @ts-ignore */
+                fw = Window_Base._faceWidth;
+                /* @ts-ignore */
+                fh = Window_Base._faceHeight;
+            }
+            const size = this.settings.size;
+            const sx = (this.settings.faceIndex % 4) * fw;
+            const sy = Math.floor(this.settings.faceIndex / 4) * fh;
+            this.image.bitmap.blt(b, sx, sy, fw, fh, 0, 0, size, size);
+            this.setFrame(0, 0, size, size);
+            this.flipX(this.settings.mirror);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+}
+// * NUI 1.0
+// * rev 10.09.24
+// * "type": "circle"
+class KNSprite_BaseCircle extends KNSprite {
+    constructor(settings) {
+        super();
+        this._settings = Object.assign({}, KNSprite_BaseCircle.DefaultSettings(), settings);
+        this._create();
+        this._applySettings();
+    }
+    // * DefaultSettings in JSON format (for easy copy-paste)
+    /**
+     * Returns the default settings for the base circle sprite.
+     * @returns {BaseCircleSpriteSettings} The default settings.
+     */
+    static DefaultSettings() {
+        return {
+            "width": 100,
+            "height": 100,
+            "fillColor": "#FFFFFF",
+            "fillAlpha": 1,
+            "strokeWidth": 4,
+            "strokeColor": "#000000",
+            "strokeAlpha": 1
+        };
+    }
+    /**
+     * Gets the current settings of the base circle sprite.
+     * @returns {BaseCircleSpriteSettings} The current settings.
+     */
+    get settings() {
+        return this._settings;
+    }
+    /**
+     * Applies the current settings to the sprite.
+     */
+    refresh() {
+        try {
+            this._applySettings();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Returns an object with data bindings for width, height, size, stroke, and fill.
+     * @returns {Record<string, any>} The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            width: (v) => { if (v)
+                this.setSize(v, this.settings.height); },
+            height: (v) => { if (v)
+                this.setSize(this.settings.width, v); },
+            size: (v) => { if (v)
+                this.setSize(v.width, v.height); },
+            stroke: (v) => { if (v)
+                this.setStroke(v.color, v.width, v.alpha); },
+            fill: (v) => { if (v)
+                this.setFill(v.color, v.alpha); }
+        });
+    }
+    /**
+     * Sets the size of the base circle sprite.
+     * @param {number | string} [width=100] - The width of the sprite.
+     * @param {number | string} [height=100] - The height of the sprite.
+     */
+    setSize(width = 100, height = 100) {
+        try {
+            let _width = this.convertStringSizeValue(width, 'width', this);
+            let _height = this.convertStringSizeValue(height, 'height', this);
+            if (_width != null)
+                this._settings.width = _width;
+            if (_height != null)
+                this._settings.height = _height;
+            this.refresh();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Sets the stroke properties of the base circle sprite.
+     * @param {string} [color="#FFFFFF"] - The stroke color.
+     * @param {number} [width=0] - The stroke width.
+     * @param {number} [alpha=1] - The stroke alpha.
+     */
+    setStroke(color = "#FFFFFF", width = 0, alpha = 1) {
+        this._settings.strokeColor = color;
+        this._settings.strokeWidth = width;
+        this._settings.strokeAlpha = alpha;
+        this.refresh();
+    }
+    /**
+     * Sets the fill properties of the base circle sprite.
+     * @param {string} [color="#FFFFFF"] - The fill color.
+     * @param {number} [alpha=1] - The fill alpha.
+     */
+    setFill(color = "#FFFFFF", alpha = 1) {
+        this._settings.fillColor = color;
+        this._settings.fillAlpha = alpha;
+        this.refresh();
+    }
+    /**
+     * Creates the graphics object and adds it as a child.
+     * @private
+     */
+    _create() {
+        this._graphics = new PIXI.Graphics();
+        this.addChild(this._graphics);
+    }
+    /**
+     * Applies the current settings to the base circle sprite.
+     * @private
+     */
+    _applySettings() {
+        if (!this._settings)
+            return;
+        if (!this._graphics)
+            return;
+        this._graphics.clear();
+        try {
+            this._drawBaseCircle();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        this._applySize();
+    }
+    /**
+     * Draws the base circle with the current settings.
+     * @private
+     */
+    _drawBaseCircle() {
+        // * Fill circle
+        this._graphics.beginFill(KColor.HexToColorNumber(this._settings.fillColor), this._settings.fillAlpha);
+        this._graphics.drawEllipse(0, 0, this._settings.width / 2, this._settings.height / 2);
+        this._graphics.endFill();
+        if (this._settings.strokeWidth > 0) {
+            // * Stroke circle
+            this._graphics.lineStyle(this._settings.strokeWidth, KColor.HexToColorNumber(this._settings.strokeColor), this._settings.strokeAlpha);
+            this._graphics.drawEllipse(0, 0, this._settings.width / 2, this._settings.height / 2);
+        }
+    }
+    /**
+     * Applies the size settings to the base circle sprite and its graphics object.
+     * @private
+     */
+    _applySize() {
+        this.width = this._settings.width;
+        this.height = this._settings.height;
+        // * Круг (элипс) рисуется от центра, что не удобно  при расчёте координат, поэтому сдвигаем в левый вверхний угол
+        this._graphics.position.set(this._settings.width / 2, this._settings.height / 2);
+    }
+}
+// * NUI 1.0
+// * rev 09.09.24
+// * "type": "rect"
+class KNSprite_BaseRect extends KNSprite {
+    constructor(settings) {
+        super();
+        this._settings = Object.assign({}, KNSprite_BaseRect.DefaultSettings(), settings);
+        this._create();
+        this._applySettings();
+    }
+    // * DefaultSettings in JSON format (for easy copy-paste)
+    /**
+     * Returns the default settings for the base rectangle sprite.
+     * @returns {BaseRectSpriteSettings} The default settings.
+     */
+    static DefaultSettings() {
+        return {
+            "width": 100,
+            "height": 100,
+            "corners": 0,
+            "fillGradient": null,
+            "gradientStart": { "x": 0, "y": 0 },
+            "gradientEnd": { "x": 0, "y": 100 },
+            "fillColor": "#FFFFFF",
+            "fillAlpha": 1,
+            "strokeWidth": 4,
+            "strokeColor": "#000000",
+            "strokeAlpha": 1
+        };
+    }
+    /**
+     * Returns the default gradient settings.
+     * @returns {Record<string, string>} The default gradient settings.
+     */
+    static DefaultGradientSettings() {
+        return {
+            "0": "#9ff",
+            "1": "#033"
+        };
+    }
+    /**
+     * Returns the default corner settings.
+     * @returns {RectCorners} The default corner settings.
+     */
+    static DefaultCornerSettings() {
+        return {
+            "topLeft": 0,
+            "topRight": 0,
+            "bottomRight": 0,
+            "bottomLeft": 0
+        };
+    }
+    /**
+     * Gets the current settings of the base rectangle sprite.
+     * @returns {BaseRectSpriteSettings} The current settings.
+     */
+    get settings() {
+        return this._settings;
+    }
+    /**
+     * Checks if the sprite has a gradient fill.
+     * @returns {boolean} True if the sprite has a gradient fill, otherwise false.
+     */
+    isHaveGradient() {
+        return this._settings.fillGradient != null;
+    }
+    /**
+     * Applies the current settings to the sprite.
+     */
+    refresh() {
+        try {
+            this._applySettings();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Returns an object with data bindings for width, height, size, stroke, fill, gradient start, and gradient end.
+     * @returns {Record<string, any>} The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            width: (v) => { if (v)
+                this.setSize(v, this.settings.height); },
+            height: (v) => { if (v)
+                this.setSize(this.settings.width, v); },
+            size: (v) => { if (v)
+                this.setSize(v.width, v.height); },
+            stroke: (v) => { if (v)
+                this.setStroke(v.color, v.width, v.alpha); },
+            fill: (v) => { if (v)
+                this.setFill(v.color, v.alpha); },
+            gradientStart: (v) => { if (v)
+                this.setGradientStartEnd(v, this.settings.gradientEnd); },
+            gradientEnd: (v) => { if (v)
+                this.setGradientStartEnd(this.settings.gradientStart, v); }
+        });
+    }
+    /**
+     * Sets the size of the base rectangle sprite.
+     * @param {number | string} [width=100] - The width of the sprite.
+     * @param {number | string} [height=100] - The height of the sprite.
+     */
+    setSize(width = 100, height = 100) {
+        try {
+            let _width = this.convertStringSizeValue(width, 'width', this);
+            let _height = this.convertStringSizeValue(height, 'height', this);
+            if (_width != null)
+                this._settings.width = _width;
+            if (_height != null)
+                this._settings.height = _height;
+            this.refresh();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Sets the stroke properties of the base rectangle sprite.
+     * @param {string} [color="#FFFFFF"] - The stroke color.
+     * @param {number} [width=0] - The stroke width.
+     * @param {number} [alpha=1] - The stroke alpha.
+     */
+    setStroke(color = "#FFFFFF", width = 0, alpha = 1) {
+        this._settings.strokeColor = color;
+        this._settings.strokeWidth = width;
+        this._settings.strokeAlpha = alpha;
+        this.refresh();
+    }
+    /**
+     * Sets the fill properties of the base rectangle sprite.
+     * @param {string} [color="#FFFFFF"] - The fill color.
+     * @param {number} [alpha=1] - The fill alpha.
+     */
+    setFill(color = "#FFFFFF", alpha = 1) {
+        this._settings.fillColor = color;
+        this._settings.fillAlpha = alpha;
+        this._settings.fillGradient = null;
+        this.refresh();
+    }
+    /**
+     * Sets the gradient start and end points for the base rectangle sprite.
+     * @param {{ x: number, y: number }} start - The start point of the gradient.
+     * @param {{ x: number, y: number }} end - The end point of the gradient.
+     */
+    setGradientStartEnd(start, end) {
+        try {
+            if (start) {
+                start.x = this.convertStringSizeValue(start.x, 'width', this);
+                start.y = this.convertStringSizeValue(start.y, 'height', this);
+            }
+            if (end) {
+                end.x = this.convertStringSizeValue(end.x, 'width', this);
+                end.y = this.convertStringSizeValue(end.y, 'height', this);
+            }
+            this._settings.gradientStart = start;
+            this._settings.gradientEnd = end;
+            this.refresh();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Creates the graphics object and adds it as a child.
+     * @private
+     */
+    _create() {
+        this._graphics = new PIXI.Graphics();
+        this.addChild(this._graphics);
+    }
+    /**
+     * Applies the current settings to the base rectangle sprite.
+     * @private
+     */
+    _applySettings() {
+        if (!this._settings)
+            return;
+        if (!this._graphics)
+            return;
+        this._graphics.clear();
+        try {
+            this._applyGradient();
+            this._drawCornerRect();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        this._applySize();
+    }
+    /**
+     * Applies the gradient fill to the base rectangle sprite.
+     * @private
+     */
+    _applyGradient() {
+        try {
+            if (!this.isHaveGradient())
+                return;
+            if (KDX.isMV())
+                return;
+            let gradientFillSettings = Object.assign({}, KNSprite_BaseRect.DefaultGradientSettings(), this._settings.fillGradient);
+            let canvas = document.createElement("canvas");
+            let ctx = canvas.getContext("2d");
+            let gradient = ctx.createLinearGradient(this._settings.gradientStart.x, this._settings.gradientStart.y, this._settings.gradientEnd.x, this._settings.gradientEnd.y);
+            for (let key in gradientFillSettings) {
+                let color = this._convertGradientStopColor(gradientFillSettings[key]);
+                gradient.addColorStop(Number(key), color);
+            }
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, this._settings.width, this._settings.height);
+            let texture = PIXI.Texture.from(canvas);
+            this._graphics.beginTextureFill({ texture: texture });
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Converts a gradient stop color to a CSS color string.
+     * @param {string} color - The color to convert.
+     * @returns {string} The converted color.
+     * @private
+     */
+    _convertGradientStopColor(color) {
+        if (!KString.any(color))
+            return "#000000";
+        try {
+            if (color.includes("%")) {
+                let [hex, opacity] = color.split("%");
+                return KColor.HexToCss(hex, parseFloat(opacity));
+            }
+            else {
+                return color;
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return "#000000";
+    }
+    /**
+     * Draws the rectangle with rounded corners.
+     * @private
+     */
+    _drawCornerRect() {
+        try {
+            if (typeof this._settings.corners == "number") {
+                this._drawRoundRect(this._settings.corners);
+            }
+            else {
+                let corners = Object.assign({}, KNSprite_BaseRect.DefaultCornerSettings(), this.settings.corners);
+                this._drawAllCornersRect(corners);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Draws a rounded rectangle.
+     * @param {number} radius - The radius of the corners.
+     * @private
+     */
+    _drawRoundRect(radius) {
+        if (!this.isHaveGradient()) {
+            this._graphics.beginFill(KColor.HexToColorNumber(this._settings.fillColor), this._settings.fillAlpha);
+        }
+        this._graphics.drawRoundedRect(0, 0, this._settings.width, this._settings.height, radius);
+        if (this._settings.strokeWidth > 0) {
+            let strokeWidth = this._settings.strokeWidth;
+            // * Draw Stroke Around the Rect
+            this._graphics.lineStyle(this._settings.strokeWidth, KColor.HexToColorNumber(this._settings.strokeColor), this._settings.strokeAlpha);
+            this._graphics.drawRoundedRect(-strokeWidth / 2, -strokeWidth / 2, this._settings.width + strokeWidth / 2, this._settings.height + strokeWidth / 2, radius);
+        }
+        if (!this.isHaveGradient()) {
+            this._graphics.endFill();
+        }
+    }
+    /**
+     * Draws a rectangle with different corner radii.
+     * @param {RectCorners} corners - The radii of the corners.
+     * @private
+     */
+    _drawAllCornersRect(corners) {
+        if (!this.isHaveGradient()) {
+            this._graphics.beginFill(KColor.HexToColorNumber(this._settings.fillColor), this._settings.fillAlpha);
+        }
+        this._drawRoundedRectComplex(0, 0, this._settings.width, this._settings.height, corners.topLeft, corners.topRight, corners.bottomRight, corners.bottomLeft);
+        if (this._settings.strokeWidth > 0) {
+            let strokeWidth = this._settings.strokeWidth;
+            // * Draw Stroke Around the Rect
+            this._graphics.lineStyle(this._settings.strokeWidth, KColor.HexToColorNumber(this._settings.strokeColor), this._settings.strokeAlpha);
+            this._drawRoundedRectComplex(-strokeWidth / 2, -strokeWidth / 2, this._settings.width + strokeWidth / 2, this._settings.height + strokeWidth / 2, corners.topLeft, corners.topRight, corners.bottomRight, corners.bottomLeft);
+            // this._graphics.closePath();
+        }
+        if (!this.isHaveGradient()) {
+            this._graphics.endFill();
+        }
+    }
+    /**
+     * Draws a complex rounded rectangle with different corner radii.
+     * @param {number} x - The x-coordinate of the rectangle.
+     * @param {number} y - The y-coordinate of the rectangle.
+     * @param {number} width - The width of the rectangle.
+     * @param {number} height - The height of the rectangle.
+     * @param {number} radiusTL - The radius of the top-left corner.
+     * @param {number} radiusTR - The radius of the top-right corner.
+     * @param {number} radiusBR - The radius of the bottom-right corner.
+     * @param {number} radiusBL - The radius of the bottom-left corner.
+     * @private
+     */
+    _drawRoundedRectComplex(x, y, width, height, radiusTL, radiusTR, radiusBR, radiusBL) {
+        this._graphics.moveTo(x + radiusTL, y);
+        this._graphics.lineTo(x + width - radiusTR, y);
+        if (radiusTR > 0)
+            this._graphics.quadraticCurveTo(x + width, y, x + width, y + radiusTR);
+        this._graphics.lineTo(x + width, y + height - radiusBR);
+        if (radiusBR > 0)
+            this._graphics.quadraticCurveTo(x + width, y + height, x + width - radiusBR, y + height);
+        this._graphics.lineTo(x + radiusBL, y + height);
+        if (radiusBL > 0)
+            this._graphics.quadraticCurveTo(x, y + height, x, y + height - radiusBL);
+        this._graphics.lineTo(x, y + radiusTL);
+        if (radiusTL > 0)
+            this._graphics.quadraticCurveTo(x, y, x + radiusTL, y);
+    }
+    /**
+     * Applies the size settings to the base rectangle sprite and its graphics object.
+     * @private
+     */
+    _applySize() {
+        this.width = this._settings.width;
+        this.height = this._settings.height;
+    }
+}
+class KNSprite_Button extends KNSprite {
+    constructor(_settings) {
+        super();
+        this._settings = _settings;
+        this._isForcePressed = false;
+        this._settings = Object.assign(KNSprite_Button.DefaultSettings(), _settings);
+        this._create();
+        this._applySettings();
+    }
+    static DefaultSettings() {
+        return {
+            "imageName": "",
+            "folderName": "pictures",
+            "imageMargins": 20,
+            "width": 160,
+            "height": 60,
+            "clickSe": "Cursor1",
+            "desaturateWhenDisabled": false,
+            "tint": "",
+            "tintAlpha": 0.5,
+            "overTint": "#FFFFDD",
+            "overTintAlpha": 0.5,
+            "activeTint": "#AAAAAA",
+            "activeTintAlpha": 0.5,
+            "disabledTint": "#AAAAAA",
+            "disabledTintAlpha": 0.5,
+            "keyboardKey": "",
+            "keyboardHandled": true,
+            "enabled": true,
+        };
+    }
+    isCanHandleTouch() {
+        return true;
+    }
+    isSupportKeyboardHandle() {
+        return this._settings.keyboardHandled == true;
+    }
+    isClickEnabled() {
+        return super.isClickEnabled() && this.opacity != 0;
+    }
+    onPress() {
+        super.onPress();
+        this._refreshTint();
+    }
+    onReleased() {
+        super.onReleased();
+        this._refreshTint();
+    }
+    onMouseEnter() {
+        super.onMouseEnter();
+        this._refreshTint();
+    }
+    onMouseExit() {
+        super.onMouseExit();
+        this._refreshTint();
+    }
+    onClick() {
+        try {
+            if (this.isDisabled())
+                return;
+            if (this.isClickEnabled()) {
+                KAudio.PlaySE(this._settings.clickSe);
+            }
+            super.onClick();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Gets the current settings of the Button.
+     * @returns {ButtonSpriteSettings} The current settings.
+     */
+    get settings() {
+        return this._settings;
+    }
+    /**
+     * Returns an object with data bindings for width, height, and size.
+     * @returns {Record<string, any>} The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            width: (v) => { if (v)
+                this.setSize(v, this.settings.height); },
+            height: (v) => { if (v)
+                this.setSize(this.settings.width, v); },
+            size: (v) => { if (v)
+                this.setSize(v.width, v.height); },
+            style: (v) => { if (KDX.any(v))
+                this.setStyle(v); },
+            enable: (v) => { if (KDX.any(v))
+                this.setEnabledState(v); },
+            handler: (v) => { this.addClickHandler(v); }
+        });
+    }
+    setStyle(style) {
+        this._settings = Object.assign(this._settings, style);
+        this._applySettings();
+    }
+    /**
+     * Sets the size of the sprite button.
+     *
+     * @param {number | string} [width=160] - The width of the button. Can be a number or a string.
+     * @param {number | string} [height=60] - The height of the button. Can be a number or a string.
+     *
+     * @throws {Error} Will throw an error if the width or height cannot be converted.
+     */
+    setSize(width = 160, height = 60) {
+        try {
+            let _width = this.convertStringSizeValue(width, 'width', this);
+            let _height = this.convertStringSizeValue(height, 'height', this);
+            if (_width != null)
+                this._settings.width = _width;
+            if (_height != null)
+                this._settings.height = _height;
+            this._applySettings();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    realWidth() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return this._settings.width;
+    }
+    realHeight() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return this._settings.height;
+    }
+    update() {
+        super.update();
+        if (this.isClickEnabled()) {
+            this._updateButtonKeyboardHandling();
+        }
+    }
+    isEnabled() {
+        return !this.isDisabled();
+    }
+    setEnabledState(enabled) {
+        try {
+            this._settings.enabled = enabled;
+            if (enabled) {
+                this._enable();
+            }
+            else {
+                this._disable();
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    addClickHandler(handler) {
+        this._handleOkAction = handler;
+    }
+    // * Only visual
+    simulateClickEffect() {
+        this._isForcePressed = true;
+        setTimeout(() => {
+            try {
+                this._isForcePressed = false;
+                this._refreshTint();
+            }
+            catch (error) {
+                console.warn(error);
+            }
+        }, 100);
+        this._refreshTint();
+    }
+    enable() {
+        this.setEnabledState(true);
+    }
+    disable() {
+        this.setEnabledState(false);
+    }
+    _create() {
+        this._buttonPlane = new KNSprite_Plane({
+            "width": this._settings.width,
+            "height": this._settings.height,
+            "margins": this._settings.imageMargins,
+            "imageName": this._settings.imageName,
+            "folderName": this._settings.folderName,
+        });
+        this.addChild(this._buttonPlane);
+    }
+    _applySettings() {
+        try {
+            this._onResize();
+            this._refreshTint();
+            this._refreshState();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _onResize() {
+        try {
+            this.width = this._settings.width;
+            this.height = this._settings.height;
+            this._buttonPlane.setSize(this._settings.width, this._settings.height);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _refreshTint() {
+        try {
+            if (this.isPressed() || this._isForcePressed) {
+                this._applyTint(this._settings.activeTint, this._settings.activeTintAlpha);
+            }
+            else if (this.isHovered()) {
+                this._applyTint(this._settings.overTint, this._settings.overTintAlpha);
+            }
+            else {
+                this._applyTint(this._settings.tint, this._settings.tintAlpha);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _applyTint(color, alpha = 0.5) {
+        try {
+            if (!KString.any(color)) {
+                this.removeEffect(KNSpriteEffects.Tint);
+                return;
+            }
+            else {
+                let tintColor = KColor.HexToColorNumber(color);
+                this.addTintEffect({
+                    "color": tintColor,
+                    "alpha": alpha
+                });
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _refreshState() {
+        try {
+            this.setEnabledState(this._settings.enabled);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _enable() {
+        this._isDisabled = false;
+        try {
+            if (this._settings.desaturateWhenDisabled) {
+                this.removeEffect(KNSpriteEffects.Desaturate);
+            }
+            this._refreshTint();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _disable() {
+        try {
+            this._isDisabled = true;
+            if (this._settings.desaturateWhenDisabled) {
+                this.addDesaturateEffect();
+            }
+            else if (KString.any(this._settings.disabledTint)) {
+                this._applyTint(this._settings.disabledTint, this._settings.disabledTintAlpha);
+            }
+            else {
+                this._applyTint(this._settings.tint, this._settings.tintAlpha);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _updateButtonKeyboardHandling() {
+        if (KString.any(this._settings.keyboardKey)) {
+            if (Input.isTriggered(this._settings.keyboardKey)) {
+                try {
+                    Input.clear();
+                    this.onClick();
+                }
+                catch (error) {
+                    console.warn(error);
+                }
+            }
+        }
+    }
+    _activateHandlerVisually() {
+        try {
+            if (this.isDisabled()) {
+                super._activateHandlerVisually();
+                return;
+            }
+            this._applyTint(this._settings.overTint, this._settings.overTintAlpha);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _deactivateHandlerVisually() {
+        try {
+            if (this.isDisabled()) {
+                super._deactivateHandlerVisually();
+                return;
+            }
+            this._refreshTint();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+}
+// * NUI 1.1
+// * rev 11.09.24
+// * "type": "gauge"
+class KNSprite_Gauge extends KNSprite {
+    constructor(_settings) {
+        super();
+        this._settings = _settings;
+        this._settings = Object.assign({}, KNSprite_Gauge.DefaultSettings(), _settings);
+        this._loaded = false;
+        this._lastValue = 1;
+        this._create();
+        this._applySettings();
+    }
+    /**
+     * Returns the default settings for the gauge sprite.
+     * @returns {GaugeSpriteSettings} The default settings.
+     */
+    static DefaultSettings() {
+        return {
+            "fillMode": "color",
+            "fillColor": "#ffffff",
+            "fillOpacity": 255,
+            "imageName": "",
+            "folderName": "pictures",
+            "margins": 2,
+            "width": "auto",
+            "height": "auto",
+            "mask": "",
+            "backColor": "#000000",
+            "backImage": "",
+            "backOpacity": 255,
+            "vertical": false
+        };
+    }
+    /**
+     * Checks if the gauge sprite is loaded.
+     * @returns {boolean} True if loaded, otherwise false.
+     */
+    isLoaded() {
+        try {
+            return this._loaded === true;
+        }
+        catch (e) {
+            console.warn(e);
+        }
+        return false;
+    }
+    /**
+     * Gets the real width of the gauge sprite.
+     * @returns {number} The real width.
+     */
+    realWidth() {
+        try {
+            if (this.isNotHaveBounds())
+                return 0;
+            if (this._settings.width !== "auto") {
+                return this._settings.width;
+            }
+            else if (this._gaugeSpr) {
+                return this._gaugeSpr.realWidth();
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+        return this.width;
+    }
+    /**
+     * Gets the real height of the gauge sprite.
+     * @returns {number} The real height.
+     */
+    realHeight() {
+        try {
+            if (this.isNotHaveBounds())
+                return 0;
+            if (this._settings.height !== "auto") {
+                return this._settings.height;
+            }
+            else if (this._gaugeSpr) {
+                return this._gaugeSpr.realHeight();
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+        return this.height;
+    }
+    /**
+     * Returns an object with data bindings for width, height, size, rate, fillImage, fillColor, and fillOpacity.
+     * @returns {Record<string, any>} The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            width: (v) => { if (v)
+                this.setSize(v, this._settings.height); },
+            height: (v) => { if (v)
+                this.setSize(this._settings.width, v); },
+            size: (v) => { if (v)
+                this.setSize(v.width, v.height); },
+            rate: (v) => { if (v)
+                this.draw(v); },
+            fillImage: (v) => { if (v)
+                this.setFillImage(v); },
+            fillColor: (v) => { if (v)
+                this.setFillColor(v); },
+            fillOpacity: (v) => { if (v)
+                this.setFillOpacity(v); }
+        });
+    }
+    /**
+     * Draws the gauge with the specified percentage.
+     * @param {number} [percent=1] - The percentage to draw.
+     */
+    draw(percent = 1) {
+        try {
+            if (!this.isLoaded()) {
+                this.requireFunc('draw', arguments);
+                return;
+            }
+            this._lastValue = percent;
+            this._drawGauge(percent);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Sets the fill opacity of the gauge.
+     * @param {number} opacity - The fill opacity.
+     */
+    setFillOpacity(opacity) {
+        try {
+            this._settings.fillOpacity = opacity;
+            if (this._fillLayer) {
+                this._fillLayer.opacity = opacity;
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Sets the fill color of the gauge.
+     * @param {string} color - The fill color.
+     */
+    setFillColor(color) {
+        try {
+            this._settings.fillColor = color;
+            if (this._fillColorBitmap) {
+                this._createColorGaugeFillColorBitmap();
+                this._drawGauge(this._lastValue);
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Sets the fill image of the gauge.
+     * @param {string} imageName - The name of the fill image.
+     */
+    setFillImage(imageName) {
+        try {
+            this._settings.imageName = imageName;
+            this._applySettings();
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Sets the size of the gauge sprite.
+     * @param {number | string} [width="auto"] - The width of the sprite.
+     * @param {number | string} [height="auto"] - The height of the sprite.
+     */
+    setSize(width = "auto", height = "auto") {
+        try {
+            if (width !== "auto") {
+                width = this.convertStringSizeValue(width, 'width', this);
+            }
+            if (height !== "auto") {
+                height = this.convertStringSizeValue(height, 'height', this);
+            }
+            if (width)
+                this._settings.width = width;
+            if (height)
+                this._settings.height = height;
+            this._applySettings();
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Creates the base layer sprite.
+     * @private
+     */
+    _create() {
+        this._gaugeBaseLayer = new KSprite();
+        this.addChild(this._gaugeBaseLayer);
+    }
+    /**
+     * Applies the current settings to the gauge sprite.
+     * @private
+     */
+    _applySettings() {
+        try {
+            this._loaded = false;
+            this._destroyExistGauge();
+            this._createGaugeFromSettings();
+            this.draw(this._lastValue);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Destroys the existing gauge sprite.
+     * @private
+     */
+    _destroyExistGauge() {
+        try {
+            if (!this._gaugeSpr)
+                return;
+            this._gaugeSpr.removeFromParent();
+            this._gaugeSpr = null;
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Creates the gauge sprite based on the current settings.
+     * @private
+     */
+    _createGaugeFromSettings() {
+        try {
+            this._gaugeSpr = new KNSprite();
+            this._gaugeBaseLayer.addChild(this._gaugeSpr);
+            switch (this._settings.fillMode) {
+                case "image":
+                    this._createImageGauge();
+                    break;
+                case "plane":
+                    this._createPlaneGauge();
+                    break;
+                case "color":
+                    this._createColorGauge();
+                    break;
+                default:
+                    console.warn("Unknown Gauge fillMode: " + this._settings.fillMode);
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Creates the image gauge.
+     * @private
+     */
+    _createImageGauge() {
+        try {
+            this._gaugeSourceImage = new KNSprite_Image({
+                imageName: this._settings.imageName,
+                folderName: this._settings.folderName,
+                width: this._settings.width,
+                height: this._settings.height
+            });
+            this._gaugeSourceImage.addLoadListener(this._onGaugeFillImageLoaded.bind(this));
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Handles the event when the gauge fill image is loaded.
+     * @private
+     */
+    _onGaugeFillImageLoaded() {
+        try {
+            let width = this._gaugeSourceImage.realWidth();
+            let height = this._gaugeSourceImage.realHeight();
+            this._addBackground(width, height);
+            this._fillLayer = new KSprite(new Bitmap(width, height));
+            this._fillLayer.opacity = this._settings.fillOpacity;
+            this._gaugeSpr.addChild(this._fillLayer);
+            this._addMask();
+            this._onGaugeLoadedAndReady();
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Handles the event when the gauge is loaded and ready.
+     * @private
+     */
+    _onGaugeLoadedAndReady() {
+        try {
+            this._loaded = true;
+            this.width = this.realWidth();
+            this.height = this.realHeight();
+            this.executeRequiredFuncs();
+            this.executeLoadListeners();
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Creates the plane gauge.
+     * @private
+     */
+    _createPlaneGauge() {
+        try {
+            // * Нельзя создать Plane Gauge с auto размером, поэтому задаём стандартные значения
+            if (this._settings.width === "auto")
+                this._settings.width = 80;
+            if (this._settings.height === "auto")
+                this._settings.height = 20;
+            this._addBackground(this._settings.width, this._settings.height);
+            this._fillLayer = new KNSprite_Plane({
+                imageName: this._settings.imageName,
+                folderName: this._settings.folderName,
+                width: this._settings.width,
+                height: this._settings.height,
+                margins: this._settings.margins
+            });
+            this._fillLayer.opacity = this._settings.fillOpacity;
+            this._gaugeSpr.addChild(this._fillLayer);
+            this._addMask();
+            this._onGaugeLoadedAndReady();
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Creates the color gauge.
+     * @private
+     */
+    _createColorGauge() {
+        try {
+            // * Нельзя создать цветную Gauge с auto размером, поэтому задаём стандартные значения
+            if (this._settings.width === "auto")
+                this._settings.width = 80;
+            if (this._settings.height === "auto")
+                this._settings.height = 20;
+            this._addBackground(this._settings.width, this._settings.height);
+            this._fillLayer = new KSprite(new Bitmap(this._settings.width, this._settings.height));
+            this._fillLayer.opacity = this._settings.fillOpacity;
+            this._createColorGaugeFillColorBitmap();
+            this._gaugeSpr.addChild(this._fillLayer);
+            this._addMask();
+            this._onGaugeLoadedAndReady();
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Creates the fill color bitmap for the color gauge.
+     * @private
+     */
+    _createColorGaugeFillColorBitmap() {
+        try {
+            this._fillColorBitmap = new Bitmap(this._settings.width, this._settings.height);
+            this._fillColorBitmap.fillAll(this._settings.fillColor);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Adds the background to the gauge sprite.
+     * @param {number} width - The width of the background.
+     * @param {number} height - The height of the background.
+     * @private
+     */
+    _addBackground(width, height) {
+        try {
+            if (!this._gaugeSpr)
+                return;
+            let background = null;
+            if (KString.any(this._settings.backImage)) {
+                background = this._createGaugeBackgroundImage();
+            }
+            else if (KString.any(this._settings.backColor)) {
+                background = this._createGaugeBackgroundColor(width, height, this._settings.backColor);
+            }
+            if (background) {
+                if (this._settings.backOpacity) {
+                    background.opacity = this._settings.backOpacity;
+                }
+                this._gaugeSpr.addChild(background);
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Adds the mask to the gauge sprite.
+     * @private
+     */
+    _addMask() {
+        try {
+            if (!this._gaugeSpr)
+                return;
+            if (!KString.any(this._settings.mask))
+                return;
+            const gaugeMask = new KNSprite_Image({
+                imageName: this._settings.mask,
+                folderName: this._settings.folderName,
+                width: this._settings.width,
+                height: this._settings.height
+            });
+            this._gaugeSpr.mask = gaugeMask.image;
+            this._gaugeSpr.addChild(gaugeMask);
+        }
+        catch (e) {
+            console.warn(e);
+            this._gaugeSpr.mask = null;
+        }
+    }
+    /**
+     * Creates the background color for the gauge sprite.
+     * @param {number} width - The width of the background.
+     * @param {number} height - The height of the background.
+     * @param {string} color - The color of the background.
+     * @returns {KSprite} The background sprite.
+     * @private
+     */
+    _createGaugeBackgroundColor(width, height, color) {
+        try {
+            const background = new KSprite(new Bitmap(width, height));
+            background.fillAll(color);
+            return background;
+        }
+        catch (e) {
+            console.warn(e);
+            return new KSprite();
+        }
+    }
+    /**
+     * Creates the background image for the gauge sprite.
+     * @returns {KNSprite_Image} The background image sprite.
+     * @private
+     */
+    _createGaugeBackgroundImage() {
+        try {
+            return new KNSprite_Image({
+                imageName: this._settings.backImage,
+                folderName: this._settings.folderName,
+                width: this._settings.width,
+                height: this._settings.height
+            });
+        }
+        catch (e) {
+            console.warn(e);
+            return new KNSprite();
+        }
+    }
+    /**
+     * Draws the gauge with the specified percentage.
+     * @param {number} percent - The percentage to draw.
+     * @private
+     */
+    _drawGauge(percent) {
+        try {
+            if (!this._fillLayer)
+                return;
+            if (this._settings.vertical == true) {
+                this._drawVertical(percent);
+            }
+            else {
+                this._drawHorizontal(percent);
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the horizontal gauge based on the fill mode and percentage.
+     * @param {number} percent - The percentage to fill the gauge.
+     */
+    _drawHorizontal(percent) {
+        try {
+            switch (this._settings.fillMode) {
+                case "image":
+                    this._drawImageGauge(percent);
+                    break;
+                case "plane":
+                    this._drawPlaneGauge(percent);
+                    break;
+                case "color":
+                    this._drawColorGauge(percent);
+                    break;
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the image gauge with the specified percentage.
+     * @param {number} percent - The percentage to draw.
+     * @private
+     */
+    _drawImageGauge(percent) {
+        try {
+            this._fillLayer.bitmap.clear();
+            const fillBitmap = this._gaugeSourceImage.image.bitmap;
+            this._drawGaugeBitmapBased(percent, fillBitmap);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the gauge based on the specified bitmap and percentage.
+     * @param {number} percent - The percentage to draw.
+     * @param {Bitmap} fillBitmap - The bitmap to use for drawing.
+     * @private
+     */
+    _drawGaugeBitmapBased(percent, fillBitmap) {
+        try {
+            const w = this.realWidth() * percent;
+            const h = this.realHeight();
+            this._fillLayer.bitmap.blt(fillBitmap, 0, 0, w, h, 0, 0);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the horizontal color gauge based on the percentage.
+     * @param {number} percent - The percentage to fill the gauge.
+     */
+    _drawColorGauge(percent) {
+        try {
+            this._fillLayer.bitmap.clear();
+            const fillBitmap = this._fillColorBitmap;
+            this._drawGaugeBitmapBased(percent, fillBitmap);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the horizontal plane gauge based on the percentage.
+     * @param {number} percent - The percentage to fill the gauge.
+     */
+    _drawPlaneGauge(percent) {
+        try {
+            const w = this.realWidth() * percent;
+            const h = this.realHeight();
+            if (this._fillLayer['setSize'])
+                this._fillLayer['setSize'](w, h);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the vertical gauge based on the fill mode and percentage.
+     * @param {number} percent - The percentage to fill the gauge.
+     */
+    _drawVertical(percent) {
+        try {
+            switch (this._settings.fillMode) {
+                case "image":
+                    this._drawImageGaugeVertical(percent);
+                    break;
+                case "plane":
+                    this._drawPlaneGaugeVertical(percent);
+                    break;
+                case "color":
+                    this._drawColorGaugeVertical(percent);
+                    break;
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the vertical image gauge based on the percentage.
+     * @param {number} percent - The percentage to fill the gauge.
+     */
+    _drawImageGaugeVertical(percent) {
+        try {
+            this._fillLayer.bitmap.clear();
+            const fillBitmap = this._gaugeSourceImage.image.bitmap;
+            this._drawGaugeBitmapBasedVertical(percent, fillBitmap);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the vertical gauge based on the bitmap and percentage.
+     * @param {number} percent - The percentage to fill the gauge.
+     * @param {Bitmap} fillBitmap - The bitmap to use for the gauge.
+     */
+    _drawGaugeBitmapBasedVertical(percent, fillBitmap) {
+        try {
+            const w = this.realWidth();
+            const h = this.realHeight() * percent;
+            this._fillLayer.bitmap.blt(fillBitmap, 0, 0, w, h, 0, 0);
+            this._fillLayer.y = this.realHeight() - h;
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the vertical color gauge based on the percentage.
+     * @param {number} percent - The percentage to fill the gauge.
+     */
+    _drawColorGaugeVertical(percent) {
+        try {
+            this._fillLayer.bitmap.clear();
+            const fillBitmap = this._fillColorBitmap;
+            this._drawGaugeBitmapBasedVertical(percent, fillBitmap);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the vertical plane gauge based on the percentage.
+     * @param {number} percent - The percentage to fill the gauge.
+     */
+    _drawPlaneGaugeVertical(percent) {
+        try {
+            const w = this.realWidth();
+            const h = this.realHeight() * percent;
+            if (this._fillLayer['setSize'])
+                this._fillLayer['setSize'](w, h);
+            this._fillLayer.y = this.realHeight() - h;
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+}
+//NUI 1.0
+//rev 11.09.24
+//"type": "group"
+class KNSprite_Group extends KNSprite {
+    constructor(_settings) {
+        super();
+        this._settings = _settings;
+        this._isNeedWaitLoadingChild = false;
+        this._settings = Object.assign({}, KNSprite_Group.DefaultSettings(), _settings);
+        if (this._settings.horizontalNavigation === true) {
+            this.isVerticalKeyboardNavigation = () => false;
+        }
+        if (this._settings.freeNavigation === true) {
+            this.isFreeKeyboardNavigation = () => true;
+        }
+        this._applySettings();
+        this._onResize();
+    }
+    /**
+     * Gets the current settings of the image sprite.
+     * @returns {GroupSpriteSettings} The current settings.
+     */
+    get settings() {
+        return this._settings;
+    }
+    /**
+     * Returns the default settings for the sprite group.
+     * @returns {GroupSpriteSettings} The default settings.
+     */
+    static DefaultSettings() {
+        return {
+            "keyboardHandling": false,
+            "horizontalNavigation": false,
+            "freeNavigation": false,
+            "width": "auto",
+            "height": "auto"
+        };
+    }
+    /**
+     * Returns an object with data bindings for width, height, and size.
+     * @returns {Record<string, any>} The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            width: (v) => { if (v)
+                this.setSize(v, this._settings.height); },
+            height: (v) => { if (v)
+                this.setSize(this._settings.width, v); },
+            size: (v) => { if (v)
+                this.setSize(v.width, v.height); }
+        });
+    }
+    /**
+     * Updates the sprite group.
+     */
+    update() {
+        super.update();
+        try {
+            if (this._isNeedWaitLoadingChild === true) {
+                this.refreshBindings(this._dataObjectRef, true);
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Refreshes the bindings for the sprite group.
+     * @param {object} dataObject - The data object to bind.
+     * @param {boolean} recursive - Whether to refresh bindings recursively.
+     */
+    refreshBindings(dataObject, recursive) {
+        super.refreshBindings(dataObject, recursive);
+        for (const c of this.children) {
+            if (c instanceof KNSprite) {
+                if (!c.isLoaded()) {
+                    this._startWaitLoading(dataObject);
+                    return;
+                }
+            }
+        }
+        this._isNeedWaitLoadingChild = false;
+    }
+    /**
+     * Starts waiting for a child to load.
+     * @param {object} dataObjectRef - The data object reference.
+     */
+    _startWaitLoading(dataObjectRef) {
+        try {
+            this._dataObjectRef = dataObjectRef;
+            this._isNeedWaitLoadingChild = true;
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Sets the size of the sprite group.
+     * @param {number | string} [width="auto"] - The width of the sprite group.
+     * @param {number | string} [height="auto"] - The height of the sprite group.
+     */
+    setSize(width = 'auto', height = 'auto') {
+        try {
+            if (width !== "auto") {
+                width = this.convertStringSizeValue(width, 'width', this);
+            }
+            if (height !== "auto") {
+                height = this.convertStringSizeValue(height, 'height', this);
+            }
+            if (width != null)
+                this._settings.width = width;
+            if (height != null)
+                this._settings.height = height;
+            this._onResize();
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Gets the real width of the sprite group.
+     * @returns {number} The real width.
+     */
+    realWidth() {
+        try {
+            if (this.isNotHaveBounds())
+                return 0;
+            if (this._settings.width === "auto") {
+                return this._calculateMax("x", "width");
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+        return this._settings.width;
+    }
+    /**
+     * Gets the real height of the sprite group.
+     * @returns {number} The real height.
+     */
+    realHeight() {
+        try {
+            if (this.isNotHaveBounds())
+                return 0;
+            if (this._settings.height === "auto") {
+                return this._calculateMax("y", "height");
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+        return this._settings.height;
+    }
+    /**
+     * Calculates the maximum size of the sprite group.
+     * @param {'x' | 'y'} axis - The axis to calculate.
+     * @param {string} b - The size property to calculate.
+     * @returns {number} The maximum size.
+     */
+    _calculateMax(axis, b) {
+        let value = 0;
+        try {
+            for (const child of this.children) {
+                const size = child[axis] + NUtils.GetSpriteRealSize(b, child);
+                if (size > value)
+                    value = size;
+            }
+            if (value < 0)
+                value = 0;
+        }
+        catch (e) {
+            console.warn(e);
+            return 0;
+        }
+        return value;
+    }
+    /**
+     * Applies the current settings to the sprite group.
+     * @private
+     */
+    _applySettings() {
+        try {
+            if (this._settings.keyboardHandling === true) {
+                this.activateHandlerManagment();
+            }
+            else {
+                this.deactivateHandlerManagment();
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Resizes the sprite group based on its real width and height.
+     * @private
+     */
+    _onResize() {
+        try {
+            this.width = this.realWidth();
+            this.height = this.realHeight();
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+}
+// * NUI 1.0
+// * rev 07.10.24
+// * "type": "image"
+/**
+ * Represents an image sprite used in the NUI system.
+ * @class
+ * @extends KNSprite
+ */
+class KNSprite_Image extends KNSprite {
+    /**
+     * Constructs a new instance of the NUI_Sprite_Image class.
+     * @param _settings - The optional settings for the image sprite.
+     */
+    constructor(_settings) {
+        super();
+        this._settings = _settings;
+        this._isLoaded = false;
+        this._settings = Object.assign({}, KNSprite_Image.DefaultSettings(), _settings);
+        this._create();
+        this._onResize();
+        this.draw(this._settings.imageName);
+    }
+    // * DefaultSettings in JSON format (for easy copy-paste)
+    /**
+     * Returns the default settings for the image sprite.
+     * @returns {ImageSpriteSettings} The default settings.
+     */
+    static DefaultSettings() {
+        return {
+            "width": "auto",
+            "height": "auto",
+            "imageName": "",
+            "folderName": "pictures",
+            "keepAspect": false,
+            "useAspectSize": false
+        };
+    }
+    /**
+     * Gets the current settings of the image sprite.
+     * @returns {ImageSpriteSettings} The current settings.
+     */
+    get settings() {
+        return this._settings;
+    }
+    /**
+     * Gets the image sprite.
+     * @returns {KSprite} The image sprite.
+     */
+    get image() {
+        return this._image;
+    }
+    /**
+     * Checks if the image sprite is loaded.
+     * @returns {boolean} True if loaded, otherwise false.
+     */
+    isLoaded() {
+        try {
+            /*if(this.settings.width != 'auto' && this.settings.height != 'auto') {
+                return true;
+            }*/
+            return this._isLoaded == true;
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return false;
+    }
+    /**
+     * Gets the real width of the image sprite.
+     * @returns {number} The real width.
+     */
+    realWidth() {
+        if (this.isNotHaveBounds())
+            return 0;
+        if (this.settings.useAspectSize == true && this._aspectWidth) {
+            return this._aspectWidth;
+        }
+        if (this.settings.width == 'auto') {
+            if (this._srcBitmap) {
+                return this._srcBitmap.width;
+            }
+            else {
+                if (this._image.bitmap && this._image.bitmap.isReady()) {
+                    return this._image.bitmap.width;
+                }
+            }
+        }
+        else {
+            return this.settings.width;
+        }
+        return this.width;
+    }
+    /**
+     * Gets the real height of the image sprite.
+     * @returns {number} The real height.
+     */
+    realHeight() {
+        if (this.isNotHaveBounds())
+            return 0;
+        if (this.settings.useAspectSize == true && this._aspectHeight) {
+            return this._aspectHeight;
+        }
+        if (this.settings.height == 'auto') {
+            if (this._srcBitmap) {
+                return this._srcBitmap.height;
+            }
+            else {
+                if (this._image.bitmap && this._image.bitmap.isReady()) {
+                    return this._image.bitmap.height;
+                }
+            }
+        }
+        else {
+            return this.settings.height;
+        }
+        return this.height;
+    }
+    /**
+     * Sets the image for the sprite.
+     * @param {string} imageName - The name of the image.
+     * @param {string} [folderName] - The name of the folder containing the image.
+     */
+    setImage(imageName, folderName) {
+        if (KString.any(folderName)) {
+            this._settings.folderName = folderName;
+        }
+        this.draw(imageName);
+    }
+    isHoveredByCursor() {
+        if (this.image) {
+            return this.image.isHoveredByCursor();
+        }
+        else {
+            return super.isHoveredByCursor();
+        }
+    }
+    /**
+     * Returns an object with data bindings for width, height, size, image, and icon.
+     * @returns {Record<string, any>} The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            width: (v) => { if (v)
+                this.setSize(v, this.settings.height); },
+            height: (v) => { if (v)
+                this.setSize(this.settings.width, v); },
+            size: (v) => { if (v)
+                this.setSize(v.width, v.height); },
+            image: (v) => { this.draw(v); },
+            icon: (v) => { this.drawIcon(v); }
+        });
+    }
+    /**
+     * Sets the size of the image sprite.
+     * @param {number | string} [width='auto'] - The width of the sprite.
+     * @param {number | string} [height='auto'] - The height of the sprite.
+     */
+    setSize(width = 'auto', height = 'auto') {
+        try {
+            if (width != 'auto')
+                width = this.convertStringSizeValue(width, 'width', this);
+            if (height != 'auto')
+                height = this.convertStringSizeValue(height, 'height', this);
+            if (width != null)
+                this._settings.width = width;
+            if (height != null)
+                this._settings.height = height;
+            this._onResize();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Draws an icon on the sprite.
+     * @param {number} iconIndex - The index of the icon.
+     */
+    drawIcon(iconIndex) {
+        try {
+            if (typeof (iconIndex) == 'number') {
+                this.draw(iconIndex);
+            }
+            else {
+                this.draw("");
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Draws an image or icon on the sprite.
+     * @param {string | number} [imageName=""] - The name of the image or the index of the icon.
+     */
+    draw(imageName = "") {
+        if (typeof (imageName) == 'string' && KString.any(imageName)) {
+            this._drawImage(imageName);
+            return;
+        }
+        if (typeof (imageName) == 'number' && imageName >= 0) {
+            this._drawIcon(imageName);
+            return;
+        }
+        this._srcBitmap = null;
+        this._onResize();
+    }
+    /**
+     * Draws an icon on the sprite.
+     * @param {number} iconIndex - The index of the icon.
+     * @private
+     */
+    _drawIcon(iconIndex) {
+        try {
+            let size = this.settings.width == 'auto' ? 32 : this.settings.width;
+            this.settings.height = size;
+            this._srcBitmap = new Bitmap(size, size);
+            KBitmap.DrawIcon(this._srcBitmap, iconIndex, 0, 0, size);
+            this._isLoaded = true;
+            this._onResize();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Draws an image on the sprite.
+     * @param {string} imageName - The name of the image.
+     * @private
+     */
+    _drawImage(imageName) {
+        this._isLoaded = false;
+        this._srcBitmap = ImageManager.loadBitmap('img/' + this.settings.folderName + '/', imageName, 0, false);
+        this._srcBitmap.addLoadListener(() => {
+            this._isLoaded = true;
+            this._onResize();
+            this.executeRequiredFuncs();
+            this.executeLoadListeners();
+        });
+    }
+    /**
+     * Creates the image sprite and adds it as a child.
+     * @private
+     */
+    _create() {
+        this._image = new KSprite(new Bitmap(1, 1));
+        this._image.isNeedCheckAlphaPixels = () => true;
+        this.addChild(this._image);
+    }
+    /**
+     * Resizes the image sprite.
+     * @private
+     */
+    _onResize() {
+        try {
+            this._aspectWidth = null;
+            this._aspectHeight = null;
+            this._image.bitmap = new Bitmap(this.realWidth(), this.realHeight());
+            if (!this._srcBitmap)
+                return;
+            let fw = this.realWidth();
+            let fh = this.realHeight();
+            if (this.settings.keepAspect) {
+                let aspect = this._calculateAspect(this._image.bitmap.width, this._image.bitmap.height, this._srcBitmap.width, this._srcBitmap.height);
+                fw = aspect.width;
+                fh = aspect.height;
+                if (fh < this._image.bitmap.height) {
+                    this._aspectHeight = fh;
+                }
+                else {
+                    this._aspectHeight = this._image.bitmap.height;
+                }
+                if (fw < this._image.bitmap.width) {
+                    this._aspectWidth = fw;
+                }
+                else {
+                    this._aspectWidth = this._image.bitmap.width;
+                }
+            }
+            this._image.bitmap.blt(this._srcBitmap, 0, 0, this._srcBitmap.width, this._srcBitmap.height, 0, 0, fw, fh);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Calculates the aspect ratio for resizing.
+     * @param {number} containerWidth - The width of the container.
+     * @param {number} containerHeight - The height of the container.
+     * @param {number} width - The width of the image.
+     * @param {number} height - The height of the image.
+     * @returns {{ width: number, height: number }} The calculated width and height.
+     * @private
+     */
+    _calculateAspect(containerWidth, containerHeight, width, height) {
+        let aspect = width / height;
+        let containerAspectRatio = containerWidth / containerHeight;
+        if (aspect > containerAspectRatio) {
+            width = containerWidth;
+            height = width / aspect;
+        }
+        else {
+            height = containerHeight;
+            width = height * aspect;
+        }
+        return { width, height };
+    }
+}
+class KNSprite_ImageButton extends KNSprite {
+    constructor(_settings) {
+        super();
+        this._settings = _settings;
+        this._isSimulation = false;
+        this._settings = Object.assign(KNSprite_ImageButton.DefaultSettings(), _settings);
+        this._create();
+        this._applySettings();
+    }
+    static DefaultSettings() {
+        return {
+            "folderName": "pictures",
+            "imageName": "",
+            "hoverImageName": "",
+            "pressedImageName": "",
+            "disabledImageName": "",
+            "isCheckAlpha": false,
+            "width": 160,
+            "height": 60,
+            "clickSe": "Cursor1",
+            "desaturateWhenDisabled": false,
+            "tint": "",
+            "tintAlpha": 0.5,
+            "overTint": "",
+            "overTintAlpha": 0.5,
+            "activeTint": "",
+            "activeTintAlpha": 0.5,
+            "disabledTint": "",
+            "disabledTintAlpha": 0.5,
+            "keyboardKey": "",
+            "keyboardHandled": true,
+            "enabled": true,
+        };
+    }
+    isCanHandleTouch() {
+        return true;
+    }
+    isSupportKeyboardHandle() {
+        return this._settings.keyboardHandled == true;
+    }
+    isClickEnabled() {
+        return super.isClickEnabled() && this.opacity != 0;
+    }
+    onPress() {
+        super.onPress();
+        this._refreshVisualState();
+    }
+    onReleased() {
+        super.onReleased();
+        this._refreshVisualState();
+    }
+    onMouseEnter() {
+        super.onMouseEnter();
+        this._refreshVisualState();
+    }
+    onMouseExit() {
+        super.onMouseExit();
+        this._refreshVisualState();
+    }
+    isHoveredByCursor() {
+        if (this._buttonImage && this._buttonImage.visible && this._buttonImage.isHoveredByCursor()) {
+            return true;
+        }
+        if (this._hoveredImage && this._hoveredImage.visible && this._hoveredImage.isHoveredByCursor()) {
+            return true;
+        }
+        if (this._pressedImage && this._pressedImage.visible && this._pressedImage.isHoveredByCursor()) {
+            return true;
+        }
+        if (this._disabledImage && this._disabledImage.visible && this._disabledImage.isHoveredByCursor()) {
+            return true;
+        }
+        return false;
+    }
+    onClick() {
+        try {
+            if (this.isDisabled())
+                return;
+            if (this.isClickEnabled()) {
+                KAudio.PlaySE(this._settings.clickSe);
+            }
+            super.onClick();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Gets the current settings of the Button.
+     * @returns {ImageButtonSpriteSettings} The current settings.
+     */
+    get settings() {
+        return this._settings;
+    }
+    /**
+     * Returns an object with data bindings for width, height, and size.
+     * @returns {Record<string, any>} The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            width: (v) => { if (v)
+                this.setSize(v, this.settings.height); },
+            height: (v) => { if (v)
+                this.setSize(this.settings.width, v); },
+            size: (v) => { if (v)
+                this.setSize(v.width, v.height); },
+            style: (v) => { if (KDX.any(v))
+                this.setStyle(v); },
+            enable: (v) => { if (KDX.any(v))
+                this.setEnabledState(v); },
+            handler: (v) => { this.addClickHandler(v); },
+            image: (v) => { if (KDX.any(v))
+                this.setImage(v); },
+            // * Не используются, т.к. этих кнопок может не быть созданно, будет путанница
+            //hoveredImage: (v: string) => {  if(KDX.any(v)) this.setHoveredImage(v) },
+            //pressedImage: (v: string) => {  if(KDX.any(v)) this.setPressedImage(v) },
+            //disabledImage: (v: string) => {  if(KDX.any(v)) this.setDisabledImage(v) }
+        });
+    }
+    setStyle(style) {
+        this._settings = Object.assign(this._settings, style);
+        this._applySettings();
+    }
+    setImage(imageName) {
+        var _a;
+        try {
+            this._settings.imageName = imageName;
+            (_a = this._buttonImage) === null || _a === void 0 ? void 0 : _a.setImage(imageName);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setHoveredImage(imageName) {
+        var _a;
+        try {
+            this._settings.hoverImageName = imageName;
+            (_a = this._hoveredImage) === null || _a === void 0 ? void 0 : _a.setImage(imageName);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setPressedImage(imageName) {
+        var _a;
+        try {
+            this._settings.pressedImageName = imageName;
+            (_a = this._pressedImage) === null || _a === void 0 ? void 0 : _a.setImage(imageName);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setDisabledImage(imageName) {
+        var _a;
+        try {
+            this._settings.disabledImageName = imageName;
+            (_a = this._disabledImage) === null || _a === void 0 ? void 0 : _a.setImage(imageName);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Sets the size of the sprite button.
+     *
+     * @param {number | string} [width=160] - The width of the button. Can be a number or a string.
+     * @param {number | string} [height=60] - The height of the button. Can be a number or a string.
+     *
+     * @throws {Error} Will throw an error if the width or height cannot be converted.
+     */
+    setSize(width = 160, height = 60) {
+        try {
+            let _width = this.convertStringSizeValue(width, 'width', this);
+            let _height = this.convertStringSizeValue(height, 'height', this);
+            if (_width != null)
+                this._settings.width = _width;
+            if (_height != null)
+                this._settings.height = _height;
+            this._applySettings();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    realWidth() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return this._settings.width;
+    }
+    realHeight() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return this._settings.height;
+    }
+    update() {
+        super.update();
+        if (this.isClickEnabled()) {
+            this._updateButtonKeyboardHandling();
+        }
+    }
+    isEnabled() {
+        return !this.isDisabled();
+    }
+    setEnabledState(enabled) {
+        try {
+            this._settings.enabled = enabled;
+            if (enabled) {
+                this._enable();
+            }
+            else {
+                this._disable();
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    addClickHandler(handler) {
+        this._handleOkAction = handler;
+    }
+    // * Only visual
+    simulateClickEffect() {
+        this._isSimulation = true;
+        setTimeout(() => {
+            try {
+                this._isSimulation = false;
+                this._refreshVisualState();
+            }
+            catch (error) {
+                console.warn(error);
+            }
+        }, 100);
+        this._refreshVisualState();
+    }
+    enable() {
+        this.setEnabledState(true);
+    }
+    disable() {
+        this.setEnabledState(false);
+    }
+    _create() {
+        this._buttonImage = new KNSprite_Image({
+            "folderName": this._settings.folderName,
+            "imageName": this._settings.imageName,
+            "width": this._settings.width,
+            "height": this._settings.height,
+        });
+        this.addChild(this._buttonImage);
+        if (KString.any(this._settings.hoverImageName)) {
+            this._hoveredImage = new KNSprite_Image({
+                "folderName": this._settings.folderName,
+                "imageName": this._settings.hoverImageName,
+                "width": this._settings.width,
+                "height": this._settings.height,
+            });
+            this.addChild(this._hoveredImage);
+        }
+        if (KString.any(this._settings.pressedImageName)) {
+            this._pressedImage = new KNSprite_Image({
+                "folderName": this._settings.folderName,
+                "imageName": this._settings.pressedImageName,
+                "width": this._settings.width,
+                "height": this._settings.height,
+            });
+            this.addChild(this._pressedImage);
+        }
+        if (KString.any(this._settings.disabledImageName)) {
+            this._disabledImage = new KNSprite_Image({
+                "folderName": this._settings.folderName,
+                "imageName": this._settings.disabledImageName,
+                "width": this._settings.width,
+                "height": this._settings.height,
+            });
+            this.addChild(this._disabledImage);
+        }
+        if (this._settings.isCheckAlpha == true) {
+            this._buttonImage.isNeedCheckAlphaPixels = () => true;
+            if (this._hoveredImage)
+                this._hoveredImage.isNeedCheckAlphaPixels = () => true;
+            if (this._pressedImage)
+                this._pressedImage.isNeedCheckAlphaPixels = () => true;
+            if (this._disabledImage)
+                this._disabledImage.isNeedCheckAlphaPixels = () => true;
+        }
+    }
+    _applySettings() {
+        try {
+            this._onResize();
+            this._refreshVisualState();
+            this._refreshState();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _onResize() {
+        try {
+            this.width = this._settings.width;
+            this.height = this._settings.height;
+            if (this._buttonImage) {
+                this._buttonImage.setSize(this._settings.width, this._settings.height);
+            }
+            if (this._hoveredImage) {
+                this._hoveredImage.setSize(this._settings.width, this._settings.height);
+            }
+            if (this._pressedImage) {
+                this._pressedImage.setSize(this._settings.width, this._settings.height);
+            }
+            if (this._disabledImage) {
+                this._disabledImage.setSize(this._settings.width, this._settings.height);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _refreshVisualState() {
+        try {
+            this._refreshImage();
+            this._refreshTint();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _refreshImage() {
+        if (this._isSimulation == true) {
+            if (this._pressedImage) {
+                this._showPressedImage();
+            }
+            else {
+                this._showHoveredImage();
+            }
+            return;
+        }
+        if (this.isPressed()) {
+            this._showPressedImage();
+        }
+        else if (this.isHovered()) {
+            this._showHoveredImage();
+        }
+        else {
+            this._hideAllButtonImages();
+            this._buttonImage.visible = true;
+        }
+    }
+    _hideAllButtonImages() {
+        if (this._buttonImage) {
+            this._buttonImage.visible = false;
+        }
+        if (this._hoveredImage) {
+            this._hoveredImage.visible = false;
+        }
+        if (this._pressedImage) {
+            this._pressedImage.visible = false;
+        }
+        if (this._disabledImage) {
+            this._disabledImage.visible = false;
+        }
+    }
+    _showHoveredImage() {
+        this._hideAllButtonImages();
+        if (this._hoveredImage) {
+            this._hoveredImage.visible = true;
+        }
+        else {
+            this._buttonImage.visible = true;
+        }
+    }
+    _showPressedImage() {
+        this._hideAllButtonImages();
+        if (this._pressedImage) {
+            this._pressedImage.visible = true;
+        }
+        else {
+            this._buttonImage.visible = true;
+        }
+    }
+    _showDisabledImage() {
+        this._hideAllButtonImages();
+        if (this._disabledImage) {
+            this._disabledImage.visible = true;
+        }
+        else {
+            this._buttonImage.visible = true;
+        }
+    }
+    _refreshTint() {
+        if (this.isPressed() || this._isSimulation) {
+            this._applyTint(this._settings.activeTint, this._settings.activeTintAlpha);
+        }
+        else if (this.isHovered()) {
+            this._applyTint(this._settings.overTint, this._settings.overTintAlpha);
+        }
+        else {
+            this._applyTint(this._settings.tint, this._settings.tintAlpha);
+        }
+    }
+    _applyTint(color, alpha = 0.5) {
+        try {
+            if (!KString.any(color)) {
+                this.removeEffect(KNSpriteEffects.Tint);
+                return;
+            }
+            else {
+                let tintColor = KColor.HexToColorNumber(color);
+                this.addTintEffect({
+                    "color": tintColor,
+                    "alpha": alpha
+                });
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _refreshState() {
+        try {
+            this.setEnabledState(this._settings.enabled);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _enable() {
+        this._isDisabled = false;
+        try {
+            if (this._settings.desaturateWhenDisabled) {
+                this.removeEffect(KNSpriteEffects.Desaturate);
+            }
+            this._refreshVisualState();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _disable() {
+        try {
+            this._isDisabled = true;
+            this._showDisabledImage();
+            if (this._settings.desaturateWhenDisabled) {
+                this.addDesaturateEffect();
+            }
+            else if (KString.any(this._settings.disabledTint)) {
+                this._applyTint(this._settings.disabledTint, this._settings.disabledTintAlpha);
+            }
+            else {
+                this._applyTint(this._settings.tint, this._settings.tintAlpha);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _updateButtonKeyboardHandling() {
+        if (KString.any(this._settings.keyboardKey)) {
+            if (Input.isTriggered(this._settings.keyboardKey)) {
+                try {
+                    Input.clear();
+                    this.onClick();
+                }
+                catch (error) {
+                    console.warn(error);
+                }
+            }
+        }
+    }
+    _activateHandlerVisually() {
+        try {
+            if (this.isDisabled()) {
+                super._activateHandlerVisually();
+                return;
+            }
+            this._applyTint(this._settings.overTint, this._settings.overTintAlpha);
+            this._showHoveredImage();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _deactivateHandlerVisually() {
+        try {
+            if (this.isDisabled()) {
+                super._deactivateHandlerVisually();
+                return;
+            }
+            this._refreshVisualState();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+}
+//NUI 1.0
+//rev 10.10.24
+//type: "list"
+class KNSprite_ItemsList extends KNSprite {
+    constructor(settings = {}) {
+        super();
+        this._settings = Object.assign(KSelectableItemsList.DefaultSettings(), settings);
+        this._applySettings();
+    }
+    get settings() {
+        return this._settings;
+    }
+    get list() {
+        return this._list;
+    }
+    realWidth() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return this.settings.width;
+    }
+    realHeight() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return this.settings.height;
+    }
+    /**
+     * Returns an object with data bindings for width, height, size, text, and style settings.
+     * @returns {Record<string, any>} The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            width: (v) => { if (v)
+                this.setSize(v, this.realHeight()); },
+            height: (v) => { if (v)
+                this.setSize(this.realWidth(), v); },
+            size: (v) => { if (v)
+                this.setSize(v.width, v.height); },
+            maxCols: (v) => { if (v)
+                this.setMaxCols(v); }
+        });
+    }
+    setSize(width, height) {
+        try {
+            let _width = this.convertStringSizeValue(width, 'width', this);
+            let _height = this.convertStringSizeValue(height, 'height', this);
+            this.settings.width = _width;
+            this.settings.height = _height;
+            this._applySettings();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setMaxCols(value) {
+        try {
+            this.settings.maxCols = value;
+            this._applySettings();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _applySettings() {
+        let storedListData = this._destroyList();
+        /*@ts-ignore*/
+        this._list = new KSelectableItemsList(0, 0, this.settings);
+        /*@ts-ignore*/
+        this.addChild(this._list);
+        this._restoreData(storedListData);
+    }
+    _destroyList() {
+        if (!this.list)
+            return null;
+        let storedData = {
+            listItems: this.list.getAllItems(),
+            activeState: this.list.isOpenAndActive(),
+            selectedIdx: this.list.index(),
+            /*@ts-ignore*/
+            handlers: this.list._handlers
+        };
+        /*@ts-ignore*/
+        this.removeChild(this.list);
+        this._list = null;
+        return storedData;
+    }
+    _restoreData(data) {
+        if (!data)
+            return;
+        if (!this.list)
+            return;
+        this._list.setItems(data.listItems);
+        if (data.activeState) {
+            this._list.activate(data.selectedIdx);
+        }
+        for (let key in data.handlers) {
+            this._list.setHandler(key, data.handlers[key]);
+        }
+    }
+}
+//Класс который позволяет сделать список (на основе Window_Selectable), но из Sprite элементов, а не Draw на Bitmap
+class KSelectableItemsList extends Window_Selectable {
+    constructor(x = 0, y = 0, settings = {}) {
+        let _settings = Object.assign(KSelectableItemsList.DefaultSettings(), settings);
+        if (KDX.isMV()) {
+            /*@ts-ignore*/
+            super(x, y, _settings.width, _settings.height);
+        }
+        else {
+            super(new Rectangle(x, y, _settings.width, _settings.height));
+        }
+        this._settings = _settings;
+        this._itemsSet = [];
+        this._lastSelectedIndexForCallback = -1;
+        this._prevSelectedIndex = -1;
+        this._createItemsContainer();
+        this._createWindowContentMask();
+        this.setBackgroundType(this._settings.backgroundType);
+    }
+    get settings() {
+        return this._settings;
+    }
+    get padding() {
+        if (this.settings) {
+            return this.settings.itemsPadding;
+        }
+        else {
+            return 12;
+        }
+    }
+    get width() {
+        if (this.settings) {
+            return this.settings.width;
+        }
+        else {
+            return 240;
+        }
+    }
+    get height() {
+        if (this.settings) {
+            return this.settings.height;
+        }
+        else {
+            return 420;
+        }
+    }
+    static DefaultSettings() {
+        return {
+            "width": 240,
+            "height": 420,
+            "maxCols": 1,
+            "isHaveSelectionEffect": false,
+            "selectionEffects": ["glow;distance:12;outerStrength:3"],
+            "scaleItemsWidth": false,
+            "scaleItemsHeight": false,
+            "isDrawDefaultItemBack": false,
+            "defaultItemHeight": 0,
+            "backgroundType": 2,
+            "itemsPadding": 12,
+            "isHaveInOutAnimation": false,
+            "isHorizontal": false,
+            "inAnimation": "field:x;duration:0.15;keyframes:0=0,100=4",
+            "outAnimation": "field:x;duration:0.15;keyframes:0=4,100=0"
+        };
+    }
+    isHoveredByCursor() {
+        return this.getAllItems().some((item) => item.isHoveredByCursor());
+    }
+    setSelectionHandler(callback) {
+        this.setHandler('onSelectionChanged', callback);
+    }
+    setOkHandler(callback) {
+        this.setHandler('ok', callback);
+    }
+    setCancelHandler(callback) {
+        this.setHandler('cancel', callback);
+    }
+    getAllItems() {
+        return this._itemsSet || [];
+    }
+    maxCols() {
+        if (!this.settings)
+            return 1;
+        if (this.settings.isHorizontal) {
+            return this.maxItems();
+        }
+        return this.settings.maxCols;
+    }
+    maxItems() {
+        return this.getAllItems().length;
+    }
+    clear() {
+        this.setItems([]);
+    }
+    selectedItem() {
+        return this._itemsSet[this.index()];
+    }
+    itemAt(index) {
+        return this._itemsSet[index];
+    }
+    lineHeight() {
+        try {
+            if (!this.settings)
+                return 36; // * For super class
+            if (this.settings.defaultItemHeight && this.settings.defaultItemHeight > 0) {
+                return this.settings.defaultItemHeight;
+            }
+            if (this.maxItems() > 0) {
+                return this.itemAt(0).realHeight();
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return 36;
+    }
+    activate(index) {
+        try {
+            if (index !== undefined) {
+                this.refresh();
+                this.safeSelect(index);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        super.activate();
+    }
+    select(index) {
+        super.select(index);
+        if (this._lastSelectedIndexForCallback !== index) {
+            try {
+                this.callHandler('onSelectionChanged');
+            }
+            catch (error) {
+                console.warn(error);
+            }
+            this._lastSelectedIndexForCallback = index;
+        }
+    }
+    safeSelect(index) {
+        try {
+            if (this.maxItems() > index) {
+                this.select(index);
+            }
+            else {
+                if (this.maxItems() > 0) {
+                    this.select(0);
+                }
+                else {
+                    this.select(-1);
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setItems(items) {
+        try {
+            this._prevSelectedIndex = -1;
+            this._itemsSet = items;
+            this._itemsContainer.removeChildren();
+            this.setTopRow(0);
+            this.refresh();
+            items.forEach((item, index) => this._addNewItemToList(item, index));
+        }
+        catch (error) {
+            console.warn(error);
+            this.setItems([]);
+        }
+    }
+    isCursorVisible() {
+        if (KDX.isMV()) {
+            return super.isCursorVisible();
+        }
+        else {
+            /*@ts-ignore*/
+            return this.cursorVisible;
+        }
+    }
+    processTouch() {
+        if (KDX.isMV()) {
+            if (this.isOpenAndActive()) {
+                if (!TouchInput.isPressed() && this.isTouchedInsideFrame()) {
+                    this.onTouch(false);
+                }
+            }
+            super.processTouch();
+        }
+        else {
+            super.processTouch();
+        }
+    }
+    update() {
+        super.update();
+        /*@ts-ignore*/
+        this._itemsContainer.y = -this._scrollY;
+        this._updateItemsSelectionState();
+    }
+    _createItemsContainer() {
+        this._windowItemsContentLayer = new KSprite();
+        this._windowItemsContentLayer.move(this.padding, this.padding);
+        this.addChild(this._windowItemsContentLayer);
+        this._itemsContainer = new KSprite();
+        this._windowItemsContentLayer.addChild(this._itemsContainer);
+        try {
+            if (this['_downArrowSprite']) {
+                this.addChild(this['_downArrowSprite']);
+            }
+            if (this['_upArrowSprite']) {
+                this.addChild(this['_upArrowSprite']);
+            }
+            if (!this.settings.isDrawDefaultItemBack) {
+                if (this['_contentsBackSprite']) {
+                    this['_contentsBackSprite'].visible = false;
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _createWindowContentMask() {
+        try {
+            let maskBitmap = new Bitmap(this.width - this.padding * 2, this.height - this.padding * 2);
+            maskBitmap.fillAll('#ffffff');
+            let maskSprite = new KSprite(maskBitmap);
+            /*@ts-ignore*/
+            this._windowItemsContentLayer.mask = maskSprite;
+            this._windowItemsContentLayer.addChild(maskSprite);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _updateItemsSelectionState() {
+        try {
+            if (!this.isOpenAndActive() || this.index() < 0 || !this.isCursorVisible) {
+                this._disableSelectionForAll();
+                return;
+            }
+            this._selectItemAtIndex(this.index());
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _disableSelectionForAll() {
+        try {
+            if (this._prevSelectedIndex == -2) {
+                return;
+            }
+            this._prevSelectedIndex = -2;
+            this.getAllItems().forEach((item) => this._deselectItem(item));
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _selectItemAtIndex(index) {
+        try {
+            if (this._prevSelectedIndex == index) {
+                return;
+            }
+            let item = this.itemAt(index);
+            if (item) {
+                this._selectItem(item);
+                this._prevSelectedIndex = index;
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _selectItem(item) {
+        if (!item)
+            return;
+        try {
+            if (this._prevSelectedIndex >= 0) {
+                this._deselectItem(this.itemAt(this._prevSelectedIndex));
+            }
+            item.activateInList();
+            this._playItemInAnimation(item);
+            this._selectItemVisually(item);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _deselectItem(item) {
+        if (!item)
+            return;
+        try {
+            item.deactivateInList();
+            this._playItemOutAnimation(item);
+            this._deselectItemVisually(item);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _selectItemVisually(item) {
+        try {
+            if (!this.settings.isHaveSelectionEffect)
+                return;
+            if (!this.settings.selectionEffects)
+                return;
+            if (this.settings.selectionEffects.length == 0)
+                return;
+            KNBuilder.ApplyEffects(item, this.settings.selectionEffects);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _playItemInAnimation(item) {
+        try {
+            if (!this.settings.isHaveInOutAnimation)
+                return;
+            if (KString.any(this.settings.inAnimation)) {
+                this._playItemAnimation(item, this.settings.inAnimation);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _playItemOutAnimation(item) {
+        try {
+            if (!this.settings.isHaveInOutAnimation)
+                return;
+            if (KString.any(this.settings.outAnimation)) {
+                this._playItemAnimation(item, this.settings.outAnimation);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _playItemAnimation(item, animation) {
+        try {
+            let child = item.children[0];
+            if (!child)
+                return;
+            if (!child.setAnimationRule)
+                return;
+            child.setAnimationRule(animation);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _deselectItemVisually(item) {
+        try {
+            if (!this.settings.isHaveSelectionEffect)
+                return;
+            item.filters = [];
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _addNewItemToList(item, index) {
+        if (!item)
+            return;
+        try {
+            let rect = this.itemRect(index);
+            item.move(rect.x, rect.y);
+            if (this.settings.scaleItemsHeight) {
+                item.scale.y = rect.height / item.realHeight();
+            }
+            if (this.settings.scaleItemsWidth) {
+                item.scale.x = rect.width / item.realWidth();
+            }
+            this._itemsContainer.addChild(item);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    //$[OVER]
+    // * We don't need Default Cursor of Window_Selectable
+    _updateCursor() {
+        if (KDX.isMZ()) {
+            /*@ts-ignore*/
+            this._cursorSprite.visible = false;
+        }
+        else {
+            /*@ts-ignore*/
+            this.setCursorRect(0, 0, 0, 0);
+        }
+    }
+}
+// * NUI 1.0
+// * rev 10.09.24
+// * "type": "plane"
+/**
+ * Represents a NineSlicePlane sprite used in NUI system.
+ */
+class KNSprite_Plane extends KNSprite {
+    /**
+     * Constructs a new instance of the KNSprite_Plane class.
+     * @param _settings - The settings for the plane sprite.
+     */
+    constructor(_settings) {
+        super();
+        this._settings = _settings;
+        this._settings = Object.assign({}, KNSprite_Plane.DefaultSettings(), _settings);
+        this._create();
+        this._applySettings();
+    }
+    // * DefaultSettings in JSON format (for easy copy-paste)
+    /**
+     * Returns the default settings for the plane sprite.
+     * @returns {PlaneSpriteSettings} The default settings.
+     */
+    static DefaultSettings() {
+        return {
+            "width": 100,
+            "height": 100,
+            "margins": 20,
+            "imageName": "",
+            "folderName": "pictures"
+        };
+    }
+    /**
+     * Gets the current settings of the plane sprite.
+     * @returns {PlaneSpriteSettings} The current settings.
+     */
+    get settings() {
+        return this._settings;
+    }
+    /**
+     * Gets the real width of the sprite.
+     * @returns {number} The real width.
+     */
+    realWidth() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return this.settings.width;
+    }
+    /**
+     * Gets the real height of the sprite.
+     * @returns {number} The real height.
+     */
+    realHeight() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return this.settings.height;
+    }
+    /**
+     * Applies the current settings to the sprite.
+     */
+    refresh() {
+        try {
+            this._applySettings();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Returns an object with data bindings for width, height, and size.
+     * @returns {Record<string, any>} The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            width: (v) => { if (v)
+                this.setSize(v, this.settings.height); },
+            height: (v) => { if (v)
+                this.setSize(this.settings.width, v); },
+            size: (v) => { if (v)
+                this.setSize(v.width, v.height); },
+        });
+    }
+    /**
+     * Sets the size of the sprite.
+     * @param {number | string} [width=100] - The width of the sprite.
+     * @param {number | string} [height=100] - The height of the sprite.
+     */
+    setSize(width = 100, height = 100) {
+        try {
+            let _width = this.convertStringSizeValue(width, 'width', this);
+            let _height = this.convertStringSizeValue(height, 'height', this);
+            if (_width != null)
+                this._settings.width = _width;
+            if (_height != null)
+                this._settings.height = _height;
+            this.refresh();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Creates the plane container and adds it as a child.
+     * @private
+     */
+    _create() {
+        this._planeContainer = new KSprite();
+        this.addChild(this._planeContainer);
+    }
+    /**
+     * Applies the current settings to the plane sprite.
+     * @private
+     */
+    _applySettings() {
+        if (!this._settings)
+            return;
+        try {
+            if (this._plane) {
+                this._planeContainer.removeChild(this._plane);
+                this._plane.destroy();
+            }
+            let margins = this._getMargins();
+            let textureSource = ImageManager.loadBitmap('img/' + this._settings.folderName + "/", this._settings.imageName, 0, false);
+            textureSource.addLoadListener(() => {
+                let texture = new PIXI.Texture(textureSource.baseTexture);
+                if (KDX.isMV()) {
+                    /*@ts-ignore*/
+                    this._plane = new PIXI.mesh.NineSlicePlane(texture, margins.left, margins.top, margins.right, margins.bottom);
+                }
+                else {
+                    this._plane = new PIXI.NineSlicePlane(texture, margins.left, margins.top, margins.right, margins.bottom);
+                }
+                this._planeContainer.addChild(this._plane);
+                this._applySize();
+            });
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        this._applySize();
+    }
+    /**
+     * Returns the margins for the plane sprite.
+     * @returns {PlaneMargins} The margins.
+     * @private
+     */
+    _getMargins() {
+        let margins = this._settings.margins;
+        if (typeof margins === "number") {
+            return {
+                left: margins,
+                top: margins,
+                right: margins,
+                bottom: margins
+            };
+        }
+        else {
+            return margins;
+        }
+    }
+    /**
+     * Applies the size settings to the plane sprite and its container.
+     * @private
+     */
+    _applySize() {
+        this.width = this._settings.width;
+        this.height = this._settings.height;
+        if (!this._plane)
+            return;
+        this._plane.width = this._settings.width;
+        this._plane.height = this._settings.height;
+    }
+}
+//NUI 1.0
+//rev 11.09.24
+//"type": "screen"
+class KNSprite_Screen extends KNSprite_Group {
+    constructor() {
+        super({
+            width: Graphics.width,
+            height: Graphics.height
+        });
+    }
+    realWidth() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return Graphics.width;
+    }
+    realHeight() {
+        if (this.isNotHaveBounds())
+            return 0;
+        return Graphics.height;
+    }
+}
+//NUI 1.0
+//rev 07.12.24
+//"type": "text"
+class KNSprite_Text extends KNSprite {
+    /**
+         * Creates an instance of Sprite_UIText2.
+         * @param _settings The parameters for the sprite.
+         * @param _userTextStyle The user-defined text style.
+         */
+    constructor(settings = {}, _userTextStyle = {}) {
+        super();
+        this._userTextStyle = _userTextStyle;
+        this._settings = KNSprite_Text.DefaultSettings();
+        this._applySettings(settings);
+        this._createTextSprite();
+        if (KString.any(settings.text)) {
+            this.drawText(settings.text);
+        }
+    }
+    /**
+     * Checks if the image sprite is loaded.
+     * @returns {boolean} True if loaded, otherwise false.
+     */
+    isLoaded() {
+        try {
+            /*if(this.settings.width != 'auto' && this.settings.height != 'auto') {
+                return true;
+            }*/
+            return !!this._textSpr;
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return false;
+    }
+    /**
+     * Gets the current settings of the image sprite.
+     * @returns {TextSpriteSettings} The current settings.
+     */
+    get settings() {
+        return this._settings;
+    }
+    get textColor() {
+        return this._settings.textColor;
+    }
+    set textColor(value) {
+        this.setTextColor(value);
+    }
+    static DefaultSettings() {
+        return {
+            "size": { "width": 60, "height": 20 },
+            "alignment": "center",
+            "font": {
+                "face": null,
+                "size": 18,
+                "italic": false,
+                "bold": false,
+                "weight": 0
+            },
+            "margins": { "x": 0, "y": 0 },
+            "outline": { "color": null, "width": 2 },
+            "textColor": "#FFFFFF",
+            "shadow": {
+                "color": "#000",
+                "opacity": 0,
+                "margins": { "x": 1, "y": 1 }
+            },
+            "text": "",
+            "multiline": false,
+            "verticalCentered": true,
+            "actualWidth": false,
+            "actualHeight": false,
+            "isLoadFontFromFile": false
+        };
+    }
+    /**
+     * Returns an object with data bindings for width, height, size, text, and style settings.
+     * @returns {Record<string, any>} The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            width: (v) => { if (v)
+                this.setSize(v, this.realHeight()); },
+            height: (v) => { if (v)
+                this.setSize(this.realWidth(), v); },
+            size: (v) => { if (v)
+                this.setSize(v.width, v.height); },
+            text: (v) => { this.drawText(v); },
+            style: (v) => { if (v)
+                this.setStyle(v, {}); },
+            textColor: (v) => { if (v)
+                this.setTextColor(v); },
+            fontSize: (v) => { if (v)
+                this.setFontSize(v); }
+        });
+    }
+    setSize(width, height) {
+        try {
+            let _width = this.convertStringSizeValue(width, 'width', this);
+            let _height = this.convertStringSizeValue(height, 'height', this);
+            this.setStyle({ size: { width: _width, height: _height } }, {});
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setStyle(newStyleInOldFormat, newStyleInPixiFormat) {
+        try {
+            this._textStyle = this._convertToPixiStyle(newStyleInOldFormat, newStyleInPixiFormat);
+            this._textSpr.style = this._textStyle;
+            this.drawText(this._textSpr.text);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setFontSize(size) {
+        try {
+            let font = Object.assign({}, this._settings.font);
+            if (typeof size == "string") {
+                size = this.convertStringSizeValue(size, 'height', this);
+            }
+            font.size = size;
+            this.setStyle({ font }, {});
+            this.drawText(this._settings.text);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setTextColor(color) {
+        try {
+            this._settings.textColor = color;
+            this.setStyle({ textColor: color }, {});
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    getMetrics() {
+        return PIXI.TextMetrics.measureText(this._textSpr.text, this._textSpr.style);
+    }
+    drawText(text) {
+        try {
+            if (!KString.any(text)) {
+                text = "";
+            }
+            this._settings.text = text;
+            this._drawText(text);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    realWidth() {
+        if (this.isNotHaveBounds())
+            return 0;
+        if (this._textSpr && this._settings.actualWidth == true) {
+            return this.getMetrics().width;
+        }
+        if (this._settings.size.width > 0) {
+            return this._settings.size.width;
+        }
+        return super.realWidth();
+    }
+    realHeight() {
+        if (this.isNotHaveBounds())
+            return 0;
+        if (this._textSpr && this._settings.actualHeight == true) {
+            return this.getMetrics().height;
+        }
+        if (this._settings.size.height > 0) {
+            return this._settings.size.height;
+        }
+        return super.realHeight();
+    }
+    /**
+         * Applies the parameters to the sprite.
+         * @param settings The parameters to apply.
+         */
+    _applySettings(settings) {
+        try {
+            this._textStyle = this._convertToPixiStyle(settings, {});
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+         * Converts the old style parameters to the new (PIXI) style.
+         * @param settings The old style parameters.
+         * @param style The new style parameters.
+         * @returns The converted text style.
+         */
+    _convertToPixiStyle(settings = {}, style) {
+        try {
+            this._settings = Object.assign(this._settings, settings);
+            let _textStyle = (Object.assign({}, this._userTextStyle, style));
+            if (KString.any(this._settings.font.face)) {
+                this._loadFont();
+                _textStyle.fontFamily = this._settings.font.face;
+            }
+            _textStyle.fontSize = this._settings.font.size;
+            if (this._settings.font.italic === true) {
+                _textStyle.fontStyle = 'italic';
+            }
+            if (this._settings.font.bold === true) {
+                _textStyle.fontWeight = 'bold';
+            }
+            if (this._settings.font.weight && this._settings.font.weight > 0) {
+                _textStyle.fontWeight = this._settings.font.weight.toString();
+            }
+            if (KString.any(this._settings.outline.color) && this._settings.outline.width > 0) {
+                _textStyle.stroke = this._settings.outline.color;
+                _textStyle.strokeThickness = this._settings.outline.width;
+            }
+            _textStyle.fill = this._settings.textColor;
+            if (this._settings.shadow && this._settings.shadow.opacity > 0) {
+                const { color, opacity, margins } = this._settings.shadow;
+                _textStyle.dropShadow = true;
+                _textStyle.dropShadowAngle = margins.y;
+                _textStyle.dropShadowColor = color;
+                _textStyle.dropShadowDistance = margins.x;
+                _textStyle.dropShadowAlpha = opacity / 255.0;
+            }
+            if (this._settings.multiline === true) {
+                _textStyle.align = this._settings.alignment || 'left';
+                _textStyle.wordWrap = true;
+                if (this._settings.font.size) {
+                    _textStyle.lineHeight = this._settings.font.size + 2;
+                }
+                if (this.realWidth() > 0) {
+                    _textStyle.wordWrapWidth = this.realWidth();
+                }
+            }
+            return _textStyle;
+        }
+        catch (e) {
+            console.warn(e);
+            return new PIXI.TextStyle();
+        }
+    }
+    _loadFont() {
+        try {
+            if (this._settings.isLoadFontFromFile != true)
+                return;
+            if (!KString.any(this._settings.font.face))
+                return;
+            //@ts-ignore
+            if (KNSprite_Text._loadedFonts.includes(this._settings.font.face))
+                return;
+            if (KDX.isMV()) {
+                let url = "fonts/" + Utils.encodeURI(this._settings.font.face) + ".ttf";
+                var style = document.createElement('style');
+                var head = document.getElementsByTagName('head');
+                var rule = '@font-face { font-family: "' + this._settings.font.face + '"; src: url("' + url + '"); }';
+                style.type = 'text/css';
+                head.item(0).appendChild(style);
+                style.sheet.insertRule(rule, 0);
+            }
+            else {
+                //@ts-ignore
+                FontManager.load(this._settings.font.face, this._settings.font.face + ".ttf");
+            }
+            KNSprite_Text._loadedFonts.push(this._settings.font.face);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Creates the text sprite.
+     */
+    _createTextSprite() {
+        try {
+            const style = new PIXI.TextStyle(this._textStyle);
+            this._textSpr = new PIXI.Text('', style);
+            this.addChild(this._textSpr);
+            this.executeRequiredFuncs();
+            this.executeLoadListeners();
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Draws the text.
+     * @param text The text to draw.
+     */
+    _drawText(text) {
+        try {
+            if (!this.isLoaded()) {
+                this.requireFunc("_drawText", text);
+                return;
+            }
+            if (typeof text !== "string") {
+                text = String(text);
+            }
+            try {
+                text = TextProParser.ConvertControlCharacters(text);
+            }
+            catch (error) {
+                console.warn(error);
+            }
+            this._textSpr.text = text;
+            const { width: w, height: h } = this._settings.size;
+            // * Fix for a bug with 0 font size
+            if (this._textSpr.style.fontSize == 0) {
+                this._textSpr.style.fontSize = 18;
+            }
+            let textMetrics;
+            try {
+                textMetrics = PIXI.TextMetrics.measureText(text, this._textSpr.style);
+            }
+            catch (error) {
+                console.warn(error);
+                return;
+            }
+            const { height, maxLineWidth } = textMetrics;
+            if (this._settings.verticalCentered === true) {
+                this._textSpr.y = (h - height) / 2;
+            }
+            else {
+                this._textSpr.y = 0;
+            }
+            if (this._settings.alignment === 'center') {
+                this._textSpr.x = (w - maxLineWidth) / 2;
+            }
+            else if (this._settings.alignment === 'right') {
+                this._textSpr.x = (w - maxLineWidth);
+            }
+            else {
+                this._textSpr.x = 0;
+            }
+            this._textSpr.x += this._settings.margins.x;
+            this._textSpr.y += this._settings.margins.y;
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+}
+KNSprite_Text._loadedFonts = [];
+//NUI 1.3
+//rev 07.10.24
+//"type": "textPro"
+class KNSprite_TextPro extends KNSprite {
+    /**
+         * Creates an instance of Sprite_UIText2.
+         * @param _settings The parameters for the sprite.
+         * @param _userTextStyle The user-defined text style.
+         */
+    constructor(settings = {}, _userTextStyle = {}) {
+        super();
+        this._userTextStyle = _userTextStyle;
+        this._settings = Object.assign(KNSprite_TextPro.DefaultSettings(), settings);
+        this._textsContainer = new KNSprite_Group();
+        this._textLines = [];
+        this.addChild(this._textsContainer);
+        if (KString.any(settings.text)) {
+            this.drawText(settings.text);
+        }
+    }
+    /**
+     * Gets the current settings of the image sprite.
+     * @returns {TextProSpriteSettings} The current settings.
+     */
+    get settings() {
+        return this._settings;
+    }
+    static DefaultSettings() {
+        return {
+            "size": { "width": 60, "height": 20 },
+            "alignment": "center",
+            "font": {
+                "face": null,
+                "size": 18,
+                "italic": false,
+                "bold": false,
+                "weight": 0
+            },
+            "margins": { "x": 0, "y": 0 },
+            "outline": { "color": null, "width": 2 },
+            "textColor": "#FFFFFF",
+            "shadow": {
+                "color": "#000",
+                "opacity": 0,
+                "margins": { "x": 1, "y": 1 }
+            },
+            "text": "",
+            "multiline": false,
+            "verticalCentered": true,
+            "verticalAlignment": "top",
+            "verticalSpacing": 4,
+            "actualWidth": false,
+            "actualHeight": false,
+            "trimWidth": false,
+            "trimHeight": false,
+            "iconPadding": {
+                "left": 2,
+                "right": 2,
+                "top": 0,
+                "bottom": 0
+            },
+            "iconSize": 1,
+            "isStaticIconSize": false,
+            "isLoadFontFromFile": false
+        };
+    }
+    realWidth() {
+        try {
+            if (this.isNotHaveBounds())
+                return 0;
+            if (this.settings.actualWidth == true) {
+                return this._textsContainer.realWidth();
+            }
+            return this.settings.size.width;
+        }
+        catch (error) {
+            console.warn(error);
+            return 0;
+        }
+    }
+    realHeight() {
+        try {
+            if (this.isNotHaveBounds())
+                return 0;
+            if (this.settings.actualHeight == true) {
+                return this._textsContainer.realHeight();
+            }
+            return this.settings.size.height;
+        }
+        catch (error) {
+            console.warn(error);
+            return 0;
+        }
+    }
+    /**
+     * Returns an object with data bindings for width, height, size, text, and style settings.
+     * @returns {Record<string, any>} The data bindings.
+     */
+    dataBindings() {
+        return Object.assign(super.dataBindings(), {
+            width: (v) => { if (v)
+                this.setSize(v, this.realHeight()); },
+            height: (v) => { if (v)
+                this.setSize(this.realWidth(), v); },
+            size: (v) => { if (v)
+                this.setSize(v.width, v.height); },
+            text: (v) => { this.drawText(v); },
+            style: (v) => { if (v)
+                this.setStyle(v, {}); },
+            textColor: (v) => { if (v)
+                this.setTextColor(v); },
+            fontSize: (v) => { if (v)
+                this.setFontSize(v); },
+            iconSize: (v) => { if (v)
+                this.setIconSize(v); },
+            verticalSpacing: (v) => { if (v)
+                this.setVerticalSpacing(v); }
+        });
+    }
+    setSize(width, height) {
+        try {
+            let _width = this.convertStringSizeValue(width, 'width', this);
+            let _height = this.convertStringSizeValue(height, 'height', this);
+            this.setStyle({ size: { width: _width, height: _height } }, {});
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setTextColor(color) {
+        try {
+            this.setStyle({ textColor: color }, {});
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setIconSize(size) {
+        if (typeof size == "string") {
+            size = this.convertStringSizeValue(size, 'height', this);
+        }
+        this.setStyle({ iconSize: size }, {});
+    }
+    setVerticalSpacing(spacing) {
+        if (typeof spacing == "string") {
+            spacing = this.convertStringSizeValue(spacing, 'height', this);
+        }
+        this.setStyle({ verticalSpacing: spacing }, {});
+    }
+    setFontSize(size) {
+        try {
+            let font = Object.assign({}, this._settings.font);
+            if (typeof size == "string") {
+                size = this.convertStringSizeValue(size, 'height', this);
+            }
+            font.size = size;
+            this.setStyle({ font }, {});
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setStyle(style, userStyle) {
+        try {
+            this._settings = Object.assign(this._settings, style);
+            this._userTextStyle = Object.assign(this._userTextStyle, userStyle);
+            this.drawText(this.settings.text);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Draws the specified text on the sprite.
+     *
+     * @param text - The text to be drawn. If the text is not provided or is invalid, an empty string will be used.
+     * @throws Will log a warning to the console if an error occurs during the drawing process.
+     */
+    drawText(text) {
+        try {
+            if (!KString.any(text)) {
+                text = "";
+            }
+            this._settings.text = text;
+            this._createTextSprites();
+            this._applyAlignment();
+            this._applyMargins();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _createTextSprites() {
+        try {
+            this._clearTextSprites();
+            let textConfigs = TextProParser.ParseText(this.settings);
+            let elements = TextProElementsBuilder.Build(textConfigs, this.settings, this._userTextStyle);
+            if (this.settings.multiline == true || this.settings.trimWidth == true) {
+                let lines = this._separateTextToLines(elements);
+                for (let line of lines) {
+                    this._textLines.push(line);
+                    this._textsContainer.addChild(line);
+                    this._refreshTextElementsVerticalPosition(line);
+                    this._applyLineAligmnent(line);
+                }
+            }
+            else {
+                this._textLines.push(elements);
+                this._textsContainer.addChild(elements);
+                this._refreshTextElementsVerticalPosition(elements);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _clearTextSprites() {
+        try {
+            this._textsContainer.move(0, 0);
+            this._textsContainer.removeChildren();
+            this._textLines = [];
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _separateTextToLines(allTextElements) {
+        const lines = [];
+        try {
+            const maxLineWidth = this.settings.size.width;
+            const maxHeight = this.settings.size.height;
+            let currentWidth = 0;
+            const currentHeight = () => {
+                return lines.reduce((sum, line) => sum + line.realHeight(), 0);
+            };
+            const elements = [];
+            for (const child of allTextElements.children) {
+                elements.push(child);
+            }
+            let line = new KNSprite_Group({});
+            lines.push(line);
+            for (const el of elements) {
+                currentWidth += el.realWidth();
+                if (currentWidth > maxLineWidth) {
+                    currentWidth = 0;
+                    if (this.settings.multiline === false)
+                        break;
+                    const newHeight = currentHeight() + el.realHeight();
+                    if (newHeight > maxHeight) {
+                        if (this.settings.trimHeight === true)
+                            break;
+                    }
+                    line = new KNSprite_Group({});
+                    line.addChild(el);
+                    el.setPosition(0, this._textElementVerticalPosition());
+                    lines.push(line);
+                    line.y += line.realHeight() + this.settings.verticalSpacing;
+                }
+                else {
+                    line.addChild(el);
+                    el.setPosition("prevEndX", this._textElementVerticalPosition());
+                }
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+        return lines;
+    }
+    _refreshTextElementsVerticalPosition(elements) {
+        try {
+            for (let child of elements.children) {
+                child.setPosition(child.x, this._textElementVerticalPosition());
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    /**
+     * Gets the vertical position for the text element.
+     * @returns The vertical position for the text element.
+     * @private
+     */
+    _textElementVerticalPosition() {
+        try {
+            if (this.settings.verticalCentered) {
+                return "center";
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+        return 0;
+    }
+    _applyLineAligmnent(line) {
+        try {
+            line.setPosition(this.settings.alignment, line.y);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _applyAlignment() {
+        try {
+            this._textsContainer.setPosition(this.settings.alignment, this.settings.verticalAlignment);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _applyMargins() {
+        try {
+            this._textsContainer.x += this.settings.margins.x;
+            this._textsContainer.y += this.settings.margins.y;
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+}
+class TextProElementsBuilder {
+    /**
+     * Creates an instance of TextProElementsBuilder.
+     * @param configs The configuration for the text elements.
+     * @param settings The settings for the TextPro sprite.
+     * @param userTextStyle The user-defined text style.
+     */
+    constructor(configs, settings, userTextStyle) {
+        this.configs = configs;
+        this.settings = settings;
+        this.userTextStyle = userTextStyle;
+        this._elements = new KNSprite_Group();
+        this._buildElements();
+    }
+    /**
+     * Gets the elements created by the builder.
+     * @returns The elements created by the builder.
+     */
+    getElements() {
+        return this._elements;
+    }
+    /**
+     * Builds the elements based on the provided configurations.
+     * @param configs The configuration for the text elements.
+     * @param settings The settings for the TextPro sprite.
+     * @param userTextStyle The user-defined text style.
+     * @returns The elements created by the builder.
+     */
+    static Build(configs, settings, userTextStyle) {
+        const builder = new TextProElementsBuilder(configs, settings, userTextStyle);
+        return builder.getElements();
+    }
+    /**
+     * Builds the elements based on the configurations.
+     * @private
+     */
+    _buildElements() {
+        try {
+            for (const config of this.configs) {
+                if (config.iconIndex !== undefined && config.iconIndex >= 0) {
+                    this._createIconElement(config, this._elements);
+                }
+                else {
+                    this._createTextElement(config, this._elements);
+                }
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Creates an icon element based on the configuration.
+     * @param config The configuration for the icon element.
+     * @param line The line to add the icon element to.
+     * @private
+     */
+    _createIconElement(config, line) {
+        try {
+            let iconSize;
+            if (this.settings.isStaticIconSize) {
+                iconSize = this.settings.iconSize;
+            }
+            else {
+                if (config.fontSize && config.fontSize > 0) {
+                    iconSize = config.fontSize * this.settings.iconSize;
+                }
+                else {
+                    iconSize = this.settings.font.size * this.settings.iconSize;
+                }
+            }
+            const icon = new KNSprite_Image({
+                imageName: config.iconIndex,
+                width: iconSize,
+                height: iconSize
+            });
+            const paddingGroup = new KNSprite_Group({
+                width: iconSize + this.settings.iconPadding.left + this.settings.iconPadding.right,
+                height: iconSize + this.settings.iconPadding.top + this.settings.iconPadding.bottom
+            });
+            paddingGroup.addChild(icon);
+            icon.setPosition("center", "center");
+            line.addChild(paddingGroup);
+            paddingGroup.setPosition("prevEndX", this._textElementVerticalPosition());
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Creates a text element based on the configuration.
+     * @param config The configuration for the text element.
+     * @param line The line to add the text element to.
+     * @private
+     */
+    _createTextElement(config, line) {
+        try {
+            const textSettings = Object.assign({}, this.settings);
+            textSettings.text = config.text;
+            if (config.fontSize && config.fontSize > 0) {
+                textSettings.font.size = config.fontSize;
+            }
+            if (config.color && KString.any(config.color)) {
+                textSettings.textColor = config.color;
+            }
+            textSettings.alignment = "left";
+            textSettings.multiline = false;
+            textSettings.verticalCentered = false;
+            textSettings.actualWidth = true;
+            textSettings.actualHeight = true;
+            textSettings.margins = { x: 0, y: 0 };
+            const text = new KNSprite_Text(textSettings, this.userTextStyle);
+            line.addChild(text);
+            text.setPosition("prevEndX", this._textElementVerticalPosition());
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Gets the vertical position for the text element.
+     * @returns The vertical position for the text element.
+     * @private
+     */
+    _textElementVerticalPosition() {
+        try {
+            if (this.settings.verticalCentered) {
+                return "center";
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+        return 0;
+    }
+}
+let _pkdTempWindowBaseForConvertEscapeCharacters = null;
+class TextProParser {
+    /**
+     * Converts control characters in the input text.
+     * @param inputText The input text to convert.
+     * @returns The converted text.
+     */
+    static ConvertControlCharacters(inputText) {
+        try {
+            if (KString.any(inputText)) {
+                if (!_pkdTempWindowBaseForConvertEscapeCharacters) {
+                    if (KDX.isMV()) {
+                        //@ts-ignore
+                        _pkdTempWindowBaseForConvertEscapeCharacters = new Window_Base(0, 0, 0, 0);
+                    }
+                    else {
+                        _pkdTempWindowBaseForConvertEscapeCharacters = new Window_Base(new Rectangle(0, 0, 0, 0));
+                    }
+                }
+                return _pkdTempWindowBaseForConvertEscapeCharacters.convertEscapeCharacters(inputText);
+            }
+            else {
+                return "";
+            }
+        }
+        catch (e) {
+            console.warn(e);
+            return "";
+        }
+    }
+    /**
+     * Creates an instance of TextProParser.
+     * @param settings The settings for the TextPro sprite.
+     */
+    constructor(settings) {
+        this._textsConfigs = [];
+        this.settings = settings;
+        if (KDX.isMV()) {
+            if (!window["__kdSharedTextProTextColorSourceWindow"]) {
+                /*@ts-ignore*/
+                window["__kdSharedTextProTextColorSourceWindow"] = new Window_Base(0, 0, 0, 0);
+            }
+        }
+        this._parseAllText();
+    }
+    /**
+     * Parses the text based on the provided settings.
+     * @param settings The settings for the TextPro sprite.
+     * @returns The parsed text configurations.
+     */
+    static ParseText(settings) {
+        const parser = new TextProParser(settings);
+        return parser.getConfigs();
+    }
+    /**
+     * Checks if the character is a control separator.
+     * @param char The character to check.
+     * @returns True if the character is a control separator, otherwise false.
+     */
+    static isControlSeparator(char) {
+        return '\x1b' === char;
+    }
+    /**
+     * Gets the parsed text configurations.
+     * @returns The parsed text configurations.
+     */
+    getConfigs() {
+        return this._textsConfigs;
+    }
+    /**
+     * Parses all the text based on the settings.
+     * @private
+     */
+    _parseAllText() {
+        try {
+            const preparedText = TextProParser.ConvertControlCharacters(this.settings.text);
+            const textState = this._makeInitialTextState(preparedText);
+            this._processAllText(textState);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Creates the initial text state.
+     * @param text The text to create the state for.
+     * @returns The initial text state.
+     * @private
+     */
+    _makeInitialTextState(text) {
+        return {
+            text: text,
+            buffer: "",
+            index: 0,
+            color: "", // * "" default
+            fontSize: -1, // * -1 default
+            iconIndex: -1, // * -1 none
+        };
+    }
+    /**
+     * Processes all the text based on the text state.
+     * @param textState The text state to process.
+     * @private
+     */
+    _processAllText(textState) {
+        try {
+            while (textState.index < textState.text.length) {
+                this._processCharacter(textState);
+            }
+            this._saveTextConfig(textState);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Processes a single character in the text state.
+     * @param textState The text state to process.
+     * @private
+     */
+    _processCharacter(textState) {
+        try {
+            const c = textState.text[textState.index++];
+            if (c.charCodeAt(0) < 0x20) {
+                this._saveTextConfig(textState);
+                this._processControlCharacter(textState, c);
+            }
+            else {
+                textState.buffer += c;
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Saves the current text configuration.
+     * @param textState The text state to save.
+     * @private
+     */
+    _saveTextConfig(textState) {
+        try {
+            if (textState.buffer.length > 0 || textState.iconIndex > 0) {
+                this._textsConfigs.push({
+                    text: textState.buffer,
+                    color: textState.color,
+                    fontSize: textState.fontSize,
+                    iconIndex: textState.iconIndex
+                });
+                textState.buffer = "";
+                textState.iconIndex = -1;
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Processes a control character in the text state.
+     * @param textState The text state to process.
+     * @param c The control character to process.
+     * @private
+     */
+    _processControlCharacter(textState, c) {
+        try {
+            if (TextProParser.isControlSeparator(c)) {
+                const code = this._obtainEscapeCode(textState);
+                this._processEscapeCharacter(code, textState);
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Obtains the escape code from the text state.
+     * @param textState The text state to obtain the escape code from.
+     * @returns The escape code.
+     * @private
+     */
+    _obtainEscapeCode(textState) {
+        try {
+            const regExp = /^[$.|^!><{}\\]|^[A-Z]+/i;
+            const arr = regExp.exec(textState.text.slice(textState.index));
+            if (arr) {
+                textState.index += arr[0].length;
+                return arr[0].toUpperCase();
+            }
+            else {
+                return "";
+            }
+        }
+        catch (e) {
+            console.warn(e);
+            return "";
+        }
+    }
+    /**
+     * Processes an escape character in the text state.
+     * @param code The escape code to process.
+     * @param textState The text state to process.
+     * @private
+     */
+    _processEscapeCharacter(code, textState) {
+        try {
+            let currentFontSize = textState.fontSize;
+            switch (code) {
+                case "C":
+                    const colorIndex = this._obtainEscapeParam(textState);
+                    if (colorIndex > 0) {
+                        if (KDX.isMV()) {
+                            textState.color = window["__kdSharedTextProTextColorSourceWindow"].textColor(colorIndex);
+                        }
+                        else {
+                            textState.color = ColorManager.textColor(colorIndex);
+                        }
+                    }
+                    else {
+                        textState.color = "";
+                    }
+                    break;
+                case "I":
+                    const iconIndex = this._obtainEscapeParam(textState);
+                    if (iconIndex > 0) {
+                        textState.iconIndex = iconIndex;
+                        // * Icon is a separate sprite, so save the current text as separate
+                        this._saveTextConfig(textState);
+                    }
+                    else {
+                        textState.iconIndex = -1;
+                    }
+                    break;
+                case "FS":
+                    const fontSize = this._obtainEscapeParam(textState);
+                    textState.fontSize = fontSize;
+                    break;
+                case "{": // * Make font bigger by 1
+                    currentFontSize = textState.fontSize;
+                    if (currentFontSize === -1) {
+                        currentFontSize = this.settings.font.size;
+                    }
+                    textState.fontSize = currentFontSize + 1;
+                    break;
+                case "}":
+                    currentFontSize = textState.fontSize;
+                    if (currentFontSize === -1) {
+                        currentFontSize = this.settings.font.size;
+                    }
+                    textState.fontSize = currentFontSize - 1;
+                    break;
+                default:
+                    console.warn("KNSprite_TextPro: Unknown escape code: " + code);
+            }
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    /**
+     * Obtains the escape parameter from the text state.
+     * @param textState The text state to obtain the escape parameter from.
+     * @returns The escape parameter.
+     * @private
+     */
+    _obtainEscapeParam(textState) {
+        try {
+            const regExp = /^\[\d+\]/;
+            const arr = regExp.exec(textState.text.slice(textState.index));
+            if (arr) {
+                textState.index += arr[0].length;
+                return parseInt(arr[0].slice(1));
+            }
+            else {
+                return 0;
+            }
+        }
+        catch (e) {
+            console.warn(e);
+            return 0;
+        }
+    }
 }
 
-// ==========================================================================
-// ==========================================================================
 
-//   END OF PLUGINS CORE LIBRARY
-//   (Next code is this plugin code)
-
-// ==========================================================================
-// ==========================================================================
-
-//Plugin KDCore builded by PKD PluginBuilder 2.1 - 10.05.2022
-
-// Generated by CoffeeScript 2.6.1
-//$[ENCODE]
-//╒═════════════════════════════════════════════════════════════════════════╛
-// ■ Plugin Paramters.coffee
-//╒═════════════════════════════════════════════════════════════════════════╛
-//---------------------------------------------------------------------------
-(function() {
-  var _;
-  //@[DEFINES]
-  _ = PKD_SimpleFishing.PP;
-  _.getGameEventsData = function() {
-    return this._loader.getParam("gameEventsData", {
-      onGameInitedCommonEventId: 1,
-      onGameStartedCommonEventId: 2,
-      onGameEndCommonEventId: 3,
-      onPlayerClickGood: 4,
-      onPlayerCatchFish: 5,
-      onPlayerClickBad: 6,
-      onPlayerLoseFish: 7
-    });
-  };
-  _.getMainUIVisualSettings = function() {
-    return this._loader.getParam("visualSettings", {
-      gameBarPosition: {
-        x: "Graphics.width / 2 - 162",
-        y: "60"
-      },
-      gameBarSettings: {
-        redZoneFillOpacity: 125,
-        redZoneFillColor: KDCore.Color.MAGENTA,
-        redZoneMinWidthBeforeBadEnd: 6
-      },
-      rodIconPosition: {
-        x: "Graphics.width / 2 - 38 - 50",
-        y: "110"
-      },
-      baitIconPosition: {
-        x: "Graphics.width / 2 - 38 + 50",
-        y: "110"
-      },
-      fishIconPosition: {
-        x: "Graphics.width / 2 - 62",
-        y: "Graphics.height - 224"
-      },
-      progressBarPosition: {
-        x: "Graphics.width / 2 - 162",
-        y: "Graphics.height - 100"
-      },
-      progressBarSettings: {
-        visible: true,
-        fill: "progressBarFill",
-        foreground: "progressBarFore",
-        mask: "",
-        backColor: "#CCCCCC".toCss(),
-        backOpacity: 125,
-        vertical: false
-      }
-    });
-  };
-  _.getGameVariablesData = function() {
-    return this._loader.getParam("variablesData", {
-      baitVariableId: 1,
-      rodVariableId: 2
-    });
-  };
-  _.getRodsData = function() {
-    return this._loader.getParam("rodsData", [
-      {
-        "id": 1,
-        "iconName": "rod1",
-        "progressBarTimerMod": 1,
-        "gameZoneFillSpeed": 1,
-        "redBarShrinkSpeed": 10,
-        "whiteCursorMoveSpeed": 3,
-        "redBarMinWidth": 60,
-        "redBarMaxWidth": 120,
-        "badClickProgressPenalty": 20,
-        "goodClickProgressAdd": 0
-      },
-      {
-        "id": 2,
-        "iconName": "",
-        "progressBarTimerMod": 0.8,
-        "gameZoneFillSpeed": 1,
-        "redBarShrinkSpeed": 9,
-        "whiteCursorMoveSpeed": 4,
-        "redBarMinWidth": 50,
-        "redBarMaxWidth": 110,
-        "badClickProgressPenalty": 50,
-        "goodClickProgressAdd": 2
-      }
-    ]);
-  };
-  _.getBaitsData = function() {
-    return this._loader.getParam("baitsData", [
-      {
-        "id": 1,
-        "iconName": "worm"
-      },
-      {
-        "id": 2,
-        "iconName": ""
-      }
-    ]);
-  };
-  _.getRegionsData = function() {
-    return this._loader.getParam("regionsData", [
-      {
-        "region": 70,
-        "fishes": [
-          {
-            "id": 34,
-            "appearChance": 20,
-            "progressBarFillSpeed": 10,
-            "goodClickProgressAdd": 10,
-            "baits": [
-              {
-                "id": 1,
-                "addToChance": 40
-              },
-              {
-                "id": 2,
-                "addToChance": 80
-              }
-            ]
-          },
-          {
-            "id": 35,
-            "appearChance": 10,
-            "progressBarFillSpeed": 40,
-            "goodClickProgressAdd": 12,
-            "baits": [
-              {
-                "id": 1,
-                "addToChance": 10
-              },
-              {
-                "id": 2,
-                "addToChance": 80
-              }
-            ]
-          }
-        ]
-      }
-    ]);
-  };
-  _.getRodDataById = function(id) {
-    return this.getRodsData().getById(id);
-  };
-  _.getBaitDataById = function(id) {
-    return this.getBaitsData().getById(id);
-  };
-  _.getRegionDataById = function(region) {
-    return this.getRegionsData().getByField("region", region);
-  };
-})();
-
-
-// Generated by CoffeeScript 2.6.1
-//╒═════════════════════════════════════════════════════════════════════════╛
-// ■ Plugin Paramters.coffee
-//╒═════════════════════════════════════════════════════════════════════════╛
-//---------------------------------------------------------------------------
-PKD_SimpleFishing.isPro = function() {
-  return true;
-};
-
-(function() {
-  var ALIAS__getRodsData, _;
-  //@[DEFINES]
-  _ = PKD_SimpleFishing.PP;
-  //@[ALIAS]
-  ALIAS__getRodsData = _.getRodsData;
-  _.getRodsData = function() {
-    var rods;
-    return rods = ALIAS__getRodsData.call(this);
-  };
-})();
-
-
-// Generated by CoffeeScript 2.6.1
-//╒═════════════════════════════════════════════════════════════════════════╛
-// ■ SCRIPT CALLS.coffee
-//╒═════════════════════════════════════════════════════════════════════════╛
-//---------------------------------------------------------------------------
-(function() {
-  window.InitFishingGame = function() {
-    var e;
-    try {
-      if (KDCore.Utils.isSceneMap()) {
-        return SceneManager._scene.pInitFishingGame();
-      }
-    } catch (error) {
-      e = error;
-      return KDCore.warning(e);
+var KDX;
+(function (KDX) {
+    /**
+     * The version of the KDX Library.
+     * @type {string}
+     */
+    KDX.Version = "0.1";
+    /**
+     * Checks if the RPG Maker version is MV.
+     * @returns {boolean} True if the RPG Maker version is MV, otherwise false.
+     */
+    /* @ts-ignore */
+    KDX.isMV = () => Utils.RPGMAKER_NAME.includes("MV");
+    /**
+     * Checks if the RPG Maker version is MZ.
+     * @returns {boolean} True if the RPG Maker version is MZ, otherwise false.
+     */
+    KDX.isMZ = () => !KDX.isMV();
+    /**
+     * Checks if a value is not null and not undefined
+     *
+     * @param {any} value - The value to check.
+     * @returns {boolean} True if the value is not null and not undefined
+     */
+    KDX.any = (value) => (value === null || value === undefined) ? false : true;
+})(KDX || (KDX = {}));
+var KArray;
+(function (KArray) {
+    /**
+     * Deletes all occurrences of a specified item from an array.
+     *
+     * @template T - The type of elements in the array.
+     * @param {T[]} array - The array from which to delete items.
+     * @param {T} item - The item to delete from the array.
+     * @returns {T[]} A new array with all occurrences of the specified item removed.
+     */
+    function deleteAll(array, item) {
+        return array.filter((i) => i !== item);
     }
-  };
-  window.IsInFishingGame = function() {
-    var e;
+    KArray.deleteAll = deleteAll;
+    /**
+     * Returns a random item from an array.
+     *
+     * @template T - The type of elements in the array.
+     * @param {T[]} array - The array from which to select a random item.
+     * @returns {T} A random item from the array.
+     */
+    function randomItem(array) {
+        return array[Math.floor(Math.random() * array.length)];
+    }
+    KArray.randomItem = randomItem;
+    /**
+     * Shuffles the elements of an array in place.
+     *
+     * @template T - The type of elements in the array.
+     * @param {T[]} array - The array to shuffle.
+     * @returns {T[]} The shuffled array.
+     */
+    function shuffle(array) {
+        let currentIndex = array.length;
+        let randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+    KArray.shuffle = shuffle;
+    /**
+     * Finds an item in an array by a specified key and value.
+     *
+     * @template T - The type of elements in the array.
+     * @param {T[]} array - The array to search.
+     * @param {string} key - The key to match.
+     * @param {any} value - The value to match.
+     * @returns {T | null} The found item, or null if no item matches.
+     */
+    function getByKey(array, key, value) {
+        try {
+            return array.find((i) => i[key] === value);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return null;
+    }
+    KArray.getByKey = getByKey;
+    /**
+     * Finds an item in an array by its 'id' property.
+     *
+     * @template T - The type of elements in the array.
+     * @param {T[]} array - The array to search.
+     * @param {any} value - The value of the 'id' property to match.
+     * @returns {T | null} The found item, or null if no item matches.
+     */
+    function getById(array, value) {
+        return getByKey(array, "id", value);
+    }
+    KArray.getById = getById;
+})(KArray || (KArray = {}));
+var KNumber;
+(function (KNumber) {
+    /**
+    * Clamps a number within a specified range.
+    *
+    * @param {number} value - The value to clamp.
+    * @param {number} min - The minimum value.
+    * @param {number} max - The maximum value.
+    * @returns {number} The clamped value.
+    */
+    KNumber.clamp = (value, min, max) => {
+        return Math.min(Math.max(value, min), max);
+    };
+    /**
+     * Generates a random number between the specified minimum and maximum values (inclusive).
+     *
+     * @param {number} min - The minimum value of the range.
+     * @param {number} max - The maximum value of the range.
+     * @returns {number} A random number between the minimum and maximum values.
+     */
+    KNumber.random = (min, max) => {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    };
+    /**
+     * Checks if the given number is greater than zero.
+     *
+     * @param {number} number - The number to be checked.
+     * @returns {boolean} `true` if the number is greater than zero, `false` otherwise.
+     */
+    KNumber.any = (number) => {
+        if (number === null || number === undefined) {
+            return false;
+        }
+        return number > 0;
+    };
+})(KNumber || (KNumber = {}));
+var KString;
+(function (KString) {
+    /**
+         * Generates a random string of the specified length.
+         * @param {number} length - The length of the generated string.
+         * @returns {string} The generated string.
+         */
+    KString.randomString = (length) => {
+        let result = '';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const charactersLength = characters.length;
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+    };
+    /**
+     * Replaces all occurrences of a substring in a string with a specified replacement.
+     *
+     * @param {string} source - The source string.
+     * @param {string} search - The substring to search for.
+     * @param {string} replacement - The replacement string.
+     * @returns {string} The modified string with all occurrences of the substring replaced.
+     */
+    KString.replaceAll = (source, search, replacement) => {
+        return source.split(search).join(replacement);
+    };
+    /**
+     * Checks if a string is not null, not undefined, and has a length greater than 0 (after trimming).
+     *
+     * @param {string} str - The string to check.
+     * @returns {boolean} True if the string is not null, not undefined, and has a length greater than 0 (after trimming), otherwise false.
+     */
+    KString.any = (str) => {
+        if (str === null || str === undefined) {
+            return false;
+        }
+        // * For compatibility with old verions of KDCore library
+        if (typeof str === "boolean") {
+            return str == true;
+        }
+        try {
+            if (typeof str == "string") {
+                return str.length > 0 || str.trim().length > 0;
+            }
+            else {
+                return true;
+            }
+        }
+        catch (error) {
+            console.warn(error);
+            return false;
+        }
+    };
+    /**
+     * Checks if the provided value is of type string.
+     *
+     * @param value - The value to check.
+     * @returns `true` if the value is a string, otherwise `false`.
+     */
+    KString.isString = (value) => {
+        return typeof value === "string";
+    };
+})(KString || (KString = {}));
+(function () {
+    // * RPG Maker MV only
+    // * В версии RPG Maker MV не отслеживаются координаты курсора, если мы просто двигаем мышкой
+    // * Данный код исправляет эту проблему, чтобы можно было отслеживать координаты курсора, даже если мышь не нажата
+    if (!Utils.RPGMAKER_NAME.includes("MV"))
+        return;
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ TouchInput.ts
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    //---------------------------------------------------------------------------
+    (() => {
+        //@[DEFINES]
+        const _ = TouchInput;
+        //@[ALIAS]
+        /*@ts-ignore*/
+        const ALIAS___onMouseMove = _._onMouseMove;
+        _['_onMouseMove'] = function (event) {
+            ALIAS___onMouseMove.call(this, event);
+            let x = Graphics.pageToCanvasX(event.pageX);
+            let y = Graphics.pageToCanvasY(event.pageY);
+            if (Graphics.isInsideCanvas(x, y)) {
+                this['_x'] = x;
+                this['_y'] = y;
+            }
+        };
+    })();
+    // ■ END TouchInput.ts
+    //---------------------------------------------------------------------------
+})();
+var KAudio;
+(function (KAudio) {
+    /**
+     * Plays a sound effect (SE) with the specified parameters.
+     *
+     * @param name - The name of the sound effect file to play.
+     * @param pitch - The pitch of the sound effect. Defaults to 100.
+     * @param volume - The volume of the sound effect. Defaults to 100.
+     *
+     * @remarks
+     * If the provided name is empty or invalid, the function will not attempt to play the sound effect.
+     */
+    function PlaySE(name, pitch = 100, volume = 100) {
+        if (!KString.any(name))
+            return;
+        let audioData = {
+            name: name,
+            pitch: pitch,
+            volume: volume,
+            pan: 0,
+            pos: 0
+        };
+        AudioManager.playStaticSe(audioData);
+    }
+    KAudio.PlaySE = PlaySE;
+})(KAudio || (KAudio = {}));
+var KGameEvents;
+(function (KGameEvents) {
+    // * Return whole line that contains the commentCode
+    /**
+     * Retrieves a specific comment line from a game event based on the provided comment code.
+     *
+     * @param commentCode - The code to search for within the comment lines.
+     * @param event - The game event from which to retrieve the comment line.
+     * @returns The comment line containing the specified code, or `null` if not found.
+     *
+     * @remarks
+     * This function searches through the event's page list to find a comment line that includes the specified comment code.
+     * It looks for comment codes 108 and 408, which are typically used for comments in RPG Maker events.
+     * If the event or its page list is not available, or if no matching comment line is found, the function returns `null`.
+     *
+     * @throws Will log a warning to the console if an error occurs during the search process.
+     */
+    function GetCommentLine(commentCode, event) {
+        try {
+            if (!event)
+                return null;
+            let page = event.page();
+            if (!page)
+                return null;
+            let list = page.list;
+            if (!list)
+                return null;
+            for (let i = 0; i < list.length; i++) {
+                if (!list[i])
+                    continue;
+                if (list[i].code === 108 || list[i].code === 408) {
+                    let line = list[i].parameters[0];
+                    if (line && line.includes(commentCode)) {
+                        return line;
+                    }
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return null;
+    }
+    KGameEvents.GetCommentLine = GetCommentLine;
+    // * For commentCode:value
+    /**
+     * Retrieves the value associated with a specific comment code from a game event.
+     * Pattern commentCode:value
+     *
+     * @param commentCode - The code of the comment to search for.
+     * @param event - The game event object to search within.
+     * @returns The value associated with the comment code, or null if not found.
+     */
+    function GetCommentCodeValue(commentCode, event) {
+        try {
+            let line = GetCommentLine(commentCode, event);
+            if (!line)
+                return null;
+            let value = line.split(":")[1].trim();
+            return value;
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return null;
+    }
+    KGameEvents.GetCommentCodeValue = GetCommentCodeValue;
+})(KGameEvents || (KGameEvents = {}));
+var KGameItems;
+(function (KGameItems) {
+    /**
+     * Checks if the given object has a meta property with the specified symbol.
+     *
+     * @param symbol - The symbol to check for in the meta property.
+     * @param obj - The object to check for the meta property.
+     * @returns `true` if the object has a meta property with the specified symbol, otherwise `false`.
+     * @throws Will log a warning to the console if an error occurs during the check.
+     */
+    function IsHaveMeta(symbol, obj) {
+        try {
+            return obj && obj.meta && obj.meta.hasOwnProperty(symbol);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return false;
+    }
+    KGameItems.IsHaveMeta = IsHaveMeta;
+    /**
+     * Retrieves the metadata associated with a given symbol from an object.
+     *
+     * @param symbol - The key for the metadata to retrieve.
+     * @param obj - The object containing the metadata.
+     * @param defaultValue - The value to return if the symbol is not present or an error occurs.
+     * @returns The metadata value. If the symbol is not present or an error occurs, returns the default value.
+     */
+    function GetMeta(symbol, obj, defaultValue = null) {
+        try {
+            if (!IsHaveMeta(symbol, obj))
+                return defaultValue;
+            return obj.meta[symbol];
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return defaultValue;
+    }
+    KGameItems.GetMeta = GetMeta;
+    /**
+     * Retrieves the metadata associated with the given symbol from the specified object
+     * and converts it to a number.
+     *
+     * @param symbol - The key for the metadata to retrieve.
+     * @param obj - The object from which to retrieve the metadata.
+     * @param defaultValue - The value to return if the symbol is not present or an error occurs.
+     * @returns The metadata value as a number. If the symbol is not present or an error occurs, returns the default value.
+     */
+    function GetMetaAsNumber(symbol, obj, defaultValue = 0) {
+        try {
+            return Number(GetMeta(symbol, obj, defaultValue));
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return defaultValue;
+    }
+    KGameItems.GetMetaAsNumber = GetMetaAsNumber;
+})(KGameItems || (KGameItems = {}));
+var KInput;
+(function (KInput) {
+    /**
+     * Simulates a virtual click on the specified button.
+     *
+     * @param buttonName - The name of the button to simulate a click on.
+     *
+     * This function checks if the environment is MV (RPG Maker MV) and if the `Input.virtualClick` method is not already extended.
+     * If both conditions are met, it extends the MV Input system to support virtual clicks.
+     *
+     * @remarks
+     * The function uses a TypeScript ignore comment to bypass type checking for the `Input.virtualClick` method.
+     */
+    function VirtualClick(buttonName) {
+        try {
+            if (KDX.isMV() && !KDX.any(Input['virtualClick'])) {
+                _extendMvInput();
+            }
+            /* @ts-ignore */
+            Input.virtualClick(buttonName);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    KInput.VirtualClick = VirtualClick;
+    function IsCancel() {
+        return Input.isTriggered('cancel') || TouchInput.isCancelled();
+    }
+    KInput.IsCancel = IsCancel;
+    function _extendMvInput() {
+        //╒═════════════════════════════════════════════════════════════════════════╛
+        // ■ Input.ts
+        //╒═════════════════════════════════════════════════════════════════════════╛
+        //---------------------------------------------------------------------------
+        (() => {
+            //@[DEFINES]
+            const _ = Input;
+            _['virtualClick'] = function (buttonName) {
+                this._virtualButton = buttonName;
+            };
+            //@[ALIAS]
+            const ALIAS__clear = _.clear;
+            _.clear = function () {
+                ALIAS__clear.call(this);
+                this._virtualButton = null;
+            };
+            //@[ALIAS]
+            const ALIAS__update = _.update;
+            _.update = function () {
+                ALIAS__update.call(this);
+                try {
+                    if (KString.any(this._virtualButton)) {
+                        this._latestButton = this._virtualButton;
+                        this._pressedTime = 0;
+                        this._virtualButton = null;
+                    }
+                }
+                catch (error) {
+                    console.warn(error);
+                }
+            };
+        })();
+        // ■ END Input.ts
+        //---------------------------------------------------------------------------
+    }
+    function _extend() {
+        // * If Input is extended by KDCore or KDX
+        if (KDX.any(Input['KeyMapperPKD']))
+            return;
+        try {
+            let KeyMapperPKD = {};
+            //Numbers
+            for (let i = 48; i <= 57; i++) {
+                KeyMapperPKD[i] = String.fromCharCode(i);
+            }
+            //Letters Upper
+            for (let i = 65; i <= 90; i++) {
+                KeyMapperPKD[i] = String.fromCharCode(i).toLowerCase();
+            }
+            //Letters Lower
+            for (let i = 97; i <= 122; i++) {
+                KeyMapperPKD[i] = String.fromCharCode(i).toLowerCase();
+            }
+            Input['KeyMapperPKD'] = KeyMapperPKD;
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    function _onKeyDown(event) {
+        try {
+            _extend();
+            /* @ts-ignore */
+            let symbol = Input.KeyMapperPKD[event.keyCode];
+            if (symbol) {
+                /* @ts-ignore */
+                Input._currentState[symbol] = true;
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    KInput._onKeyDown = _onKeyDown;
+    function _onKeyUp(event) {
+        try {
+            _extend();
+            /* @ts-ignore */
+            let symbol = Input.KeyMapperPKD[event.keyCode];
+            if (symbol) {
+                /* @ts-ignore */
+                Input._currentState[symbol] = false;
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    KInput._onKeyUp = _onKeyUp;
+})(KInput || (KInput = {}));
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Input.ts
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(() => {
+    //@[DEFINES]
+    const _ = Input;
+    //@[ALIAS]
+    /* @ts-ignore */
+    const ALIAS___onKeyDown = _._onKeyDown;
+    /* @ts-ignore */
+    _._onKeyDown = function (event) {
+        let t = this;
+        ALIAS___onKeyDown.call(this, event);
+        try {
+            if (Input.keyMapper[event.keyCode]) {
+                return;
+            }
+            KInput._onKeyDown(event);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    };
+    //@[ALIAS]
+    /* @ts-ignore */
+    const ALIAS___onKeyUp = _._onKeyUp;
+    /* @ts-ignore */
+    _._onKeyUp = function (event) {
+        let t = this;
+        ALIAS___onKeyUp.call(this, event);
+        try {
+            if (Input.keyMapper[event.keyCode]) {
+                return;
+            }
+            KInput._onKeyUp(event);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    };
+})();
+// ■ END Input.ts
+//---------------------------------------------------------------------------
+var KPoint;
+(function (KPoint) {
+    /**
+     * Clones a given Point object.
+     *
+     * @param {IPoint} p - The Point object to be cloned.
+     * @returns {IPoint} A new Point object with the same x and y coordinates as the input.
+     */
+    function Clone(p) {
+        return new PIXI.Point(p.x, p.y);
+    }
+    KPoint.Clone = Clone;
+    /**
+     * Checks if two Point objects have the same coordinates.
+     *
+     * @param {IPoint} p1 - The first Point object.
+     * @param {IPoint} p2 - The second Point object.
+     * @returns {boolean} True if both points have the same coordinates, false otherwise.
+     */
+    function IsSame(p1, p2) {
+        return p1.x == p2.x && p1.y == p2.y;
+    }
+    KPoint.IsSame = IsSame;
+    /**
+     * Converts a Point object to a string representation.
+     *
+     * @param {IPoint} p - The Point object to be converted.
+     * @returns {string} A string representation of the Point object.
+     */
+    function ToPrint(p) {
+        return `(${p.x}, ${p.y})`;
+    }
+    KPoint.ToPrint = ToPrint;
+    /**
+     * Converts a Point object from screen coordinates to map coordinates.
+     *
+     * @param {IPoint} p - The Point object in screen coordinates.
+     * @returns {IPoint} A new Point object in map coordinates.
+     */
+    function ConvertFromScreenToMap(p) {
+        return new PIXI.Point($gameMap.canvasToMapX(p.x), $gameMap.canvasToMapY(p.y));
+    }
+    KPoint.ConvertFromScreenToMap = ConvertFromScreenToMap;
+    /**
+     * Converts a Point object from map coordinates to screen coordinates.
+     *
+     * @param {IPoint} p - The Point object in map coordinates.
+     * @returns {IPoint} A new Point object in screen coordinates.
+     */
+    function ConvertFromMapToScreen(p) {
+        let x = $gameMap.adjustX(p.x);
+        let tw = $gameMap.tileWidth();
+        x = Math.round(x * tw + tw / 2);
+        let y = $gameMap.adjustY(p.y);
+        let th = $gameMap.tileHeight();
+        y = Math.round(y * th + th);
+        return new PIXI.Point(x, y);
+    }
+    KPoint.ConvertFromMapToScreen = ConvertFromMapToScreen;
+    /**
+     * Rounds the coordinates of a Point object to the nearest integer.
+     *
+     * @param {IPoint} p - The Point object to be rounded.
+     * @returns {IPoint} A new Point object with rounded coordinates.
+     */
+    function Round(p) {
+        return new PIXI.Point(Math.round(p.x), Math.round(p.y));
+    }
+    KPoint.Round = Round;
+    /**
+     * Calculates the distance between two Point objects.
+     *
+     * @param {IPoint} p1 - The first Point object.
+     * @param {IPoint} p2 - The second Point object.
+     * @returns {number} The distance between the two points.
+     */
+    function Distance(p1, p2) {
+        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+    }
+    KPoint.Distance = Distance;
+    /**
+     * Checks if a Point object is inside a given rectangle.
+     *
+     * @param {IPoint} p - The Point object to check.
+     * @param {PIXI.Rectangle} rect - The rectangle to check against.
+     * @returns {boolean} True if the point is inside the rectangle, false otherwise.
+     */
+    function IsInsideRect(p, rect) {
+        return rect.contains(p.x, p.y);
+    }
+    KPoint.IsInsideRect = IsInsideRect;
+    /**
+     * Checks if a Point object is inside a given circle.
+     *
+     * @param {IPoint} p - The Point object to check.
+     * @param {IPoint} center - The center of the circle.
+     * @param {number} radius - The radius of the circle.
+     * @returns {boolean} True if the point is inside the circle, false otherwise.
+     */
+    function IsInsideCircle(p, center, radius) {
+        return Distance(p, center) <= radius;
+    }
+    KPoint.IsInsideCircle = IsInsideCircle;
+})(KPoint || (KPoint = {}));
+var KUtils;
+(function (KUtils) {
+    /**
+     * Calls a specified callback function after a given delay.
+     *
+     * @param callback - The function to be called after the delay.
+     * @param delay - The delay in milliseconds before the callback is executed.
+     * @returns The ID of the timeout, which can be used to cancel the timeout with clearTimeout.
+     *
+     * @throws Will log a warning to the console if the callback throws an error.
+     */
+    function CallWithDelay(callback, delay) {
+        if (!callback)
+            return;
+        return setTimeout(() => {
+            try {
+                callback();
+            }
+            catch (error) {
+                console.warn(error);
+            }
+        }, delay);
+    }
+    KUtils.CallWithDelay = CallWithDelay;
+    function IsMapScene() {
+        return SceneManager._scene instanceof Scene_Map;
+    }
+    KUtils.IsMapScene = IsMapScene;
+    function IsBattleScene() {
+        return SceneManager._scene instanceof Scene_Battle;
+    }
+    KUtils.IsBattleScene = IsBattleScene;
+})(KUtils || (KUtils = {}));
+var KDX;
+(function (KDX) {
+    class ParamLoader {
+        /**
+         * Creates an instance of ParamLoader.
+         * @param _pluginName The name of the plugin.
+         */
+        constructor(_pluginName) {
+            this._pluginName = _pluginName;
+            this._ppNameToParseNext = "";
+            this._paramsRaw = this.getPluginParametersByRoot(this._pluginName);
+            this._params = this.parseParameters(this._paramsRaw);
+        }
+        /**
+         * Gets the plugin parameters by the root name.
+         * @param rootName The root name of the plugin.
+         * @returns The plugin parameters if found, otherwise calls PluginManager.parameters.
+         */
+        getPluginParametersByRoot(rootName) {
+            /* @ts-ignore */
+            let allParametersRaw = PluginManager._parameters;
+            for (const property in allParametersRaw) {
+                if (allParametersRaw.hasOwnProperty(property)) {
+                    const pluginParameters = allParametersRaw[property];
+                    if (pluginParameters[rootName]) {
+                        return pluginParameters;
+                    }
+                }
+            }
+            return PluginManager.parameters(rootName);
+        }
+        /**
+         * Parses the parameters from the plugin.
+         * @param paramSet The raw parameter set.
+         * @returns The parsed parameters.
+         */
+        parseParameters(paramSet) {
+            const params = {};
+            for (const key in paramSet) {
+                if (paramSet.hasOwnProperty(key)) {
+                    this._ppNameToParseNext = key;
+                    const clearKey = this.parseKey(key);
+                    const typeKey = this.parseKeyType(key);
+                    params[clearKey] = this.parseParamItem(typeKey, paramSet[key]);
+                }
+            }
+            return params;
+        }
+        /**
+         * Parses the key to remove the type.
+         * @param keyRaw The raw key.
+         * @returns The parsed key.
+         */
+        parseKey(keyRaw) {
+            return keyRaw.split(":")[0];
+        }
+        /**
+         * Parses the key to get the type.
+         * @param keyRaw The raw key.
+         * @returns The type of the key.
+         */
+        parseKeyType(keyRaw) {
+            return keyRaw.split(":")[1];
+        }
+        /**
+         * Writes a detailed error message to the console.
+         */
+        writeDetailedError() {
+            try {
+                if (!KString.any(this._ppNameToParseNext))
+                    return;
+                console.warn(`Please, check Plugin Parameter ${this._ppNameToParseNext} in plugin ${this._pluginName}`);
+            }
+            catch (e) {
+                console.warn(e);
+            }
+        }
+        /**
+         * Checks if the parameters are loaded.
+         * @returns True if the parameters are loaded, otherwise false.
+         */
+        isLoaded() {
+            return !!this._paramsRaw && this._paramsRaw.hasOwnProperty(this._pluginName);
+        }
+        /**
+         * Checks if a parameter exists.
+         * @param paramName The name of the parameter.
+         * @returns True if the parameter exists, otherwise false.
+         */
+        isHasParameter(paramName) {
+            return this._params.hasOwnProperty(paramName);
+        }
+        /**
+         * Gets the value of a parameter.
+         * @param paramName The name of the parameter.
+         * @param def The default value if the parameter is not found.
+         * @returns The value of the parameter or the default value.
+         */
+        getParam(paramName, def) {
+            if (this.isHasParameter(paramName)) {
+                const value = this._params[paramName];
+                if (value != null)
+                    return value;
+            }
+            return def;
+        }
+        /**
+         * Parses a parameter item based on its type.
+         * @param type The type of the parameter.
+         * @param item The parameter item.
+         * @returns The parsed parameter item.
+         */
+        parseParamItem(type, item) {
+            if (!type)
+                return item;
+            try {
+                switch (type) {
+                    case "int":
+                    case "i":
+                        return Number(item);
+                    case "intA":
+                        return this.parseArray(item, "int");
+                    case "bool":
+                    case "b":
+                    case "e":
+                        return eval(item);
+                    case "struct":
+                    case "s":
+                        return this.parseStruct(item);
+                    case "structA":
+                        return this.parseStructArray(item);
+                    case "str":
+                        return item;
+                    case "strA":
+                        return this.parseArray(item, "str");
+                    case "note":
+                        return this.parseNote(item);
+                    case "json":
+                    case "j":
+                        return this.parseJson(item);
+                    case "jA":
+                        return this.parseArray(item, "json");
+                    default:
+                        return item;
+                }
+            }
+            catch (e) {
+                console.warn(e);
+                this.writeDetailedError();
+                return item;
+            }
+        }
+        /**
+         * Parses an array of items.
+         * @param items The items to parse.
+         * @param type The type of the items.
+         * @returns The parsed array.
+         */
+        parseArray(items, type) {
+            try {
+                const elements = [];
+                const parsed = JsonEx.parse(items);
+                for (const p of parsed) {
+                    try {
+                        elements.push(this.parseParamItem(type, p));
+                    }
+                    catch (e) {
+                        console.warn(e);
+                    }
+                }
+                return elements;
+            }
+            catch (e) {
+                console.warn(e);
+                this.writeDetailedError();
+                return [];
+            }
+        }
+        /**
+         * Parses a struct item.
+         * @param item The item to parse.
+         * @returns The parsed struct.
+         */
+        parseStruct(item) {
+            try {
+                if (!item || !KString.any(item))
+                    return null;
+                const parsed = JsonEx.parse(item);
+                return parsed ? this.parseParameters(parsed) : null;
+            }
+            catch (e) {
+                console.warn(e);
+                this.writeDetailedError();
+                return null;
+            }
+        }
+        /**
+         * Parses an array of struct items.
+         * @param items The items to parse.
+         * @returns The parsed array of structs.
+         */
+        parseStructArray(items) {
+            try {
+                const elements = [];
+                const parsed = JsonEx.parse(items);
+                for (const p of parsed) {
+                    try {
+                        elements.push(this.parseStruct(p));
+                    }
+                    catch (e) {
+                        console.warn(e);
+                        this.writeDetailedError();
+                    }
+                }
+                return elements;
+            }
+            catch (e) {
+                console.warn(e);
+                this.writeDetailedError();
+                return [];
+            }
+        }
+        /**
+         * Parses a note item.
+         * @param item The item to parse.
+         * @returns The parsed note.
+         */
+        parseNote(item) {
+            try {
+                const parsed = JsonEx.parse(item);
+                return parsed ? parsed : item;
+            }
+            catch (e) {
+                console.warn(e);
+                this.writeDetailedError();
+                return item;
+            }
+        }
+        /**
+         * Parses a JSON item.
+         * @param item The item to parse.
+         * @returns The parsed JSON.
+         */
+        parseJson(item) {
+            try {
+                const json = {};
+                const parsed = JsonEx.parse(item);
+                const elements = parsed.split('\n');
+                for (const element of elements) {
+                    const cx = `{${element}}`;
+                    try {
+                        const item = JsonEx.parse(cx);
+                        for (const key in item) {
+                            if (item.hasOwnProperty(key)) {
+                                json[key] = item[key];
+                            }
+                        }
+                    }
+                    catch (e) {
+                        console.warn(`Parameter ${element} has syntax errors, ignored`);
+                    }
+                }
+                return json;
+            }
+            catch (e) {
+                console.warn(e);
+                this.writeDetailedError();
+                return null; // To return default value
+            }
+        }
+    }
+    KDX.ParamLoader = ParamLoader;
+})(KDX || (KDX = {}));
+var KDX;
+(function (KDX) {
+    class TimedUpdate {
+        /**
+         * Creates an instance of TimedUpdate.
+         * @param interval The interval in frames.
+         * @param method The method to call on update.
+         */
+        constructor(interval, method) {
+            this.interval = interval;
+            this.method = method;
+            this._timer = 0;
+            this._once = false;
+        }
+        /**
+         * Sets the number of repeats and the callback after completion.
+         * @param repeatsLeft The number of repeats left.
+         * @param afterCallback The callback to call after completion.
+         */
+        setAfter(repeatsLeft, afterCallback) {
+            this._repeatsLeft = repeatsLeft;
+            this._afterCallback = afterCallback;
+        }
+        /**
+         * Updates the timer and calls the method if the interval is reached.
+         */
+        update() {
+            if (this.interval == null)
+                return;
+            if (this._timer++ >= this.interval) {
+                this.call();
+                this._timer = 0;
+                if (this._repeatsLeft != null) {
+                    this._repeatsLeft -= 1;
+                    if (this._repeatsLeft <= 0) {
+                        if (this._afterCallback)
+                            this._afterCallback();
+                    }
+                }
+                if (this._once)
+                    this.stop();
+            }
+        }
+        /**
+         * Sets the update to be called only once.
+         */
+        once() {
+            this._once = true;
+        }
+        /**
+         * Sets the method to call on update.
+         * @param method The method to call on update.
+         */
+        onUpdate(method) {
+            this.method = method;
+        }
+        /**
+         * Stops the update.
+         */
+        stop() {
+            this.interval = null;
+        }
+        /**
+         * Checks if the update is still active.
+         * @returns True if the update is active, otherwise false.
+         */
+        isAlive() {
+            return this.interval != null;
+        }
+        /**
+         * Randomizes the interval within a given range.
+         * @param min The minimum value to add to the interval.
+         * @param max The maximum value to add to the interval.
+         */
+        applyTimeRange(min, max) {
+            if (!this.isAlive())
+                return;
+            const value = KNumber.random(min, max);
+            this.interval += value;
+        }
+        /**
+         * Calls the method.
+         */
+        call() {
+            try {
+                if (this.method)
+                    this.method();
+            }
+            catch (e) {
+                console.warn(e);
+            }
+        }
+    }
+    KDX.TimedUpdate = TimedUpdate;
+})(KDX || (KDX = {}));
+
+
+
+
+
+
+var PP;
+(function (PP) {
+    let _loader;
+    /**
+        * Load plugin settings
+    */
+    function LoadPluginSettings() {
+        _loader = new KDX.ParamLoader("PKD_SimpleFishing");
+    }
+    PP.LoadPluginSettings = LoadPluginSettings;
+    /**
+        * Get parameter from plugin settings
+        * @param {string} paramName - Name of parameter
+        * @param {any} defaultValue - Default value if not found
+        * @returns {any} - Value of parameter
+    */
+    function getLoaderParam(paramName, defaultValue) {
+        try {
+            if (!_loader) {
+                LoadPluginSettings();
+            }
+            return _loader.getParam(paramName, defaultValue);
+        }
+        catch (error) {
+            console.warn(error);
+            return null;
+        }
+    }
+    function getGameEventsData() {
+        return getLoaderParam('gameEventsData', {
+            onGameInitedCommonEventId: 0,
+            onGameStartedCommonEventId: 0,
+            onGameEndCommonEventId: 0,
+            onPlayerClickGood: 0,
+            onPlayerCatchFish: 0,
+            onPlayerClickBad: 0,
+            onPlayerLoseFish: 0
+        });
+    }
+    PP.getGameEventsData = getGameEventsData;
+    function CheckParameters() {
+        if (isIgnoreParametersCheck()) {
+            return;
+        }
+        let variablesData = getGameVariablesData();
+        if (variablesData['baitVariableId'] == undefined || variablesData['rodVariableId'] == undefined) {
+            console.warn("PKD_SimpleFishing: Bait or Rod variable id is undefined! Please, set correct variable id in plugin parameters!");
+            window.alert("PKD_SimpleFishing: Bait or Rod variable id is undefined! Please, set correct variable id in plugin parameters!");
+        }
+        if (variablesData.baitVariableId == 0 || variablesData.rodVariableId == 0) {
+            console.warn("PKD_SimpleFishing: Bait or Rod variable id is zero! Please, set correct variable id in plugin parameters!");
+            window.alert("PKD_SimpleFishing: Bait or Rod variable id is zero! Please, set correct variable id in plugin parameters!");
+        }
+        ;
+        let rodsData = getRodsData();
+        if (rodsData.length == 0) {
+            console.warn("PKD_SimpleFishing: Rods data is empty! Please, set correct data in plugin parameters!");
+            window.alert("PKD_SimpleFishing: Rods data is empty! Please, set correct data in plugin parameters!");
+        }
+        ;
+        let baitsData = getBaitsData();
+        if (baitsData.length == 0) {
+            console.warn("PKD_SimpleFishing: Baits data is empty! Please, set correct data in plugin parameters!");
+            window.alert("PKD_SimpleFishing: Baits data is empty! Please, set correct data in plugin parameters!");
+        }
+        ;
+        let regionsData = getRegionsData();
+        if (regionsData.length == 0) {
+            console.warn("PKD_SimpleFishing: Regions data is empty! Please, set correct data in plugin parameters!");
+            window.alert("PKD_SimpleFishing: Regions data is empty! Please, set correct data in plugin parameters!");
+        }
+        ;
+    }
+    PP.CheckParameters = CheckParameters;
+    function getGameVariablesData() {
+        return getLoaderParam('variablesData', {
+            baitVariableId: 0,
+            rodVariableId: 0
+        });
+    }
+    PP.getGameVariablesData = getGameVariablesData;
+    function getRodsData() {
+        return getLoaderParam('rodsData', []);
+    }
+    PP.getRodsData = getRodsData;
+    function getBaitsData() {
+        return getLoaderParam('baitsData', []);
+    }
+    PP.getBaitsData = getBaitsData;
+    function getRegionsData() {
+        return getLoaderParam('regionsData', []);
+    }
+    PP.getRegionsData = getRegionsData;
+    function getRodDataById(id) {
+        return getRodsData().find(r => r.id == id);
+    }
+    PP.getRodDataById = getRodDataById;
+    function getBaitDataById(id) {
+        return getBaitsData().find(b => b.id == id);
+    }
+    PP.getBaitDataById = getBaitDataById;
+    function getRegionDataById(region) {
+        return getRegionsData().find(r => r.region == region);
+    }
+    PP.getRegionDataById = getRegionDataById;
+    function isAutorestartFishingGame() {
+        return getLoaderParam('autoRestart', false);
+    }
+    PP.isAutorestartFishingGame = isAutorestartFishingGame;
+    function isIgnoreParametersCheck() {
+        return getLoaderParam('ignoreParametersCheck', false);
+    }
+    PP.isIgnoreParametersCheck = isIgnoreParametersCheck;
+    function isShowFishCaughtMessage() {
+        return getLoaderParam('showFishCaughtMessage', true);
+    }
+    PP.isShowFishCaughtMessage = isShowFishCaughtMessage;
+})(PP || (PP = {}));
+
+
+class Sprite_FishingGameMain extends KNSprite {
+    static Instance() {
+        return this._instance;
+    }
+    static Create() {
+        if (!this._instance) {
+            new Sprite_FishingGameMain();
+        }
+        SceneManager._scene.addChild(this._instance);
+    }
+    static Destroy() {
+        if (this._instance) {
+            this._instance.stop();
+            this._instance = null;
+        }
+    }
+    get gameProgressBar() {
+        return this._gameProgressBar;
+    }
+    get gameZone() {
+        return this._gameZone;
+    }
+    get gameCursor() {
+        return this._gameCursor;
+    }
+    rodImage() {
+        return this._gameLogic.getRodImage();
+    }
+    baitImage() {
+        return this._gameLogic.getBaitImage();
+    }
+    fishImage() {
+        if (this._gameLogic.isGameInProgress()) {
+            return this._gameLogic.getFishImage();
+        }
+        else {
+            return "unknownFish";
+        }
+    }
+    refresh() {
+        var _a, _b, _c;
+        (_a = this._rodIcon) === null || _a === void 0 ? void 0 : _a.refreshBindings(this);
+        (_b = this._baitIcon) === null || _b === void 0 ? void 0 : _b.refreshBindings(this);
+        (_c = this._fishIcon) === null || _c === void 0 ? void 0 : _c.refreshBindings(this);
+    }
+    //%[MAIN]
+    startFishingGame() {
+        this._gameLogic.start();
+        this.gameCursor.visible = true;
+        this.gameZone.visible = true;
+    }
+    pause() {
+        this._gameLogic.pause();
+        this.gameCursor.pause();
+        this.gameZone.pause();
+        this.gameProgressBar.pause();
+        this.gameCursor.visible = false;
+        this.gameZone.visible = false;
+    }
+    clear() {
+        this.pause();
+        this._gameLogic.clear();
+        this.gameCursor.clear();
+        this.gameZone.clear();
+        this.gameProgressBar.clear();
+        this.refresh();
+    }
+    isPlaying() {
+        return this._gameLogic.isGameInProgress();
+    }
+    stop() {
+        try {
+            this.visible = false;
+            this.terminate();
+            this.removeFromParent();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    terminate() {
+        try {
+            FishingUtils.callCommonEvent(PP.getGameEventsData().onGameEndCommonEventId);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    update() {
+        super.update();
+        this._gameLogic.update();
+    }
+    destroy(options) {
+        Sprite_FishingGameMain._instance = null;
+        super.destroy(options);
+    }
+    constructor() {
+        super();
+        this._initGameLogic();
+        this._createVisuals();
+        Sprite_FishingGameMain._instance = this;
+    }
+    _initGameLogic() {
+        this._gameLogic = new FishingGameLogic(this);
+    }
+    _createVisuals() {
+        KDNUI.FromScheme(this._scheme(), this);
+        this._createDynamicZone();
+        this._createGameProgressBar();
+        this._createMovingCursor();
+    }
+    _createDynamicZone() {
+        let zoneColor = this.uiConstant("zoneColor");
+        let zoneOpacity = this.uiConstant("zoneOpacity");
+        let zonePadding = this.uiConstant("zonePadding");
+        let zoneWidth = this._gameBarMainImage.realWidth() - zonePadding.x * 2;
+        let zoneHeight = this._gameBarMainImage.realHeight() - zonePadding.y * 2;
+        this._gameZone = new Sprite_DynamicZone(zoneColor, zoneOpacity, zoneWidth, zoneHeight);
+        this._gameZone.move(zonePadding.x, zonePadding.y);
+        this._gameZone.setIsVertical(this.uiConstant("isZoneIsVertical"));
+        this._gameZone.setEndThreshold(this.uiConstant("zoneMinSize"));
+        this._gameProccessGaugeContainer.addChild(this._gameZone);
+        this._gameZone.visible = false;
+    }
+    _createMovingCursor() {
+        this._gameCursor = new Sprite_MovingCursor();
+        let isVertical = this.uiConstant("isZoneIsVertical");
+        let maxDistance = this._gameCursorContainer.realWidth();
+        if (isVertical) {
+            maxDistance = this._gameCursorContainer.realHeight();
+        }
+        this._gameCursor.setMaxMovingDistance(maxDistance);
+        this._gameCursor.setIsVertical(isVertical);
+        this._gameProccessGaugeContainer.addChild(this._gameCursor);
+        if (isVertical) {
+            this._gameCursor.setPosition("center", this._gameCursorContainer.y);
+        }
+        else {
+            this._gameCursor.setPosition(this._gameCursorContainer.x, "center");
+        }
+        this._gameCursor.visible = false;
+    }
+    _createGameProgressBar() {
+        this._gameProgressBar = new Sprite_GameProgressBar();
+        this._gameProgressGaugeContainer.addChild(this._gameProgressBar);
+    }
+    _scheme() {
+        return PKD_SimpleFishing.GetNUIFile("NUI_GameUI");
+    }
+}
+PKD_SimpleFishing.Link(Sprite_FishingGameMain, "Sprite_FishingGameMain");
+
+
+const InitFishingGame = (withStart = false) => {
     try {
-      if (KDCore.Utils.isSceneMap()) {
-        return SceneManager._scene.pInFishing();
-      }
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
+        if (KUtils.IsMapScene()) {
+            FishingGameManager.initFishingGame();
+            if (withStart === true) {
+                setTimeout(() => {
+                    StartFishingGame();
+                }, 100);
+            }
+        }
+    }
+    catch (e) {
+        console.warn(e);
+    }
+};
+const IsInFishingGame = () => {
+    try {
+        return FishingGameManager.isInFishing();
+    }
+    catch (e) {
+        console.warn(e);
     }
     return false;
-  };
-  window.StartFishingGame = function() {
-    var e;
+};
+const IsFishingGameInited = () => {
     try {
-      if (KDCore.Utils.isSceneMap()) {
-        return SceneManager._scene.pStartFishingGame();
-      }
-    } catch (error) {
-      e = error;
-      return KDCore.warning(e);
+        if (KUtils.IsMapScene()) {
+            return FishingGameManager.isFishingGameExists();
+        }
     }
-  };
-  window.PauseFishingGame = function() {
-    var e;
-    try {
-      if (KDCore.Utils.isSceneMap()) {
-        return SceneManager._scene.pPauseFishingGame();
-      }
-    } catch (error) {
-      e = error;
-      return KDCore.warning(e);
-    }
-  };
-  window.StopFishingGame = function() {
-    var e;
-    try {
-      if (KDCore.Utils.isSceneMap()) {
-        return SceneManager._scene.pStopFishingGame();
-      }
-    } catch (error) {
-      e = error;
-      return KDCore.warning(e);
-    }
-  };
-})();
-
-// ■ END SCRIPT CALLS.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-//╒═════════════════════════════════════════════════════════════════════════╛
-// ■ DataManager.coffee
-//╒═════════════════════════════════════════════════════════════════════════╛
-//---------------------------------------------------------------------------
-(function() {
-  var _;
-  //@[DEFINES]
-  _ = DataManager;
-})();
-
-// ■ END DataManager.coffee
-//---------------------------------------------------------------------------
-//@[ALIAS]
-/*ALIAS__loadDatabase = _.loadDatabase
-_.loadDatabase = ->
-    console.log(Graphics.width)
-    PKD_SimpleFishing.LoadPluginSettings()
-    ALIAS__loadDatabase.call(@, ...arguments)*/
-
-
-// Generated by CoffeeScript 2.6.1
-var FSH_Sprite_GameMainBar;
-
-FSH_Sprite_GameMainBar = class FSH_Sprite_GameMainBar extends KDCore.Sprite {
-  constructor() {
-    super();
-    this.settings = PKD_SimpleFishing.PP.getMainUIVisualSettings().gameBarSettings;
-    this._create();
-    this._initValues();
-  }
-
-  setCallbackOnFillBad(callbackOnBad) {
-    this.callbackOnBad = callbackOnBad;
-  }
-
-  setCallbackOnFillGood(callbackOnGood) {
-    this.callbackOnGood = callbackOnGood;
-  }
-
-  isPaused() {
-    return this._paused === true;
-  }
-
-  _create() {
-    return this._preloadImage();
-  }
-
-  _preloadImage() {
-    var b;
-    this.maxGameLength = 320; // * fallback value
-    this.maxGameHeight = 38; // * fallback value
-    b = ImageManager.loadPictureForFSHplugin("gameBarBack");
-    b.addLoadListener(() => {
-      this.maxGameWidth = b.width;
-      this.maxGameHeight = b.height;
-      return this._createAfter();
-    });
-  }
-
-  _createAfter() {
-    this._createBack();
-    this._createRedFillSpr();
-    this._createFore();
-    return this._createWhiteCursor();
-  }
-
-  _createBack() {
-    var backgroundImage;
-    backgroundImage = new KDCore.UI.Sprite_UIImage();
-    backgroundImage.rootImageFolder = function() {
-      return "pSimpleFishing";
-    };
-    backgroundImage.draw("gameBarBack");
-    return this.addChild(backgroundImage);
-  }
-
-  _createRedFillSpr() {
-    this.fill = new Sprite(new Bitmap(100, 100));
-    this.fill.visible = false;
-    this.fill.opacity = this.settings.redZoneFillOpacity;
-    return this.addChild(this.fill);
-  }
-
-  _createFore() {
-    var foreImage;
-    foreImage = new KDCore.UI.Sprite_UIImage();
-    foreImage.rootImageFolder = function() {
-      return "pSimpleFishing";
-    };
-    foreImage.draw("gameBarFore");
-    return this.addChild(foreImage);
-  }
-
-  _createWhiteCursor() {
-    var whiteIcon;
-    this.white = new Sprite();
-    whiteIcon = new Sprite(ImageManager.loadPictureForFSHplugin("cursorSmall"));
-    whiteIcon.anchor.x = 0.5;
-    this.white.addChild(whiteIcon);
-    return this.addChild(this.white);
-  }
-
-  _initValues() {
-    this._paused = true;
-    this.tSpeed = 10;
-    this.rSpeed = 1;
-    this._timer = 0;
-    this.minW = 60;
-    this.maxW = 220;
-    this.wSpeed = 3;
-    this._goToRight = true;
-    this.rMinW = this.settings.redZoneMinWidthBeforeBadEnd || 6;
-  }
-
-  setTimerSpeed(tSpeed) {
-    this.tSpeed = tSpeed;
-  }
-
-  setMinMaxFill(minW, maxW) {
-    this.minW = minW;
-    this.maxW = maxW;
-  }
-
-  setWhiteProbeSpeed(wSpeed) {
-    this.wSpeed = wSpeed;
-  }
-
-  setFillSpeed(rSpeed) {
-    this.rSpeed = rSpeed;
-  }
-
-  //%[Запуск анимации движения курсора и уменьшения зоны]
-  start() {
-    this._paused = false;
-    return this._reCreateRedFill();
-  }
-
-  pause() {
-    return this._paused = true;
-  }
-
-  _reCreateRedFill() {
-    return setTimeout((() => {
-      this._createRedFill();
-      if (this.tSpeed > 2) {
-        return this.tSpeed -= 1;
-      }
-    }), 500);
-  }
-
-  update() {
-    super.update();
-    if (this._paused === true) {
-      return;
-    }
-    this._timer++;
-    if (this._timer >= this.tSpeed) {
-      this._timer = 0;
-      this._onTimerTick();
-    }
-    return this._updateWhiteProbTimer();
-  }
-
-  _onTimerTick() {
-    if (this.fill.visible === false) {
-      return;
-    }
-    this._processRedFill();
-    if (this.fill.bitmap.width <= this.rMinW) {
-      return this.onRedFillBad();
-    }
-  }
-
-  _processRedFill() {
-    var h, w;
-    w = this.fill.bitmap.width;
-    h = this.fill.bitmap.height;
-    this.fill.bitmap = new Bitmap(w - (this.rSpeed * 2), h);
-    this.fill.x += this.rSpeed;
-    return this.fill.bitmap.fillAll(this.settings.redZoneFillColor);
-  }
-
-  onRedFillBad() {
-    this.fill.visible = false;
-    this._reCreateRedFill();
-    if (this.callbackOnBad != null) {
-      return this.callbackOnBad();
-    }
-  }
-
-  _createRedFill() {
-    var w, x;
-    w = this.minW + Math.randomInt(this.maxW);
-    this.fill.bitmap = new Bitmap(w, this.maxGameHeight);
-    this.fill.bitmap.fillAll(this.settings.redZoneFillColor);
-    x = Math.randomInt(this.maxGameWidth - w - 1);
-    this.fill.move(x, 0);
-    return this.fill.visible = true;
-  }
-
-  _updateWhiteProbTimer() {
-    var x;
-    x = this.white.x;
-    if (this._goToRight === true) {
-      if (x >= this.maxGameWidth) {
-        this._goToRight = false;
-      } else {
-        return this.white.x = x + this.wSpeed;
-      }
-    } else {
-      if (x <= 0) {
-        this._goToRight = true;
-      } else {
-        return this.white.x = x - this.wSpeed;
-      }
-    }
-  }
-
-  isWhiteInRedZone() {
-    var rE, rX, wX;
-    rX = this.fill.x;
-    rE = this.fill.x + this.fill.bitmap.width;
-    wX = this.white.x;
-    if (wX >= rX && wX <= rE) {
-      return true;
+    catch (e) {
+        console.warn(e);
     }
     return false;
-  }
-
-  onRedFillGood() {
-    this.fill.visible = false;
-    this._reCreateRedFill();
-    if (this.callbackOnGood != null) {
-      return this.callbackOnGood();
-    }
-  }
-
-  isReady() {
-    return this._paused === false && this.fill.visible === true;
-  }
-
-  clear() {
-    this.fill.visible = false;
-    this._timer = 0;
-    this._goToRight = true;
-    return this.white.x = 0;
-  }
-
 };
-
-
-// Generated by CoffeeScript 2.6.1
-var FSH_Sprite_GameProgressBar;
-
-FSH_Sprite_GameProgressBar = class FSH_Sprite_GameProgressBar extends KDCore.UI.Sprite_UIGauge {
-  constructor() {
-    super();
-    this._initValues();
-  }
-
-  rootImageFolder() {
-    return "pSimpleFishing";
-  }
-
-  defaultParams() {
-    return PKD_SimpleFishing.PP.getMainUIVisualSettings().progressBarSettings;
-  }
-
-  _initValues() {
-    this._currentProgress = 0;
-    this._paused = true;
-    this._isEndGood = false;
-    this._isEndBad = false;
-    this.tSpeed = 10;
-    return this._timer = 0;
-  }
-
-  setTimerSpeed(tSpeed) {
-    this.tSpeed = tSpeed;
-  }
-
-  // * float value from 0 to 1
-  extraMoveBy(dx) {
-    this._currentProgress -= dx;
-    this.refreshProgress();
-    if (this._currentProgress <= 0) {
-      this._isEndGood = false;
-      this._isEndBad = true;
+const StartFishingGame = () => {
+    try {
+        FishingGameManager.startFishingGame();
     }
-  }
-
-  refreshProgress() {
-    if (this._currentProgress > 1.0) {
-      this._currentProgress = 1.0;
-    } else if (this._currentProgress < 0) {
-      this._currentProgress = 0;
+    catch (e) {
+        console.warn(e);
     }
-    return this.draw(this._currentProgress);
-  }
-
-  // * float value from 0 to 1
-  extraMoveBy2(dx) {
-    this._currentProgress += dx;
-    this.refreshProgress();
-    if (this._currentProgress >= 1) {
-      this._isEndGood = true;
-      this._isEndBad = false;
-    }
-  }
-
-  isEndGood() {
-    return this._isEndGood === true;
-  }
-
-  isEndBad() {
-    return this._isEndBad === true;
-  }
-
-  isAnyEnd() {
-    return this.isEndGood() || this.isEndBad();
-  }
-
-  start() {
-    return this._paused = false;
-  }
-
-  pause() {
-    return this._paused = true;
-  }
-
-  clear() {
-    this._currentProgress = 0;
-    this._timer = 0;
-    this._isEndGood = false;
-    this._isEndBad = false;
-    this.refreshProgress();
-  }
-
-  update() {
-    Sprite.prototype.update.call(this);
-    if (this._paused === true) {
-      return;
-    }
-    this._timer++;
-    if (this._timer >= this.tSpeed) {
-      this._timer = 0;
-      return this._onTimerTick();
-    }
-  }
-
-  _onTimerTick() {
-    if (this.isAnyEnd()) {
-      return;
-    }
-    this._currentProgress += 0.01;
-    this.refreshProgress();
-    if (this._currentProgress >= 1) {
-      this._isEndGood = true;
-      this._isEndBad = false;
-    }
-  }
-
 };
+const PauseFishingGame = () => {
+    try {
+        FishingGameManager.pauseFishingGame();
+    }
+    catch (e) {
+        console.warn(e);
+    }
+};
+const StopFishingGame = () => {
+    try {
+        FishingGameManager.stopFishingGame();
+    }
+    catch (e) {
+        console.warn(e);
+    }
+};
+const GetCaughtFishId = () => {
+    try {
+        return FishingGameLogic.lastCaughtFishId;
+    }
+    catch (e) {
+        console.warn(e);
+    }
+};
+const GetMissedFishId = () => {
+    try {
+        return FishingGameLogic.lastDroppedFishId;
+    }
+    catch (e) {
+        console.warn(e);
+    }
+};
+const CurrentFishId = () => {
+    try {
+        return FishingGameLogic.currentFishId;
+    }
+    catch (e) {
+        console.warn(e);
+    }
+};
+const ShowCaughtFishNotify = (fishId) => {
+    try {
+        const fishData = { id: fishId };
+        Sprite_FishCatchNotifyText.Show(fishData);
+    }
+    catch (e) {
+        console.warn(e);
+    }
+};
+const ShowNotifyMessage = (message = "") => {
+    try {
+        Sprite_NotifyMessage.Show(message);
+    }
+    catch (e) {
+        console.warn(e);
+    }
+};
+window['InitFishingGame'] = InitFishingGame;
+window['IsInFishingGame'] = IsInFishingGame;
+window['IsFishingGameInited'] = IsFishingGameInited;
+window['StartFishingGame'] = StartFishingGame;
+window['PauseFishingGame'] = PauseFishingGame;
+window['StopFishingGame'] = StopFishingGame;
+window['GetCaughtFishId'] = GetCaughtFishId;
+window['GetMissedFishId'] = GetMissedFishId;
+window['CurrentFishId'] = CurrentFishId;
+window['ShowCaughtFishNotify'] = ShowCaughtFishNotify;
+window['ShowNotifyMessage'] = ShowNotifyMessage;
 
 
-// Generated by CoffeeScript 2.6.1
-//@[GLOBAL]
-var FSH_Sprite_MainGameUI;
+var FishingGameStates;
+(function (FishingGameStates) {
+    FishingGameStates[FishingGameStates["Initialize"] = 0] = "Initialize";
+    FishingGameStates[FishingGameStates["Paused"] = 1] = "Paused";
+    FishingGameStates[FishingGameStates["Playing"] = 2] = "Playing";
+    FishingGameStates[FishingGameStates["End"] = 3] = "End";
+})(FishingGameStates || (FishingGameStates = {}));
+class FishingGameLogic {
+    constructor(_gameUI) {
+        this._gameUI = _gameUI;
+        this._goodClickBonus = 0;
+        this._badClickPenalty = 0;
+        this._gameState = FishingGameStates.Initialize;
+        FishingGameLogic.lastCaughtFishId = 0;
+        FishingGameLogic.lastDroppedFishId = 0;
+        FishingGameLogic.currentFishId = 0;
+        this._gameEvents = PP.getGameEventsData();
+        this._gameVariables = PP.getGameVariablesData();
+        this._currentRod = this._loadPlayerRod();
+        this._currentBait = this._loadPlayerBait();
+        FishingUtils.callCommonEvent(this._gameEvents.onGameInitedCommonEventId);
+    }
+    pause() {
+        this._gameState = FishingGameStates.Paused;
+    }
+    clear() {
+        this._gameState = FishingGameStates.End;
+    }
+    isGameInProgress() {
+        return this._gameState === FishingGameStates.Playing;
+    }
+    getRodImage() {
+        return this._currentRod.iconName;
+    }
+    getBaitImage() {
+        return this._currentBait.iconName;
+    }
+    update() {
+        if (this.isGameInProgress()) {
+            this._updatePlayerInputs();
+            this._updateGameLogic();
+        }
+        if (KInput.IsCancel()) {
+            this._gameUI.pause();
+            this._gameUI.clear();
+            Input.clear();
+            StopFishingGame();
+        }
+    }
+    getFishImage() {
+        return FishingUtils.getFishIcon(this._currentFish.id);
+    }
+    start() {
+        this._goodClickBonus = 0;
+        this._badClickPenalty = 0;
+        this._currentFish = this._getRandomFish();
+        if (this._isCanStartFishingGame()) {
+            this._applyFishData();
+            this._applyRodData();
+            this._gameState = FishingGameStates.Playing;
+            this._gameUI.refresh();
+            this._gameUI.gameCursor.start();
+            this._gameUI.gameZone.start();
+            this._gameUI.gameProgressBar.start();
+            FishingUtils.callCommonEvent(this._gameEvents.onGameStartedCommonEventId);
+        }
+        else {
+            FishingUtils.callCommonEvent(this._gameEvents.onNoAnyFishInRegion);
+            FishingGameLogic.currentFishId = 0;
+            StopFishingGame();
+        }
+    }
+    _loadPlayerRod() {
+        let rodId = $gameVariables.value(this._gameVariables.rodVariableId);
+        let rodData = PP.getRodDataById(rodId);
+        if (!rodData) {
+            console.warn("Rod with id " + rodId + " not found!");
+            rodData = {
+                id: 1000,
+                iconName: "notFound",
+                progressBarTimerMod: 1,
+                gameZoneFillSpeed: 1,
+                redBarShrinkSpeed: 10,
+                whiteCursorMoveSpeed: 3,
+                redBarMinWidth: 60,
+                redBarMaxWidth: 120,
+                badClickProgressPenalty: 20,
+                goodClickProgressAdd: 0
+            };
+        }
+        return rodData;
+    }
+    _loadPlayerBait() {
+        let baitId = $gameVariables.value(this._gameVariables.baitVariableId);
+        let baitData = PP.getBaitDataById(baitId);
+        if (!baitData) {
+            console.warn("Bait with id " + baitId + " not found!");
+            baitData = {
+                id: 1000,
+                iconName: "notFound",
+            };
+        }
+        return baitData;
+    }
+    _getRandomFish() {
+        let regionId = FishingUtils.getRegionIdPlayerFacing();
+        let fish = FishingUtils.getRandomFishFromRegionId(regionId, this._currentBait);
+        if (FishingUtils.isFishAppearConditionsValid(fish)) {
+            return fish;
+        }
+        else {
+            return null;
+        }
+    }
+    _isCanStartFishingGame() {
+        // * If not have bait or fish or rod - can't start fishing
+        return KDX.any(this._currentRod) && KDX.any(this._currentBait) && KDX.any(this._currentFish);
+    }
+    _applyFishData() {
+        FishingGameLogic.currentFishId = this._currentFish.id;
+        this._goodClickBonus = this._currentFish.goodClickProgressAdd / 100;
+        this._gameUI.gameProgressBar.setTimerSpeed(this._currentFish.progressBarFillSpeed);
+    }
+    _applyRodData() {
+        this._goodClickBonus += this._currentRod.goodClickProgressAdd / 100;
+        this._badClickPenalty = this._currentRod.badClickProgressPenalty / 100;
+        this._gameUI.gameProgressBar.modTimerSpeed(this._currentRod.progressBarTimerMod);
+        this._gameUI.gameCursor.setMovingSpeed(this._currentRod.whiteCursorMoveSpeed);
+        this._gameUI.gameZone.setShrinkingSpeed(this._currentRod.gameZoneFillSpeed);
+        this._gameUI.gameZone.setShrinkTime(this._currentRod.redBarShrinkSpeed);
+        this._gameUI.gameZone.setMaxSize(this._currentRod.redBarMaxWidth);
+        this._gameUI.gameZone.setMinSize(this._currentRod.redBarMinWidth);
+    }
+    _updatePlayerInputs() {
+        if (TouchInput.isTriggered() || Input.isTriggered('ok')) {
+            if (this._gameUI.gameZone.isPointInsideZone(this._gameUI.gameCursor.cursorPosition())) {
+                this._gameUI.gameProgressBar.addProgressValue(this._goodClickBonus);
+                FishingUtils.callCommonEvent(this._gameEvents.onPlayerClickGood);
+            }
+            else {
+                this._onBadClick();
+            }
+            this._gameUI.gameZone.restart();
+        }
+    }
+    _onBadClick() {
+        this._gameUI.gameProgressBar.addProgressValue(-this._badClickPenalty);
+        if (!this._gameUI.gameProgressBar.isBadEnd()) {
+            FishingUtils.callCommonEvent(this._gameEvents.onPlayerClickBad);
+        }
+    }
+    _updateGameLogic() {
+        if (this._gameUI.gameProgressBar.isGoodEnd()) {
+            FishingGameLogic.lastCaughtFishId = FishingGameLogic.currentFishId;
+            FishingUtils.callCommonEvent(this._gameEvents.onPlayerCatchFish);
+            this._gainFishToPlayer();
+            if (PP.isShowFishCaughtMessage()) {
+                Sprite_FishCatchNotifyText.Show(this._currentFish);
+            }
+            this._endFishingGame();
+        }
+        else if (this._gameUI.gameProgressBar.isBadEnd()) {
+            FishingGameLogic.lastDroppedFishId = FishingGameLogic.currentFishId;
+            FishingUtils.callCommonEvent(this._gameEvents.onPlayerLoseFish);
+            this._endFishingGame();
+        }
+        else {
+            if (this._gameUI.gameZone.isShrinkFinished()) {
+                this._onBadClick();
+                this._gameUI.gameZone.restart();
+            }
+        }
+    }
+    _gainFishToPlayer() {
+        let fishItem = $dataItems[FishingGameLogic.currentFishId];
+        if (fishItem) {
+            setTimeout(() => {
+                $gameParty.gainItem(fishItem, 1, true);
+            }, 600);
+        }
+    }
+    _endFishingGame() {
+        this._gameUI.pause();
+        this._gameUI.clear();
+        if (PP.isAutorestartFishingGame()) {
+            setTimeout(() => {
+                StartFishingGame();
+            }, 1000);
+        }
+    }
+}
+FishingGameLogic.lastCaughtFishId = 0;
+FishingGameLogic.lastDroppedFishId = 0;
+FishingGameLogic.currentFishId = 0;
+PKD_SimpleFishing.Link(FishingGameLogic, "FishingGameLogic");
 
-FSH_Sprite_MainGameUI = class FSH_Sprite_MainGameUI extends KDCore.Sprite {
-  constructor() {
+
+var FishingGameManager;
+(function (FishingGameManager) {
+    function isFishingGameExists() {
+        return KDX.any(Sprite_FishingGameMain.Instance());
+    }
+    FishingGameManager.isFishingGameExists = isFishingGameExists;
+    function initFishingGame() {
+        Sprite_FishingGameMain.Destroy();
+        Sprite_FishingGameMain.Create();
+    }
+    FishingGameManager.initFishingGame = initFishingGame;
+    function startFishingGame() {
+        if (isFishingGameExists()) {
+            Sprite_FishingGameMain.Instance().startFishingGame();
+        }
+        else {
+            console.warn("You should call InitFishingGame() first!");
+        }
+    }
+    FishingGameManager.startFishingGame = startFishingGame;
+    function pauseFishingGame() {
+        if (isFishingGameExists()) {
+            Sprite_FishingGameMain.Instance().pause();
+        }
+    }
+    FishingGameManager.pauseFishingGame = pauseFishingGame;
+    function stopFishingGame() {
+        Sprite_FishingGameMain.Destroy();
+    }
+    FishingGameManager.stopFishingGame = stopFishingGame;
+    function isInFishing() {
+        return isFishingGameExists();
+    }
+    FishingGameManager.isInFishing = isInFishing;
+})(FishingGameManager || (FishingGameManager = {}));
+window["FishingGameManager"] = FishingGameManager;
+
+
+var FishingUtils;
+(function (FishingUtils) {
+    function getRegionIdPlayerFacing() {
+        const regionId = $gamePlayer.regionId();
+        if (regionId > 0) {
+            return regionId;
+        }
+        else {
+            let direction = $gamePlayer.direction();
+            let x = $gamePlayer.x;
+            let y = $gamePlayer.y;
+            switch (direction) {
+                case 2:
+                    y++;
+                    break;
+                case 4:
+                    x--;
+                    break;
+                case 6:
+                    x++;
+                    break;
+                case 8:
+                    y--;
+                    break;
+            }
+            return $gameMap.regionId(x, y);
+        }
+    }
+    FishingUtils.getRegionIdPlayerFacing = getRegionIdPlayerFacing;
+    function getFishIcon(fishId) {
+        try {
+            let fishItem = $dataItems[fishId];
+            if (fishItem) {
+                if (fishItem.meta && KString.any(fishItem.meta['fishIcon'])) {
+                    return fishItem.meta['fishIcon'];
+                }
+                return fishItem.iconIndex;
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return 0;
+    }
+    FishingUtils.getFishIcon = getFishIcon;
+    function getChanceForFishDependsOnBait(fish, bait) {
+        try {
+            let baseChance = fish.appearChance / 100;
+            if (!bait) {
+                let baitForFish = fish.baits.find(b => b.id === bait.id);
+                if (baitForFish) {
+                    baseChance += baitForFish.addToChance / 100;
+                }
+            }
+            return baseChance;
+        }
+        catch (error) {
+            console.warn(error);
+            return 0;
+        }
+    }
+    function getRandomFishFromRegionId(regionId, bait) {
+        let regionData = PP.getRegionDataById(regionId);
+        if (regionData) {
+            // * Collect chances for each fish
+            let fishIdChance = {};
+            let fishes = regionData.fishes;
+            for (let fish of fishes) {
+                let chance = getChanceForFishDependsOnBait(fish, bait);
+                fishIdChance[fish.id] = chance;
+            }
+            // * Check if fish passed
+            let passedFishes = [];
+            for (let fishId in fishIdChance) {
+                let chance = fishIdChance[fishId];
+                if (Math.random() <= chance) {
+                    passedFishes.push(Number(fishId));
+                }
+            }
+            let fishId = 0;
+            if (passedFishes.length == 0) {
+                // * Select fish with highest chance from all
+                let highestChance = Math.max(...Object.values(fishIdChance));
+                fishId = Number(Object.keys(fishIdChance).find(key => fishIdChance[key] === highestChance));
+            }
+            else {
+                // * Select random fish from passed
+                fishId = passedFishes[Math.floor(Math.random() * passedFishes.length)];
+            }
+            let resultFish = fishes.find(f => f.id === fishId);
+            if (resultFish) {
+                return resultFish;
+            }
+            else {
+                if (regionData.fishes[0]) {
+                    return regionData.fishes[0];
+                }
+                else {
+                    return null;
+                }
+            }
+        }
+        else {
+            let message = "Fishing Data for Region with id " + regionId + " not found!";
+            console.warn(message);
+            return null;
+        }
+    }
+    FishingUtils.getRandomFishFromRegionId = getRandomFishFromRegionId;
+    function isFishAppearConditionsValid(fish) {
+        if (!fish) {
+            return false;
+        }
+        let canAppearBySwitch = true;
+        let canAppearByScript = true;
+        try {
+            if (fish.appearSwitchId > 0) {
+                canAppearBySwitch = $gameSwitches.value(fish.appearSwitchId);
+            }
+            if (KString.any(fish.appearConditionScript)) {
+                try {
+                    canAppearByScript = eval(fish.appearConditionScript);
+                }
+                catch (error) {
+                    console.warn(error);
+                    canAppearByScript = false;
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return canAppearBySwitch && canAppearByScript;
+    }
+    FishingUtils.isFishAppearConditionsValid = isFishAppearConditionsValid;
+    function callCommonEvent(eventId) {
+        try {
+            if (KDX.any(eventId) && eventId > 0) {
+                $gameTemp.reserveCommonEvent(eventId);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    FishingUtils.callCommonEvent = callCommonEvent;
+})(FishingUtils || (FishingUtils = {}));
+
+
+class Sprite_DynamicZone extends KNSprite {
+    constructor(fillColor = "#ad189a", fillOpacity = 125, maxWidth = 300, maxHeight = 100) {
+        super();
+        this._maxSize = 100;
+        this._minSize = 10;
+        this._shrinkingSpeed = 1;
+        this._endThreshold = 6;
+        this._isActive = false;
+        this._shrinkTime = 10;
+        this._isVertical = false;
+        this._timer = 0;
+        this._zoneFillColor = "#ffffff";
+        this._zoneFillOpacity = 255;
+        this._maxWidth = 0;
+        this._maxHeight = 0;
+        this._zoneFillColor = fillColor;
+        this._zoneFillOpacity = fillOpacity;
+        this._maxWidth = maxWidth;
+        this._maxHeight = maxHeight;
+        this._create();
+    }
+    isShrinkFinished() {
+        if (this._isVertical) {
+            return this._isActive && this._zoneSprite.bitmap.height <= this._endThreshold;
+        }
+        else
+            return this._isActive && this._zoneSprite.bitmap.width <= this._endThreshold;
+    }
+    start() {
+        this._isActive = true;
+        this._restartZone();
+    }
+    pause() {
+        this._isActive = false;
+    }
+    setMaxSize(value) {
+        this._maxSize = value;
+    }
+    setMinSize(value) {
+        this._minSize = value;
+    }
+    setShrinkingSpeed(value) {
+        this._shrinkingSpeed = value;
+    }
+    setShrinkTime(value) {
+        this._shrinkTime = value;
+    }
+    setEndThreshold(value) {
+        this._endThreshold = value;
+    }
+    setIsVertical(value) {
+        this._isVertical = value;
+    }
+    isPointInsideZone(point) {
+        if (!this._zoneSprite.visible)
+            return false;
+        let zone = this._zoneSprite;
+        let zonePosition = zone.position;
+        let zoneWidth = zone.bitmap.width;
+        let zoneHeight = zone.bitmap.height;
+        return point.x >= zonePosition.x && point.x <= zonePosition.x + zoneWidth
+            && point.y >= zonePosition.y && point.y <= zonePosition.y + zoneHeight;
+    }
+    clear() {
+        this._timer = 0;
+        this._zoneSprite.visible = false;
+    }
+    restart() {
+        this._restartZone();
+    }
+    update() {
+        super.update();
+        if (this._isActive) {
+            this._updateZone();
+        }
+    }
+    _create() {
+        this._zoneSprite = new Sprite(new Bitmap(100, 100));
+        this._zoneSprite.opacity = this._zoneFillOpacity;
+        this.addChild(this._zoneSprite);
+        this._createNewZone();
+    }
+    _createNewZone() {
+        let size = Math.floor(this._minSize + Math.random() * (this._maxSize - this._minSize));
+        let x = 0;
+        let y = 0;
+        if (this._isVertical) {
+            this._zoneSprite.bitmap = new Bitmap(this._maxWidth, size);
+            y = Math.random() * (this._maxHeight - size - 1);
+        }
+        else {
+            this._zoneSprite.bitmap = new Bitmap(size, this._maxHeight);
+            x = Math.random() * (this._maxWidth - size - 1);
+        }
+        this._zoneSprite.move(x, y);
+        this._zoneSprite.bitmap.fillAll(this._zoneFillColor);
+        this._zoneSprite.visible = true;
+    }
+    _restartZone() {
+        this.clear();
+        setTimeout(() => {
+            this._createNewZone();
+        }, 500);
+    }
+    _updateZone() {
+        this._timer++;
+        if (this._timer >= this._shrinkTime) {
+            this._timer = 0;
+            this._onShrinkStep();
+        }
+    }
+    _onShrinkStep() {
+        if (!this._zoneSprite.visible)
+            return;
+        if (!this.isShrinkFinished()) {
+            this._shrinkZone();
+        }
+    }
+    _shrinkZone() {
+        // * Decrease width (or height) by shrinking speed
+        // * Move by X or Y (by shrinking speed) to keep the center
+        let zone = this._zoneSprite;
+        let bitmap = zone.bitmap;
+        let zonePosition = zone.position;
+        let shrinkingSpeed = this._shrinkingSpeed;
+        let isVertical = this._isVertical;
+        if (isVertical) {
+            this._zoneSprite.bitmap = new Bitmap(bitmap.width, bitmap.height - shrinkingSpeed * 2);
+            zonePosition.y += shrinkingSpeed;
+        }
+        else {
+            this._zoneSprite.bitmap = new Bitmap(bitmap.width - shrinkingSpeed * 2, bitmap.height);
+            zonePosition.x += shrinkingSpeed;
+        }
+        this._zoneSprite.bitmap.fillAll(this._zoneFillColor);
+    }
+}
+PKD_SimpleFishing.Link(Sprite_DynamicZone, "Sprite_DynamicZone");
+
+
+class Sprite_GameProgressBar extends KNSprite {
+    constructor() {
+        super();
+        this._timer = 0;
+        this._progressStepTime = 10;
+        this._isPaused = true;
+        this._isFinished = false;
+        this._isReturing = false;
+        this._currentProgress = 0;
+        this._create();
+        this.clear();
+    }
+    addProgressValue(value) {
+        this._currentProgress += value;
+        this._refreshProgressBar();
+        if (this._currentProgress <= 0) {
+            this._isReturing = true;
+            this._isFinished = false;
+        }
+        else if (this._currentProgress >= 1.0) {
+            this._isFinished = true;
+            this._isReturing = false;
+        }
+    }
+    isGoodEnd() {
+        return this._isFinished;
+    }
+    isBadEnd() {
+        return this._isReturing;
+    }
+    isAnyEnd() {
+        return this.isGoodEnd() || this.isBadEnd();
+    }
+    start() {
+        this._isPaused = false;
+    }
+    pause() {
+        this._isPaused = true;
+    }
+    update() {
+        super.update();
+        try {
+            if (this._isPaused)
+                return;
+            this._timer++;
+            if (this._timer >= this._progressStepTime) {
+                this._timer = 0;
+                if (!this.isAnyEnd()) {
+                    this._onProgressTimerTick();
+                }
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    setTimerSpeed(speed) {
+        this._progressStepTime = speed;
+    }
+    modTimerSpeed(value) {
+        this.setTimerSpeed(this._progressStepTime * value);
+    }
+    clear() {
+        this._currentProgress = 0;
+        this._timer = 0;
+        this._isFinished = false;
+        this._isReturing = false;
+        this._refreshProgressBar();
+    }
+    _onProgressTimerTick() {
+        try {
+            this._currentProgress += 0.01;
+            this._refreshProgressBar();
+            if (this._currentProgress >= 1.0) {
+                this._isFinished = true;
+                this._isReturing = false;
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _refreshProgressBar() {
+        var _a;
+        try {
+            if (this._currentProgress > 1.0) {
+                this._currentProgress = 1.0;
+            }
+            else if (this._currentProgress < 0) {
+                this._currentProgress = 0;
+            }
+            (_a = this._progressBar) === null || _a === void 0 ? void 0 : _a.draw(this._currentProgress);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _create() {
+        KDNUI.FromScheme(this._scheme(), this);
+    }
+    _scheme() {
+        return PKD_SimpleFishing.GetNUIFile("NUI_GameProgressBar");
+    }
+}
+PKD_SimpleFishing.Link(Sprite_GameProgressBar, "Sprite_GameProgressBar");
+
+
+class Sprite_MovingCursor extends KNSprite {
+    constructor() {
+        super();
+        this._maxMovingDistance = 100;
+        this._movingSpeed = 3;
+        this._isVertical = false;
+        this._isActive = false;
+        this._isMovingForward = true;
+        this._create();
+    }
+    start() {
+        this._isActive = true;
+    }
+    pause() {
+        this._isActive = false;
+    }
+    clear() {
+        this._isActive = false;
+        this._cursorImage.setPosition(0, 0);
+    }
+    cursorPosition() {
+        return this._cursorImage.position;
+    }
+    setMaxMovingDistance(value) {
+        this._maxMovingDistance = value;
+    }
+    setMovingSpeed(value) {
+        this._movingSpeed = value;
+    }
+    setIsVertical(value) {
+        this._isVertical = value;
+        this._refreshAnchor();
+    }
+    update() {
+        super.update();
+        this._updateCursorMovement();
+    }
+    _create() {
+        KDNUI.FromScheme(this._scheme(), this);
+        this._refreshAnchor();
+    }
+    _refreshAnchor() {
+        if (this._isVertical) {
+            this._cursorImage.setCommonAnchor(0, 0.5);
+        }
+        else {
+            this._cursorImage.setCommonAnchor(0.5, 0);
+        }
+    }
+    _scheme() {
+        return PKD_SimpleFishing.GetNUIFile("NUI_GameMovingCursor");
+    }
+    // * Move from left to right or from bottom to top
+    _updateCursorMovement() {
+        if (this._isActive) {
+            let cursor = this._cursorImage;
+            let cursorPosition = cursor.position;
+            let cursorSpeed = this._movingSpeed;
+            let cursorMaxDistance = this._maxMovingDistance;
+            let isVertical = this._isVertical;
+            let isMovingForward = this._isMovingForward;
+            if (isVertical) {
+                if (isMovingForward) {
+                    cursorPosition.y += cursorSpeed;
+                    if (cursorPosition.y >= cursorMaxDistance) {
+                        cursorPosition.y = cursorMaxDistance;
+                        this._isMovingForward = false;
+                    }
+                }
+                else {
+                    cursorPosition.y -= cursorSpeed;
+                    if (cursorPosition.y <= 0) {
+                        cursorPosition.y = 0;
+                        this._isMovingForward = true;
+                    }
+                }
+            }
+            else {
+                if (isMovingForward) {
+                    cursorPosition.x += cursorSpeed;
+                    if (cursorPosition.x >= cursorMaxDistance) {
+                        cursorPosition.x = cursorMaxDistance;
+                        this._isMovingForward = false;
+                    }
+                }
+                else {
+                    cursorPosition.x -= cursorSpeed;
+                    if (cursorPosition.x <= 0) {
+                        cursorPosition.x = 0;
+                        this._isMovingForward = true;
+                    }
+                }
+            }
+            cursor.position = cursorPosition;
+        }
+    }
+}
+PKD_SimpleFishing.Link(Sprite_MovingCursor, "Sprite_MovingCursor");
+
+
+class Sprite_FishCatchNotifyText extends KNSprite {
+    static Show(fishData) {
+        SceneManager._scene.addChild(new Sprite_FishCatchNotifyText(fishData));
+    }
+    constructor(_fishData) {
+        super();
+        this._fishData = _fishData;
+        this._create();
+        try {
+            const aliveTime = this.uiConstant('aliveTime');
+            this._aliveTimer = new KDX.TimedUpdate(aliveTime * 60, () => {
+                this.visible = false;
+                this.removeFromParent();
+                this.destroy();
+            });
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _create() {
+        KDNUI.FromScheme(this._scheme(), this);
+    }
+    update() {
+        var _a;
+        super.update();
+        (_a = this._aliveTimer) === null || _a === void 0 ? void 0 : _a.update();
+    }
+    fishItem() {
+        return $dataItems[this._fishData.id];
+    }
+    fishName() {
+        var _a;
+        try {
+            return (_a = this.fishItem()) === null || _a === void 0 ? void 0 : _a.name;
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return "";
+    }
+    fishIcon() {
+        try {
+            if (this.fishItem()) {
+                return FishingUtils.getFishIcon(this._fishData.id);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
+        return 0;
+    }
+    _scheme() {
+        return PKD_SimpleFishing.GetNUIFile("NUI_CaughtFishNotifyMessage");
+    }
+}
+
+
+class Sprite_NotifyMessage extends KNSprite {
+    static Show(message) {
+        SceneManager._scene.addChild(new Sprite_NotifyMessage(message));
+    }
+    constructor(_message) {
+        super();
+        this._message = _message;
+        this._create();
+        try {
+            const aliveTime = this.uiConstant('aliveTime');
+            this._aliveTimer = new KDX.TimedUpdate(aliveTime * 60, () => {
+                this.visible = false;
+                this.removeFromParent();
+                this.destroy();
+            });
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _create() {
+        KDNUI.FromScheme(this._scheme(), this);
+    }
+    update() {
+        var _a;
+        super.update();
+        (_a = this._aliveTimer) === null || _a === void 0 ? void 0 : _a.update();
+    }
+    notifyMessage() {
+        return this._message;
+    }
+    _scheme() {
+        return PKD_SimpleFishing.GetNUIFile("NUI_NotifyMessage");
+    }
+}
+PKD_SimpleFishing.Link(Sprite_NotifyMessage, 'Sprite_NotifyMessage');
+
+
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ DataManager.ts
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(() => {
+    /**
+     * Register NUI file for load with Database
+     * @param {string} filnename - NUI file name WITHOUT extension
+     */
+    function pkdRegisterLocalNUIFile(filnename) {
+        KDNUI.RegisterNUIFile("PKD_SimpleFishing", filnename);
+    }
+    pkdRegisterLocalNUIFile("NUI_GameProgressBar");
+    pkdRegisterLocalNUIFile("NUI_GameMovingCursor");
+    pkdRegisterLocalNUIFile("NUI_GameUI");
+    pkdRegisterLocalNUIFile("NUI_CaughtFishNotifyMessage");
+    pkdRegisterLocalNUIFile("NUI_NotifyMessage");
+    //@[ALIAS]
+    const ALIAS__loadDataFile = DataManager.loadDataFile;
+    DataManager.loadDataFile = function (name, src) {
+        if (src.includes("PKD_SimpleFishing")) {
+            src = src.replace("Test_", "");
+        }
+        ALIAS__loadDataFile.call(this, name, src);
+    };
+})();
+// ■ END DataManager.ts
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.7.0
+var FSH_Sprite_AnimatedSpotIcon;
+
+FSH_Sprite_AnimatedSpotIcon = class FSH_Sprite_AnimatedSpotIcon extends KSprite {
+  constructor(iconImageName, maxFramesCount) {
     super();
-    this._fInit();
-    this._fCreateElements();
-    this._fSetupHandlers();
-    this._callCommonEvent(this.pEvents.onGameInitedCommonEventId);
+    this.iconImageName = iconImageName;
+    this.maxFramesCount = maxFramesCount;
+    this.setDefaultImage();
+    this._frameIndex = 0;
+    this._frameTimer = 0;
+    this._frames = [];
+    if (this._framesCount() > 0) {
+      this._createSeq();
+    }
     return;
   }
 
-  //%[MAIN]
-  start() {
-    this.bonus = 0;
-    this._prepareFish();
-    if ((this.fish != null) && (this.bait != null) && (this.rod != null)) {
-      this._prepareRod();
-      this.gameBar.start();
-      this.progressBar.start();
-      return this._callCommonEvent(this.pEvents.onGameStartedCommonEventId);
-    } else {
-      console.warn("Fish or Bait or Rod data not found!");
-      return window.StopFishingGame();
+  restart() {
+    this._frameIndex = 0;
+    this._frameTimer = 0;
+    this.setNextFrame();
+  }
+
+  // * FOR changing
+  _defaultBitmap() {
+    return ImageManager.loadPictureForFSHplugin(this.iconImageName + "_0");
+  }
+
+  _frameSpeed() {
+    return 10;
+  }
+
+  _framesCount() {
+    return this.maxFramesCount;
+  }
+
+  _imageName() {
+    return this.iconImageName + "_";
+  }
+
+  _loadPictureMethod(filename, index) {
+    return ImageManager.loadPictureForFSHplugin(filename + index);
+  }
+
+  // * --- --- -- -- --
+  setDefaultImage() {
+    return this.bitmap = this._defaultBitmap();
+  }
+
+  _createSeq() {
+    var i, j, ref;
+    for (i = j = 0, ref = this._framesCount(); (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
+      this._frames.push(this._loadPictureMethod(this._imageName(), i));
     }
-  }
-
-  pause() {
-    this.gameBar.pause();
-    return this.progressBar.pause();
-  }
-
-  clear() {
-    this.gameBar.clear();
-    this.progressBar.clear();
-    return this._refreshFishIcon(0);
-  }
-
-  isPlaying() {
-    return !this.gameBar.isPaused();
-  }
-
-  stop() {
-    var ref;
-    this.visible = false;
-    this.terminate();
-    if ((ref = this.parent) != null) {
-      ref.removeChild(this);
-    }
-  }
-
-  terminate() {
-    var ref;
-    return this._callCommonEvent((ref = this.pEvents) != null ? ref.onGameEndCommonEventId : void 0);
+    return this.setNextFrame();
   }
 
   update() {
     super.update();
-    this._updateInput();
-    this._updateState();
+    this.visible = !window.IsFishingGameInited();
+    if (this._frames.length === 0) {
+      return;
+    }
+    this._frameTimer++;
+    if (this._frameTimer > this._frameSpeed()) {
+      this._frameIndex++;
+      this._frameTimer = 0;
+      if (this._frameIndex > (this._framesCount() - 1)) {
+        this._frameIndex = 0;
+      }
+      this.setNextFrame();
+    }
+  }
+
+  setNextFrame() {
+    var e;
+    try {
+      return this.bitmap = this._frames[this._frameIndex];
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
   }
 
 };
 
-(function() {  //╒═════════════════════════════════════════════════════════════════════════╛
-  // ■ FSH_Sprite_MainGameUI.coffee
-  //╒═════════════════════════════════════════════════════════════════════════╛
-  //---------------------------------------------------------------------------
+PKD_SimpleFishing.Link(FSH_Sprite_AnimatedSpotIcon, "FSH_Sprite_AnimatedSpotIcon");
+
+
+// Generated by CoffeeScript 2.7.0
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Event.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var ALIAS__setupPage, _;
+  //@[DEFINES]
+  _ = Game_Event.prototype;
+  //@[ALIAS]
+  ALIAS__setupPage = _.setupPage;
+  _.setupPage = function() {
+    ALIAS__setupPage.call(this, ...arguments);
+    this._fshCheckForFishingSpotComment();
+  };
+})();
+
+// ■ END Game_Event.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.7.0
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Event.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
   var _;
   //@[DEFINES]
-  _ = FSH_Sprite_MainGameUI.prototype;
-  _._fInit = function() {
-    this.pEvents = PKD_SimpleFishing.PP.getGameEventsData();
-    this.pVars = PKD_SimpleFishing.PP.getGameVariablesData();
-    this.pVisual = PKD_SimpleFishing.PP.getMainUIVisualSettings();
-    this.rod = this._getRodData();
-    this.bait = this._getBaitData();
+  _ = Game_Event.prototype;
+  _.fshGetFishingSpotIconData = function() {
+    return this._fshSpotIconData;
   };
-  //console.info @rod
-  //console.info @bait
-  _._getRodData = function() {
-    var rodId;
-    rodId = KDCore.Utils.getVar(this.pVars.rodVariableId);
-    return PKD_SimpleFishing.PP.getRodDataById(rodId);
-  };
-  _._getBaitData = function() {
-    var baidId;
-    baidId = KDCore.Utils.getVar(this.pVars.baitVariableId);
-    if (baidId > 0) {
-      return PKD_SimpleFishing.PP.getBaitDataById(baidId);
-    } else {
-      return null;
-    }
-  };
-  _._fCreateElements = function() {
-    this._createGameBar();
-    this._createProgressBar();
-    this._createFishIcon();
-    this._createRodIcon();
-    this._createBaitIcon();
-  };
-  _._createGameBar = function() {
-    var position;
-    position = this.pVisual.gameBarPosition;
-    this.gameBar = new FSH_Sprite_GameMainBar();
-    this.gameBar.x = eval(position.x);
-    this.gameBar.y = eval(position.y);
-    return this.addChild(this.gameBar);
-  };
-  _._createProgressBar = function() {
-    var position;
-    position = this.pVisual.progressBarPosition;
-    this.progressBar = new FSH_Sprite_GameProgressBar();
-    this.progressBar.x = eval(position.x);
-    this.progressBar.y = eval(position.y);
-    this.progressBar.draw(0);
-    return this.addChild(this.progressBar);
-  };
-  _._createFishIcon = function() {
-    var position;
-    position = this.pVisual.fishIconPosition;
-    this.fishIconBack = new Sprite(ImageManager.loadPictureForFSHplugin("fishBackground"));
-    this.fishIconBack.x = eval(position.x);
-    this.fishIconBack.y = eval(position.y);
-    this.fishIcon = new Sprite();
-    this.fishIconBack.addChild(this.fishIcon);
-    return this.addChild(this.fishIconBack);
-  };
-  _._createRodIcon = function() {
-    var position, rodIcon;
-    position = this.pVisual.rodIconPosition;
-    this.rodIconBack = new Sprite(ImageManager.loadPictureForFSHplugin("rodBackground"));
-    this.rodIconBack.x = eval(position.x);
-    this.rodIconBack.y = eval(position.y);
-    rodIcon = new Sprite();
-    if (String.any(this.rod.iconName)) {
-      rodIcon.bitmap = ImageManager.loadPictureForFSHplugin(this.rod.iconName);
-    }
-    this.rodIconBack.addChild(rodIcon);
-    this.addChild(this.rodIconBack);
-  };
-  _._createBaitIcon = function() {
-    var baitIcon, position;
-    position = this.pVisual.baitIconPosition;
-    this.baitIconBack = new Sprite(ImageManager.loadPictureForFSHplugin("baitBackground"));
-    this.baitIconBack.x = eval(position.x);
-    this.baitIconBack.y = eval(position.y);
-    baitIcon = new Sprite();
-    if (String.any(this.bait.iconName)) {
-      baitIcon.bitmap = ImageManager.loadPictureForFSHplugin(this.bait.iconName);
-    }
-    this.baitIconBack.addChild(baitIcon);
-    return this.addChild(this.baitIconBack);
-  };
-  _._fSetupHandlers = function() {
-    this.gameBar.setCallbackOnFillBad(() => {
-      this.progressBar.extraMoveBy(this.penalty);
-      if (!this.progressBar.isEndBad()) {
-        return this._callCommonEvent(this.pEvents.onPlayerClickBad);
-      }
-    });
-    this.gameBar.setCallbackOnFillGood(() => {
-      this.progressBar.extraMoveBy2(this.bonus);
-      return this._callCommonEvent(this.pEvents.onPlayerClickGood);
-    });
-  };
-  _._callCommonEvent = function(cId) {
-    if (cId > 0) {
-      return $gameTemp.reserveCommonEvent(cId);
-    }
-  };
-  _._prepareFish = function() {
-    var msg, regionNumber;
-    if (this.bait == null) {
-      window.StopFishingGame();
-    }
-    regionNumber = $gamePlayer.pGetRegionOnMyFront();
-    this.region = PKD_SimpleFishing.PP.getRegionDataById(regionNumber);
-    if (this.region != null) {
-      this._extractFishesFromRegionData();
-      if (this.fish != null) {
-        this._refreshFishIcon(this.fish.id);
-      }
-    } else {
-      msg = "Not found fishing settings for Region " + regionNumber;
-      console.warn(msg);
-      window.alert(msg);
-      window.StopFishingGame();
-    }
-  };
-  _._extractFishesFromRegionData = function() {
-    var a, b, chance, chancesOnly, data, fish, fishId, i, len, max, maxRandom, r, ref, values;
-    chancesOnly = [];
-    data = {};
-    ref = this.region.fishes;
-    for (i = 0, len = ref.length; i < len; i++) {
-      fish = ref[i];
-      chance = this._getChanceForFishWithBait(fish);
-      data[fish.id] = chance;
-      chancesOnly.push(chance);
-    }
-    maxRandom = 0;
-    for (a in data) {
-      b = data[a];
-      maxRandom += b;
-    }
-    maxRandom *= 100;
-    r = Math.randomInt(maxRandom);
-    values = [];
-    for (a in data) {
-      b = data[a];
-      if ((b * 100) <= r) {
-        values.push(b);
-      }
-    }
-    if (values.length === 0) {
-      max = chancesOnly.max();
-    } else {
-      max = values.max();
-    }
-    this.fish = null;
-    for (fishId in data) {
-      chance = data[fishId];
-      if (max === chance) {
-        this.fish = this.region.fishes.getById(parseInt(fishId));
-        break;
-      }
-    }
-    if (this.fish == null) {
-      this.fish = this.region.fishes[0];
-    }
-    if (this.fish != null) {
-      this.bonus = this.fish.goodClickProgressAdd / 100;
-      this.progressBar.setTimerSpeed(this.fish.progressBarFillSpeed);
-    }
-  };
-  //console.info @fish
-  _._getChanceForFishWithBait = function(fish) {
-    var baitChance, baseChance;
-    baseChance = fish.appearChance / 100;
-    baitChance = fish.baits.getById(this.bait.id);
-    if (baitChance != null) {
-      baseChance += baitChance.addToChance / 100;
-    }
-    return baseChance;
-  };
-  _._refreshFishIcon = function(fishId) {
-    var e, fishData;
-    this.fishIcon.bitmap = new Bitmap(1, 1);
+  _._fshCheckForFishingSpotComment = function() {
+    var data, e, parts, ref;
+    this._fshSpotIconData = null;
     try {
-      if (fishId > 0) {
-        fishData = $dataItems[this.fish.id];
-        if (String.any(fishData.meta.fishIcon)) {
-          this.fishIcon.bitmap = ImageManager.loadPictureForFSHplugin(fishData.meta.fishIcon);
+      if (this.page() != null) {
+        data = KGameEvents.GetCommentLine('fishingSpot', this);
+        if (!KString.any(data)) {
+          return;
         }
+        parts = data.split(':');
+        parts = (ref = parts[1]) != null ? ref.split(",") : void 0;
+        if (parts == null) {
+          return;
+        }
+        return this._fshSpotIconData = {
+          name: parts[0].trim(),
+          frames: parseInt(parts[1].trim())
+        };
       }
     } catch (error) {
       e = error;
-      KDCore.warning(e);
-      this.fishIcon.bitmap = new Bitmap(1, 1);
+      return console.warn(e);
     }
-  };
-  _._prepareRod = function() {
-    var mod;
-    if (this.rod == null) {
-      return;
-    }
-    mod = this.progressBar.tSpeed * this.rod.progressBarTimerMod;
-    this.progressBar.setTimerSpeed(mod);
-    this.gameBar.setFillSpeed(this.rod.gameZoneFillSpeed);
-    this.gameBar.setWhiteProbeSpeed(this.rod.whiteCursorMoveSpeed);
-    this.gameBar.setTimerSpeed(this.rod.redBarShrinkSpeed);
-    this.gameBar.setMinMaxFill(this.rod.redBarMinWidth, this.rod.redBarMaxWidth);
-    this.penalty = this.rod.badClickProgressPenalty / 100;
-    this.bonus += this.rod.goodClickProgressAdd / 100;
-  };
-  _._updateInput = function() {
-    if (!this.gameBar.isReady()) {
-      return;
-    }
-    if (TouchInput.isTriggered() || Input.isTriggered('ok')) {
-      this._onAction();
-    } else if (Input.isCancel()) {
-      this.pause();
-      this.clear();
-      Input.clear();
-      window.StopFishingGame();
-    }
-  };
-  _._onAction = function() {
-    if (this.gameBar.isWhiteInRedZone()) {
-      return this.gameBar.onRedFillGood();
-    } else {
-      return this.gameBar.onRedFillBad();
-    }
-  };
-  _._updateState = function() {
-    if (!this.gameBar.isReady()) {
-      return;
-    }
-    if (this.progressBar.isEndGood()) {
-      this._onCaughtFish();
-      return;
-    }
-    if (this.progressBar.isEndBad()) {
-      this._onDropFish();
-    }
-  };
-  _._onCaughtFish = function() {
-    var fish;
-    this.pause();
-    this.clear();
-    this._callCommonEvent(this.pEvents.onPlayerCatchFish);
-    fish = this.fish.id;
-    if (fish > 0) {
-      setTimeout((function() {
-        return $gameParty.gainItem($dataItems[fish], 1);
-      }), 600);
-    }
-  };
-  _._onDropFish = function() {
-    this.pause();
-    this.clear();
-    this._callCommonEvent(this.pEvents.onPlayerLoseFish);
   };
 })();
 
-// ■ END FSH_Sprite_MainGameUI.coffee
+// ■ END Game_Event.coffee
 //---------------------------------------------------------------------------
 
 
-// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
-// ■ Game_Player.coffee
+// ■ Game_Map.ts
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
-(function() {
-  var ALIAS__canMove, _;
-  //@[DEFINES]
-  _ = Game_Player.prototype;
-  //@[ALIAS]
-  ALIAS__canMove = _.canMove;
-  _.canMove = function() {
-    if (IsInFishingGame()) {
-      return false;
-    }
-    return ALIAS__canMove.call(this, ...arguments);
-  };
+(() => {
+    //@[DEFINES]
+    const _ = Game_Map.prototype;
+    //@[ALIAS]
+    const ALIAS__isEventRunning = _.isEventRunning;
+    _.isEventRunning = function () {
+        if (IsInFishingGame())
+            return true;
+        return ALIAS__isEventRunning.call(this);
+    };
 })();
-
-// ■ END Game_Player.coffee
+// ■ END Game_Map.ts
 //---------------------------------------------------------------------------
 
 
-// Generated by CoffeeScript 2.6.1
-//╒═════════════════════════════════════════════════════════════════════════╛
-// ■ Game_Player.coffee
-//╒═════════════════════════════════════════════════════════════════════════╛
-//---------------------------------------------------------------------------
-(function() {
-  var _;
-  //@[DEFINES]
-  _ = Game_Player.prototype;
-  _.pGetRegionBelowMe = function() {
-    return $gameMap.regionId(this.x, this.y);
-  };
-  _.pGetRegionOnMyFront = function() {
-    var regionId;
-    regionId = this.pGetRegionBelowMe();
-    if (regionId > 0) {
-      return regionId;
-    }
-    if (this.direction() === 2) {
-      regionId = $gameMap.regionId(this.x, this.y + 1);
-    } else if (this.direction() === 4) {
-      regionId = $gameMap.regionId(this.x - 1, this.y);
-    } else if (this.direction() === 8) {
-      regionId = $gameMap.regionId(this.x, this.y - 1);
-    } else {
-      regionId = $gameMap.regionId(this.x + 1, this.y);
-    }
-    return regionId;
-  };
-})();
-
-// ■ END Game_Player.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
+// Generated by CoffeeScript 2.7.0
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ ImageManager.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -7933,106 +11299,171 @@ FSH_Sprite_MainGameUI = class FSH_Sprite_MainGameUI extends KDCore.Sprite {
 //---------------------------------------------------------------------------
 
 
-// Generated by CoffeeScript 2.6.1
+
+
 //╒═════════════════════════════════════════════════════════════════════════╛
-// ■ Scene_Boot.coffee
+// ■ Scene_Boot.ts
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(() => {
+    //@[DEFINES]
+    const _ = Scene_Boot.prototype;
+    //@[ALIAS]
+    const ALIAS__start = _.start;
+    _.start = function () {
+        ALIAS__start.call(this);
+        PP.LoadPluginSettings();
+        PP.CheckParameters();
+    };
+})();
+// ■ END Scene_Boot.ts
+//---------------------------------------------------------------------------
+
+
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Scene_Map.ts
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(() => {
+    //@[DEFINES]
+    const _ = Scene_Map.prototype;
+    //@[ALIAS]
+    const ALIAS__stop = _.stop;
+    _.stop = function () {
+        Sprite_FishingGameMain.Destroy();
+        ALIAS__stop.call(this);
+    };
+})();
+// ■ END Scene_Map.ts
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.7.0
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Sprite_Character.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
 (function() {
-  var ALIAS__start, _;
+  var ALIAS__setCharacter, ALIAS__updateOther, _;
   //@[DEFINES]
-  _ = Scene_Boot.prototype;
+  _ = Sprite_Character.prototype;
   //@[ALIAS]
-  ALIAS__start = _.start;
-  _.start = function() {
-    ALIAS__start.call(this, ...arguments);
-    return PKD_SimpleFishing.LoadPluginSettings();
+  ALIAS__setCharacter = _.setCharacter;
+  _.setCharacter = function(char) {
+    ALIAS__setCharacter.call(this, char);
+    if ((char != null) && char instanceof Game_Event) {
+      this._fshSpotIconThread = new KDX.TimedUpdate(10, this._fshRefreshFishingSpotIcon.bind(this));
+    } else {
+      this._fshSpotIconThread = null;
+    }
+  };
+  //@[ALIAS]
+  ALIAS__updateOther = _.updateOther;
+  _.updateOther = function() {
+    ALIAS__updateOther.call(this, ...arguments);
+    return this._fshUpdateFishingSpotIcon();
   };
 })();
 
-// ■ END Scene_Boot.coffee
+// ■ END Sprite_Character.coffee
 //---------------------------------------------------------------------------
 
 
-// Generated by CoffeeScript 2.6.1
+// Generated by CoffeeScript 2.7.0
 //╒═════════════════════════════════════════════════════════════════════════╛
-// ■ Scene_Map.coffee
-//╒═════════════════════════════════════════════════════════════════════════╛
-//---------------------------------------------------------------------------
-(function() {
-  var ALIAS__isMenuCalled, ALIAS__stop, _;
-  //@[DEFINES]
-  _ = Scene_Map.prototype;
-  //@[ALIAS]
-  ALIAS__isMenuCalled = _.isMenuCalled;
-  _.isMenuCalled = function() {
-    if (this.pInFishing()) {
-      return false;
-    }
-    return ALIAS__isMenuCalled.call(this, ...arguments);
-  };
-  
-  //@[ALIAS]
-  ALIAS__stop = _.stop;
-  _.stop = function() {
-    var ref;
-    if (this.pInFishing()) {
-      if ((ref = this._pFishingGameMain) != null) {
-        ref.terminate();
-      }
-    }
-    return ALIAS__stop.call(this, ...arguments);
-  };
-})();
-
-// ■ END Scene_Map.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-//╒═════════════════════════════════════════════════════════════════════════╛
-// ■ Scene_Map.coffee
+// ■ Sprite_Character.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
 (function() {
   var _;
   //@[DEFINES]
-  _ = Scene_Map.prototype;
-  _.pInitFishingGame = function() {
-    if (this._pFishingGameMain != null) {
-      this.pStopFishingGame();
+  _ = Sprite_Character.prototype;
+  _._fshUpdateFishingSpotIcon = function() {
+    var ref, ref1;
+    if ((ref = this._fshSpotIconThread) != null) {
+      ref.update();
     }
-    this._pFishingGameMain = new FSH_Sprite_MainGameUI();
-    this.addChild(this._pFishingGameMain);
-  };
-  _.pStartFishingGame = function() {
-    if (this._pFishingGameMain != null) {
-      this._pFishingGameMain.start();
-    } else {
-      console.warn("You should call InitFishingGame() first!");
+    if ((ref1 = this._fshFishingSpotSpr) != null) {
+      ref1.move(this.x, this.y);
     }
   };
-  _.pPauseFishingGame = function() {
-    var ref;
-    return (ref = this._pFishingGameMain) != null ? ref.pause() : void 0;
-  };
-  _.pStopFishingGame = function() {
-    if (this._pFishingGameMain == null) {
-      return;
+  _._fshRefreshFishingSpotIcon = function() {
+    var e, fishingSpotIcon, frames, name;
+    try {
+      if ((this._character != null) && this._character instanceof Game_Event) {
+        fishingSpotIcon = this._character.fshGetFishingSpotIconData();
+        if (fishingSpotIcon != null) {
+          ({name, frames} = fishingSpotIcon);
+          if (this._fshLastFSIName !== name) {
+            this._fshCreateFisingSpotIcon(name, frames);
+            return this._fshLastFSIName = name;
+          }
+        } else {
+          return this._fshDestroyFishingSpotIcon();
+        }
+      } else {
+        return this._fshDestroyFishingSpotIcon();
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
     }
-    this.pPauseFishingGame();
-    this._pFishingGameMain.stop();
-    this._pFishingGameMain = null;
   };
-  _.pInFishing = function() {
-    if (this._pFishingGameMain != null) {
-      return this._pFishingGameMain.isPlaying();
+  _._fshCreateFisingSpotIcon = function(name, frames) {
+    var e;
+    try {
+      this._fshFishingSpotSpr = new FSH_Sprite_AnimatedSpotIcon(name, frames);
+      this._fshFishingSpotSpr.z = 3;
+      this._fshFishingSpotSpr.anchor.x = 0.5;
+      this._fshFishingSpotSpr.anchor.y = 1;
+      return this.parent.addChild(this._fshFishingSpotSpr);
+    } catch (error) {
+      e = error;
+      console.warn(e);
     }
-    return false;
+  };
+  _._fshDestroyFishingSpotIcon = function() {
+    var e;
+    try {
+      this._fshLastFSIName = null;
+      if (this._fshFishingSpotSpr == null) {
+        return;
+      }
+      this._fshFishingSpotSpr.visible = false;
+      this._fshFishingSpotSpr.removeFromParent();
+      return this._fshFishingSpotSpr = null;
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
   };
 })();
 
-// ■ END Scene_Map.coffee
+// ■ END Sprite_Character.coffee
 //---------------------------------------------------------------------------
 
-//Plugin PKD_SimpleFishing builded by PKD PluginBuilder 2.1 - 22.05.2022
+
+// Generated by CoffeeScript 2.7.0
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Spriteset_Map.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var ALIAS__createTilemap, _;
+  //@[DEFINES]
+  _ = Spriteset_Map.prototype;
+  //@[ALIAS]
+  ALIAS__createTilemap = _.createTilemap;
+  _.createTilemap = function() {
+    ALIAS__createTilemap.call(this, ...arguments);
+    this._fshFishingSpotsLayer = new Sprite();
+    this._fshFishingSpotsLayer.z = 5;
+    this._tilemap.addChild(this._fshFishingSpotsLayer);
+  };
+})();
+
+// ■ END Spriteset_Map.coffee
+//---------------------------------------------------------------------------
+
+
+})();

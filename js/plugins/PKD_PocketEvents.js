@@ -1,46 +1,28 @@
 /*
- * License: Creative Commons 4.0 Attribution, Share Alike, Commercial
+ * Copyright (c) 2024 Vladimir Skrypnikov (Pheonix KageDesu)
+ * <https://kdworkshop.net/>
  *
- * Copyright (c) 2021 Vladimir Skrypnikov (Pheonix KageDesu)
- * <https://http://kdworkshop.net//>
  *
  */
 
 /*:
- * @plugindesc (v.1.3)[PRO] Allow you spawn Events during game with placement select
+ * @plugindesc (v.1.5)[PRO] Allow you spawn Events during game with placement select
  * @author Pheonix KageDesu
- * @target MZ
+ * @target MZ MV
  * @url https://kdworkshop.net/plugins/pocket-events/
  *
  * 
  * @help
- * 
- * This plugin allows player placing events from a specified 'template' map
- * with placement selecting for them in the current map.
- * This template map is designated with the "Templates Map" plugin setting.
- * 
- * For create rules and setup placement events, see plugin parameter
- * 'Placement Items'
- * 
- * For place and removing events, use plugin commands. 
- *
- *
- *
- * Since update 1.1. you can create draggable events.
- * Player can dragging those events by mouse to another place on map.
- * Set plugin parameter "Event Drag Drop?" to true for activate dragging.
- * Setup dragging event rules in "Draggable Templates" plugin parameter.
- *   
- * Add comment "draggable:X" (without quotes) on event page
- * where X - number of dragging template from plugin parameters
- *
-  *
- *
- * Visit plugin web page for more information, also you can find Demo project.
- * 
+ * ---------------------------------------------------------------------------
+ * GUIDE:
+ * https://gist.github.com/KageDesu/aad29345574201ec9979b9a913b001f1
+ *  
+ * ---------------------------------------------------------------------------
  * If you like my Plugins, want more and offten updates,
- * please support me on Patreon!
+ * please support me on Boosty or Patreon!
  * 
+ * Boosty Page:
+ *      https://boosty.to/kagedesu
  * Patreon Page:
  *      https://www.patreon.com/KageDesu
  * YouTube Channel:
@@ -48,8 +30,7 @@
  *
  * You can use this plugin in your game thanks to all my Patrons!
  * 
- * License: Creative Commons 4.0 Attribution, Share Alike, Commercial
- * 
+ *
  *
  * @param TemplatesMap
  * @text Templates Map
@@ -89,8 +70,15 @@
  * @type struct<DraggableItem>[]
  * @desc Draggable Events Settings Templates List
  * @default []
-
-
+ * 
+ * @param SpawnInFrontOfThePlayer
+ * @text Spawn In Front
+ * @type boolean
+ * @default true
+ * @desc Spawn placement item in front of the player?
+ * 
+ * @param spacer|endHolder @text‏‏‎ ‎@desc ===============================================
+ * 
  * @command PlacePocketEvent
  * @text Place Pocket Event
  * @desc Placing pocket event on map with placement select
@@ -134,176 +122,680 @@
  * @desc Item that's will be added to inventory when item is removed from map [optional]
  * @type item
  * @default 0
+ * 
+ * @command EMPTY_HOLDER
+ * @text ‏
+ * @desc
+ * @default
+ */
+/*:ru
+ * @plugindesc (v.1.5)[PRO] озволяет спавнить предметы как события на карту
+ * @author Pheonix KageDesu
+ * @target MZ MV
+ * @url https://kdworkshop.net/plugins/pocket-events/
+ *
+ * 
+ * @help
+ * ---------------------------------------------------------------------------
+ * РУКОВОДСТВО: 
+ *  https://gist.github.com/KageDesu/aad29345574201ec9979b9a913b001f1
+ * ---------------------------------------------------------------------------
+ * Если Вам нравятся мои плагины, поддержите меня на Boosty!
+ * 
+ * Boosty:
+ *      https://boosty.to/kagedesu
+ * YouTube:
+ *      https://www.youtube.com/channel/UCA3R61ojF5vp5tGwJ1YqdgQ?
+ *
+ *
+ *
+ *
 
-
+ * @param TemplatesMap
+ * @text Карта-шаблон
+ * @type number
+ * @min 1
+ * @default 1
+ * @desc Номер карты на которой будут хранится события-шаблоны
+ * 
+ * @param GlobalExceptRegions
+ * @text Запрещённые регионы
+ * @type number[]
+ * @min 1
+ * @max 255
+ * @desc Глобальные запрещённые регионы на которых нельзя поместить событие
+ * @default []
+ * 
+ * @param PlacementsList
+ * @text События
+ * @type struct<PlacementItem>[]
+ * @desc
+ * @default []
+ * 
+ * @param AllowArrowMove
+ * @text Клавиатура?
+ * @type boolean
+ * @default false
+ * @desc Разрешить двигать событие при помощи стрелок на клавиатуре? (если ВЫКЛ - то только мышкой)
+ * 
+ * @param AllowEventDragging
+ * @text Перемещение?
+ * @type boolean
+ * @default true
+ * @desc Включить систему перемещения событий? (событие должно иметь спец. комментарий)
+ * 
+ * @param DraggableList
+ * @text Шаблоны перемещения
+ * @type struct<DraggableItem>[]
+ * @desc Шаблоны настроек перемещаемых событий
+ * @default []
+ * 
+ * @param SpawnInFrontOfThePlayer
+ * @text Спавн перед игроком
+ * @type boolean
+ * @default true
+ * @desc Спавн события перед игроком?
+ * 
+ * @param spacer|endHolder @text‏‏‎ ‎@desc ===============================================
+ * 
+ * @command PlacePocketEvent
+ * @text Поместить событие
+ * @desc Поместить предмет как событие на карту
+ * 
+ * @arg placementItemId
+ * @text Событие
+ * @desc Номер события из параметра плагина События
+ * @type number
+ * @min 1
+ * @default 1
+ * 
+ * @arg gameItemId
+ * @text Игровой предмет
+ * @desc Опционально. Предмет который будет удалён из инвентаря при размещении данного события на крате.
+ * @type item
+ * @default 0
+ * 
+ * @command RemovePocketEvent
+ * @text Поднять событие
+ * @desc Удалить расположенное ранее событие с карты
+ * 
+ * @arg placementItemId
+ * @text Событие
+ * @desc Номер события из параметра плагина События! НЕ номер события на карте!
+ * @type number
+ * @min 1
+ * @default 1
+ * 
+ * @arg gameItemId
+ * @text Игровой предмет
+ * @desc Опционально. Предмет который будет добавлен в инвентарь.
+ * @type item
+ * @default 0
+ * 
+ * @command RemovePocketEvent2
+ * @text Поднять ЭТО событие
+ * @desc Удалить данное! (расположенное ранее) событие с карты
+ * 
+ * @arg gameItemId
+ * @text Gain Item
+ * @desc Опционально. Предмет который будет добавлен в инвентарь.
+ * @type item
+ * @default 0
+ * 
+ * @command EMPTY_HOLDER
+ * @text ‏
+ * @desc
+ * @default
  */
 /*~struct~PlacementItem:
-@param eventId
-@text Event ID
-@type number
-@default 1
-@min 1
-@desc Event ID on Placements Templates Map
+    @param eventId
+    @text Event ID
+    @type number
+    @default 1
+    @min 1
+    @desc Event ID on Placements Templates Map
 
-@param animationId
-@text Place Animation
-@type animation
-@default 0
-@desc Animation that will be playing after item placed
+    @param animationId
+    @text Place Animation
+    @type animation
+    @default 0
+    @desc Animation that will be playing after item placed
 
-@param gridVisiblity
-@text Grid
-@type boolean
-@default true
-@desc Show map grid when this item placing?
+    @param gridVisiblity
+    @text Grid
+    @type boolean
+    @default true
+    @desc Show map grid when this item placing?
 
-@param sSwitch
-@text Self Switch
-@type combo
-@option None
-@option A
-@option B
-@option C
-@option D
-@default None
-@desc Select which Self Switch will be turned ON when item been placed
+    @param sSwitch
+    @text Self Switch
+    @type combo
+    @option None
+    @option A
+    @option B
+    @option C
+    @option D
+    @default None
+    @desc Select which Self Switch will be turned ON when item been placed
 
-@param exceptRegions
-@text Forbidden Regions
-@type number[]
-@min 1
-@max 255
-@desc Region ID's where this item cannot be placed 
-@default []
+    @param exceptRegions
+    @text Forbidden Regions
+    @type number[]
+    @min 1
+    @max 255
+    @desc Region ID's where this item cannot be placed 
+    @default []
 
-@param onlyRegions
-@text Allowed Only Regions
-@type number[]
-@min 1
-@max 255
-@desc Only Region ID's where this item can be placed
-@default []
+    @param onlyRegions
+    @text Allowed Only Regions
+    @type number[]
+    @min 1
+    @max 255
+    @desc Only Region ID's where this item can be placed
+    @default []
 
-@param ceSpawnGood
-@text On Placed CE
-@type common_event
-@default 0
-@desc Common event called after item been placed
+    @param exceptTT
+    @text Forbidden Terrain Tags
+    @type number[]
+    @min 1
+    @max 7
+    @desc The terrains tags (1-7) where this event cannot be placed
+    @default []
 
-@param canSpawnOverEvents
-@text Place On Events?
-@type boolean
-@default false
-@desc Can be this item placed on (above) other map events?
+    @param onlyTT
+    @text Allowed Terrain Tags
+    @type number[]
+    @min 1
+    @max 7
+    @desc The terrains tags (1-7) where this item can be placed
+    @default []
 
-@param ceSpawnCancel
-@text On Cancel CE
-@type common_event
-@default 0
-@desc Common event called if player not placed item, just cancel placement (ESC or right mouse click)
+    @param ceSpawnGood
+    @text On Placed CE
+    @type common_event
+    @default 0
+    @desc Common event called after item been placed
 
-@param isShouldPauseMap
-@text Pause Game?
-@type boolean
-@default false
-@desc Pause game map when player placing this item?
+    @param canSpawnOverEvents
+    @text Place On Events?
+    @type boolean
+    @default false
+    @desc Can be this item placed on (above) other map events?
 
-@param maxDistance
-@text Distance
-@type number
-@default 0
-@min 0
-@desc Maximum allowed distance (from player) to place this item. 0 - unlimited
+    @param ceSpawnCancel
+    @text On Cancel CE
+    @type common_event
+    @default 0
+    @desc Common event called if player not placed item, just cancel placement (ESC or right mouse click)
 
-@param allowMargin
-@text Allow Y Offset?
-@type boolean
-@default false
-@desc If true, you can change object height offset by mouse scroll (when placing)
+    @param isShouldPauseMap
+    @text Pause Game?
+    @type boolean
+    @default false
+    @desc Pause game map when player placing this item?
 
-@param marginStep
-@parent allowMargin
-@text Step
-@type number
-@default 1
-@min 1
-@desc Y coordinate changing step (in px)
+    @param maxDistance
+    @text Distance
+    @type number
+    @default 0
+    @min 0
+    @desc Maximum allowed distance (from player) to place this item. 0 - unlimited
 
-@param marginMin
-@parent allowMargin
-@text Min Offset
-@type number
-@default -20
-@min -100
-@max -1
-@desc Lower allowed height offset value
+    @param allowMargin
+    @text Allow Y Offset?
+    @type boolean
+    @default false
+    @desc If true, you can change object height offset by mouse scroll (when placing)
 
-@param marginMax
-@parent allowMargin
-@text Max Offset
-@type number
-@default 20
-@min 1
-@max 100
-@desc Upper allowed height offset value
+    @param marginStep
+    @parent allowMargin
+    @text Step
+    @type number
+    @default 1
+    @min 1
+    @desc Y coordinate changing step (in px)
+
+    @param marginMin
+    @parent allowMargin
+    @text Min Offset
+    @type number
+    @default -20
+    @min -100
+    @max -1
+    @desc Lower allowed height offset value
+
+    @param marginMax
+    @parent allowMargin
+    @text Max Offset
+    @type number
+    @default 20
+    @min 1
+    @max 100
+    @desc Upper allowed height offset value
+
+    @param timer
+    @text Timer
+    @type struct<ETimer>
+    @default {"time":"0","isLocal":"true","specialAction":"Start","sSwitch":"None","ceEvent":"0"}
+    @desc Timer for spawned event. Start, execute action or remove event after certain time.
+*/
+
+/*~struct~PlacementItem:ru
+    @param eventId
+    @text Event ID
+    @type number
+    @default 1
+    @min 1
+    @desc ID События на Карта-шаблон
+
+    @param animationId
+    @text Place Animation
+    @type animation
+    @default 0
+    @desc Анимация когда событие будет установлено на карту
+
+    @param gridVisiblity
+    @text Grid
+    @type boolean
+    @default true
+    @desc Показывать сетку?
+
+    @param sSwitch
+    @text Self Switch
+    @type combo
+    @option None
+    @option A
+    @option B
+    @option C
+    @option D
+    @default None
+    @desc Локальный переключательно, который будет ВКЛ, когда событие будет установлено на карту
+
+    @param exceptRegions
+    @text Forbidden Regions
+    @type number[]
+    @min 1
+    @max 255
+    @desc Номера регионов (ТОЛЬКО) на которых НЕЛЬЗЯ разместить событие
+    @default []
+
+    @param onlyRegions
+    @text Allowed Only Regions
+    @type number[]
+    @min 1
+    @max 255
+    @desc Номера регионов (ТОЛЬКО) на которых МОЖНО разместить событие
+    @default []
+
+    @param exceptTT
+    @text Forbidden Terrain Tags
+    @type number[]
+    @min 1
+    @max 7
+    @desc Номера территории (ТОЛЬКО) (terrain tag 1-7) на которых НЕЛЬЗЯ разместить событие
+    @default []
+
+    @param onlyTT
+    @text Allowed Terrain Tags
+    @type number[]
+    @min 1
+    @max 7
+    @desc Номера территории (ТОЛЬКО) (terrain tag 1-7) на которых МОЖНО разместить событие
+    @default []
+
+    @param ceSpawnGood
+    @text On Placed CE
+    @type common_event
+    @default 0
+    @desc Общее событие вызываемое когда предмет установлен на карту
+
+    @param canSpawnOverEvents
+    @text Place On Events?
+    @type boolean
+    @default false
+    @desc Можно ли поместить \ установить событие поверх других событий?
+
+    @param ceSpawnCancel
+    @text On Cancel CE
+    @type common_event
+    @default 0
+    @desc Общее событие вызываемое когда установка события отменена игроком
+
+    @param isShouldPauseMap
+    @text Pause Game?
+    @type boolean
+    @default false
+    @desc Ставить игру на паузу при процессе размещения данного события?
+
+    @param maxDistance
+    @text Distance
+    @type number
+    @default 0
+    @min 0
+    @desc Максимальная дистанция (от игрока) на которую можно установить данное событие на карту. 0 - нет ограничений
+
+    @param allowMargin
+    @text Allow Y Offset?
+    @type boolean
+    @default false
+    @desc Если ВКЛ, можно менять высоту предмета на оси Y путём скролла колеса мышки
+
+    @param marginStep
+    @parent allowMargin
+    @text Step
+    @type number
+    @default 1
+    @min 1
+    @desc Шаг изменения координаты Y на один скролл колеса мышки
+
+    @param marginMin
+    @parent allowMargin
+    @text Min Offset
+    @type number
+    @default -20
+    @min -100
+    @max -1
+    @desc Минимальный сдвиг по оси Y
+
+    @param marginMax
+    @parent allowMargin
+    @text Max Offset
+    @type number
+    @default 20
+    @min 1
+    @max 100
+    @desc Маскимальный сдвиг по оси Y
+
+    @param timer
+    @text Timer
+    @type struct<ETimer>
+    @default {"time":"0","isLocal":"true","specialAction":"Start","sSwitch":"None","ceEvent":"0"}
+    @desc Настройки таймера. Запускает действие по окончанию времени.
+*/
+
+/*~struct~ETimer:
+    @param time
+    @text Time
+    @type number
+    @decimals 1
+    @min 0
+    @default 0
+    @desc Time in seconds. 0 - no timer.
+
+    @param isLocal
+    @text Is Local?
+    @type boolean
+    @on Local
+    @off Global
+    @default true
+    @desc Local timer countdown only when player on same map with this Event. Global always countdown.
+
+    @param specialAction
+    @text On Complete
+    @type combo
+    @option Start
+    @option Common Event
+    @option Erase
+    @option Self Switch
+    @default Start
+    @desc Action when timer is reach 0
+
+    @param sSwitch
+    @parent specialAction
+    @text Self Switch
+    @type combo
+    @option None
+    @option A
+    @option B
+    @option C
+    @option D
+    @default None
+    @desc If you select Self Switch. Select which Ssw will be turned ON when timer is complete
+
+    @param ceEvent
+    @parent specialAction
+    @text Common Event
+    @type common_event
+    @default 0
+    @desc If you select Common Event. which will be called when timer is complete
+
+*/
+
+/*~struct~ETimer:ru
+    @param time
+    @text Time
+    @type number
+    @decimals 1
+    @min 0
+    @default 0
+    @desc Время в секундах. 0 - нет таймера.
+
+    @param isLocal
+    @text Is Local?
+    @type boolean
+    @on Свой
+    @off Общий
+    @default true
+    @desc Если свой (ВКЛ) - значит таймер будет работать только на карте с этим событием. Если общий - то на всех картах.
+
+    @param specialAction
+    @text On Complete
+    @type combo
+    @option Start
+    @option Common Event
+    @option Erase
+    @option Self Switch
+    @default Start
+    @desc Действие, когда таймер закончит отсчёт (Запуск, Общее событие, Стереть, Локал. перекл.)
+
+    @param sSwitch
+    @parent specialAction
+    @text Self Switch
+    @type combo
+    @option None
+    @option A
+    @option B
+    @option C
+    @option D
+    @default None
+    @desc Если выбрано действие - Self Switch. Какой локальный переключаетель будет в положение ВКЛ
+
+    @param ceEvent
+    @parent specialAction
+    @text Common Event
+    @type common_event
+    @default 0
+    @desc Если выбрано действие - Common Event. Вызов общего события по завершению таймера
+
 */
 
 /*~struct~DraggableItem:
-@param gridVisiblity
-@text Grid
-@type boolean
-@default true
-@desc Show map grid when this event dragging?
+    @param gridVisiblity
+    @text Grid
+    @type boolean
+    @default true
+    @desc Show map grid when this event dragging?
 
-@param exceptRegions
-@text Forbidden Regions
-@type number[]
-@min 1
-@max 255
-@desc Region ID's where this event cannot be placed after dragging 
-@default []
+    @param exceptRegions
+    @text Forbidden Regions
+    @type number[]
+    @min 1
+    @max 255
+    @desc Region ID's where this event cannot be placed after dragging 
+    @default []
 
-@param ceSpawnGood
-@text On Placed CE
-@type common_event
-@default 0
-@desc Common event called after event been placed (after dragging)
+    @param onlyRegions
+    @text Allowed Only Regions
+    @type number[]
+    @min 1
+    @max 255
+    @desc Only Region ID's where this item can be placed after dragging 
+    @default []
 
-@param canSpawnOverEvents
-@text Place On Events?
-@type boolean
-@default false
-@desc Can be this event placed on (above) other map events?
+    @param exceptTT
+    @text Forbidden Terrain Tags
+    @type number[]
+    @min 1
+    @max 7
+    @desc The terrains tags (1-7) where this event cannot be placed after dragging 
+    @default []
 
-@param isShouldPauseMap
-@text Pause Game?
-@type boolean
-@default false
-@desc Pause game map when player dragging this event?
+    @param onlyTT
+    @text Allowed Terrain Tags
+    @type number[]
+    @min 1
+    @max 7
+    @desc The terrains tags (1-7) where this item can be placed after dragging 
+    @default []
 
-@param image
-@text Drag Image
-@type struct<DraggableItemImage>
-@default
-@desc Change event graphic to this image when event is dragging, optional
+    @param ceDragStart
+    @text On Start CE
+    @type common_event
+    @default 0
+    @desc Common event called when event start dragging. Works only if Pause Game is Off
+
+    @param ceSpawnGood
+    @text On Placed CE
+    @type common_event
+    @default 0
+    @desc Common event called after event been placed (after dragging)
+
+    @param ceDradBad
+    @text On Returned CE
+    @type common_event
+    @default 0
+    @desc Common event called when dragging is failed
+
+    @param canSpawnOverEvents
+    @text Place On Events?
+    @type boolean
+    @default false
+    @desc Can be this event placed on (above) other map events?
+
+    @param isShouldPauseMap
+    @text Pause Game?
+    @type boolean
+    @default false
+    @desc Pause game map when player dragging this event?
+
+    @param image
+    @text Drag Image
+    @type struct<DraggableItemImage>
+    @default
+    @desc Change event graphic to this image when event is dragging, optional
+*/
+
+/*~struct~DraggableItem:ru
+    @param gridVisiblity
+    @text Grid
+    @type boolean
+    @default true
+    @desc Показывать сетку при перемещении?
+
+    @param exceptRegions
+    @text Forbidden Regions
+    @type number[]
+    @min 1
+    @max 255
+    @desc Номера регионов (ТОЛЬКО) на которых НЕЛЬЗЯ разместить событие 
+    @default []
+
+    @param onlyRegions
+    @text Allowed Only Regions
+    @type number[]
+    @min 1
+    @max 255
+    @desc Номера регионов (ТОЛЬКО) на которых МОЖНО разместить событие
+    @default []
+
+    @param exceptTT
+    @text Forbidden Terrain Tags
+    @type number[]
+    @min 1
+    @max 7
+    @desc Номера территории (ТОЛЬКО) (terrain tag 1-7) на которых НЕЛЬЗЯ разместить событие 
+    @default []
+
+    @param onlyTT
+    @text Allowed Terrain Tags
+    @type number[]
+    @min 1
+    @max 7
+    @desc Номера территории (ТОЛЬКО) (terrain tag 1-7) на которых МОЖНО разместить событие
+    @default []
+
+    @param ceDragStart
+    @text On Start CE
+    @type common_event
+    @default 0
+    @desc Общее событие, когда перемещение только началось. Работает только если параметр Pause Game выключен
+
+    @param ceSpawnGood
+    @text On Placed CE
+    @type common_event
+    @default 0
+    @desc Общее событие когда перемещение закончено успешно
+
+    @param ceDradBad
+    @text On Returned CE
+    @type common_event
+    @default 0
+    @desc Общее событие когда перемещение НЕ законченно (возврат)
+
+    @param canSpawnOverEvents
+    @text Place On Events?
+    @type boolean
+    @default false
+    @desc Можно ли разместить поверх других событий?
+
+    @param isShouldPauseMap
+    @text Pause Game?
+    @type boolean
+    @default false
+    @desc Ставить игру на паузу при перемещении данного события?
+
+    @param image
+    @text Drag Image
+    @type struct<DraggableItemImage>
+    @default
+    @desc (Опционально) Изменять графику события на данную при перещемении?
 */
 
 /*~struct~DraggableItemImage:
-@param characterName
-@text Graphic
-@type file
-@dir img/characters/
-@require 1
-@default
-@desc Character graphic file
+    @param characterName
+    @text Graphic
+    @type file
+    @dir img/characters/
+    @require 1
+    @default
+    @desc Character graphic file
 
-@param characterIndex
-@text Index
-@type number
-@min 0
-@desc Charcter Index on character graphics
-@default 0
+    @param characterIndex
+    @text Index
+    @type number
+    @min 0
+    @desc Charcter Index on character graphics
+    @default 0
  */
+
+/*~struct~DraggableItemImage:ru
+    @param characterName
+    @text Graphic
+    @type file
+    @dir img/characters/
+    @require 1
+    @default
+    @desc Файл с графикой персонажа
+
+    @param characterIndex
+    @text Index
+    @type number
+    @min 0
+    @desc Номер персонажа (индекс)
+    @default 0
+ */
+
+
 
 
 var Imported = Imported || {};
@@ -312,6 +804,8 @@ Imported.PKD_PocketEvents = true;
 
 
 var PKD_EasyPlacement = {};
+PKD_EasyPlacement.version = 150; // 1.5
+
 PKD_EasyPlacement.LIBS = {};
 PKD_EasyPlacement.register = function (library) {
     this.LIBS[library.name] = library;
@@ -326,8 +820,7 @@ window.KDCoreMini = KDCoreMini;
 
 KDCoreMini.Utils = {};
 
-//TODO: В KDCore
-KDCoreMini.makeid = function(length) {
+KDCoreMini.makeid = function (length) {
     var result = '';
     var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     var charactersLength = characters.length;
@@ -336,6 +829,20 @@ KDCoreMini.makeid = function(length) {
             charactersLength));
     }
     return result;
+};
+
+KDCoreMini.checkSwitch = function (switchValue) {
+    try {
+        if(!switchValue) return false;
+        switchValue = switchValue.toUpperCase();
+        if (switchValue === 'A' || switchValue === 'B' || switchValue === 'C' || switchValue === 'D') {
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.warn(error);
+        return false;
+    }
 };
 
 (function () {
@@ -354,6 +861,10 @@ KDCoreMini.makeid = function(length) {
         }
         return this;
     };
+
+    Object.defineProperty(Array.prototype, "delete", {
+        enumerable: false
+    })
 
     KDCoreMini.TimedUpdate = class TimedUpdate {
         constructor(interval, method1) {
@@ -428,6 +939,7 @@ KDCoreMini.makeid = function(length) {
     };
 
 })();
+
 (function(){
     
 
@@ -444,6 +956,8 @@ KDCoreMini.makeid = function(length) {
         PKD_EasyPlacement.PARAMS.ALLOW_ARROW_MOVE = JsonEx.parse(params.AllowArrowMove || "false");
         PKD_EasyPlacement.PARAMS.ALLOW_DRAG = JsonEx.parse(params.AllowEventDragging || "true");
         PKD_EasyPlacement.PARAMS.DRAG_ITEMS = ParsePluginDraggableList(params.DraggableList);
+
+        PKD_EasyPlacement.PARAMS.SPAWN_IN_FRONT = JsonEx.parse(params.SpawnInFrontOfThePlayer || "true");
 
         //console.info(PKD_EasyPlacement.PARAMS);
         if(KDCoreMini.isMZ())
@@ -515,6 +1029,50 @@ KDCoreMini.makeid = function(length) {
             } else {
                 element.marginMax = 20;
             }
+
+            // * NOT USED (DEPRECATED)
+            if(element.selfSwitchOn) {
+                try {
+                    if(KDCoreMini.checkSwitch(element.selfSwitchOn)) {
+                        element.selfSwitchOn = element.selfSwitchOn.toUpperCase();
+                    } else {
+                        element.selfSwitchOn = null;
+                    }
+                } catch (e) {
+                    console.warn(e);
+                    element.selfSwitchOn = null;
+                }
+            }
+
+            // * TERRAIN TAGS
+            if(element.exceptTT) {
+                element.exceptTT = ParsePluginRegionArray(element.exceptTT);
+            } else {
+                element.exceptTT = [];
+            }
+            if(element.onlyTT) {
+                element.onlyTT = ParsePluginRegionArray(element.onlyTT);
+            } else {
+                element.onlyTT = [];
+            }
+
+            // * TIMER
+            if(element.timer) {
+                element.timer = JsonEx.parse(element.timer);
+                try {
+                    element.timer.time = Number(element.timer.time);
+                    if(element.timer.time > 0) {
+                        element.timer.ceEvent = parseInt(element.timer.ceEvent);
+                        element.timer.isLocal = eval(element.timer.isLocal);
+                    }
+                } catch (e) {
+                    console.warn(e);
+                }
+            } else {
+                element.timer = {
+                    time: 0
+                };
+            }
         });
         parsed = [null].concat(parsed);
         return parsed;
@@ -527,6 +1085,10 @@ KDCoreMini.makeid = function(length) {
         parsed.forEach(element => {
             element.gridVisiblity = JsonEx.parse(element.gridVisiblity);
             element.exceptRegions = ParsePluginRegionArray(element.exceptRegions);
+            if(element.onlyRegions)
+                element.onlyRegions = ParsePluginRegionArray(element.onlyRegions);
+            else
+                element.onlyRegions = [];
             element.ceSpawnGood = parseInt(element.ceSpawnGood);
             element.canSpawnOverEvents = JsonEx.parse(element.canSpawnOverEvents);
             element.isShouldPauseMap = JsonEx.parse(element.isShouldPauseMap);
@@ -534,6 +1096,43 @@ KDCoreMini.makeid = function(length) {
                 element.image = JsonEx.parse(element.image);
             } else {
                 element.image = null;
+            }
+
+            if(element.ceDragStart) {
+                element.ceDragStart = parseInt(element.ceDragStart);
+            } else {
+                element.ceDragStart = 0;
+            }
+
+            if(element.ceDradBad) {
+                element.ceDradBad = parseInt(element.ceDradBad);
+            } else {
+                element.ceDradBad = 0;
+            }
+
+            if(element.selfSwitchOn) {
+                try {
+                    if(KDCoreMini.checkSwitch(element.selfSwitchOn)) {
+                        element.selfSwitchOn = element.selfSwitchOn.toUpperCase();
+                    } else {
+                        element.selfSwitchOn = null;
+                    }
+                } catch (e) {
+                    console.warn(e);
+                    element.selfSwitchOn = null;
+                }
+            }
+
+            // * TERRAIN TAGS
+            if(element.exceptTT) {
+                element.exceptTT = ParsePluginRegionArray(element.exceptTT);
+            } else {
+                element.exceptTT = [];
+            }
+            if(element.onlyTT) {
+                element.onlyTT = ParsePluginRegionArray(element.onlyTT);
+            } else {
+                element.onlyTT = [];
             }
         });
         parsed = [null].concat(parsed);
@@ -595,7 +1194,276 @@ KDCoreMini.makeid = function(length) {
     };
 
 })();
-// Generated by CoffeeScript 2.5.1
+
+// * Общая библиотека для методов которых нет в MV
+
+(function(){
+    
+    if(!KDCoreMini.isMZ()) {
+
+        Spriteset_Map.prototype.findTargetSprite = function(target) {
+            return this._characterSprites.find(sprite => sprite.checkCharacter(target));
+        };
+
+        Sprite_Character.prototype.checkCharacter = function(character) {
+            return this._character === character;
+        };
+
+        //@[ALIAS]
+        var alias_TIOMM = TouchInput._onMouseMove;
+        TouchInput._onMouseMove = function(event) {
+            var x, y;
+            alias_TIOMM.call(this, event);
+            x = Graphics.pageToCanvasX(event.pageX);
+            y = Graphics.pageToCanvasY(event.pageY);
+            if (Graphics.isInsideCanvas(x, y)) {
+                return this._onHover(x, y);
+            }
+        };
+        
+        //?NEW, from MZ
+        TouchInput._onHover = function(_x, _y) {
+            this._x = _x;
+            this._y = _y;
+        };
+
+        Game_Temp.prototype.requestAnimation = function(targets, animationId) {
+            if(animationId > 0) {
+                if ($dataAnimations[animationId]) {
+                    targets.forEach(t => t.requestAnimation(animationId))
+                }
+            }
+        };
+
+        //@[ALIAS]
+        var _Game_Interpreter_pluginCommand_3434 = Game_Interpreter.prototype.pluginCommand;
+        Game_Interpreter.prototype.pluginCommand = function (command, args) {
+            _Game_Interpreter_pluginCommand_3434.call(this, command, args);
+            if (command === 'PlacePocketEvent') {
+                try {
+                    var pocketItemId = parseInt(args[0]);
+                    var gameItemId = 0;
+                    if(args[1]) {
+                        gameItemId = parseInt(args[1]);
+                    }
+                    if(pocketItemId >= 0) {
+                        PKD_EPManager.Start(pocketItemId, gameItemId);
+                    }
+                } catch (e) {
+                    console.warn(e);
+                }
+            } else if (command === 'PickUpPocketEvent') {
+                try {
+                    var pocketItemId = parseInt(args[0]);
+                    var gameItemId = 0;
+                    if(args[1]) {
+                        gameItemId = parseInt(args[1]);
+                    }
+                    if(pocketItemId >= 0) {
+                        PKD_EPManager.PickUpPlacedItem(pocketItemId, gameItemId);
+                    }
+                } catch (e) {
+                    console.warn(e);
+                }
+            } else if (command === 'PickUpThisPocketEvent') {
+                try {
+                    let eventId = this.eventId();
+                    let gameItemId = 0;
+                    if(args[0]) {
+                        gameItemId = parseInt(args[0]);
+                    }
+                    if(eventId > 0) {
+                        PKD_EPManager.PickUpPlacedItemByEvent(eventId, gameItemId);
+                    }
+                } catch (e) {
+                    console.warn(e);
+                }
+            }
+        };
+
+    }
+
+})();
+
+function Game_EPEvent() {
+    this.initialize.apply(this, arguments);
+}
+
+Game_EPEvent.prototype = Object.create(Game_Event.prototype);
+Game_EPEvent.prototype.constructor = Game_EPEvent;
+
+Game_EPEvent.prototype.initialize = function (templateEventId, eventId, epItemId) {
+    this._templateEventId = templateEventId;
+    this._epItemId = epItemId;
+    Game_Event.prototype.initialize.call(this, $gameMap.mapId(), eventId);
+    DataManager.extractMetadata(this.event());
+    this.pExtraPositions = null;
+    this.pExtractExtaPos();
+    this.setPosition(-1, -1);
+};
+
+Game_EPEvent.prototype.event = function () {
+    return $dataEPEventsMap.events[this._templateEventId];
+};
+
+Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
+    return 1; // * JUST FOR CONDITIONS
+};
+
+// * Only once, after spawning (not after load)
+Game_EPEvent.prototype.epStartTimer = function () {
+
+    if (PKD_PocketEvents.IsNetworkGame() == true) {
+        console.warn("In current version of Pocket Events Timers not works with Alpha NET Z");
+        return;
+    }
+
+    let timer = this.epGetTimerData();
+    if (timer) {
+        $gameMap.peAddTimer(timer, this.eventId());
+    }
+};
+
+Game_EPEvent.prototype.epGetTimerData = function () {
+    try {
+        let itemData = PKD_EPManager.ItemData(this._epItemId);
+        if (itemData.timer && itemData.timer.time > 0) {
+            return itemData.timer;
+        }
+        return null;
+
+    } catch (error) {
+        console.warn(error);
+        return null;
+    }
+
+};
+
+Game_EPEvent.prototype.epDoneTimer = function () {
+
+    let timer = this.epGetTimerData();
+    if (timer) {
+        try {
+
+            let actionType = timer.specialAction;
+            switch (actionType) {
+                case "Start":
+                    this.start();
+                    break;
+
+                case "Erase":
+                    this.erase();
+                    let evId = this.eventId();
+                    setTimeout(() => {
+                        PE_PickUpByEvent(evId, 0);
+                    }, 10);
+                    break;
+
+                case "Self Switch":
+                    if(KDCoreMini.checkSwitch(timer.sSwitch)) {
+                        let key = [$gameMap.mapId(), this.eventId(), timer.sSwitch];
+                        $gameSelfSwitches.setValue(key, true);
+                    }
+                    break;
+            
+                case "Common Event":
+                    if(timer.ceEvent > 0)
+                        this.peStartCommonEventLocal(timer.ceEvent);
+                    break;
+
+                default:
+                    console.warn("Unknown timer complete action: " + actionType);
+                    break;
+            }
+
+        } catch (error) {
+            console.warn(error);
+        }
+    }
+};
+
+//@[ALIAS]
+var _alias_Game_Event_pos = Game_Event.prototype.pos;
+Game_Event.prototype.pos = function (x, y) {
+    var isOnPosition = _alias_Game_Event_pos.call(this, x, y);
+    if(isOnPosition) {
+        return true;
+    }
+    if(this.pIsHaveExtraPos()) {
+        return this.pCheckExtraPos(x, y);
+    }
+
+    return isOnPosition;
+};
+
+Game_Event.prototype.pExtractExtaPos = function() {
+    if(this.pExtraPositions) return;
+    // * Array of extra positions (margins (0, 1, -1, +1) of default position)
+    var extraPositions = PKD_EasyPlacement.ExtendedEventCollisions.ExtractExtraPositionsData(this);
+    if(extraPositions)
+        this.pSetExtraPos(extraPositions);
+};
+
+Game_Event.prototype.pGetAllExtraPositions = function() {
+    let positions = [];
+    let extraPositions = this.pGetExtraPos();
+    if(extraPositions) {
+        for (let i = 0; i < extraPositions.length; i++) {
+            let exPos = extraPositions[i];
+            positions.push([this.x + exPos[0], this.y + exPos[1]]);
+        }
+    }
+    return positions;
+};
+
+Game_Event.prototype.pGetExtraPos = function() {
+    return this.pExtraPositions;
+};
+
+Game_Event.prototype.pSetExtraPos = function(extraPositionsArray) {
+    this.pExtraPositions = extraPositionsArray;
+};
+
+Game_Event.prototype.pIsHaveExtraPos = function() {
+    let exPos = this.pGetExtraPos();
+    return exPos && exPos.length > 0;
+};
+
+Game_Event.prototype.pCheckExtraPos = function(x, y) {
+    let extraPositions = this.pGetExtraPos();
+    for (let i = 0; i < extraPositions.length; i++) {
+        let exPos = extraPositions[i];
+        if (x === this.x + exPos[0] && y === this.y + exPos[1]) {
+            return true;
+        }
+    }
+    return false;
+};
+
+(function(){
+    
+    DataManager.pLoadEPEventData = function () {
+        var mapId = PKD_EasyPlacement.ITEMS_MAP;
+        if (mapId > 0) {
+            var filename = 'Map%1.json'.format(mapId.padZero(3));
+            this.loadDataFile('$dataEPEventsMap', filename);
+        } else {
+            console.warn("EasyPlacement.js: You didn't set a map ID for placement events!");
+            window.alert("EasyPlacement.js: You didn't set a map ID for placement events!");
+        }
+    };
+
+    //@[ALIAS]
+    var _alias_DataManager_loadDatabase = DataManager.loadDatabase;
+    DataManager.loadDatabase = function () {
+        PKD_EasyPlacement.LoadPluginSettings();
+        DataManager.pLoadEPEventData();
+        _alias_DataManager_loadDatabase.call(this);
+    };
+
+})();
+
+// Generated by CoffeeScript 2.6.1
 // * MAIN
 Array.prototype.last = function() {
   return this[this.length - 1];
@@ -620,7 +1488,8 @@ TouchInput.mapScreenPoint = function() {
   return {x, y};
 };
 
-// Generated by CoffeeScript 2.5.1
+
+// Generated by CoffeeScript 2.6.1
 var PKD_EPManager;
 
 PKD_EPManager = function() {};
@@ -638,8 +1507,9 @@ PKD_EPManager = function() {};
       this.CreateEPEventsOnMap();
       $gameSystem.pRestoreDraggableEventsPositions();
       this.RestoreMargins();
-      return this.isNextMapLoaded = false;
+      this.isNextMapLoaded = false;
     }
+    $gameMap.peCheckCompleteTimers();
   };
   _.OnNextMapLoaded = function() {
     return this.isNextMapLoaded = true;
@@ -654,22 +1524,31 @@ PKD_EPManager = function() {};
     return this.isActive === true;
   };
   _.IsPointIsGood = function() {
+    var x, y;
     if (this.IsActive()) {
-      return this.IsPointIsGoodForPlacement();
+      // * Потому что добавил движение стрелками
+      if ($gameTemp._epSpawned != null) {
+        ({x, y} = $gameTemp._epSpawned);
+      } else {
+        ({x, y} = TouchInput.mapPoint());
+      }
+      if (this.IsPointIsGoodForPlacement(x, y)) {
+        return PKD_EasyPlacement.ExtendedEventCollisions.CheckExtraPositionEvent($gameTemp._epSpawned, x, y);
+      } else {
+        return false;
+      }
     } else if (this.IsEventDragStart()) {
-      return this.IsPointIsGoodForDrag();
+      ({x, y} = TouchInput.mapPoint());
+      if (this.IsPointIsGoodForDrag(x, y)) {
+        return PKD_EasyPlacement.ExtendedEventCollisions.CheckExtraPositionEvent($gameTemp.pLastDraggableEvent, x, y);
+      } else {
+        return false;
+      }
     } else {
       return true;
     }
   };
-  _.IsPointIsGoodForPlacement = function() {
-    var x, y;
-    // * Потому что добавил движение стрелками
-    if ($gameTemp._epSpawned != null) {
-      ({x, y} = $gameTemp._epSpawned);
-    } else {
-      ({x, y} = TouchInput.mapPoint());
-    }
+  _.IsPointIsGoodForPlacement = function(x, y) {
     // * Только если нельзя спавнить на другие события (по умолчанию)
     if (!$gameTemp._epSpawnModeOverEvents) {
       // * > 1 because self under mouse
@@ -689,7 +1568,7 @@ PKD_EPManager = function() {};
     return this.CheckDistance(x, y);
   };
   _.CheckRegions = function(x, y) {
-    var item, region, regionSet;
+    var item, region, regionSet, terrain;
     regionSet = PKD_EasyPlacement.PARAMS.BAD_REGIONS;
     region = $gameMap.regionId(x, y);
     if (regionSet.contains(region)) {
@@ -705,6 +1584,16 @@ PKD_EPManager = function() {};
       }
     } else if (item.exceptRegions.length > 0) {
       if (item.exceptRegions.contains(region)) {
+        return false;
+      }
+    }
+    terrain = $gameMap.terrainTag(x, y);
+    if (item.onlyTT.length > 0) {
+      if (!item.onlyTT.contains(terrain)) {
+        return false;
+      }
+    } else if (item.exceptTT.length > 0) {
+      if (item.exceptTT.contains(terrain)) {
         return false;
       }
     }
@@ -738,8 +1627,31 @@ PKD_EPManager = function() {};
     itemData = this.ItemData($gameTemp._epPlacementItemId);
     return itemData;
   };
-  //?VERSION
-  _.Start = function(pItemIndex, gItemId = 0) {};
+  _.Start = function(pItemIndex, gItemId = 0) {
+    var item;
+    //"START".p(pItemIndex)
+    if (pItemIndex == null) {
+      return;
+    }
+    if (pItemIndex < 0) {
+      return;
+    }
+    item = this.ItemData(pItemIndex);
+    if (item == null) {
+      return;
+    }
+    if (item.eventId <= 0) {
+      return;
+    }
+    this.RegisterPlacementItem(pItemIndex, gItemId);
+    $gameTemp._epSpawnModeOverEvents = item.canSpawnOverEvents === true;
+    // * В сетевой игре пауза игры недоступна
+    $gameTemp.pPauseMap = item.isShouldPauseMap === true && !PKD_PocketEvents.IsNetworkGame();
+    this.Scene().pActivateEPMode(item.eventId);
+    this.SetGridVisibility(item.gridVisiblity);
+    this.isActive = true;
+    $gameTemp.peLastEventId = -1;
+  };
   // * Сохраняем текущий предмет для дальнейшей работы с ним
   _.RegisterPlacementItem = function(pItemIndex, gItemId) {
     $gameTemp._epPlacementPartyItemId = gItemId;
@@ -762,6 +1674,9 @@ PKD_EPManager = function() {};
     itemId = $gameTemp._epPlacementItemId;
     dbItem = $gameSystem.pRegisterEPItem($gameMap.mapId(), itemId, x, y, evId);
     this.ActivatePlacedItem($gameMap.mapId(), itemId, evId);
+    if ($gameTemp._epSpawned.epDirection != null) {
+      $gameMap.event(evId).setDirection($gameTemp._epSpawned.epDirection);
+    }
     this.ChangePlacementItem(-1);
     this.CallPlacementAnimation($gameTemp._epSpawned, itemId);
     if (PKD_PocketEvents.IsNetworkGame()) {
@@ -774,6 +1689,8 @@ PKD_EPManager = function() {};
     if (commonEventId > 0) {
       $gameTemp.reserveCommonEvent(commonEventId);
     }
+    $gameTemp.peLastEventId = evId;
+    $gameTemp._epSpawned.epStartTimer();
   };
   _.CallPlacementAnimation = function(event, itemId) {
     var animationId;
@@ -866,8 +1783,26 @@ PKD_EPManager = function() {};
     }
     return this.PickUpPlacedItemByEvent(item[3], gItemId);
   };
-  //?VERSION
-  _.CreateEPEventsOnMap = function() {};
+  _.CreateEPEventsOnMap = function() {
+    var db, ev, item, itemData, j, len, mapId, ref;
+    db = $gameSystem.pGetEPDB();
+    mapId = $gameMap.mapId();
+    if (!db[mapId]) {
+      return;
+    }
+    ref = db[mapId];
+    for (j = 0, len = ref.length; j < len; j++) {
+      item = ref[j];
+      itemData = this.ItemData(item[0]);
+      ev = this.Scene().pSpawnEPEvent(itemData.eventId, item[1], item[2], item[3]);
+      ev._epItemId = item[0];
+      ev._templateEventId = itemData.eventId;
+      if (item[4] != null) {
+        ev.setDirection(item[4]);
+      }
+      ev.pExtractExtaPos();
+    }
+  };
   (function() {    // * EVENT DRAGGING SYSTEM
     // * ==================================================================
     _.IsEventDragStart = function() {
@@ -900,9 +1835,7 @@ PKD_EPManager = function() {};
       this.Scene().pOnDragStart();
     };
     _.OnEventDragProcess = function() {}; // * EMPTY
-    _.IsPointIsGoodForDrag = function() {
-      var x, y;
-      ({x, y} = TouchInput.mapPoint());
+    _.IsPointIsGoodForDrag = function(x, y) {
       // * Только если нельзя спавнить на другие события (по умолчанию)
       if (!$gameTemp._epSpawnModeOverEvents) {
         // * Можно вернуть на своё место, поэтому доп. проверка на свою позицию
@@ -916,101 +1849,40 @@ PKD_EPManager = function() {};
       if (Game_CharacterBase.prototype.isCollidedWithVehicles(x, y)) {
         return false;
       }
-      return $gameTemp.pLastDraggableEvent.pOnDragCheckRegion(x, y);
+      if (!$gameTemp.pLastDraggableEvent.pOnDragCheckRegion(x, y)) {
+        return false;
+      }
+      if (!$gameTemp.pLastDraggableEvent.pOnDragCheckTerrainTag(x, y)) {
+        return false;
+      }
+      return true;
     };
-    //?VERSION
-    return _.ExtractDraggableEventComment = function(list) {};
+    _.ExtractDraggableEventComment = function(list) {
+      var comment, data, e;
+      if (list == null) {
+        return null;
+      }
+      try {
+        comment = KDCoreMini.Utils.getEventCommentValue('draggable', list);
+        if (comment != null) {
+          data = parseInt(comment.split(':')[1]);
+          return data;
+        }
+      } catch (error) {
+        e = error;
+        console.warn(e);
+        return null;
+      }
+      return null;
+    };
+    return _.RestoreMargins = function() {
+      $gameSystem.pRestoreEPMargins();
+    };
   })();
 })();
 
-// Generated by CoffeeScript 2.5.1
-PKD_EPManager.CreateEPEventsOnMap = function() {
-  var db, ev, i, item, itemData, len, mapId, ref;
-  db = $gameSystem.pGetEPDB();
-  mapId = $gameMap.mapId();
-  if (!db[mapId]) {
-    return;
-  }
-  ref = db[mapId];
-  for (i = 0, len = ref.length; i < len; i++) {
-    item = ref[i];
-    itemData = this.ItemData(item[0]);
-    ev = this.Scene().pSpawnEPEvent(itemData.eventId, item[1], item[2], item[3]);
-  }
-};
 
-PKD_EPManager.Start = function(pItemIndex, gItemId = 0) {
-  var item;
-  //"START".p(pItemIndex)
-  if (pItemIndex == null) {
-    return;
-  }
-  if (pItemIndex < 0) {
-    return;
-  }
-  item = this.ItemData(pItemIndex);
-  if (item == null) {
-    return;
-  }
-  if (item.eventId <= 0) {
-    return;
-  }
-  this.RegisterPlacementItem(pItemIndex, gItemId);
-  $gameTemp._epSpawnModeOverEvents = item.canSpawnOverEvents === true;
-  // * В сетевой игре пауза игры недоступна
-  $gameTemp.pPauseMap = item.isShouldPauseMap === true && !PKD_PocketEvents.IsNetworkGame();
-  this.Scene().pActivateEPMode(item.eventId);
-  this.SetGridVisibility(item.gridVisiblity);
-  this.isActive = true;
-};
-
-PKD_EPManager.ExtractDraggableEventComment = function(list) {
-  var comment, data, e;
-  if (list == null) {
-    return null;
-  }
-  try {
-    comment = KDCoreMini.Utils.getEventCommentValue('draggable', list);
-    if (comment != null) {
-      data = parseInt(comment.split(':')[1]);
-      return data;
-    }
-  } catch (error) {
-    e = error;
-    console.warn(e);
-    return null;
-  }
-  return null;
-};
-
-PKD_EPManager.RestoreMargins = function() {
-  $gameSystem.pRestoreEPMargins();
-};
-
-function Game_EPEvent() {
-    this.initialize.apply(this, arguments);
-}
-
-Game_EPEvent.prototype = Object.create(Game_Event.prototype);
-Game_EPEvent.prototype.constructor = Game_EPEvent;
-
-Game_EPEvent.prototype.initialize = function (templateEventId, eventId, epItemId) {
-    this._templateEventId = templateEventId;
-    this._epItemId = epItemId;
-    Game_Event.prototype.initialize.call(this, $gameMap.mapId(), eventId);
-    DataManager.extractMetadata(this.event());
-    this.setPosition(-1, -1);
-};
-
-Game_EPEvent.prototype.event = function () {
-    return $dataEPEventsMap.events[this._templateEventId];
-};
-
-Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
-    return 1; // * JUST FOR CONDITIONS
-};
-
-// Generated by CoffeeScript 2.5.1
+// Generated by CoffeeScript 2.6.1
 (function() {
   var Sprite_GridCell;
   Sprite_GridCell = class Sprite_GridCell extends Sprite {
@@ -1019,13 +1891,15 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
       this.anchor.x = 0.5;
       this.anchor.y = 1;
       this.z = 1;
-      this.maxOpacity = 80;
-      this.minOpacity = 40;
+      this.maxOpacity = 120;
+      this.minOpacity = 60;
       this.opacity = this.maxOpacity;
       this.setNormalColor();
       this.updateOpacityChange = this.updateOpacityDown;
       this.colorChangeThread = new KDCoreMini.TimedUpdate(2, this._colorChange.bind(this));
       this._colorChange();
+      this._extraCellsAdded = false;
+      return;
     }
 
     setNormalColor() {
@@ -1042,7 +1916,8 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
         return;
       }
       this.updateOpacityChange();
-      return this.colorChangeThread.update();
+      this.colorChangeThread.update();
+      return this._updateExtraCellsDraw();
     }
 
     _colorChange() {
@@ -1072,11 +1947,61 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
       }
     }
 
+    _targetEvent() {
+      if ($gameTemp._epSpawned != null) {
+        return $gameTemp._epSpawned;
+      } else if ($gameTemp.pLastDraggableEvent != null) {
+        return $gameTemp.pLastDraggableEvent;
+      }
+      return null;
+    }
+
+    _updateExtraCellsDraw() {
+      var e, extraPositions, i, len, pos, results, t;
+      try {
+        if (this._extraCellsAdded) {
+          return;
+        }
+        if (this._targetEvent() == null) {
+          return;
+        }
+        this._extraCellsAdded = true;
+        t = this._targetEvent();
+        if (!t.pIsHaveExtraPos()) {
+          return;
+        }
+        extraPositions = t.pGetExtraPos();
+        results = [];
+        for (i = 0, len = extraPositions.length; i < len; i++) {
+          pos = extraPositions[i];
+          results.push(this._createExtraCellSprite(pos[0], pos[1]));
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return console.warn(e);
+      }
+    }
+
+    _createExtraCellSprite(dx, dy) {
+      var e, extraCell;
+      try {
+        extraCell = new Sprite_GridCell();
+        extraCell._extraCellsAdded = true;
+        extraCell.move($gameMap.tileWidth() * dx, $gameMap.tileHeight() * dy);
+        return this.addChild(extraCell);
+      } catch (error) {
+        e = error;
+        return console.warn(e);
+      }
+    }
+
   };
   PKD_EasyPlacement.register(Sprite_GridCell);
 })();
 
-// Generated by CoffeeScript 2.5.1
+
+// Generated by CoffeeScript 2.6.1
 (function() {
   PKD_EasyPlacement.applyMIPatch = function() {
     var __moveCell, __onCellClick, __onHotCellClick;
@@ -1107,7 +2032,8 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
   };
 })();
 
-// Generated by CoffeeScript 2.5.1
+
+// Generated by CoffeeScript 2.6.1
 (function() {
   PKD_PocketEvents.IsNetworkGame = function() {
     return Imported.Alpha_NETZ === true && ANNetwork.isConnected();
@@ -1131,7 +2057,7 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
       });
     } catch (error) {
       e = error;
-      return KDCore.warning(e);
+      return console.warn(e);
     }
   };
   PKD_EPManager.GenerateUniqueId = function() {
@@ -1250,7 +2176,7 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
       nAPI.sendCustomCommand("pkdPE:PlaceOuterItem", data);
     } catch (error) {
       e = error;
-      KDCore.warning(e);
+      console.warn(e);
     }
   };
   PKD_EPManager.SendItemRemovedToServer = function(spawnedEventId, uniqueId) {
@@ -1279,7 +2205,7 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
       return PKD_EPManager.PlaceOuterItem(data);
     } catch (error) {
       e = error;
-      return KDCore.warning(e);
+      return console.warn(e);
     }
   };
   
@@ -1296,7 +2222,7 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
       return PKD_EPManager.RemoveOuterItem(data);
     } catch (error) {
       e = error;
-      return KDCore.warning(e);
+      return console.warn(e);
     }
   };
   // * Расширение методов
@@ -1324,7 +2250,8 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
   };
 })();
 
-// Generated by CoffeeScript 2.5.1
+
+// Generated by CoffeeScript 2.6.1
 (function() {
   // * Создать (поместить) событие на карте (если карта таже) и зарегестрировать
   PKD_EPManager._SpawnEventOuter = function(eventData) {
@@ -1345,7 +2272,7 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
       return this._RegisterOuterItem(eventData);
     } catch (error) {
       e = error;
-      return KDCore.warning(e);
+      return console.warn(e);
     }
   };
   // * Сохранить состояние помещённого от другого игрока события
@@ -1389,34 +2316,282 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
     } catch (error) {
       //"SWITCHES CLEARED".p()
       e = error;
-      return KDCore.warning(e);
+      return console.warn(e);
     }
   };
 })();
 
-(function(){
-    
-    DataManager.pLoadEPEventData = function () {
-        var mapId = PKD_EasyPlacement.ITEMS_MAP;
-        if (mapId > 0) {
-            var filename = 'Map%1.json'.format(mapId.padZero(3));
-            this.loadDataFile('$dataEPEventsMap', filename);
-        } else {
-            console.warn("EasyPlacement.js: You didn't set a map ID for placement events!");
-            window.alert("EasyPlacement.js: You didn't set a map ID for placement events!");
-        }
-    };
 
-    //@[ALIAS]
-    var _alias_DataManager_loadDatabase = DataManager.loadDatabase;
-    DataManager.loadDatabase = function () {
-        PKD_EasyPlacement.LoadPluginSettings();
-        DataManager.pLoadEPEventData();
-        _alias_DataManager_loadDatabase.call(this);
-    };
-
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ SCRIPT CALLS.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  window.PE_Place = function(pItemId, removeItemId) {
+    var e;
+    try {
+      if (pItemId >= 0) {
+        return PKD_EPManager.Start(pItemId, removeItemId);
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
+  window.PE_PickUpByItem = function(pItemId, gItemId) {
+    var e;
+    try {
+      if (pItemId >= 0) {
+        return PKD_EPManager.PickUpPlacedItem(pItemId, gItemId);
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
+  window.PE_PickUpByEvent = function(eventId, gItemId) {
+    var e;
+    try {
+      if (eventId <= 0) {
+        eventId = $gameMap._interpreter.eventId();
+      }
+      if (eventId <= 0) {
+        return;
+      }
+      return PKD_EPManager.PickUpPlacedItemByEvent(eventId, gItemId);
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
+  window.PE_LastEventId = function() {
+    var e;
+    try {
+      return $gameTemp.peLastEventId;
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
+  window.PE_LastEventRegion = function() {
+    var e, event, x, y;
+    try {
+      event = PE_LastEvent();
+      if (event == null) {
+        return -1;
+      }
+      ({x, y} = event);
+      return $gameMap.regionId(x, y);
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
+  window.PE_LastEventTerrain = function() {
+    var e, event, x, y;
+    try {
+      event = PE_LastEvent();
+      if (event == null) {
+        return -1;
+      }
+      ({x, y} = event);
+      return $gameMap.terrainTag(x, y);
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
+  window.PE_LastEvent = function() {
+    var e, id;
+    try {
+      id = PE_LastEventId();
+      if ((id != null) && id >= 1) {
+        return $gameMap.event(id);
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
+    return null;
+  };
+  window.PE_ForceStopTimer = function(eventId, mapId) {
+    var e;
+    try {
+      if (mapId == null) {
+        mapId = $gameMap.mapId();
+      }
+      $gameMap.peForceStopTimer(eventId, mapId);
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
+  window.PE_ForceCompleteTimer = function(eventId, mapId) {
+    var e;
+    try {
+      if (mapId == null) {
+        mapId = $gameMap.mapId();
+      }
+      if ($gameMap.mapId() === mapId) {
+        $gameMap.peExecuteEventTimerAction(eventId);
+      } else {
+        $gameMap.peRegisterPostTimerAction(eventId, mapId);
+      }
+      $gameMap.peForceStopTimer(eventId, mapId);
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
 })();
-// Generated by CoffeeScript 2.5.1
+
+// ■ END SCRIPT CALLS.coffee
+//---------------------------------------------------------------------------
+
+
+var PKD_EasyPlacement;
+(function (PKD_EasyPlacement) {
+    var Utils;
+    (function (Utils) {
+        function GetPositionInFrontOfPlayer() {
+            let x = $gamePlayer.x;
+            let y = $gamePlayer.y;
+            let direction = $gamePlayer.direction();
+            switch (direction) {
+                case 2:
+                    y += 1;
+                    break;
+                case 4:
+                    x -= 1;
+                    break;
+                case 6:
+                    x += 1;
+                    break;
+                case 8:
+                    y -= 1;
+                    break;
+            }
+            return { x, y };
+        }
+        Utils.GetPositionInFrontOfPlayer = GetPositionInFrontOfPlayer;
+    })(Utils = PKD_EasyPlacement.Utils || (PKD_EasyPlacement.Utils = {}));
+})(PKD_EasyPlacement || (PKD_EasyPlacement = {}));
+
+
+var PKD_EasyPlacement;
+(function (PKD_EasyPlacement) {
+    var ExtendedEventCollisions;
+    (function (ExtendedEventCollisions) {
+        // * Return whole line that contains the commentCode
+        /**
+         * Retrieves a specific comment line from a game event based on the provided comment code.
+         *
+         * @param commentCode - The code to search for within the comment lines.
+         * @param event - The game event from which to retrieve the comment line.
+         * @returns The comment line containing the specified code, or `null` if not found.
+         *
+         * @remarks
+         * This function searches through the event's page list to find a comment line that includes the specified comment code.
+         * It looks for comment codes 108 and 408, which are typically used for comments in RPG Maker events.
+         * If the event or its page list is not available, or if no matching comment line is found, the function returns `null`.
+         *
+         * @throws Will log a warning to the console if an error occurs during the search process.
+         */
+        function GetCommentLine(commentCode, event) {
+            try {
+                if (!event)
+                    return null;
+                let page = event.page();
+                if (!page)
+                    return null;
+                let list = page.list;
+                if (!list)
+                    return null;
+                for (let i = 0; i < list.length; i++) {
+                    if (!list[i])
+                        continue;
+                    if (list[i].code === 108 || list[i].code === 408) {
+                        let line = list[i].parameters[0];
+                        if (line && line.includes(commentCode)) {
+                            return line;
+                        }
+                    }
+                }
+            }
+            catch (error) {
+                console.warn(error);
+            }
+            return null;
+        }
+        // * For commentCode:value
+        /**
+         * Retrieves the value associated with a specific comment code from a game event.
+         * Pattern commentCode:value
+         *
+         * @param commentCode - The code of the comment to search for.
+         * @param event - The game event object to search within.
+         * @returns The value associated with the comment code, or null if not found.
+         */
+        function GetCommentCodeValue(commentCode, event) {
+            try {
+                let line = GetCommentLine(commentCode, event);
+                if (!line)
+                    return null;
+                let value = line.split(":")[1].trim();
+                return value;
+            }
+            catch (error) {
+                console.warn(error);
+            }
+            return null;
+        }
+        function ExtractExtraPositionsData(event) {
+            if (!event)
+                return;
+            let extraPositions = [];
+            // * Comment code rule
+            // expandSize:[DX, DY],...
+            // Example:
+            // expandSize:[-1,0],[1,0]
+            // * Extracting data from comments
+            try {
+                let expandSize = GetCommentCodeValue("expandSize", event);
+                if (!expandSize)
+                    return null;
+                let positions = expandSize.split("],[").map(s => s.replace("[", "").replace("]", ""));
+                for (let pos of positions) {
+                    let [dx, dy] = pos.split(",").map(s => Number(s));
+                    extraPositions.push([dx, dy]);
+                }
+            }
+            catch (error) {
+                console.warn(error);
+                return [];
+            }
+            return extraPositions;
+        }
+        ExtendedEventCollisions.ExtractExtraPositionsData = ExtractExtraPositionsData;
+        function CheckExtraPositionEvent(event, x, y) {
+            /*@ts-ignore*/
+            if (!event.pIsHaveExtraPos())
+                return true;
+            /*@ts-ignore*/
+            let extraPositions = event.pGetExtraPos();
+            for (let [dx, dy] of extraPositions) {
+                /*@ts-ignore*/
+                if (!PKD_EPManager.IsPointIsGoodForPlacement(x + dx, y + dy)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        ExtendedEventCollisions.CheckExtraPositionEvent = CheckExtraPositionEvent;
+    })(ExtendedEventCollisions = PKD_EasyPlacement.ExtendedEventCollisions || (PKD_EasyPlacement.ExtendedEventCollisions = {}));
+})(PKD_EasyPlacement || (PKD_EasyPlacement = {}));
+
+
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Game_CharacterBase.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -1439,7 +2614,69 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
 // ■ END Game_CharacterBase.coffee
 //---------------------------------------------------------------------------
 
-// Generated by CoffeeScript 2.5.1
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Event.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var ALIAS__list, _;
+  //@[DEFINES]
+  _ = Game_Event.prototype;
+  //@[ALIAS]
+  ALIAS__list = _.list;
+  _.list = function() {
+    var e, t;
+    try {
+      // * Вызов общего события, которое было bind к этому событию
+      if (this._peExtraEventList != null) {
+        t = this._peExtraEventList;
+        // * Один раз, поэтому зануляем
+        this._peExtraEventList = null;
+        return [
+          {
+            // * Команда "Вызов Общего события" внутри этого события
+            // * (Так можно использовать this. и есть _eventId)
+            code: 117,
+            indent: 0,
+            parameters: [t]
+          }
+        ];
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
+    return ALIAS__list.call(this, ...arguments);
+  };
+  // * Запускает общее события внутри данного события (т.е. внутри себя вызов общего)
+  _.peStartCommonEventLocal = function(ceId) {
+    var commonEvent, e;
+    try {
+      this._peExtraEventList = null;
+      if (ceId <= 0) {
+        return;
+      }
+      commonEvent = $dataCommonEvents[ceId];
+      if (commonEvent == null) {
+        return;
+      }
+      this._peExtraEventList = ceId;
+      // * Переключаем напрямую, без метода start(), так как не нужен Lock
+      this._starting = true;
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
+  };
+})();
+
+// ■ END Game_Event.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Game_Event.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -1453,6 +2690,9 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
   _.setupPageSettings = function() {
     var e;
     ALIAS__setupPageSettings.call(this);
+    if (this.pExtraPositions == null) {
+      this.pExtractExtaPos();
+    }
     try {
       // * В версии 1.3. в сетевой игре Draggable отключён (временно)
       if (PKD_EasyPlacement.PARAMS.ALLOW_DRAG === true && !PKD_PocketEvents.IsNetworkGame()) {
@@ -1497,12 +2737,20 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
   // * Когда игрок начал двигать событие
   _.pOnDragStart = function() {
     var e;
+    $gameTemp.peLastEventId = -1;
     $gameTemp._epSpawnModeOverEvents = this._epDragData.canSpawnOverEvents === true;
     PKD_EPManager.SetGridVisibility(this._epDragData.gridVisiblity);
     // * В сетевой игре пауза игры недоступна
     $gameTemp.pPauseMap = this._epDragData.isShouldPauseMap && !PKD_PocketEvents.IsNetworkGame();
     this._opacity = 200;
+    if (this._epDragData.ceDragStart > 0 && !$gameTemp.pPauseMap) {
+      this.peStartCommonEventLocal(this._epDragData.ceDragStart);
+    }
     try {
+      //dragStartCE = @_epDragData.ceDragStart
+      //setTimeout (->
+      //    $gameTemp.reserveCommonEvent dragStartCE
+      //    ), 10
       if (this._epDragData.image == null) {
         return;
       }
@@ -1530,27 +2778,63 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
   // * Когда игрок отпустил мышку (закончить перемещение)
   _.pOnDragEnd = function() {
     var x, y;
+    $gameTemp.peLastEventId = this.eventId();
     PKD_EPManager.SetGridVisibility(false);
     this._opacity = 255;
     this.pOnDragImageChange(this._pStoredImageData);
     this._pStoredImageData = null;
-    if (PKD_EPManager.IsPointIsGoodForDrag()) {
-      ({x, y} = TouchInput.mapPoint());
+    ({x, y} = TouchInput.mapPoint());
+    if (PKD_EPManager.IsPointIsGoodForDrag(x, y) && PKD_EasyPlacement.ExtendedEventCollisions.CheckExtraPositionEvent(this, x, y)) {
       this.locate(x, y);
       $gameSystem.pSaveDraggableEventPosition(this.eventId(), this.x, this.y);
       if (this._epDragData.ceSpawnGood > 0) {
-        $gameTemp.reserveCommonEvent(this._epDragData.ceSpawnGood);
+        //$gameTemp.reserveCommonEvent @_epDragData.ceSpawnGood
+        this.peStartCommonEventLocal(this._epDragData.ceSpawnGood);
       }
     } else {
+      /*if @_epDragData.selfSwitchOn?
+      try
+          key = [$gameMap.mapId(), @eventId(), @_epDragData.selfSwitchOn]
+          setTimeout (->
+                  $gameSelfSwitches.setValue(key, true)
+              ), 10
+      catch e
+          console.warn e*/
       SoundManager.playBuzzer();
+      // * just return to own place
+      if (this._epDragData.ceDradBad > 0) {
+        this.peStartCommonEventLocal(this._epDragData.ceDradBad);
+      }
     }
-    // * just return to own place
     $gameTemp._epSpawnModeOverEvents = false;
   };
   _.pOnDragCheckRegion = function(x, y) {
     var region;
     region = $gameMap.regionId(x, y);
-    return !this._epDragData.exceptRegions.contains(region);
+    if (this._epDragData.onlyRegions.length > 0) {
+      if (!this._epDragData.onlyRegions.contains(region)) {
+        return false;
+      }
+    } else if (this._epDragData.exceptRegions.length > 0) {
+      if (this._epDragData.exceptRegions.contains(region)) {
+        return false;
+      }
+    }
+    return true;
+  };
+  _.pOnDragCheckTerrainTag = function(x, y) {
+    var terrain;
+    terrain = $gameMap.terrainTag(x, y);
+    if (this._epDragData.onlyTT.length > 0) {
+      if (!this._epDragData.onlyTT.contains(terrain)) {
+        return false;
+      }
+    } else if (this._epDragData.exceptTT.length > 0) {
+      if (this._epDragData.exceptTT.contains(terrain)) {
+        return false;
+      }
+    }
+    return true;
   };
   _.pIsFacingPlayer = function() {
     var dir, x, y;
@@ -1597,12 +2881,217 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
       $gameSystem.pSaveEPMargins($gameMap.mapId(), this.eventId(), 0, this.epMY);
     }
   };
+  _.pOnDirectionChangeByKeyboard = function(direction) {
+    var e;
+    try {
+      if (this.isDirectionFixed()) {
+        return;
+      }
+      this.epDirection = direction;
+      return this.setDirection(direction);
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
+  _.pOnDirectionChangeByMouse = function(navigation) {
+    var d, e;
+    try {
+      d = this.direction();
+      if (navigation > 0) {
+        // 2 -> 4 -> 6 -> 8 -> 2
+        d += 2;
+        if (d > 8) {
+          d = 2;
+        }
+        if (d < 2) {
+          d = 2;
+        }
+      } else {
+        // 8 -> 6 -> 4 -> 2 -> 8
+        d -= 2;
+        if (d > 8) {
+          d = 8;
+        }
+        if (d < 2) {
+          d = 8;
+        }
+      }
+      return this.pOnDirectionChangeByKeyboard(d);
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
 })();
 
 // ■ END Game_Event.coffee
 //---------------------------------------------------------------------------
 
-// Generated by CoffeeScript 2.5.1
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Game_Map.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var ALIAS__update, _;
+  //@[DEFINES]
+  _ = Game_Map.prototype;
+  //@[ALIAS]
+  ALIAS__update = _.update;
+  _.update = function(sceneActive) {
+    ALIAS__update.call(this, ...arguments);
+    if (sceneActive) {
+      this.peUpdateTimers();
+    }
+  };
+  _.peInitTimers = function() {
+    if (this._peTimers != null) {
+      return;
+    }
+    this._peTimers = {};
+    this._peToExecuteActions = {};
+  };
+  _.peCheckCompleteTimers = function() {
+    var e, eventId, i, len, timersSet;
+    this.peInitTimers();
+    try {
+      timersSet = this._peToExecuteActions[this.mapId()];
+      if (timersSet != null) {
+        for (i = 0, len = timersSet.length; i < len; i++) {
+          eventId = timersSet[i];
+          this.peExecuteEventTimerAction(eventId);
+          this._peToExecuteActions[this.mapId()].delete(eventId);
+        }
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
+  };
+  _.peAddTimer = function(timerData, eventId) {
+    var e, id;
+    if (timerData == null) {
+      return;
+    }
+    if (!(timerData.time > 0)) {
+      return;
+    }
+    this.peInitTimers();
+    try {
+      if (timerData.isLocal === true) {
+        id = this.mapId();
+      } else {
+        id = 0; // * Global
+      }
+      if (this._peTimers[id] == null) {
+        this._peTimers[id] = [];
+      }
+      return this._peTimers[id].push([timerData.time, eventId, this.mapId()]);
+    } catch (error) {
+      e = error;
+      return console.warn(e(e));
+    }
+  };
+  _.peUpdateTimers = function() {
+    var i, j, key, len, len1, mapId, ref, ref1, t;
+    if (this._peTimers == null) {
+      return;
+    }
+    mapId = this.mapId();
+    ref = Object.keys(this._peTimers);
+    for (i = 0, len = ref.length; i < len; i++) {
+      key = ref[i];
+      if (key !== "0") {
+        if (parseInt(key) !== mapId) {
+          continue;
+        }
+      }
+      ref1 = this._peTimers[key];
+      for (j = 0, len1 = ref1.length; j < len1; j++) {
+        t = ref1[j];
+        if (t[0] > 0) {
+          t[0] -= 0.016;
+          if (t[0] <= 0) {
+            this.peCompleteTimer(key, t);
+            break;
+          }
+        }
+      }
+    }
+  };
+  _.peCompleteTimer = function(id, timerState) {
+    var e;
+    try {
+      this.peInitTimers();
+      if (this._peTimers[id] != null) {
+        this._peTimers[id].delete(timerState);
+      }
+      if (this.mapId() === timerState[2]) {
+        this.peExecuteEventTimerAction(timerState[1]);
+      } else {
+        this.peRegisterPostTimerAction(timerState[1], timerState[2]);
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
+  };
+  _.peExecuteEventTimerAction = function(eventId) {
+    var e, event;
+    try {
+      event = this.event(eventId);
+      if ((event != null) && event instanceof Game_EPEvent) {
+        return event.epDoneTimer();
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
+  _.peRegisterPostTimerAction = function(eventId, mapId) {
+    if (this._peToExecuteActions[mapId] == null) {
+      this._peToExecuteActions[mapId] = [];
+    }
+    this._peToExecuteActions[mapId].push(eventId);
+  };
+  // * Данный метод используется только для Script Call PE_ForceStopTimer
+  _.peForceStopTimer = function(eventId, mapId) {
+    var e, i, j, key, len, len1, ref, ref1, t, timerToStop;
+    try {
+      this.peInitTimers();
+      timerToStop = null;
+      if (mapId == null) {
+        mapId = this.mapId();
+      }
+      ref = Object.keys(this._peTimers);
+      for (i = 0, len = ref.length; i < len; i++) {
+        key = ref[i];
+        ref1 = this._peTimers[key];
+        for (j = 0, len1 = ref1.length; j < len1; j++) {
+          t = ref1[j];
+          if (t[1] === eventId && t[2] === mapId) {
+            timerToStop = [key, t];
+            break;
+          }
+        }
+      }
+      if (timerToStop != null) {
+        return this._peTimers[timerToStop[0]].delete(timerToStop[1]);
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
+})();
+
+// ■ END Game_Map.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Game_Map.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -1634,6 +3123,11 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
       return e.epIsDraggable();
     });
   };
+  _.pGetAllPlacedEvents = function() {
+    return this.events().filter(function(e) {
+      return e instanceof Game_EPEvent;
+    });
+  };
   //@[ALIAS]
   ALIAS__update = _.update;
   _.update = function(sceneActive) {
@@ -1648,7 +3142,8 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
 // ■ END Game_Map.coffee
 //---------------------------------------------------------------------------
 
-// Generated by CoffeeScript 2.5.1
+
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Game_Player.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -1673,7 +3168,8 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
 // ■ END Game_Player.coffee
 //---------------------------------------------------------------------------
 
-// Generated by CoffeeScript 2.5.1
+
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Game_System.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -1715,9 +3211,40 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
     if (db[mapId] == null) {
       db[mapId] = [];
     }
-    db[mapId].push([itemId, x, y, eventId]);
+    db[mapId].push([itemId, x, y, eventId, 2]);
     //"REGISTER".p(itemId)
     return db[mapId].last();
+  };
+  _.pUpdateEPItem = function(mapId, eventId) {
+    var db, e, ev, i, item, itemToUpdate, len, ref;
+    try {
+      db = this.pGetEPDB();
+      if (db[mapId] == null) {
+        return;
+      }
+      itemToUpdate = null;
+      ref = db[mapId];
+      for (i = 0, len = ref.length; i < len; i++) {
+        item = ref[i];
+        if (item[3] === eventId) {
+          itemToUpdate = item;
+        }
+      }
+      if (itemToUpdate == null) {
+        return;
+      }
+      ev = $gameMap.event(eventId);
+      if (ev == null) {
+        return;
+      }
+      itemToUpdate[1] = ev.x;
+      itemToUpdate[2] = ev.y;
+      return itemToUpdate[4] = ev.direction();
+    } catch (error) {
+      //console.log("UPDATE ", ev.eventId())
+      e = error;
+      return console.warn(e);
+    }
   };
   _.pRemoveEPItem = function(mapId, eventId) {
     var db, i, item, itemToDelete, len, ref;
@@ -1730,8 +3257,6 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
     ref = db[mapId];
     for (i = 0, len = ref.length; i < len; i++) {
       item = ref[i];
-      //if item[1] is x && item[2] is y
-      //    itemToDelete = item
       if (item[3] === eventId) {
         itemToDelete = item;
       }
@@ -1816,20 +3341,47 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
 // ■ END Game_System.coffee
 //---------------------------------------------------------------------------
 
-// Generated by CoffeeScript 2.5.1
+
+
+
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Scene_Map.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
 (function() {
-  var ALIAS__isMenuEnabled, ALIAS__onMapLoaded, ALIAS__processMapTouch, ALIAS__update, ALIAS__updateDestination, _;
+  var ALIAS__isMenuEnabled, ALIAS__onMapLoaded, ALIAS__processMapTouch, ALIAS__stop, ALIAS__update, ALIAS__updateDestination, _;
   //@[DEFINES]
   _ = Scene_Map.prototype;
+  //@[ALIAS]
+  ALIAS__stop = _.stop;
+  _.stop = function() {
+    var e, event, i, len, ref;
+    try {
+      ref = $gameMap.pGetAllPlacedEvents();
+      for (i = 0, len = ref.length; i < len; i++) {
+        event = ref[i];
+        $gameSystem.pUpdateEPItem($gameMap.mapId(), event.eventId());
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
+    return ALIAS__stop.call(this, ...arguments);
+  };
   // * evId - event to spawn and move
   _.pActivateEPMode = function(evId) {
+    var x, y;
     this._pInEPMode = true;
     this._pIsSetupOk = false; // * User place Event?
-    $gameTemp._epSpawned = this.pSpawnEPEvent(evId, 0, 0, $gameMap._events.length);
+    $gameTemp._epPlacementItemId = evId;
+    if (PKD_EasyPlacement.PARAMS.SPAWN_IN_FRONT === true) {
+      this.pSetMouseLockWhenArrowMove();
+      ({x, y} = PKD_EasyPlacement.Utils.GetPositionInFrontOfPlayer());
+      $gameTemp._epSpawned = this.pSpawnEPEvent(evId, x, y, $gameMap._events.length);
+    } else {
+      $gameTemp._epSpawned = this.pSpawnEPEvent(evId, 0, 0, $gameMap._events.length);
+    }
   };
   _.pEndEPMode = function() {
     if (this._pIsSetupOk === false) {
@@ -1854,8 +3406,8 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
         ref.push(ev);
       }
     }
+    ev.locate(x, y);
     this._spriteset.pAddNewPlacementEvent(ev._eventId);
-    ev.setPosition(x, y);
     return ev;
   };
   _.pUnSpawnEPEvent = function(evId) {
@@ -2005,9 +3557,17 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
     var threshold;
     threshold = 20;
     if (TouchInput.wheelY >= threshold) {
-      $gameTemp._epSpawned.pOnMargin(0, -1);
+      if (Input.isPressed('shift')) {
+        $gameTemp._epSpawned.pOnDirectionChangeByMouse(-1);
+      } else {
+        $gameTemp._epSpawned.pOnMargin(0, -1);
+      }
     } else if (TouchInput.wheelY <= -threshold) {
-      $gameTemp._epSpawned.pOnMargin(0, +1);
+      if (Input.isPressed('shift')) {
+        $gameTemp._epSpawned.pOnDirectionChangeByMouse(+1);
+      } else {
+        $gameTemp._epSpawned.pOnMargin(0, +1);
+      }
     }
   };
   _.pUpdateEPArrowMove = function() {
@@ -2018,16 +3578,36 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
       return;
     }
     if (Input.isRepeated('left')) {
-      this.pMoveSpawnedByArrowKey(-1, 0);
+      if (Input.isPressed('shift')) {
+        $gameTemp._epSpawned.pOnDirectionChangeByKeyboard(4);
+      } else {
+        this.pMoveSpawnedByArrowKey(-1, 0);
+      }
     }
     if (Input.isRepeated('right')) {
-      this.pMoveSpawnedByArrowKey(1, 0);
+      if (Input.isPressed('shift')) {
+        $gameTemp._epSpawned.pOnDirectionChangeByKeyboard(6);
+      } else {
+        this.pMoveSpawnedByArrowKey(1, 0);
+      }
     }
     if (Input.isRepeated('down')) {
-      this.pMoveSpawnedByArrowKey(0, 1);
+      if (Input.isPressed('control')) {
+        $gameTemp._epSpawned.pOnMargin(0, +1);
+      } else if (Input.isPressed('shift')) {
+        $gameTemp._epSpawned.pOnDirectionChangeByKeyboard(2);
+      } else {
+        this.pMoveSpawnedByArrowKey(0, 1);
+      }
     }
     if (Input.isRepeated('up')) {
-      this.pMoveSpawnedByArrowKey(0, -1);
+      if (Input.isPressed('control')) {
+        $gameTemp._epSpawned.pOnMargin(0, -1);
+      } else if (Input.isPressed('shift')) {
+        $gameTemp._epSpawned.pOnDirectionChangeByKeyboard(8);
+      } else {
+        this.pMoveSpawnedByArrowKey(0, -1);
+      }
     }
   };
   _.pSetMouseLockWhenArrowMove = function() {
@@ -2051,7 +3631,8 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
 // ■ END Scene_Map.coffee
 //---------------------------------------------------------------------------
 
-// Generated by CoffeeScript 2.5.1
+
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Sprite_Character.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -2089,7 +3670,8 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
 // ■ END Sprite_Character.coffee
 //---------------------------------------------------------------------------
 
-// Generated by CoffeeScript 2.5.1
+
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Spriteset_Map.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -2122,6 +3704,9 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
     return this.pCreateEPHoverCell();
   };
   _.pCreateEPHoverCell = function() {
+    if (this._pEPCell != null) {
+      this._tilemap.removeChild(this._pEPCell);
+    }
     this._pEPCell = new PKD_EasyPlacement.LIBS.Sprite_GridCell();
     return this._tilemap.addChild(this._pEPCell);
   };
@@ -2219,10 +3804,11 @@ Game_EPEvent.prototype.pGetEPDynamicObjId = function () {
     var sprite;
     sprite = this.findTargetSprite(event);
     sprite.pSetDragMode(state);
+    this.pCreateEPHoverCell();
   };
 })();
 
 // ■ END Spriteset_Map.coffee
 //---------------------------------------------------------------------------
 
-//Plugin PKD_PocketEvents automatic build by PKD PluginBuilder 1.9.2 20.11.2021
+//Plugin PKD_PocketEvents builded by PKD PluginBuilder 2.2.2 - 17.10.2024

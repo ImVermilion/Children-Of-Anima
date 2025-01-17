@@ -1,0 +1,39 @@
+{
+    "type": "gauge",
+    "id": "_progressBar",
+    "parameters": {
+        "fillMode": "image",
+        "fillColor": "#ffffff",
+        "fillOpacity": 255,
+        "imageName": "progressBarFill",
+        "folderName": "pSimpleFishing",
+        "margins": 16,
+        "mask": "",
+        "backColor": "#CCCCCC",
+        "backImage": "progressBarBack",
+        "backOpacity": 120,
+        "vertical": false
+    },
+    "bindings": {
+        "size": {
+            "width": "342hdp",
+            "height": "32hdp"
+        }
+    },
+    "childrens": [
+        {
+            "type": "plane",
+            "parameters": {
+                "margins": 16,
+                "imageName": "progressBarFore",
+                "folderName": "pSimpleFishing"
+            },
+            "bindings": {
+                "size": {
+                    "width": "100%",
+                    "height": "100%"
+                }
+            }
+        }
+    ]
+}

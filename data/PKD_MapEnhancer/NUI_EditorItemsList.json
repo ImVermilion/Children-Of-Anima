@@ -1,0 +1,27 @@
+{
+    "type": "group",
+    "id": "_group",
+    "bindings": {
+        "width": "100%",
+        "height": "100%"
+    },
+    "childrens": [{
+        "type": "list",
+        "id": "_list",
+        "parameters": {
+            "backgroundType": 2,
+            "itemsPadding": 12,
+            "isHaveSelectionEffect": false,
+            "isHaveInOutAnimation": true,
+            "inAnimation": "field:y;duration:0.15;keyframes:0=@,100=-4",
+            "outAnimation": "field:y;duration:0.15;keyframes:0=@,100=0"
+        },
+        "bindings": {
+            "size": {
+                "width": "100%",
+                "height": "100%"
+            },
+            "maxCols": "$maxCols"
+        }
+    }]
+}

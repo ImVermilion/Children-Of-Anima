@@ -1,0 +1,92 @@
+{
+    "type": "screen",
+    "id": "classSelectRoot",
+    "childrens": [
+            {
+            "type": "image",
+            "id": "classSelectInputFrame",
+            "effects": ["shadow"],
+            "animations": [
+                "field:opacity;duration:0.35;keyframes:0=0,100=255",
+                "field:y;relative;duration:0.35;keyframes:0=120hdp,100=0;"
+            ],
+            "parameters": "folderName:pSimpleSkillsTree;imageName:editorClassSelectNew",
+            "bindings": {
+                "size": { "width": "376dp", "height": "68dp" },
+                "position": { "x": "center", "y": "center" }
+            },
+            "childrens": [
+                {
+                    "type": "text",
+                    "id": "classSelectHelpText",
+                    "parameters": "textColor:#bcac9a",
+                    "bindings": {
+                        "position": { "x": "center", "y": "end - 10" },
+                        "size": { "width": "100%", "height": "100%" },
+                        "text": "Select class to edit Skill Tree",
+                        "fontSize": "28%"
+                    }
+                },
+                {
+                    "type": "text",
+                    "id": "selectedClassNameText",
+                    "parameters": "textColor:#CCC",
+                    "bindings": {
+                        "position": { "x": "center", "y": "center" },
+                        "size": { "width": "100%", "height": "100%" },
+                        "text": ["%1", "$selectedClassName"],
+                        "fontSize": "38%"
+                    }
+                },
+                {
+                    "type": "button",
+                    "id": "selectNextClassButton",
+                    "parameters": "folderName:pSimpleSkillsTree;imageName:rightArrow;imageMargins:0;overTint:#eac98a;tintAlpha:0.24",
+                    "bindings": {
+                        "position": { "x": "end + 10dp", "y": "center" },
+                        "size": { "width": "38dp", "height": "55dp" }
+                    }
+                },
+                {
+                    "type": "button",
+                    "id": "selectPrevClassButton",
+                    "parameters": "folderName:pSimpleSkillsTree;imageName:leftArrow;imageMargins:0;overTint:#eac98a;tintAlpha:0.24",
+                    "bindings": {
+                        "position": { "x": "begin - 10dp", "y": "center" },
+                        "size": { "width": "38dp", "height": "55dp" }
+                    }
+                },
+                {
+                    "type": "button",
+                    "id": "selectClassToEditButton",
+                    "effects": ["shadow"],
+                    "parameters": {
+                        "folderName": "pSimpleSkillsTree",
+                        "imageName": "buttonNew",
+                        "imageMargins": 28,
+                        "clickSe": "Cursor1",
+                        "keyboardKey": "ok",
+                        "tintAlpha": 0.15
+                    },
+                    "bindings": {
+                        "position": { "x": "center", "y": "end + height + 20dp" },
+                        "size": { "width": "178dp", "height": "55dp" }
+                    },
+                    "childrens": [
+                        {
+                            "type": "text",
+                            "id": "selectClassToEditButtonText",
+                            "parameters": "textColor:#eac98a",
+                            "bindings": {
+                                "position": { "x": "center", "y": "center" },
+                                "size": { "width": "100%", "height": "100%" },
+                                "text": "Select",
+                                "fontSize": "45%"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,57 @@
+{
+    "type": "group",
+    "id": "listItemRoot",
+    "effects": ["shadow"],
+    "bindings": {
+        "size": {
+            "width": "82dp",
+            "height": "34dp"
+        }
+    },
+    "childrens": [{
+        "type": "group",
+        "id": "itemContentGroup",
+        "bindings": {
+            "size": {
+                "width": "100%",
+                "height": "100%"
+            }
+        },
+        "childrens": [
+            {
+                "type": "image",
+                "id": "itemImageSpr",
+                "createIf": "$isHaveImageOrIcon",
+                "parameters": "folderName:pSimpleSkillsTree",
+                "bindings": {
+                    "size": {
+                        "width": "32hdp",
+                        "height": "32hdp"
+                    },
+                    "position": {
+                        "x": "2hdp",
+                        "y": "center"
+                    },
+                    "image": "$itemImageOrIconIndex"
+                }
+            },
+            {
+                "type": "text",
+                "id": "itemNameTextSpr",
+                "parameters": "textColor:#e7c788;alignment:left",
+                "bindings": {
+                    "size": {
+                        "width": "100% - prevWidth - 2hdp",
+                        "height": "100%"
+                    },
+                    "position": {
+                        "x": "prevEndX + 8hdp",
+                        "y": "center"
+                    },
+                    "fontSize": "16hdp",
+                    "text": ["[%1] %2", "$itemValue", "$itemText"]
+                }
+            }
+        ]
+    }]
+}

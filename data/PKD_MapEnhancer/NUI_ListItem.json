@@ -1,0 +1,84 @@
+{
+    "type": "group",
+    "id": "_root",
+    "bindings": {
+        "width": "160hdp",
+        "height": "190hdp"
+    },
+    "childrens": [
+        {
+            "type": "rect",
+            "parameters": {
+                "fillColor": "#697565",
+                "corners": 8,
+                "strokeWidth": 1
+            },
+            "bindings": {
+                "width": "98%",
+                "height": "82%",
+                "x": "center",
+                "y": "5"
+            },
+            "effects": ["shadow"],
+            "childrens": [
+                {
+                    "type": "rect",
+                    "id": "selectedRect",
+                    "parameters": {
+                        "fillColor": "#ECDFCC",
+                        "corners": 8,
+                        "strokeWidth": 2
+                    },
+                    "bindings": {
+                        "width": "100%",
+                        "height": "100%",
+                        "visible": "$isSelectedInList"
+                    }
+                },
+                {
+                    "type": "rect",
+                    "id": "activeRect",
+                    "parameters": {
+                        "fillColor": "#BED754",
+                        "corners": 8,
+                        "strokeWidth": 2
+                    },
+                    "bindings": {
+                        "width": "100%",
+                        "height": "100%",
+                        "visible": "$isActive"
+                    }
+                },
+                {
+                    "type": "rect",
+                    "id": "contentParent",
+                    "parameters": {
+                        "fillColor": "#3C3D37",
+                        "corners": 12,
+                        "strokeWidth": 0
+                    },
+                    "bindings": {
+                        "width": "92%",
+                        "height": "92%",
+                        "x": "center",
+                        "y": "center"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "text",
+            "parameters": {
+                "alignment": "center"
+            },
+            "bindings": {
+                "text": "$currentItemName",
+                "x": "center",
+                "y": "bottom",
+                "width": "100%",
+                "height": "18hdp",
+                "fontSize": "16hdp"
+            }
+        }
+    ]
+}

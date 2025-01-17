@@ -1,0 +1,112 @@
+{
+    "type": "screen",
+    "constants": {
+        "aliveTime": 4
+    },
+    "childrens": [
+        {
+            "type": "rect",
+            "animations": [
+                {
+                    "field": "y",
+                    "relative": true,
+                    "keyframes": {
+                        "0": "42hdp",
+                        "100": 0
+                    },
+                    "duration": 0.2
+                },
+                {
+                    "field": "_scaleFactor",
+                    "relative": false,
+                    "keyframes": {
+                        "0": 0,
+                        "100": 1
+                    },
+                    "delay": 0.1,
+                    "duration": 0.2
+                },
+                {
+                    "field": "opacity",
+                    "relative": false,
+                    "keyframes": {
+                        "0": 255,
+                        "100": 0
+                    },
+                    "delay": 3,
+                    "duration": 0.2
+                }
+            ],
+            "parameters": {
+                "corners": 12,
+                "fillColor": "#5e5e5e",
+                "fillAlpha": 0.6,
+                "strokeWidth": 1,
+                "strokeColor": "#000000",
+                "strokeAlpha": 1
+            },
+            "bindings": {
+                "size": {
+                    "width": "260hdp",
+                    "height": "40hdp"
+                },
+                "position": {
+                    "x": "center",
+                    "y": "bottom - 2"
+                },
+                "centeredScale": 0.1
+            },
+            "childrens": [
+                {
+                    "type": "textPro",
+                    "parameters": {
+                        "alignment": "center",
+                        "font": {
+                            "face": null,
+                            "size": 18,
+                            "italic": false,
+                            "bold": false,
+                            "weight": 0
+                        },
+                        "margins": { "x": 0, "y": 0 },
+                        "outline": { "color": null, "width": 2 },
+                        "textColor": "#FFFFFF",
+                        "shadow": {
+                            "color": "#000",
+                            "opacity": 0,
+                            "margins": { "x": 1, "y": 1 }
+                        },
+                        "multiline": false,
+                        "verticalCentered": true,
+                        "verticalAlignment": "center",
+                        "verticalSpacing": 4,
+                        "actualWidth": false,
+                        "actualHeight": false,
+                        "trimWidth": false,
+                        "trimHeight": false,
+                        "iconPadding": {
+                            "left": 2,
+                            "right": 2,
+                            "top": 0,
+                            "bottom": 0
+                        },
+                        "iconSize": 1,
+                        "isStaticIconSize": false,
+                        "isLoadFontFromFile": false
+                    },
+                    "bindings": {
+                        "size": {
+                            "width": "92%",
+                            "height": "100%"
+                        },
+                        "position": {
+                            "x": "center",
+                            "y": 0
+                        },
+                        "text": ["%1", "$notifyMessage"]
+                    }
+                }
+            ]
+        }
+    ]
+}

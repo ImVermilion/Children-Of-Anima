@@ -1,22 +1,22 @@
 {
     "position": [
-        "Graphics.width - 260",
-        "(Graphics.height / 2) - 160"
+        "Graphics.width - 300",
+        "(Graphics.height / 2) - 50"
     ],
     "visible": true,
-    "openInventorySE": null,
+    "openInventorySE": "Equip3",
     "backgroundImg": "inventoryBackground",
     "headerBackImg": "inventoryHeaderBackground",
     "isCloseButtonVisible": true,
-    "closeButtonMarginX": 204,
-    "closeButtonMarginY": 16,
+    "closeButtonMarginX": 240,
+    "closeButtonMarginY": 30,
     "closeButtonImg": "inventoryCloseBtn_00",
     "closeButtonHoverImg": "inventoryCloseBtn_01",
     "icon": "inventoryIcon",
-    "iconMarginX": 20,
-    "iconMarginY": 20,
-    "categoryButtonsMarginX": 73,
-    "categoryButtonsMarginY": 17,
+    "iconMarginX": 40,
+    "iconMarginY": 40,
+    "categoryButtonsMarginX": 90,
+    "categoryButtonsMarginY": 40,
     "categoryButtonMarginBetween": 26,
     "categoryButtonImg": "inventoryCategoryBtn_00",
     "categoryButtonHoverImg": "inventoryCategoryBtn_01",
@@ -31,8 +31,8 @@
         "textBoxWidth": 210,
         "textBoxHeight": 22,
         "visible": true,
-        "marginX": 20,
-        "marginY": 48,
+        "marginX": 45,
+        "marginY": 60,
         "position": "center",
         "outlineColor": null,
         "outlineWidth": 2,
@@ -41,7 +41,7 @@
         "fontSize": 16,
         "fontItalic": false
     },
-    "invCellStartPosition": [27, 74],
+    "invCellStartPosition": [30, 90],
     "invCellMarginX": 39,
     "invCellMarginY": 41,
     "invCellCornerPosition": [2, 17],
@@ -75,13 +75,13 @@
     },
     "cellEquipmentSymbol": "E",
     "goldIcon": "inventoryGoldIcon",
-    "goldIconPosition": [26, 290],
+    "goldIconPosition": [28, 260],
     "goldText": {
         "textBoxWidth": 80,
         "textBoxHeight": 22,
         "visible": true,
-        "marginX": 48,
-        "marginY": 290,
+        "marginX": 50,
+        "marginY": 260,
         "position": "left",
         "outlineColor": null,
         "outlineWidth": 2,
@@ -90,14 +90,14 @@
         "fontSize": 16,
         "fontItalic": false
     },
-    "pageArrowLeftInSectionPos": [154, 290],
-    "pageArrowRightInSectionPos": [202, 290],
+    "pageArrowLeftInSectionPos": [204, 260],
+    "pageArrowRightInSectionPos": [252, 260],
     "pageText": {
         "textBoxWidth": 40,
         "textBoxHeight": 20,
         "visible": true,
-        "marginX": 166,
-        "marginY": 290,
+        "marginX": 216,
+        "marginY": 260,
         "position": "center",
         "outlineColor": null,
         "outlineWidth": 2,
@@ -134,7 +134,7 @@
             "fontSize": 16,
             "fontItalic": false
         },
-        "goldIconPosition": [248, 2],
+        "goldIconPosition": [240, 1],
         "itemNameText": {
             "textBoxWidth": 160,
             "textBoxHeight": 24,
@@ -194,9 +194,9 @@
             "fontItalic": false
         },
         "helpIconPosition": [16, 148],
-        "helpUseItemText": "Use Item",
-        "helpEquipItemText": "Equip",
-        "helpUnEquipItemText": "UnEquip",
+        "helpUseItemText": "Usar Item",
+        "helpEquipItemText": "Equipar",
+        "helpUnEquipItemText": "Desequipar",
         "weighIconPosition": [248, 27],
         "itemWeightText": {
             "textBoxWidth": 40,
@@ -304,17 +304,17 @@
         "fontSize": 24,
         "fontItalic": false
     },
-    "extraFooter": "inventoryExtraFooter",
+    "extraFooter": null,
     "extraFooterPosition": [0, 315],
     "weightIcon": "inventoryWeightIcon2",
-    "weightIconPosition": [24, 322],
+    "weightIconPosition": [102, 260],
     "weightText": {
         "backgroundFill": null,
         "textBoxWidth": 100,
         "textBoxHeight": 22,
         "visible": true,
-        "marginX": 54,
-        "marginY": 322,
+        "marginX": 137,
+        "marginY": 259,
         "position": "left",
         "outlineColor": null,
         "outlineWidth": 2,
@@ -329,7 +329,7 @@
             "Graphics.width - 90",
             "Graphics.height - 80"
         ],
-        "labelText": ["Inventory", 20, 0],
+        "labelText": ["Invetario", 20, 0],
         "mainImg": "Button_Inventory_00",
         "hoverImg": "Button_Inventory_01",
         "pressedImg": "Button_Inventory_02",
@@ -338,10 +338,10 @@
     "QualitySystem": {
         "qualityIcon": null,
         "Levels": [
-            ["[Basic]", "#DDDDDD"],
-            ["[Good]", "#18A35A"],
-            ["[Rare]", "#1737A4"],
-            ["[Epic]", "#D59731"]
+            ["[Basico]", "#DDDDDD"],
+            ["[Bueno]", "#18A35A"],
+            ["[Rara]", "#1737A4"],
+            ["[Epico]", "#D59731"]
         ]
     },
     "EquipmentStats": {
@@ -391,7 +391,7 @@
             "fontItalic": false
         },
         "helpIconPosition": [150, 148],
-        "helpIconText": "States",
+        "helpIconText": "Estadísticas",
         "statsHelpText": {
             "textBoxWidth": 120,
             "textBoxHeight": 20,

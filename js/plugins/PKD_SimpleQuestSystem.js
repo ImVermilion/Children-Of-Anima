@@ -1,74 +1,40 @@
 /*
- * Copyright (c) 2023 Vladimir Skrypnikov (Pheonix KageDesu)
- * <http://kdworkshop.net/>
+ * Copyright (c) 2024 Vladimir Skrypnikov (Pheonix KageDesu)
+ * <https://kdworkshop.net/>
  *
- *
+ * License: Creative Commons 4.0 Attribution, Share Alike, Commercial
  */
 
 /*:
- * @plugindesc (v.1.4)[PRO] Simple quests system
+ * @plugindesc (v.1.7)[PRO] Simple quests system
  * @author Pheonix KageDesu
  * @target MZ MV
- * @url http://kdworkshop.net/plugins/simple-quests-system
+ * @url https://kdworkshop.net/plugins/simple-quests-system
  *
  * 
  * @help
  * ---------------------------------------------------------------------------
- * This plugin add simple quest journal (similar to one in game TES Skyrim)
- * and quest tasks tracking system (on map)
  *
- * Script calls:
- * SQSM.OpenQuestJournal()
-
- * SQSM.AddQuest(ID)
- *      (all IDs should be in quotes "" )
- * SQSM.ShowDescriptionForQuest(ID, INDEX)
- *      (first quest description visible by default)
- * SQSM.ShowTaskForQuest(ID, INDEX)
- *      (first quest task visible by default)
- * SQSM.ShowAllTasksForQuest(ID)
- * SQSM.CompleteTaskForQuest(ID, INDEX)
- * SQSM.CompletQuest(ID)
- * SQSM.ResetQuest(ID)
-        (remove quest from Journal and reset quest progress)
- * 
- * SQSM.SetActiveQuest(ID, true \ false)
- *      activate \ deactivate quest tracking on map
+ * GUIDE: 
+ * https://gist.github.com/KageDesu/7e2900af1ff113a5a91734d62f9123d6
  *
- * SQSM.isQuestComplete(ID) - return true if quest with ID is completed
- * SQSM.isQuestVisible(ID) - return true if quest with ID is added to journal
- * SQSM.isQuestActive(ID) - return true if quest with ID is activated (tracked)
- *
- *
- * SQSM.RefreshMapQuestsList() - refresh quests map task window
- * SQSM.ShowMapQuestsList() - show quests map task window
- * SQSM.HideMapQuestsList() - hide quests map task window
- *
- * Plugin not have plugin commands
- * 
- * Visual style can be customized via Plugin Parameters
- * Image files: img\pSQSystem
- * (don't forget to copy them in deployed project)
  * ---------------------------------------------------------------------------
  *
-  *
- * If you like my Plugins, want more and offten updates,
- * please support me on Patreon or Boosty!
- * 
- * Boosty page:
- *     https://boosty.to/kagedesu
- * Patreon Page:
- *      https://www.patreon.com/KageDesu
- * YouTube Channel:
- *      https://www.youtube.com/channel/UCA3R61ojF5vp5tGwJ1YqdgQ?
+ * If you like my Plugins, want more and offten updates, please support me
+ * on one of the following platforms:
  *
- * You can use this plugin in your game thanks to all my Patrons!
+ * Boosty:
+ *     https://boosty.to/kagedesu
+ * Patreon:
+ *      https://www.patreon.com/KageDesu
+ * YouTube:
+ *      https://www.youtube.com/channel/UCA3R61ojF5vp5tGwJ1YqdgQ?
  *
  * Contains resources designed and drawn
  * by Ekaterina N. Stadnikova (MOSCOW RUSSIA)
  * https://stadnikova-ekaterina.itch.io/
  *
-  *
+ * License: Creative Commons 4.0 Attribution, Share Alike, Commercial
  * 
  * @requiredAssets img/pSQSystem/ActiveHelp
  * @requiredAssets img/pSQSystem/Cat_All_00
@@ -86,7 +52,7 @@
  * @text Quests
  * @type struct<Quest>[]
  * @default []
- * @desc Quests
+ * @desc
  * 
  * @param sqsPointers:structA
  * @text Pointers
@@ -121,6 +87,104 @@
  * @default ["{\"position:struct\":\"{\\\"x\\\":\\\"250\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_All_00\\\",\\\"hover\\\":\\\"Cat_All_01\\\",\\\"disabled\\\":\\\"Cat_All_03\\\"}\"}","{\"position:struct\":\"{\\\"x\\\":\\\"370\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"Main\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_Main_00\\\",\\\"hover\\\":\\\"Cat_Main_01\\\",\\\"disabled\\\":\\\"Cat_Main_03\\\"}\"}","{\"position:struct\":\"{\\\"x\\\":\\\"510\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"Side\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_Side_00\\\",\\\"hover\\\":\\\"Cat_Side_01\\\",\\\"disabled\\\":\\\"Cat_Side_03\\\"}\"}","{\"position:struct\":\"{\\\"x\\\":\\\"630\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"Other\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_Other_00\\\",\\\"hover\\\":\\\"Cat_Other_01\\\",\\\"disabled\\\":\\\"Cat_Other_03\\\"}\"}"]
  * @desc [PRO] Categories for quests
  * 
+ * @param nextCategoryKey
+ * @parent sqsQuestsCategories:structA
+ * @text Next Category
+ * @desc Next Category keyboard key
+ * @default
+ * 
+ * @param prevCategoryKey
+ * @parent sqsQuestsCategories:structA
+ * @text Prev Category
+ * @desc Prev Category keyboard key
+ * @default
+ * 
+ * @param isSupportGamepad:b
+ * @parent sqsQuestsCategories:structA
+ * @type boolean
+ * @text Is support gamepad?
+ * @desc Will the game use gamepad controls?
+ * @default false
+ * 
+ * @param nextCategoryGamepadKey
+ * @parent isSupportGamepad:b
+ * @text Next Category GP
+ * @type select
+ * @option A
+ * @value A
+ * @option B
+ * @value B
+ * @option X
+ * @value X
+ * @option Y
+ * @value Y
+ * @option LB
+ * @value LB
+ * @option RB
+ * @value RB
+ * @option Left Trigger
+ * @value LTrigger
+ * @option Right Trigger
+ * @value RTrigger
+ * @option Back
+ * @value Back
+ * @option Start
+ * @value Start
+ * @option Left Stick (press)
+ * @value LStick
+ * @option Right Stick (press)
+ * @value RStick
+ * @option DPad Up
+ * @value dUp
+ * @option DPad Down
+ * @value dDown
+ * @option DPad Left
+ * @value dLeft
+ * @option DPad Right
+ * @value dRight
+ * @desc Next Category gamepad key
+ * @default RB
+ * 
+ * @param prevCategoryGamepadKey
+ * @parent isSupportGamepad:b
+ * @text Prev Category GP
+ * @type select
+ * @option A
+ * @value A
+ * @option B
+ * @value B
+ * @option X
+ * @value X
+ * @option Y
+ * @value Y
+ * @option LB
+ * @value LB
+ * @option RB
+ * @value RB
+ * @option Left Trigger
+ * @value LTrigger
+ * @option Right Trigger
+ * @value RTrigger
+ * @option Back
+ * @value Back
+ * @option Start
+ * @value Start
+ * @option Left Stick (press)
+ * @value LStick
+ * @option Right Stick (press)
+ * @value RStick
+ * @option DPad Up
+ * @value dUp
+ * @option DPad Down
+ * @value dDown
+ * @option DPad Left
+ * @value dLeft
+ * @option DPad Right
+ * @value dRight
+ * @desc Previous Category gamepad key
+ * @default LB
+ * 
+ * 
  * @param isNeedMenuCommand:b
  * @type boolean
  * @text Command in menu?
@@ -144,6 +208,14 @@
  * @off No
  * @default false
  * @desc If true - active quests always will be at the top of the list
+ * 
+ * @param isHaveFailedQuests:b
+ * @type boolean
+ * @text Failed quests
+ * @on Yes
+ * @off No
+ * @default false
+ * @desc If true - failed tasks group will be added to Quest Journal
  * 
  * @param buttonForOpenJournal
  * @type text
@@ -174,96 +246,7 @@
  * @param visualSettings
  * @text Visual Settings
  * 
- * @param questJournalBackground:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Background Position
- * @default {"x":"(Graphics.width / 2) - 408","y":"(Graphics.height / 2) - 312"}
- * @desc Journal background image (JournalBackground.png) position
  * 
- * @param questJournalLine:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Separate Line Position
- * @default {"x":"234","y":"140"}
- * @desc Separate line (Line.png) between quests lists and description position
- * 
- * @param questsListSettings:struct
- * @parent visualSettings
- * @text Quests List
- * @type struct<QuestsList>
- * @desc Quests List visual settings
- * @default {"position:struct":"{\"x\":\"20\",\"y\":\"176\"}","height:int":"360","textLine:struct":"{\"lineSize:struct\":\"{\\\"w\\\":\\\"200\\\",\\\"h\\\":\\\"36\\\"}\",\"face:str\":\"\",\"size:int\":\"20\"}"}
- * 
- * @param questsListCursor:struct
- * @parent questsListSettings:struct
- * @type struct<XY2>
- * @text Cursor Margins
- * @default {"x":"186","y":"18"}
- * @desc Cursor (Quest_Selected.png) margins relative list item
- * 
- * @param questsListActive:struct
- * @parent questsListSettings:struct
- * @type struct<XY2>
- * @text Active Icon Margins
- * @default {"x":"186","y":"18"}
- * @desc Active quest icon (Quest_Active.png) margins relative list item
- * 
- * @param questsListNewMark:struct
- * @parent questsListSettings:struct
- * @type struct<XY2>
- * @text New Quest Mark Margins
- * @default {"x":"2","y":"0"}
- * @desc [PRO] New quest mark (Quest_New.png) margins relative list item
- * 
- * @param questHeaderSettings:struct
- * @text Name Settings
- * @parent visualSettings
- * @type struct<QuestHeader>
- * @desc Quest Header (name) text settings
- * @default {"position:struct":"{\"x\":\"386\",\"y\":\"100\"}","position2:struct":"{\"x\":\"250\",\"y\":\"80\"}","textLine:struct":"{\"lineSize:struct\":\"{\\\"w\\\":\\\"256\\\",\\\"h\\\":\\\"84\\\"}\",\"face:str\":\"\",\"size:int\":\"20\"}"}
- * 
- * @param questDescSettings:struct
- * @text Description Settings
- * @parent visualSettings
- * @type struct<QuestDesc>
- * @desc Quest Description text settings
- * @default {"position:struct":"{\"x\":\"270\",\"y\":\"160\"}","textLine:struct":"{\"lineSize:struct\":\"{\\\"w\\\":\\\"460\\\",\\\"h\\\":\\\"140\\\"}\",\"face:str\":\"\",\"size:int\":\"14\"}"}
- * 
- * @param questTaskHeaderSettings:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Tasks Header
- * @default {"x":"230","y":"300"}
- * @desc Tasks header image position (tasksHeader.png)
- * 
- * @param questGroupButtonA:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Button Group A
- * @default {"x":"30","y":"80"}
- * @desc Currents quests group button position
- * 
- * @param questGroupButtonB:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Button Group B
- * @default {"x":"140","y":"80"}
- * @desc Completed quests group button position
- * 
- * @param questsTasksSettings:struct
- * @parent visualSettings
- * @type struct<QuestTask>
- * @text Tasks texts settings
- * @default {"positions:structA":"[\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"340\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"370\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"400\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"430\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"460\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"490\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"520\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"550\\\"}\"]","position:struct":"{\"x\":\"-24\",\"y\":\"4\"}","textLine:struct":"{\"lineSize:struct\":\"{\\\"w\\\":\\\"420\\\",\\\"h\\\":\\\"60\\\"}\",\"face:str\":\"\",\"size:int\":\"20\"}"}
- * @desc Quest tasks texts settings
- * 
- * @param questJournalActiveHelp:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Activate help
- * @default {"x":"36","y":"Graphics.height - 56"}
- * @desc Set active quest help image (ActiveHelp.png) position
  * 
  * @param visualPointers:structA
  * @parent visualSettings
@@ -271,6 +254,22 @@
  * @text Map Pointers
  * @default ["{\"image\":\"QuestArrow_A\",\"color:color\":\"#bfcc2f\"}","{\"image\":\"QuestArrow_A\",\"color:color\":\"#277fc2\"}","{\"image\":\"QuestArrow_A\",\"color:color\":\"#c7205d\"}"]
  * @desc Pointers for each active quest. (Pro only) -> pointers Count = Max. active quests
+ * 
+ * @param questArrowDefaultOpacity:int
+ * @parent visualPointers:structA
+ * @type number
+ * @text Default opacity
+ * @min 0
+ * @max 255
+ * @default 150
+ * @desc Default quest pointer arrow opacity on map
+ * 
+ * @param changeOpacityOverDistance:bool
+ * @parent visualPointers:structA
+ * @type boolean
+ * @text Opacity over distance
+ * @default true
+ * @desc Changing arrow opacity depends on distance to arrow target
  * 
  * @param journalNotifyPosition:struct
  * @parent visualSettings
@@ -290,8 +289,8 @@
  * 
  * @param tasksListActive:bool
  * @type boolean
- * @text Tasks List?
- * @default true
+ * @text Tasks List? (Deprecated!)
+ * @default false
  * @desc Show tasks list window on Map ?
  * 
  * @param tasksListSettings:struct
@@ -301,68 +300,53 @@
  * @default {"windowSettings":"","position:s":"{\"x:int\":\"0\",\"y:int\":\"192\"}","closeButtonPosition:s":"{\"x:int\":\"221\",\"y:int\":\"0\"}","closingDirection:str":"left","unhoveredOpacity:i":"160","windowWidth:i":"220","maxQuestsCount:i":"4","questHeight:i":"60","dynamicSize:b":"true","questsSettings":"","emptyListText:str":"No active quests","questInListFontSize:i":"13","beforeTask:str":"-\\}\\}","questsShowMode:str":"active"}
  * @desc Map tasks list window settings
  * 
+ * @param isUseNewQuestsWindow:bool
+ * @type boolean
+ * @text New Quests Window
+ * @default true
+ * @desc Use new quests window on map?
+ * 
+ * @param nqw_questsShowMode:str
+ * @parent isUseNewQuestsWindow:bool
+ * @text Mode
+ * @type select 
+ * @option active
+ * @option all
+ * @desc What quests show in list? Active only or all
+ * @default all 
  * 
  * 
  */
 /*:ru
- * @plugindesc (v.1.4)[PRO] Журнал заданий
+ * @plugindesc (v.1.7)[PRO] Simple quests system
  * @author Pheonix KageDesu
  * @target MZ MV
- * @url http://kdworkshop.net/plugins/simple-quests-system
+ * @url https://kdworkshop.net/plugins/simple-quests-system
  *
  * 
  * @help
  * ---------------------------------------------------------------------------
- * Плагин добавляет простой журнал заданий и систему указателей на цель задания
  *
- * Квесты создаются через параметры плагина, каждый квест должен иметь
- * уникальный ID
+ * РУКОВОДСТВО: 
+ * https://gist.github.com/KageDesu/7e2900af1ff113a5a91734d62f9123d6
  *
- * Вызовы скриптов:
- * SQSM.OpenQuestJournal(); - открыть журнал
-
- * SQSM.AddQuest(ID); - добавить квест в журнал по ID
- *      (все ID должны быть в кавычках "" )
- * SQSM.ShowDescriptionForQuest(ID, INDEX)
- *      (Отобразить описание для квеста, INDEX - номер описания)
- * SQSM.ShowTaskForQuest(ID, INDEX)
- *      (Отобрзатиь задачу для квеста)
- * SQSM.ShowAllTasksForQuest(ID); - показать все задачи для квеста
- * SQSM.CompleteTaskForQuest(ID, INDEX); - выполнить задачу для квеста
- * SQSM.CompletQuest(ID); - выполнить квест
- * SQSM.Reset(ID); - удалить квест (и сбросить прогресс)
-       
- * 
- * SQSM.SetActiveQuest(ID, true \ false)
- *      Сделать квест активным (система указателей будет работать), не активным
- *
- * SQSM.isQuestComplete(ID) - Возвращает истину, если квест ID выполнен
- * SQSM.isQuestVisible(ID) - Возвращает истину, если квест ID добавлен в журнал
- * SQSM.isQuestActive(ID) - Возвращает истину, если квест ID активен
- 
- * SQSM.RefreshMapQuestsList() - принудительно обновить список заданий (на карте)
- * SQSM.ShowMapQuestsList() - показать список заданий на карте
- * SQSM.HideMapQuestsList() - скрыть список заданий на карте
-
- * Команд плагина нет
- * 
- * Визуальные настройки редактируются через параметры плагина
- * Изображения (можно редактировать) тут: img\pSQSystem
  * ---------------------------------------------------------------------------
  *
-  *
- * Если Вам нравятся мои плагины и Вы хотите получить ещё больше
- * контента, Вы можете поддержать меня на Boosty
- * 
- * Boosty page:
+ * Если вам нравятся мои плагины, вы хотите больше и частых обновлений,
+ * пожалуйста, поддержите меня на одной из следующих платформ:
+ *
+ * Boosty:
  *     https://boosty.to/kagedesu
- * YouTube Channel:
+ * Patreon:
+ *      https://www.patreon.com/KageDesu
+ * YouTube:
  *      https://www.youtube.com/channel/UCA3R61ojF5vp5tGwJ1YqdgQ?
  *
- * Плагин содержит графику от Екатерины Стадниковой
+ * Contains resources designed and drawn
+ * by Ekaterina N. Stadnikova (MOSCOW RUSSIA)
  * https://stadnikova-ekaterina.itch.io/
  *
-  *
+ * License: Creative Commons 4.0 Attribution, Share Alike, Commercial
  * 
  * @requiredAssets img/pSQSystem/ActiveHelp
  * @requiredAssets img/pSQSystem/Cat_All_00
@@ -375,7 +359,6 @@
  * @requiredAssets img/pSQSystem/windowCloseButton_00
  * @requiredAssets img/pSQSystem/windowCloseButton_01
  *
-
  * @param sqsQuests:structA
  * @text Quests
  * @type struct<Quest>[]
@@ -415,6 +398,105 @@
  * @default ["{\"position:struct\":\"{\\\"x\\\":\\\"250\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_All_00\\\",\\\"hover\\\":\\\"Cat_All_01\\\",\\\"disabled\\\":\\\"Cat_All_03\\\"}\"}","{\"position:struct\":\"{\\\"x\\\":\\\"370\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"Main\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_Main_00\\\",\\\"hover\\\":\\\"Cat_Main_01\\\",\\\"disabled\\\":\\\"Cat_Main_03\\\"}\"}","{\"position:struct\":\"{\\\"x\\\":\\\"510\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"Side\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_Side_00\\\",\\\"hover\\\":\\\"Cat_Side_01\\\",\\\"disabled\\\":\\\"Cat_Side_03\\\"}\"}","{\"position:struct\":\"{\\\"x\\\":\\\"630\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"Other\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_Other_00\\\",\\\"hover\\\":\\\"Cat_Other_01\\\",\\\"disabled\\\":\\\"Cat_Other_03\\\"}\"}"]
  * @desc [PRO] Категории квестов
  * 
+ * 
+ * @param nextCategoryKey
+ * @parent sqsQuestsCategories:structA
+ * @text Next Category
+ * @desc Следующая категория (клавиатура)
+ * @default
+ * 
+ * @param prevCategoryKey
+ * @parent sqsQuestsCategories:structA
+ * @text Prev Category
+ * @desc Предыдущая категория (клавиатура)
+ * @default
+ * 
+ * @param isSupportGamepad:b
+ * @parent sqsQuestsCategories:structA
+ * @type boolean
+ * @text Is support gamepad?
+ * @desc Будет ли в игре использоваться геймпад?
+ * @default false
+ * 
+ * @param nextCategoryGamepadKey
+ * @parent isSupportGamepad:b
+ * @text Next Category GP
+ * @type select
+ * @option A
+ * @value A
+ * @option B
+ * @value B
+ * @option X
+ * @value X
+ * @option Y
+ * @value Y
+ * @option LB
+ * @value LB
+ * @option RB
+ * @value RB
+ * @option Left Trigger
+ * @value LTrigger
+ * @option Right Trigger
+ * @value RTrigger
+ * @option Back
+ * @value Back
+ * @option Start
+ * @value Start
+ * @option Left Stick (press)
+ * @value LStick
+ * @option Right Stick (press)
+ * @value RStick
+ * @option DPad Up
+ * @value dUp
+ * @option DPad Down
+ * @value dDown
+ * @option DPad Left
+ * @value dLeft
+ * @option DPad Right
+ * @value dRight
+ * @desc Следующая категория (геймпад)
+ * @default RB
+ * 
+ * @param prevCategoryGamepadKey
+ * @parent isSupportGamepad:b
+ * @text Prev Category GP
+ * @type select
+ * @option A
+ * @value A
+ * @option B
+ * @value B
+ * @option X
+ * @value X
+ * @option Y
+ * @value Y
+ * @option LB
+ * @value LB
+ * @option RB
+ * @value RB
+ * @option Left Trigger
+ * @value LTrigger
+ * @option Right Trigger
+ * @value RTrigger
+ * @option Back
+ * @value Back
+ * @option Start
+ * @value Start
+ * @option Left Stick (press)
+ * @value LStick
+ * @option Right Stick (press)
+ * @value RStick
+ * @option DPad Up
+ * @value dUp
+ * @option DPad Down
+ * @value dDown
+ * @option DPad Left
+ * @value dLeft
+ * @option DPad Right
+ * @value dRight
+ * @desc Предыдущая категория (геймпад)
+ * @default LB
+ * 
+ * 
  * @param isNeedMenuCommand:b
  * @type boolean
  * @text Command in menu?
@@ -438,6 +520,14 @@
  * @off No
  * @default false
  * @desc Если ВКЛ. то активные квесты всегда будут вверху списка
+ * 
+ * @param isHaveFailedQuests:b
+ * @type boolean
+ * @text Failed quests
+ * @on Yes
+ * @off No
+ * @default false
+ * @desc Если ВКЛ. - будет добавлена категория проваленных заданий
  * 
  * @param buttonForOpenJournal
  * @type text
@@ -468,96 +558,7 @@
  * @param visualSettings
  * @text Внешний вид журнала
  * 
- * @param questJournalBackground:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Background Position
- * @default {"x":"(Graphics.width / 2) - 408","y":"(Graphics.height / 2) - 312"}
- * @desc Позиция картинки задника (JournalBackground.png)
  * 
- * @param questJournalLine:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Separate Line Position
- * @default {"x":"234","y":"140"}
- * @desc Позиция линии (Line.png) разделителя
- * 
- * @param questsListSettings:struct
- * @parent visualSettings
- * @text Quests List
- * @type struct<QuestsList>
- * @desc Визуальные настройки списка квестов
- * @default {"position:struct":"{\"x\":\"20\",\"y\":\"176\"}","height:int":"360","textLine:struct":"{\"lineSize:struct\":\"{\\\"w\\\":\\\"200\\\",\\\"h\\\":\\\"36\\\"}\",\"face:str\":\"\",\"size:int\":\"20\"}"}
- * 
- * @param questsListCursor:struct
- * @parent questsListSettings:struct
- * @type struct<XY2>
- * @text Cursor Margins
- * @default {"x":"186","y":"18"}
- * @desc Смещение курсора (Quest_Selected.png)
- * 
- * @param questsListActive:struct
- * @parent questsListSettings:struct
- * @type struct<XY2>
- * @text Active Icon Margins
- * @default {"x":"186","y":"18"}
- * @desc Смещение иконки (Quest_Active.png) активного квеста
- * 
- * @param questsListNewMark:struct
- * @parent questsListSettings:struct
- * @type struct<XY2>
- * @text New Quest Mark Margins
- * @default {"x":"2","y":"0"}
- * @desc [PRO] Смещение иконки (Quest_New.png) нового квеста
- * 
- * @param questHeaderSettings:struct
- * @text Name Settings
- * @parent visualSettings
- * @type struct<QuestHeader>
- * @desc Настройки заголовка (названия) квеста
- * @default {"position:struct":"{\"x\":\"386\",\"y\":\"100\"}","position2:struct":"{\"x\":\"250\",\"y\":\"80\"}","textLine:struct":"{\"lineSize:struct\":\"{\\\"w\\\":\\\"256\\\",\\\"h\\\":\\\"84\\\"}\",\"face:str\":\"\",\"size:int\":\"20\"}"}
- * 
- * @param questDescSettings:struct
- * @text Description Settings
- * @parent visualSettings
- * @type struct<QuestDesc>
- * @desc Настройки текста описания квеста
- * @default {"position:struct":"{\"x\":\"270\",\"y\":\"160\"}","textLine:struct":"{\"lineSize:struct\":\"{\\\"w\\\":\\\"460\\\",\\\"h\\\":\\\"140\\\"}\",\"face:str\":\"\",\"size:int\":\"14\"}"}
- * 
- * @param questTaskHeaderSettings:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Tasks Header
- * @default {"x":"230","y":"300"}
- * @desc Позиция заголовка задач (tasksHeader.png)
- * 
- * @param questGroupButtonA:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Button Group A
- * @default {"x":"30","y":"80"}
- * @desc Позиция кнопки текущих квестов
- * 
- * @param questGroupButtonB:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Button Group B
- * @default {"x":"140","y":"80"}
- * @desc Позиция кнопки выполненных квестов
- * 
- * @param questsTasksSettings:struct
- * @parent visualSettings
- * @type struct<QuestTask>
- * @text Tasks texts settings
- * @default {"positions:structA":"[\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"340\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"370\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"400\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"430\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"460\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"490\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"520\\\"}\",\"{\\\"x\\\":\\\"270\\\",\\\"y\\\":\\\"550\\\"}\"]","position:struct":"{\"x\":\"-24\",\"y\":\"4\"}","textLine:struct":"{\"lineSize:struct\":\"{\\\"w\\\":\\\"420\\\",\\\"h\\\":\\\"60\\\"}\",\"face:str\":\"\",\"size:int\":\"20\"}"}
- * @desc Настройки текста задачи квеста
- * 
- * @param questJournalActiveHelp:struct
- * @parent visualSettings
- * @type struct<XY2>
- * @text Activate help
- * @default {"x":"36","y":"Graphics.height - 56"}
- * @desc Позация изображения подсказки (ActiveHelp.png) установки активного квеста
  * 
  * @param visualPointers:structA
  * @parent visualSettings
@@ -565,6 +566,22 @@
  * @text Map Pointers
  * @default ["{\"image\":\"QuestArrow_A\",\"color:color\":\"#bfcc2f\"}","{\"image\":\"QuestArrow_A\",\"color:color\":\"#277fc2\"}","{\"image\":\"QuestArrow_A\",\"color:color\":\"#c7205d\"}"]
  * @desc Указатели (Pro only) -> Число указателей = макс. возможному числу активных квестов
+ * 
+ * @param questArrowDefaultOpacity:int
+ * @parent visualPointers:structA
+ * @type number
+ * @text Default opacity
+ * @min 0
+ * @max 255
+ * @default 150
+ * @desc Прозрачность стрелки указателя
+ * 
+ * @param changeOpacityOverDistance:bool
+ * @parent visualPointers:structA
+ * @type boolean
+ * @text Opacity over distance
+ * @default true
+ * @desc Изменять прозрачность указателя в зависимости от дальности цели
  * 
  * @param journalNotifyPosition:struct
  * @parent visualSettings
@@ -584,8 +601,8 @@
  * 
  * @param tasksListActive:bool
  * @type boolean
- * @text Tasks List?
- * @default true
+ * @text Tasks List? (Устарел)
+ * @default false
  * @desc Показывать список активных квестов и заданий на карте?
  * 
  * @param tasksListSettings:struct
@@ -595,6 +612,328 @@
  * @default {"windowSettings":"","position:s":"{\"x:int\":\"0\",\"y:int\":\"192\"}","closeButtonPosition:s":"{\"x:int\":\"221\",\"y:int\":\"0\"}","closingDirection:str":"left","unhoveredOpacity:i":"160","windowWidth:i":"220","maxQuestsCount:i":"4","questHeight:i":"60","dynamicSize:b":"true","questsSettings":"","emptyListText:str":"No active quests","questInListFontSize:i":"13","beforeTask:str":"-\\}\\}","questsShowMode:str":"active"}
  * @desc Настройки окна со списком заданий
  * 
+ * @param isUseNewQuestsWindow:bool
+ * @type boolean
+ * @text New Quests Window
+ * @default true
+ * @desc Использовать новое окно квестов?
+ * 
+ * @param nqw_questsShowMode:str
+ * @parent isUseNewQuestsWindow:bool
+ * @text Mode
+ * @type select 
+ * @option active
+ * @option all
+ * @desc Режим отображения квестов (all - все, active - только активные)
+ * @default all 
+ * 
+ */
+/*:zh-cn
+ * @plugindesc (v.1.7)[PRO] Simple quests system
+ * @author Pheonix KageDesu
+ * @target MZ MV
+ * @url https://kdworkshop.net/plugins/simple-quests-system
+ *
+ * 
+ * @help
+ * ---------------------------------------------------------------------------
+ *
+ * 指南: 
+ * https://gist.github.com/KageDesu/7e2900af1ff113a5a91734d62f9123d6
+ *
+ * ---------------------------------------------------------------------------
+ *
+ * 如果 您喜欢我的插件，想要更多和更频繁的更新，请在以下平台上支持我：
+ *
+ * Boosty:
+ *     https://boosty.to/kagedesu
+ * Patreon:
+ *      https://www.patreon.com/KageDesu
+ * YouTube:
+ *      https://www.youtube.com/channel/UCA3R61ojF5vp5tGwJ1YqdgQ?
+ *
+ * Contains resources designed and drawn
+ * by Ekaterina N. Stadnikova (MOSCOW RUSSIA)
+ * https://stadnikova-ekaterina.itch.io/
+ *
+ * License: Creative Commons 4.0 Attribution, Share Alike, Commercial
+ * 
+ * @requiredAssets img/pSQSystem/ActiveHelp
+ * @requiredAssets img/pSQSystem/Cat_All_00
+ * @requiredAssets img/pSQSystem/Cat_All_01
+ * @requiredAssets img/pSQSystem/Cat_All_03
+ * @requiredAssets img/pSQSystem/windowFrame
+ * @requiredAssets img/pSQSystem/windowOpenButton_00
+ * @requiredAssets img/pSQSystem/windowOpenButton_01
+ * @requiredAssets img/pSQSystem/headerLine
+ * @requiredAssets img/pSQSystem/windowCloseButton_00
+ * @requiredAssets img/pSQSystem/windowCloseButton_01
+ *
+ * @param sqsQuests:structA
+ * @text 任务
+ * @type struct<Quest>[]
+ * @default []
+ * @desc
+ * 
+ * @param sqsPointers:structA
+ * @text 指针
+ * @type struct<Pointer>[]
+ * @default []
+ * @desc 任务的指针
+ * 
+ * @param isUseAutoNavigation:b
+ * @text 自动导航
+ * @type boolean
+ * @default false
+ * @desc 是否使用新的自动导航系统？
+ * 
+ * @param sqsNavigation:structA
+ * @parent isUseAutoNavigation:b
+ * @text 导航
+ * @type struct<NavigatorPathToMap>[]
+ * @default []
+ * @desc 在地图之间自动显示任务目标路径的链接
+ * 
+ * @param sqsNavigationIgnore:intA
+ * @parent isUseAutoNavigation:b
+ * @text 忽略地图
+ * @type number[]
+ * @default []
+ * @desc 自动导航无法工作的地图ID
+ * 
+ * @param sqsQuestsCategories:structA
+ * @text 分类
+ * @type struct<CategoryButton>[]
+ * @default ["{\"position:struct\":\"{\\\"x\\\":\\\"250\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_All_00\\\",\\\"hover\\\":\\\"Cat_All_01\\\",\\\"disabled\\\":\\\"Cat_All_03\\\"}\"}","{\"position:struct\":\"{\\\"x\\\":\\\"370\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"Main\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_Main_00\\\",\\\"hover\\\":\\\"Cat_Main_01\\\",\\\"disabled\\\":\\\"Cat_Main_03\\\"}\"}","{\"position:struct\":\"{\\\"x\\\":\\\"510\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"Side\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_Side_00\\\",\\\"hover\\\":\\\"Cat_Side_01\\\",\\\"disabled\\\":\\\"Cat_Side_03\\\"}\"}","{\"position:struct\":\"{\\\"x\\\":\\\"630\\\",\\\"y\\\":\\\"Graphics.height - 56\\\"}\",\"categoryId\":\"Other\",\"buttonImage:struct\":\"{\\\"main\\\":\\\"Cat_Other_00\\\",\\\"hover\\\":\\\"Cat_Other_01\\\",\\\"disabled\\\":\\\"Cat_Other_03\\\"}\"}"]
+ * @desc [PRO] 任务的分类
+ * 
+ * @param nextCategoryKey
+ * @parent sqsQuestsCategories:structA
+ * @text 下一个分类
+ * @desc 下一个分类的键盘按键
+ * @default
+ * 
+ * @param prevCategoryKey
+ * @parent sqsQuestsCategories:structA
+ * @text 上一个分类
+ * @desc 上一个分类的键盘按键
+ * @default
+ * 
+ * @param isSupportGamepad:b
+ * @parent sqsQuestsCategories:structA
+ * @type boolean
+ * @text 是否支持游戏手柄？
+ * @desc 游戏是否使用游戏手柄控制？
+ * @default false
+ * 
+ * @param nextCategoryGamepadKey
+ * @parent isSupportGamepad:b
+ * @text 下一个分类 GP
+ * @type select
+ * @option A
+ * @value A
+ * @option B
+ * @value B
+ * @option X
+ * @value X
+ * @option Y
+ * @value Y
+ * @option LB
+ * @value LB
+ * @option RB
+ * @value RB
+ * @option 左触发器
+ * @value LTrigger
+ * @option 右触发器
+ * @value RTrigger
+ * @option 返回
+ * @value Back
+ * @option 开始
+ * @value Start
+ * @option 左摇杆（按下）
+ * @value LStick
+ * @option 右摇杆（按下）
+ * @value RStick
+ * @option 十字键上
+ * @value dUp
+ * @option 十字键下
+ * @value dDown
+ * @option 十字键左
+ * @value dLeft
+ * @option 十字键右
+ * @value dRight
+ * @desc 下一个分类的游戏手柄按键
+ * @default RB
+ * 
+ * @param prevCategoryGamepadKey
+ * @parent isSupportGamepad:b
+ * @text 上一个分类 GP
+ * @type select
+ * @option A
+ * @value A
+ * @option B
+ * @value B
+ * @option X
+ * @value X
+ * @option Y
+ * @value Y
+ * @option LB
+ * @value LB
+ * @option RB
+ * @value RB
+ * @option 左触发器
+ * @value LTrigger
+ * @option 右触发器
+ * @value RTrigger
+ * @option 返回
+ * @value Back
+ * @option 开始
+ * @value Start
+ * @option 左摇杆（按下）
+ * @value LStick
+ * @option 右摇杆（按下）
+ * @value RStick
+ * @option 十字键上
+ * @value dUp
+ * @option 十字键下
+ * @value dDown
+ * @option 十字键左
+ * @value dLeft
+ * @option 十字键右
+ * @value dRight
+ * @desc 上一个分类的游戏手柄按键
+ * @default LB
+ * 
+ * @param isNeedMenuCommand:b
+ * @type boolean
+ * @text 菜单中的命令？
+ * @on 显示
+ * @off 不显示
+ * @default true
+ * @desc 在游戏菜单中显示打开任务日志的命令？
+ * 
+ * @param isSortByNew:b
+ * @type boolean
+ * @text 新任务优先
+ * @on 是
+ * @off 否
+ * @default false
+ * @desc 如果为真 - 新任务将始终位于列表顶部
+ * 
+ * @param isSortByActive:b
+ * @type boolean
+ * @text 活跃任务优先
+ * @on 是
+ * @off 否
+ * @default false
+ * @desc 如果为真 - 活跃任务将始终位于列表顶部
+ * 
+ * @param isHaveFailedQuests:b
+ * @type boolean
+ * @text 失败的任务
+ * @on 是
+ * @off 否
+ * @default false
+ * @desc 如果为真 - 任务日志中将添加失败任务组
+ * 
+ * @param buttonForOpenJournal
+ * @type text
+ * @text 打开日志按钮
+ * @default j
+ * @desc 打开任务日志的按钮（在地图上）
+ * 
+ * @param buttonForOpenTasksWindow
+ * @type text
+ * @text 任务窗口按钮
+ * @default t
+ * @desc 打开或关闭地图任务窗口的按钮
+ * 
+ * @param menuCommandText
+ * @parent isNeedMenuCommand:b
+ * @text 命令标题
+ * @default 任务
+ * @desc 打开任务日志菜单命令的标题
+ * 
+ * @param autoComplete:b
+ * @type boolean
+ * @text 自动完成
+ * @default false
+ * @desc 如果所有任务完成，是否自动完成任务？
+ * 
+ * @param spacer|visualSettings @text‏‏‎ ‎@desc ===============================================
+ * 
+ * @param visualSettings
+ * @text 视觉设置
+ * 
+ * 
+ * 
+ * 
+ * @param visualPointers:structA
+ * @parent visualSettings
+ * @type struct<VPointer>[]
+ * @text 地图指针
+ * @default ["{\"image\":\"QuestArrow_A\",\"color:color\":\"#bfcc2f\"}","{\"image\":\"QuestArrow_A\",\"color:color\":\"#277fc2\"}","{\"image\":\"QuestArrow_A\",\"color:color\":\"#c7205d\"}"]
+ * @desc 每个活跃任务的指针。（仅限专业版）-> 指针数量 = 最大活跃任务数
+ * 
+ * @param questArrowDefaultOpacity:int
+ * @parent visualPointers:structA
+ * @type number
+ * @text 默认不透明度
+ * @min 0
+ * @max 255
+ * @default 150
+ * @desc 地图上任务指针箭头的默认不透明度
+ * 
+ * @param changeOpacityOverDistance:bool
+ * @parent visualPointers:structA
+ * @type boolean
+ * @text 随距离变化的不透明度
+ * @default true
+ * @desc 箭头不透明度随箭头目标距离变化
+ * 
+ * @param journalNotifyPosition:struct
+ * @parent visualSettings
+ * @type struct<XY2>
+ * @text 通知设置
+ * @default {"x":"Graphics.width / 2 - 200","y":"32"}
+ * @desc 屏幕上通知图像（questJournalUpdated.png）的位置
+ * 
+ * @param questDifficultyPosition:struct
+ * @parent visualSettings
+ * @type struct<XY2>
+ * @text 难度设置
+ * @default {"x":"Graphics.width - 104","y":"85"}
+ * @desc [PRO] 活跃任务难度图像（questDiff_X.png）位置
+ * 
+ * @param spacer|mapTasksList @text‏‏‎ ‎@desc ===============================================
+ * 
+ * @param tasksListActive:bool
+ * @type boolean
+ * @text 任务列表？（已弃用！）
+ * @default false
+ * @desc 在地图上显示任务列表窗口？
+ * 
+ * @param tasksListSettings:struct
+ * @parent tasksListActive:bool
+ * @type struct<MapTasksList>
+ * @text 设置
+ * @default {"windowSettings":"","position:s":"{\"x:int\":\"0\",\"y:int\":\"192\"}","closeButtonPosition:s":"{\"x:int\":\"221\",\"y:int\":\"0\"}","closingDirection:str":"left","unhoveredOpacity:i":"160","windowWidth:i":"220","maxQuestsCount:i":"4","questHeight:i":"60","dynamicSize:b":"true","questsSettings":"","emptyListText:str":"没有活跃任务","questInListFontSize:i":"13","beforeTask:str":"-\\}\\}","questsShowMode:str":"active"}
+ * @desc 地图任务列表窗口设置
+ * 
+ * @param isUseNewQuestsWindow:bool
+ * @type boolean
+ * @text 新任务窗口
+ * @default true
+ * @desc 在地图上使用新任务窗口？
+ * 
+ * @param nqw_questsShowMode:str
+ * @parent isUseNewQuestsWindow:bool
+ * @text 模式
+ * @type select 
+ * @option 活跃
+ * @option 全部
+ * @desc 列表中显示哪些任务？仅活跃任务或全部任务
+ * @default 全部
  * 
  */
 /*~struct~Quest:
@@ -656,6 +995,17 @@
  * @default 0
  * @type common_event
  * @desc Common event called when this quest is completed. 0 - nothing
+
+  * @param onFailed:int
+ * @text On Failed CE
+ * @default 0
+ * @type common_event
+ * @desc Common event called when this quest is failed. 0 - nothing
+
+ * @param autoConditions:struct
+    * @text Auto Conditions
+    * @type struct<ConditionGroup>
+    * @desc Conditions for automatic add, complete and fail quest
 */
 
 /*~struct~Pointer:
@@ -672,146 +1022,55 @@
 */
 
 /*~struct~TaskPointer:
-* @param taskIndex:int
-* @text Task Index
-* @type number
-* @default 1
-* @min 1
-* @desc Quest task index (for wich current Pointer is)
+    * @param taskIndex:int
+    * @text Task Index
+    * @type number
+    * @default 1
+    * @min 1
+    * @desc Quest task index (for wich current Pointer is)
 
-* @param points:structA
-* @text Map Points
-* @type struct<MapPoint>[]
-* @default []
-* @desc What event should the pointer point for this task on a certain map?
+    * @param points:structA
+    * @text Map Points
+    * @type struct<MapPoint>[]
+    * @default []
+    * @desc What event should the pointer point for this task on a certain map?
 */
 
 /*~struct~MapPoint:
-* @param mapId:int
-* @text Map ID
-* @type number
-* @default 1
-* @min 1
+    * @param mapId:int
+    * @text Map ID
+    * @type number
+    * @default 1
+    * @min 1
 
-* @param evId:int
-* @text Event ID
-* @type number
-* @default 1
-* @min 1
-* @desc Task goal event on this map
+    * @param evId:int
+    * @text Event ID
+    * @type number
+    * @default 1
+    * @min 1
+    * @desc Task goal event on this map
 */
 
-/*~struct~QuestsList:
-* @param position:struct
-* @type struct<XY2>
-* @text Position
-* @default {"x":"20","y":"120"}
-* @desc Quests list position
 
-* @param height:int
-* @text List height
-* @type number
-* @default 360
-* @min 40
-* @desc Quests list height in pixels (Width settings see in List Item settings)
 
-* @param textLine:struct
-* @type struct<TextLine>
-* @text List Item
-* @default {"lineSize:struct":"{\"w\":\"200\",\"h\":\"36\"}","face:str":"","size:int":"20"}
-* @desc List item (quest name in list) settings
-*/
-
-/*~struct~QuestHeader:
-* @param position:struct
-* @type struct<XY2>
-* @text Text Position
-* @default {"x":"356","y":"100"}
-* @desc Quest Name Position
-
-* @param position2:struct
-* @type struct<XY2>
-* @text Image Position
-* @default {"x":"220","y":"80"}
-* @desc Quest title image position
-
-* @param textLine:struct
-* @type struct<TextLine>
-* @text Text Settings
-* @default {"lineSize:struct":"{\"w\":\"256\",\"h\":\"80\"}","face:str":"","size:int":"20"}
-* @desc Quest Name text box settings
-*/
-
-/*~struct~QuestDesc:
-* @param position:struct
-* @type struct<XY2>
-* @text Text Position
-* @default {"x":"240","y":"160"}
-* @desc Quest Description Position
-
-* @param textLine:struct
-* @type struct<TextLine>
-* @text Text Settings
-* @default {"lineSize:struct":"{\"w\":\"460\",\"h\":\"140\"}","face:str":"","size:int":"14"}
-* @desc Quest Description text box settings
-*/
-
-/*~struct~QuestTask:
-* @param positions:structA
-* @type struct<XY2>[]
-* @text Positions
-* @default []
-* @desc Positions for each task
-
-* @param position:struct
-* @type struct<XY2>
-* @text Status Icon
-* @default {"x":"-22","y":"4"}
-* @desc Task status icon position (relative task text)
-
-* @param textLine:struct
-* @type struct<TextLine>
-* @text Text Settings
-* @default {"lineSize:struct":"{\"w\":\"420\",\"h\":\"60\"}","face:str":"","size:int":"20"}
-* @desc Task text box settings
-*/
-
-/*~struct~TextLine:
-* @param lineSize:struct
-* @type struct<WH2>
-* @text Line Size
-* @default {"w":"200","h":"36"}
-* @desc Text block size (width and height)
-
-* @param face:str
-* @text Font Face
-* @default
-* @desc Font face from fonts folder (your game should support custom fonts)
-*
-* @param size:int
-* @text Font Size
-* @type number
-* @default 24
-* @min 1
-*/
 
 /*~struct~CategoryButton:
-* @param position:struct
-* @type struct<XY2>
-* @text Position
-* @default {"x":"0","y":"0"}
-* @desc Category button positon
+    * @param position:struct
+    * @type struct<XY2>
+    * @text Position
+    * @default {"x":"0","y":"0"}
+    * @desc Category button positon
 
-* @param categoryId
-* @text Category ID
-* @default 
-* @desc Category ID for show only quests with same Category ID (empty - all quests)
+    * @param categoryId
+    * @text Category ID
+    * @default 
+    * @desc Category ID for show only quests with same Category ID (empty - all quests)
 
-* @param buttonImage:struct
-* @text Image Name
-* @type struct<ButtonStates>
-* @default {"main":"","hover":"","disabled":""}
-* @desc [Required] Images for category button
+    * @param buttonImage:struct
+    * @text Image Name
+    * @type struct<ButtonStates>
+    * @default {"main":"","hover":"","disabled":""}
+    * @desc [Required] Images for category button
 */
 
 /*~struct~ButtonStates:
@@ -1034,40 +1293,66 @@
 * @desc Event, that transfer player from this Map to Destination Map
 */
 
+/*~struct~Condition:
+
+* @param switchId:int
+* @text Switch ID
+* @type switch
+* @default 0
+* @desc Switch ID for condition (0 - no switch, true), if switch is ON - condition is true
+
+* @param variableId:int
+* @text Variable ID
+* @type variable
+* @default 0
+* @desc Variable ID for condition (0 - no variable, true).
+
+* @param variableConditionMode:str
+* @parent variableId:int
+* @text Variable Mode
+* @type select
+* @option equal
+* @option more
+* @option less
+* @default equal
+* @desc Variable condition mode
+
+* @param variableValue:int
+* @parent variableId:int
+* @text Value
+* @type number
+* @default 0
+* @desc Variable value for condition
+
+* @param script:str
+* @text Script
+* @default true
+* @desc Condition script (JavaScript). If script return true - condition is true
+
+*/
+
+/*~struct~ConditionGroup:
+
+ * @param addConditions:struct
+ * @text Add Conditions
+ * @type struct<Condition>
+ * @desc Conditions for automatic add
+
+ * @param completeConditions:struct
+ * @text Complete Conditions
+ * @type struct<Condition>
+ * @desc Conditions for automatic complete
+
+ * @param failConditions:struct
+ * @text Fail Conditions
+ * @type struct<Condition>
+ * @desc Conditions for automatic fail
+
+*/
+
 
 // * MAIN
-
-var Imported = Imported || {};
-Imported.PKD_SQS = true;
-
-var PKD_SQS = {};
-PKD_SQS.version = 14;
-
-PKD_SQS.link = function (library) {
-    this[library.name] = library;
-};
-
-// * For parameters
-PKD_SQS.PP = {};
-
-window.SQOpenQuestJournal = function() {
-    try {
-        window.SQSM.OpenQuestJournal();
-    } catch (e) {
-        console.warn(e);
-    }
-};
-
-window.SQOpenOrHideTasksWindow = function() {
-    try {
-        window.SQSM.SwitchOpenedClosedStateOfQuestsList();
-    } catch (e) {
-        console.warn(e);
-    }
-};
-
-
-// * PP to H file
+//%[Initialization in 0_@Initialize.ts]
 
 /*
 # ==========================================================================
@@ -1084,6 +1369,17 @@ window.SQOpenOrHideTasksWindow = function() {
 
 
 
+/*!
+ * pixi-filters - v4.2.0
+ * Compiled Fri, 05 Aug 2022 19:51:27 UTC
+ *
+ * pixi-filters is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+var __filters=function(e,n,t,r,o,i,l,a){"use strict";var s=function(e,n){return(s=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(e,n){e.__proto__=n}||function(e,n){for(var t in n)Object.prototype.hasOwnProperty.call(n,t)&&(e[t]=n[t])})(e,n)};function u(e,n){function t(){this.constructor=e}s(e,n),e.prototype=null===n?Object.create(n):(t.prototype=n.prototype,new t)}var f=function(){return(f=Object.assign||function(e){for(var n,t=arguments,r=1,o=arguments.length;r<o;r++)for(var i in n=t[r])Object.prototype.hasOwnProperty.call(n,i)&&(e[i]=n[i]);return e}).apply(this,arguments)};Object.create;Object.create;var c="attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}",m=function(e){function n(n){var t=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform float gamma;\nuniform float contrast;\nuniform float saturation;\nuniform float brightness;\nuniform float red;\nuniform float green;\nuniform float blue;\nuniform float alpha;\n\nvoid main(void)\n{\n    vec4 c = texture2D(uSampler, vTextureCoord);\n\n    if (c.a > 0.0) {\n        c.rgb /= c.a;\n\n        vec3 rgb = pow(c.rgb, vec3(1. / gamma));\n        rgb = mix(vec3(.5), mix(vec3(dot(vec3(.2125, .7154, .0721), rgb)), rgb, saturation), contrast);\n        rgb.r *= red;\n        rgb.g *= green;\n        rgb.b *= blue;\n        c.rgb = rgb * brightness;\n\n        c.rgb *= c.a;\n    }\n\n    gl_FragColor = c * alpha;\n}\n")||this;return t.gamma=1,t.saturation=1,t.contrast=1,t.brightness=1,t.red=1,t.green=1,t.blue=1,t.alpha=1,Object.assign(t,n),t}return u(n,e),n.prototype.apply=function(e,n,t,r){this.uniforms.gamma=Math.max(this.gamma,1e-4),this.uniforms.saturation=this.saturation,this.uniforms.contrast=this.contrast,this.uniforms.brightness=this.brightness,this.uniforms.red=this.red,this.uniforms.green=this.green,this.uniforms.blue=this.blue,this.uniforms.alpha=this.alpha,e.applyFilter(this,n,t,r)},n}(n.Filter),p=function(e){function n(n){void 0===n&&(n=.5);var t=e.call(this,c,"\nuniform sampler2D uSampler;\nvarying vec2 vTextureCoord;\n\nuniform float threshold;\n\nvoid main() {\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    // A simple & fast algorithm for getting brightness.\n    // It's inaccuracy , but good enought for this feature.\n    float _max = max(max(color.r, color.g), color.b);\n    float _min = min(min(color.r, color.g), color.b);\n    float brightness = (_max + _min) * 0.5;\n\n    if(brightness > threshold) {\n        gl_FragColor = color;\n    } else {\n        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);\n    }\n}\n")||this;return t.threshold=n,t}return u(n,e),Object.defineProperty(n.prototype,"threshold",{get:function(){return this.uniforms.threshold},set:function(e){this.uniforms.threshold=e},enumerable:!1,configurable:!0}),n}(n.Filter),d=function(e){function n(n,r,o){void 0===n&&(n=4),void 0===r&&(r=3),void 0===o&&(o=!1);var i=e.call(this,c,o?"\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec2 uOffset;\nuniform vec4 filterClamp;\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n\n    // Sample top left pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y + uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Sample top right pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y + uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Sample bottom right pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y - uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Sample bottom left pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y - uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Average\n    color *= 0.25;\n\n    gl_FragColor = color;\n}\n":"\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec2 uOffset;\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n\n    // Sample top left pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y + uOffset.y));\n\n    // Sample top right pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y + uOffset.y));\n\n    // Sample bottom right pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y - uOffset.y));\n\n    // Sample bottom left pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y - uOffset.y));\n\n    // Average\n    color *= 0.25;\n\n    gl_FragColor = color;\n}")||this;return i._kernels=[],i._blur=4,i._quality=3,i.uniforms.uOffset=new Float32Array(2),i._pixelSize=new t.Point,i.pixelSize=1,i._clamp=o,Array.isArray(n)?i.kernels=n:(i._blur=n,i.quality=r),i}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i=this._pixelSize.x/n._frame.width,l=this._pixelSize.y/n._frame.height;if(1===this._quality||0===this._blur)o=this._kernels[0]+.5,this.uniforms.uOffset[0]=o*i,this.uniforms.uOffset[1]=o*l,e.applyFilter(this,n,t,r);else{for(var a=e.getFilterTexture(),s=n,u=a,f=void 0,c=this._quality-1,m=0;m<c;m++)o=this._kernels[m]+.5,this.uniforms.uOffset[0]=o*i,this.uniforms.uOffset[1]=o*l,e.applyFilter(this,s,u,1),f=s,s=u,u=f;o=this._kernels[c]+.5,this.uniforms.uOffset[0]=o*i,this.uniforms.uOffset[1]=o*l,e.applyFilter(this,s,t,r),e.returnFilterTexture(a)}},n.prototype._updatePadding=function(){this.padding=Math.ceil(this._kernels.reduce((function(e,n){return e+n+.5}),0))},n.prototype._generateKernels=function(){var e=this._blur,n=this._quality,t=[e];if(e>0)for(var r=e,o=e/n,i=1;i<n;i++)r-=o,t.push(r);this._kernels=t,this._updatePadding()},Object.defineProperty(n.prototype,"kernels",{get:function(){return this._kernels},set:function(e){Array.isArray(e)&&e.length>0?(this._kernels=e,this._quality=e.length,this._blur=Math.max.apply(Math,e)):(this._kernels=[0],this._quality=1)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"clamp",{get:function(){return this._clamp},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"pixelSize",{get:function(){return this._pixelSize},set:function(e){"number"==typeof e?(this._pixelSize.x=e,this._pixelSize.y=e):Array.isArray(e)?(this._pixelSize.x=e[0],this._pixelSize.y=e[1]):e instanceof t.Point?(this._pixelSize.x=e.x,this._pixelSize.y=e.y):(this._pixelSize.x=1,this._pixelSize.y=1)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"quality",{get:function(){return this._quality},set:function(e){this._quality=Math.max(1,Math.round(e)),this._generateKernels()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blur",{get:function(){return this._blur},set:function(e){this._blur=e,this._generateKernels()},enumerable:!1,configurable:!0}),n}(n.Filter),h=function(e){function n(t){var o=e.call(this,c,"uniform sampler2D uSampler;\nvarying vec2 vTextureCoord;\n\nuniform sampler2D bloomTexture;\nuniform float bloomScale;\nuniform float brightness;\n\nvoid main() {\n    vec4 color = texture2D(uSampler, vTextureCoord);\n    color.rgb *= brightness;\n    vec4 bloomColor = vec4(texture2D(bloomTexture, vTextureCoord).rgb, 0.0);\n    bloomColor.rgb *= bloomScale;\n    gl_FragColor = color + bloomColor;\n}\n")||this;o.bloomScale=1,o.brightness=1,o._resolution=r.settings.FILTER_RESOLUTION,"number"==typeof t&&(t={threshold:t});var i=Object.assign(n.defaults,t);o.bloomScale=i.bloomScale,o.brightness=i.brightness;var l=i.kernels,a=i.blur,s=i.quality,u=i.pixelSize,f=i.resolution;return o._extractFilter=new p(i.threshold),o._extractFilter.resolution=f,o._blurFilter=l?new d(l):new d(a,s),o.pixelSize=u,o.resolution=f,o}return u(n,e),n.prototype.apply=function(e,n,t,r,o){var i=e.getFilterTexture();this._extractFilter.apply(e,n,i,1,o);var l=e.getFilterTexture();this._blurFilter.apply(e,i,l,1),this.uniforms.bloomScale=this.bloomScale,this.uniforms.brightness=this.brightness,this.uniforms.bloomTexture=l,e.applyFilter(this,n,t,r),e.returnFilterTexture(l),e.returnFilterTexture(i)},Object.defineProperty(n.prototype,"resolution",{get:function(){return this._resolution},set:function(e){this._resolution=e,this._extractFilter&&(this._extractFilter.resolution=e),this._blurFilter&&(this._blurFilter.resolution=e)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"threshold",{get:function(){return this._extractFilter.threshold},set:function(e){this._extractFilter.threshold=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"kernels",{get:function(){return this._blurFilter.kernels},set:function(e){this._blurFilter.kernels=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blur",{get:function(){return this._blurFilter.blur},set:function(e){this._blurFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"quality",{get:function(){return this._blurFilter.quality},set:function(e){this._blurFilter.quality=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"pixelSize",{get:function(){return this._blurFilter.pixelSize},set:function(e){this._blurFilter.pixelSize=e},enumerable:!1,configurable:!0}),n.defaults={threshold:.5,bloomScale:1,brightness:1,kernels:null,blur:8,quality:4,pixelSize:1,resolution:r.settings.FILTER_RESOLUTION},n}(n.Filter),g=function(e){function n(n){void 0===n&&(n=8);var t=e.call(this,c,"varying vec2 vTextureCoord;\n\nuniform vec4 filterArea;\nuniform float pixelSize;\nuniform sampler2D uSampler;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 pixelate(vec2 coord, vec2 size)\n{\n    return floor( coord / size ) * size;\n}\n\nvec2 getMod(vec2 coord, vec2 size)\n{\n    return mod( coord , size) / size;\n}\n\nfloat character(float n, vec2 p)\n{\n    p = floor(p*vec2(4.0, -4.0) + 2.5);\n\n    if (clamp(p.x, 0.0, 4.0) == p.x)\n    {\n        if (clamp(p.y, 0.0, 4.0) == p.y)\n        {\n            if (int(mod(n/exp2(p.x + 5.0*p.y), 2.0)) == 1) return 1.0;\n        }\n    }\n    return 0.0;\n}\n\nvoid main()\n{\n    vec2 coord = mapCoord(vTextureCoord);\n\n    // get the rounded color..\n    vec2 pixCoord = pixelate(coord, vec2(pixelSize));\n    pixCoord = unmapCoord(pixCoord);\n\n    vec4 color = texture2D(uSampler, pixCoord);\n\n    // determine the character to use\n    float gray = (color.r + color.g + color.b) / 3.0;\n\n    float n =  65536.0;             // .\n    if (gray > 0.2) n = 65600.0;    // :\n    if (gray > 0.3) n = 332772.0;   // *\n    if (gray > 0.4) n = 15255086.0; // o\n    if (gray > 0.5) n = 23385164.0; // &\n    if (gray > 0.6) n = 15252014.0; // 8\n    if (gray > 0.7) n = 13199452.0; // @\n    if (gray > 0.8) n = 11512810.0; // #\n\n    // get the mod..\n    vec2 modd = getMod(coord, vec2(pixelSize));\n\n    gl_FragColor = color * character( n, vec2(-1.0) + modd * 2.0);\n\n}\n")||this;return t.size=n,t}return u(n,e),Object.defineProperty(n.prototype,"size",{get:function(){return this.uniforms.pixelSize},set:function(e){this.uniforms.pixelSize=e},enumerable:!1,configurable:!0}),n}(n.Filter),v=function(e){function n(n){var t=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform float transformX;\nuniform float transformY;\nuniform vec3 lightColor;\nuniform float lightAlpha;\nuniform vec3 shadowColor;\nuniform float shadowAlpha;\n\nvoid main(void) {\n    vec2 transform = vec2(1.0 / filterArea) * vec2(transformX, transformY);\n    vec4 color = texture2D(uSampler, vTextureCoord);\n    float light = texture2D(uSampler, vTextureCoord - transform).a;\n    float shadow = texture2D(uSampler, vTextureCoord + transform).a;\n\n    color.rgb = mix(color.rgb, lightColor, clamp((color.a - light) * lightAlpha, 0.0, 1.0));\n    color.rgb = mix(color.rgb, shadowColor, clamp((color.a - shadow) * shadowAlpha, 0.0, 1.0));\n    gl_FragColor = vec4(color.rgb * color.a, color.a);\n}\n")||this;return t._thickness=2,t._angle=0,t.uniforms.lightColor=new Float32Array(3),t.uniforms.shadowColor=new Float32Array(3),Object.assign(t,{rotation:45,thickness:2,lightColor:16777215,lightAlpha:.7,shadowColor:0,shadowAlpha:.7},n),t.padding=1,t}return u(n,e),n.prototype._updateTransform=function(){this.uniforms.transformX=this._thickness*Math.cos(this._angle),this.uniforms.transformY=this._thickness*Math.sin(this._angle)},Object.defineProperty(n.prototype,"rotation",{get:function(){return this._angle/t.DEG_TO_RAD},set:function(e){this._angle=e*t.DEG_TO_RAD,this._updateTransform()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"thickness",{get:function(){return this._thickness},set:function(e){this._thickness=e,this._updateTransform()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lightColor",{get:function(){return o.rgb2hex(this.uniforms.lightColor)},set:function(e){o.hex2rgb(e,this.uniforms.lightColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lightAlpha",{get:function(){return this.uniforms.lightAlpha},set:function(e){this.uniforms.lightAlpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"shadowColor",{get:function(){return o.rgb2hex(this.uniforms.shadowColor)},set:function(e){o.hex2rgb(e,this.uniforms.shadowColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"shadowAlpha",{get:function(){return this.uniforms.shadowAlpha},set:function(e){this.uniforms.shadowAlpha=e},enumerable:!1,configurable:!0}),n}(n.Filter),y=function(e){function n(n,o,s,u){void 0===n&&(n=2),void 0===o&&(o=4),void 0===s&&(s=r.settings.FILTER_RESOLUTION),void 0===u&&(u=5);var f,c,m=e.call(this)||this;return"number"==typeof n?(f=n,c=n):n instanceof t.Point?(f=n.x,c=n.y):Array.isArray(n)&&(f=n[0],c=n[1]),m.blurXFilter=new a.BlurFilterPass(!0,f,o,s,u),m.blurYFilter=new a.BlurFilterPass(!1,c,o,s,u),m.blurYFilter.blendMode=i.BLEND_MODES.SCREEN,m.defaultFilter=new l.AlphaFilter,m}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=e.getFilterTexture();this.defaultFilter.apply(e,n,t,r),this.blurXFilter.apply(e,n,o,1),this.blurYFilter.apply(e,o,t,0),e.returnFilterTexture(o)},Object.defineProperty(n.prototype,"blur",{get:function(){return this.blurXFilter.blur},set:function(e){this.blurXFilter.blur=this.blurYFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blurX",{get:function(){return this.blurXFilter.blur},set:function(e){this.blurXFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blurY",{get:function(){return this.blurYFilter.blur},set:function(e){this.blurYFilter.blur=e},enumerable:!1,configurable:!0}),n}(n.Filter),b=function(e){function n(t){var r=e.call(this,c,"uniform float radius;\nuniform float strength;\nuniform vec2 center;\nuniform sampler2D uSampler;\nvarying vec2 vTextureCoord;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform vec2 dimensions;\n\nvoid main()\n{\n    vec2 coord = vTextureCoord * filterArea.xy;\n    coord -= center * dimensions.xy;\n    float distance = length(coord);\n    if (distance < radius) {\n        float percent = distance / radius;\n        if (strength > 0.0) {\n            coord *= mix(1.0, smoothstep(0.0, radius / distance, percent), strength * 0.75);\n        } else {\n            coord *= mix(1.0, pow(percent, 1.0 + strength * 0.75) * radius / distance, 1.0 - percent);\n        }\n    }\n    coord += center * dimensions.xy;\n    coord /= filterArea.xy;\n    vec2 clampedCoord = clamp(coord, filterClamp.xy, filterClamp.zw);\n    vec4 color = texture2D(uSampler, clampedCoord);\n    if (coord != clampedCoord) {\n        color *= max(0.0, 1.0 - length(coord - clampedCoord));\n    }\n\n    gl_FragColor = color;\n}\n")||this;return r.uniforms.dimensions=new Float32Array(2),Object.assign(r,n.defaults,t),r}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.radius},set:function(e){this.uniforms.radius=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"strength",{get:function(){return this.uniforms.strength},set:function(e){this.uniforms.strength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.center},set:function(e){this.uniforms.center=e},enumerable:!1,configurable:!0}),n.defaults={center:[.5,.5],radius:100,strength:1},n}(n.Filter),x=function(e){function t(n,t,r){void 0===t&&(t=!1),void 0===r&&(r=1);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform sampler2D colorMap;\nuniform float _mix;\nuniform float _size;\nuniform float _sliceSize;\nuniform float _slicePixelSize;\nuniform float _sliceInnerSize;\nvoid main() {\n    vec4 color = texture2D(uSampler, vTextureCoord.xy);\n\n    vec4 adjusted;\n    if (color.a > 0.0) {\n        color.rgb /= color.a;\n        float innerWidth = _size - 1.0;\n        float zSlice0 = min(floor(color.b * innerWidth), innerWidth);\n        float zSlice1 = min(zSlice0 + 1.0, innerWidth);\n        float xOffset = _slicePixelSize * 0.5 + color.r * _sliceInnerSize;\n        float s0 = xOffset + (zSlice0 * _sliceSize);\n        float s1 = xOffset + (zSlice1 * _sliceSize);\n        float yOffset = _sliceSize * 0.5 + color.g * (1.0 - _sliceSize);\n        vec4 slice0Color = texture2D(colorMap, vec2(s0,yOffset));\n        vec4 slice1Color = texture2D(colorMap, vec2(s1,yOffset));\n        float zOffset = fract(color.b * innerWidth);\n        adjusted = mix(slice0Color, slice1Color, zOffset);\n\n        color.rgb *= color.a;\n    }\n    gl_FragColor = vec4(mix(color, adjusted, _mix).rgb, color.a);\n\n}")||this;return o.mix=1,o._size=0,o._sliceSize=0,o._slicePixelSize=0,o._sliceInnerSize=0,o._nearest=!1,o._scaleMode=null,o._colorMap=null,o._scaleMode=null,o.nearest=t,o.mix=r,o.colorMap=n,o}return u(t,e),t.prototype.apply=function(e,n,t,r){this.uniforms._mix=this.mix,e.applyFilter(this,n,t,r)},Object.defineProperty(t.prototype,"colorSize",{get:function(){return this._size},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"colorMap",{get:function(){return this._colorMap},set:function(e){var t;e&&(e instanceof n.Texture||(e=n.Texture.from(e)),(null===(t=e)||void 0===t?void 0:t.baseTexture)&&(e.baseTexture.scaleMode=this._scaleMode,e.baseTexture.mipmap=i.MIPMAP_MODES.OFF,this._size=e.height,this._sliceSize=1/this._size,this._slicePixelSize=this._sliceSize/this._size,this._sliceInnerSize=this._slicePixelSize*(this._size-1),this.uniforms._size=this._size,this.uniforms._sliceSize=this._sliceSize,this.uniforms._slicePixelSize=this._slicePixelSize,this.uniforms._sliceInnerSize=this._sliceInnerSize,this.uniforms.colorMap=e),this._colorMap=e)},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"nearest",{get:function(){return this._nearest},set:function(e){this._nearest=e,this._scaleMode=e?i.SCALE_MODES.NEAREST:i.SCALE_MODES.LINEAR;var n=this._colorMap;n&&n.baseTexture&&(n.baseTexture._glTextures={},n.baseTexture.scaleMode=this._scaleMode,n.baseTexture.mipmap=i.MIPMAP_MODES.OFF,n._updateID++,n.baseTexture.emit("update",n.baseTexture))},enumerable:!1,configurable:!0}),t.prototype.updateColorMap=function(){var e=this._colorMap;e&&e.baseTexture&&(e._updateID++,e.baseTexture.emit("update",e.baseTexture),this.colorMap=e)},t.prototype.destroy=function(n){void 0===n&&(n=!1),this._colorMap&&this._colorMap.destroy(n),e.prototype.destroy.call(this)},t}(n.Filter),_=function(e){function n(n,t){void 0===n&&(n=0),void 0===t&&(t=1);var r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec3 color;\nuniform float alpha;\n\nvoid main(void) {\n    vec4 currentColor = texture2D(uSampler, vTextureCoord);\n    gl_FragColor = vec4(mix(currentColor.rgb, color.rgb, currentColor.a * alpha), currentColor.a);\n}\n")||this;return r._color=0,r._alpha=1,r.uniforms.color=new Float32Array(3),r.color=n,r.alpha=t,r}return u(n,e),Object.defineProperty(n.prototype,"color",{get:function(){return this._color},set:function(e){var n=this.uniforms.color;"number"==typeof e?(o.hex2rgb(e,n),this._color=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],this._color=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this._alpha},set:function(e){this.uniforms.alpha=e,this._alpha=e},enumerable:!1,configurable:!0}),n}(n.Filter),C=function(e){function n(n,t,r){void 0===n&&(n=16711680),void 0===t&&(t=0),void 0===r&&(r=.4);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec3 originalColor;\nuniform vec3 newColor;\nuniform float epsilon;\nvoid main(void) {\n    vec4 currentColor = texture2D(uSampler, vTextureCoord);\n    vec3 colorDiff = originalColor - (currentColor.rgb / max(currentColor.a, 0.0000000001));\n    float colorDistance = length(colorDiff);\n    float doReplace = step(colorDistance, epsilon);\n    gl_FragColor = vec4(mix(currentColor.rgb, (newColor + colorDiff) * currentColor.a, doReplace), currentColor.a);\n}\n")||this;return o._originalColor=16711680,o._newColor=0,o.uniforms.originalColor=new Float32Array(3),o.uniforms.newColor=new Float32Array(3),o.originalColor=n,o.newColor=t,o.epsilon=r,o}return u(n,e),Object.defineProperty(n.prototype,"originalColor",{get:function(){return this._originalColor},set:function(e){var n=this.uniforms.originalColor;"number"==typeof e?(o.hex2rgb(e,n),this._originalColor=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],this._originalColor=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"newColor",{get:function(){return this._newColor},set:function(e){var n=this.uniforms.newColor;"number"==typeof e?(o.hex2rgb(e,n),this._newColor=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],this._newColor=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"epsilon",{get:function(){return this.uniforms.epsilon},set:function(e){this.uniforms.epsilon=e},enumerable:!1,configurable:!0}),n}(n.Filter),S=function(e){function n(n,t,r){void 0===t&&(t=200),void 0===r&&(r=200);var o=e.call(this,c,"precision mediump float;\n\nvarying mediump vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec2 texelSize;\nuniform float matrix[9];\n\nvoid main(void)\n{\n   vec4 c11 = texture2D(uSampler, vTextureCoord - texelSize); // top left\n   vec4 c12 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y - texelSize.y)); // top center\n   vec4 c13 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y - texelSize.y)); // top right\n\n   vec4 c21 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y)); // mid left\n   vec4 c22 = texture2D(uSampler, vTextureCoord); // mid center\n   vec4 c23 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y)); // mid right\n\n   vec4 c31 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y + texelSize.y)); // bottom left\n   vec4 c32 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y + texelSize.y)); // bottom center\n   vec4 c33 = texture2D(uSampler, vTextureCoord + texelSize); // bottom right\n\n   gl_FragColor =\n       c11 * matrix[0] + c12 * matrix[1] + c13 * matrix[2] +\n       c21 * matrix[3] + c22 * matrix[4] + c23 * matrix[5] +\n       c31 * matrix[6] + c32 * matrix[7] + c33 * matrix[8];\n\n   gl_FragColor.a = c22.a;\n}\n")||this;return o.uniforms.texelSize=new Float32Array(2),o.uniforms.matrix=new Float32Array(9),void 0!==n&&(o.matrix=n),o.width=t,o.height=r,o}return u(n,e),Object.defineProperty(n.prototype,"matrix",{get:function(){return this.uniforms.matrix},set:function(e){var n=this;e.forEach((function(e,t){n.uniforms.matrix[t]=e}))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"width",{get:function(){return 1/this.uniforms.texelSize[0]},set:function(e){this.uniforms.texelSize[0]=1/e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"height",{get:function(){return 1/this.uniforms.texelSize[1]},set:function(e){this.uniforms.texelSize[1]=1/e},enumerable:!1,configurable:!0}),n}(n.Filter),F=function(e){function n(){return e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    float lum = length(texture2D(uSampler, vTextureCoord.xy).rgb);\n\n    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n\n    if (lum < 1.00)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.75)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.50)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.3)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n}\n")||this}return u(n,e),n}(n.Filter),z=function(e){function n(t){var r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\nuniform vec2 dimensions;\n\nconst float SQRT_2 = 1.414213;\n\nconst float light = 1.0;\n\nuniform float curvature;\nuniform float lineWidth;\nuniform float lineContrast;\nuniform bool verticalLine;\nuniform float noise;\nuniform float noiseSize;\n\nuniform float vignetting;\nuniform float vignettingAlpha;\nuniform float vignettingBlur;\n\nuniform float seed;\nuniform float time;\n\nfloat rand(vec2 co) {\n    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nvoid main(void)\n{\n    vec2 pixelCoord = vTextureCoord.xy * filterArea.xy;\n    vec2 dir = vec2(vTextureCoord.xy * filterArea.xy / dimensions - vec2(0.5, 0.5));\n    \n    gl_FragColor = texture2D(uSampler, vTextureCoord);\n    vec3 rgb = gl_FragColor.rgb;\n\n    if (noise > 0.0 && noiseSize > 0.0)\n    {\n        pixelCoord.x = floor(pixelCoord.x / noiseSize);\n        pixelCoord.y = floor(pixelCoord.y / noiseSize);\n        float _noise = rand(pixelCoord * noiseSize * seed) - 0.5;\n        rgb += _noise * noise;\n    }\n\n    if (lineWidth > 0.0)\n    {\n        float _c = curvature > 0. ? curvature : 1.;\n        float k = curvature > 0. ?(length(dir * dir) * 0.25 * _c * _c + 0.935 * _c) : 1.;\n        vec2 uv = dir * k;\n\n        float v = (verticalLine ? uv.x * dimensions.x : uv.y * dimensions.y) * min(1.0, 2.0 / lineWidth ) / _c;\n        float j = 1. + cos(v * 1.2 - time) * 0.5 * lineContrast;\n        rgb *= j;\n        float segment = verticalLine ? mod((dir.x + .5) * dimensions.x, 4.) : mod((dir.y + .5) * dimensions.y, 4.);\n        rgb *= 0.99 + ceil(segment) * 0.015;\n    }\n\n    if (vignetting > 0.0)\n    {\n        float outter = SQRT_2 - vignetting * SQRT_2;\n        float darker = clamp((outter - length(dir) * SQRT_2) / ( 0.00001 + vignettingBlur * SQRT_2), 0.0, 1.0);\n        rgb *= darker + (1.0 - darker) * (1.0 - vignettingAlpha);\n    }\n\n    gl_FragColor.rgb = rgb;\n}\n")||this;return r.time=0,r.seed=0,r.uniforms.dimensions=new Float32Array(2),Object.assign(r,n.defaults,t),r}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,this.uniforms.seed=this.seed,this.uniforms.time=this.time,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"curvature",{get:function(){return this.uniforms.curvature},set:function(e){this.uniforms.curvature=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lineWidth",{get:function(){return this.uniforms.lineWidth},set:function(e){this.uniforms.lineWidth=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lineContrast",{get:function(){return this.uniforms.lineContrast},set:function(e){this.uniforms.lineContrast=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"verticalLine",{get:function(){return this.uniforms.verticalLine},set:function(e){this.uniforms.verticalLine=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noise",{get:function(){return this.uniforms.noise},set:function(e){this.uniforms.noise=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noiseSize",{get:function(){return this.uniforms.noiseSize},set:function(e){this.uniforms.noiseSize=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignetting",{get:function(){return this.uniforms.vignetting},set:function(e){this.uniforms.vignetting=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingAlpha",{get:function(){return this.uniforms.vignettingAlpha},set:function(e){this.uniforms.vignettingAlpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingBlur",{get:function(){return this.uniforms.vignettingBlur},set:function(e){this.uniforms.vignettingBlur=e},enumerable:!1,configurable:!0}),n.defaults={curvature:1,lineWidth:1,lineContrast:.25,verticalLine:!1,noise:0,noiseSize:1,seed:0,vignetting:.3,vignettingAlpha:1,vignettingBlur:.3,time:0},n}(n.Filter),O=function(e){function n(n,t){void 0===n&&(n=1),void 0===t&&(t=5);var r=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform vec4 filterArea;\nuniform sampler2D uSampler;\n\nuniform float angle;\nuniform float scale;\n\nfloat pattern()\n{\n   float s = sin(angle), c = cos(angle);\n   vec2 tex = vTextureCoord * filterArea.xy;\n   vec2 point = vec2(\n       c * tex.x - s * tex.y,\n       s * tex.x + c * tex.y\n   ) * scale;\n   return (sin(point.x) * sin(point.y)) * 4.0;\n}\n\nvoid main()\n{\n   vec4 color = texture2D(uSampler, vTextureCoord);\n   float average = (color.r + color.g + color.b) / 3.0;\n   gl_FragColor = vec4(vec3(average * 10.0 - 5.0 + pattern()), color.a);\n}\n")||this;return r.scale=n,r.angle=t,r}return u(n,e),Object.defineProperty(n.prototype,"scale",{get:function(){return this.uniforms.scale},set:function(e){this.uniforms.scale=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"angle",{get:function(){return this.uniforms.angle},set:function(e){this.uniforms.angle=e},enumerable:!1,configurable:!0}),n}(n.Filter),P=function(e){function i(o){var l=e.call(this)||this;l.angle=45,l._distance=5,l._resolution=r.settings.FILTER_RESOLUTION;var a=o?f(f({},i.defaults),o):i.defaults,s=a.kernels,u=a.blur,m=a.quality,p=a.pixelSize,h=a.resolution;l._tintFilter=new n.Filter(c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform float alpha;\nuniform vec3 color;\n\nuniform vec2 shift;\nuniform vec4 inputSize;\n\nvoid main(void){\n    vec4 sample = texture2D(uSampler, vTextureCoord - shift * inputSize.zw);\n\n    // Premultiply alpha\n    sample.rgb = color.rgb * sample.a;\n\n    // alpha user alpha\n    sample *= alpha;\n\n    gl_FragColor = sample;\n}"),l._tintFilter.uniforms.color=new Float32Array(4),l._tintFilter.uniforms.shift=new t.Point,l._tintFilter.resolution=h,l._blurFilter=s?new d(s):new d(u,m),l.pixelSize=p,l.resolution=h;var g=a.shadowOnly,v=a.rotation,y=a.distance,b=a.alpha,x=a.color;return l.shadowOnly=g,l.rotation=v,l.distance=y,l.alpha=b,l.color=x,l._updatePadding(),l}return u(i,e),i.prototype.apply=function(e,n,t,r){var o=e.getFilterTexture();this._tintFilter.apply(e,n,o,1),this._blurFilter.apply(e,o,t,r),!0!==this.shadowOnly&&e.applyFilter(this,n,t,0),e.returnFilterTexture(o)},i.prototype._updatePadding=function(){this.padding=this.distance+2*this.blur},i.prototype._updateShift=function(){this._tintFilter.uniforms.shift.set(this.distance*Math.cos(this.angle),this.distance*Math.sin(this.angle))},Object.defineProperty(i.prototype,"resolution",{get:function(){return this._resolution},set:function(e){this._resolution=e,this._tintFilter&&(this._tintFilter.resolution=e),this._blurFilter&&(this._blurFilter.resolution=e)},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"distance",{get:function(){return this._distance},set:function(e){this._distance=e,this._updatePadding(),this._updateShift()},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"rotation",{get:function(){return this.angle/t.DEG_TO_RAD},set:function(e){this.angle=e*t.DEG_TO_RAD,this._updateShift()},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"alpha",{get:function(){return this._tintFilter.uniforms.alpha},set:function(e){this._tintFilter.uniforms.alpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"color",{get:function(){return o.rgb2hex(this._tintFilter.uniforms.color)},set:function(e){o.hex2rgb(e,this._tintFilter.uniforms.color)},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"kernels",{get:function(){return this._blurFilter.kernels},set:function(e){this._blurFilter.kernels=e},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"blur",{get:function(){return this._blurFilter.blur},set:function(e){this._blurFilter.blur=e,this._updatePadding()},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"quality",{get:function(){return this._blurFilter.quality},set:function(e){this._blurFilter.quality=e},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"pixelSize",{get:function(){return this._blurFilter.pixelSize},set:function(e){this._blurFilter.pixelSize=e},enumerable:!1,configurable:!0}),i.defaults={rotation:45,distance:5,color:0,alpha:.5,shadowOnly:!1,kernels:null,blur:2,quality:3,pixelSize:1,resolution:r.settings.FILTER_RESOLUTION},i}(n.Filter),A=function(e){function n(n){void 0===n&&(n=5);var t=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float strength;\nuniform vec4 filterArea;\n\n\nvoid main(void)\n{\n\tvec2 onePixel = vec2(1.0 / filterArea);\n\n\tvec4 color;\n\n\tcolor.rgb = vec3(0.5);\n\n\tcolor -= texture2D(uSampler, vTextureCoord - onePixel) * strength;\n\tcolor += texture2D(uSampler, vTextureCoord + onePixel) * strength;\n\n\tcolor.rgb = vec3((color.r + color.g + color.b) / 3.0);\n\n\tfloat alpha = texture2D(uSampler, vTextureCoord).a;\n\n\tgl_FragColor = vec4(color.rgb * alpha, alpha);\n}\n")||this;return t.strength=n,t}return u(n,e),Object.defineProperty(n.prototype,"strength",{get:function(){return this.uniforms.strength},set:function(e){this.uniforms.strength=e},enumerable:!1,configurable:!0}),n}(n.Filter),T=function(e){function r(t){var o=e.call(this,c,"// precision highp float;\n\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform vec2 dimensions;\nuniform float aspect;\n\nuniform sampler2D displacementMap;\nuniform float offset;\nuniform float sinDir;\nuniform float cosDir;\nuniform int fillMode;\n\nuniform float seed;\nuniform vec2 red;\nuniform vec2 green;\nuniform vec2 blue;\n\nconst int TRANSPARENT = 0;\nconst int ORIGINAL = 1;\nconst int LOOP = 2;\nconst int CLAMP = 3;\nconst int MIRROR = 4;\n\nvoid main(void)\n{\n    vec2 coord = (vTextureCoord * filterArea.xy) / dimensions;\n\n    if (coord.x > 1.0 || coord.y > 1.0) {\n        return;\n    }\n\n    float cx = coord.x - 0.5;\n    float cy = (coord.y - 0.5) * aspect;\n    float ny = (-sinDir * cx + cosDir * cy) / aspect + 0.5;\n\n    // displacementMap: repeat\n    // ny = ny > 1.0 ? ny - 1.0 : (ny < 0.0 ? 1.0 + ny : ny);\n\n    // displacementMap: mirror\n    ny = ny > 1.0 ? 2.0 - ny : (ny < 0.0 ? -ny : ny);\n\n    vec4 dc = texture2D(displacementMap, vec2(0.5, ny));\n\n    float displacement = (dc.r - dc.g) * (offset / filterArea.x);\n\n    coord = vTextureCoord + vec2(cosDir * displacement, sinDir * displacement * aspect);\n\n    if (fillMode == CLAMP) {\n        coord = clamp(coord, filterClamp.xy, filterClamp.zw);\n    } else {\n        if( coord.x > filterClamp.z ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.x -= filterClamp.z;\n            } else if (fillMode == MIRROR) {\n                coord.x = filterClamp.z * 2.0 - coord.x;\n            }\n        } else if( coord.x < filterClamp.x ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.x += filterClamp.z;\n            } else if (fillMode == MIRROR) {\n                coord.x *= -filterClamp.z;\n            }\n        }\n\n        if( coord.y > filterClamp.w ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.y -= filterClamp.w;\n            } else if (fillMode == MIRROR) {\n                coord.y = filterClamp.w * 2.0 - coord.y;\n            }\n        } else if( coord.y < filterClamp.y ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.y += filterClamp.w;\n            } else if (fillMode == MIRROR) {\n                coord.y *= -filterClamp.w;\n            }\n        }\n    }\n\n    gl_FragColor.r = texture2D(uSampler, coord + red * (1.0 - seed * 0.4) / filterArea.xy).r;\n    gl_FragColor.g = texture2D(uSampler, coord + green * (1.0 - seed * 0.3) / filterArea.xy).g;\n    gl_FragColor.b = texture2D(uSampler, coord + blue * (1.0 - seed * 0.2) / filterArea.xy).b;\n    gl_FragColor.a = texture2D(uSampler, coord).a;\n}\n")||this;return o.offset=100,o.fillMode=r.TRANSPARENT,o.average=!1,o.seed=0,o.minSize=8,o.sampleSize=512,o._slices=0,o._offsets=new Float32Array(1),o._sizes=new Float32Array(1),o._direction=-1,o.uniforms.dimensions=new Float32Array(2),o._canvas=document.createElement("canvas"),o._canvas.width=4,o._canvas.height=o.sampleSize,o.texture=n.Texture.from(o._canvas,{scaleMode:i.SCALE_MODES.NEAREST}),Object.assign(o,r.defaults,t),o}return u(r,e),r.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,this.uniforms.aspect=l/i,this.uniforms.seed=this.seed,this.uniforms.offset=this.offset,this.uniforms.fillMode=this.fillMode,e.applyFilter(this,n,t,r)},r.prototype._randomizeSizes=function(){var e=this._sizes,n=this._slices-1,t=this.sampleSize,r=Math.min(this.minSize/t,.9/this._slices);if(this.average){for(var o=this._slices,i=1,l=0;l<n;l++){var a=i/(o-l),s=Math.max(a*(1-.6*Math.random()),r);e[l]=s,i-=s}e[n]=i}else{i=1;var u=Math.sqrt(1/this._slices);for(l=0;l<n;l++){s=Math.max(u*i*Math.random(),r);e[l]=s,i-=s}e[n]=i}this.shuffle()},r.prototype.shuffle=function(){for(var e=this._sizes,n=this._slices-1;n>0;n--){var t=Math.random()*n>>0,r=e[n];e[n]=e[t],e[t]=r}},r.prototype._randomizeOffsets=function(){for(var e=0;e<this._slices;e++)this._offsets[e]=Math.random()*(Math.random()<.5?-1:1)},r.prototype.refresh=function(){this._randomizeSizes(),this._randomizeOffsets(),this.redraw()},r.prototype.redraw=function(){var e,n=this.sampleSize,t=this.texture,r=this._canvas.getContext("2d");r.clearRect(0,0,8,n);for(var o=0,i=0;i<this._slices;i++){e=Math.floor(256*this._offsets[i]);var l=this._sizes[i]*n,a=e>0?e:0,s=e<0?-e:0;r.fillStyle="rgba("+a+", "+s+", 0, 1)",r.fillRect(0,o>>0,n,l+1>>0),o+=l}t.baseTexture.update(),this.uniforms.displacementMap=t},Object.defineProperty(r.prototype,"sizes",{get:function(){return this._sizes},set:function(e){for(var n=Math.min(this._slices,e.length),t=0;t<n;t++)this._sizes[t]=e[t]},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"offsets",{get:function(){return this._offsets},set:function(e){for(var n=Math.min(this._slices,e.length),t=0;t<n;t++)this._offsets[t]=e[t]},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"slices",{get:function(){return this._slices},set:function(e){this._slices!==e&&(this._slices=e,this.uniforms.slices=e,this._sizes=this.uniforms.slicesWidth=new Float32Array(e),this._offsets=this.uniforms.slicesOffset=new Float32Array(e),this.refresh())},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"direction",{get:function(){return this._direction},set:function(e){if(this._direction!==e){this._direction=e;var n=e*t.DEG_TO_RAD;this.uniforms.sinDir=Math.sin(n),this.uniforms.cosDir=Math.cos(n)}},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"red",{get:function(){return this.uniforms.red},set:function(e){this.uniforms.red=e},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"green",{get:function(){return this.uniforms.green},set:function(e){this.uniforms.green=e},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"blue",{get:function(){return this.uniforms.blue},set:function(e){this.uniforms.blue=e},enumerable:!1,configurable:!0}),r.prototype.destroy=function(){var e;null===(e=this.texture)||void 0===e||e.destroy(!0),this.texture=this._canvas=this.red=this.green=this.blue=this._sizes=this._offsets=null},r.defaults={slices:5,offset:100,direction:0,fillMode:0,average:!1,seed:0,red:[0,0],green:[0,0],blue:[0,0],minSize:8,sampleSize:512},r.TRANSPARENT=0,r.ORIGINAL=1,r.LOOP=2,r.CLAMP=3,r.MIRROR=4,r}(n.Filter),w=function(e){function n(t){var r=this,o=Object.assign({},n.defaults,t),i=o.outerStrength,l=o.innerStrength,a=o.color,s=o.knockout,u=o.quality,f=Math.round(o.distance);return(r=e.call(this,c,"varying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\n\nuniform float outerStrength;\nuniform float innerStrength;\n\nuniform vec4 glowColor;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform bool knockout;\n\nconst float PI = 3.14159265358979323846264;\n\nconst float DIST = __DIST__;\nconst float ANGLE_STEP_SIZE = min(__ANGLE_STEP_SIZE__, PI * 2.0);\nconst float ANGLE_STEP_NUM = ceil(PI * 2.0 / ANGLE_STEP_SIZE);\n\nconst float MAX_TOTAL_ALPHA = ANGLE_STEP_NUM * DIST * (DIST + 1.0) / 2.0;\n\nvoid main(void) {\n    vec2 px = vec2(1.0 / filterArea.x, 1.0 / filterArea.y);\n\n    float totalAlpha = 0.0;\n\n    vec2 direction;\n    vec2 displaced;\n    vec4 curColor;\n\n    for (float angle = 0.0; angle < PI * 2.0; angle += ANGLE_STEP_SIZE) {\n       direction = vec2(cos(angle), sin(angle)) * px;\n\n       for (float curDistance = 0.0; curDistance < DIST; curDistance++) {\n           displaced = clamp(vTextureCoord + direction * \n                   (curDistance + 1.0), filterClamp.xy, filterClamp.zw);\n\n           curColor = texture2D(uSampler, displaced);\n\n           totalAlpha += (DIST - curDistance) * curColor.a;\n       }\n    }\n    \n    curColor = texture2D(uSampler, vTextureCoord);\n\n    float alphaRatio = (totalAlpha / MAX_TOTAL_ALPHA);\n\n    float innerGlowAlpha = (1.0 - alphaRatio) * innerStrength * curColor.a;\n    float innerGlowStrength = min(1.0, innerGlowAlpha);\n    \n    vec4 innerColor = mix(curColor, glowColor, innerGlowStrength);\n\n    float outerGlowAlpha = alphaRatio * outerStrength * (1. - curColor.a);\n    float outerGlowStrength = min(1.0 - innerColor.a, outerGlowAlpha);\n\n    vec4 outerGlowColor = outerGlowStrength * glowColor.rgba;\n    \n    if (knockout) {\n      float resultAlpha = outerGlowAlpha + innerGlowAlpha;\n      gl_FragColor = vec4(glowColor.rgb * resultAlpha, resultAlpha);\n    }\n    else {\n      gl_FragColor = innerColor + outerGlowColor;\n    }\n}\n".replace(/__ANGLE_STEP_SIZE__/gi,""+(1/u/f).toFixed(7)).replace(/__DIST__/gi,f.toFixed(0)+".0"))||this).uniforms.glowColor=new Float32Array([0,0,0,1]),Object.assign(r,{color:a,outerStrength:i,innerStrength:l,padding:f,knockout:s}),r}return u(n,e),Object.defineProperty(n.prototype,"color",{get:function(){return o.rgb2hex(this.uniforms.glowColor)},set:function(e){o.hex2rgb(e,this.uniforms.glowColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"outerStrength",{get:function(){return this.uniforms.outerStrength},set:function(e){this.uniforms.outerStrength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"innerStrength",{get:function(){return this.uniforms.innerStrength},set:function(e){this.uniforms.innerStrength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"knockout",{get:function(){return this.uniforms.knockout},set:function(e){this.uniforms.knockout=e},enumerable:!1,configurable:!0}),n.defaults={distance:10,outerStrength:4,innerStrength:0,color:16777215,quality:.1,knockout:!1},n}(n.Filter),D=function(e){function n(r){var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec2 dimensions;\n\nuniform vec2 light;\nuniform bool parallel;\nuniform float aspect;\n\nuniform float gain;\nuniform float lacunarity;\nuniform float time;\nuniform float alpha;\n\n${perlin}\n\nvoid main(void) {\n    vec2 coord = vTextureCoord * filterArea.xy / dimensions.xy;\n\n    float d;\n\n    if (parallel) {\n        float _cos = light.x;\n        float _sin = light.y;\n        d = (_cos * coord.x) + (_sin * coord.y * aspect);\n    } else {\n        float dx = coord.x - light.x / dimensions.x;\n        float dy = (coord.y - light.y / dimensions.y) * aspect;\n        float dis = sqrt(dx * dx + dy * dy) + 0.00001;\n        d = dy / dis;\n    }\n\n    vec3 dir = vec3(d, d, 0.0);\n\n    float noise = turb(dir + vec3(time, 0.0, 62.1 + time) * 0.05, vec3(480.0, 320.0, 480.0), lacunarity, gain);\n    noise = mix(noise, 0.0, 0.3);\n    //fade vertically.\n    vec4 mist = vec4(noise, noise, noise, 1.0) * (1.0 - coord.y);\n    mist.a = 1.0;\n    // apply user alpha\n    mist *= alpha;\n\n    gl_FragColor = texture2D(uSampler, vTextureCoord) + mist;\n\n}\n".replace("${perlin}","vec3 mod289(vec3 x)\n{\n    return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\nvec4 mod289(vec4 x)\n{\n    return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\nvec4 permute(vec4 x)\n{\n    return mod289(((x * 34.0) + 1.0) * x);\n}\nvec4 taylorInvSqrt(vec4 r)\n{\n    return 1.79284291400159 - 0.85373472095314 * r;\n}\nvec3 fade(vec3 t)\n{\n    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);\n}\n// Classic Perlin noise, periodic variant\nfloat pnoise(vec3 P, vec3 rep)\n{\n    vec3 Pi0 = mod(floor(P), rep); // Integer part, modulo period\n    vec3 Pi1 = mod(Pi0 + vec3(1.0), rep); // Integer part + 1, mod period\n    Pi0 = mod289(Pi0);\n    Pi1 = mod289(Pi1);\n    vec3 Pf0 = fract(P); // Fractional part for interpolation\n    vec3 Pf1 = Pf0 - vec3(1.0); // Fractional part - 1.0\n    vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);\n    vec4 iy = vec4(Pi0.yy, Pi1.yy);\n    vec4 iz0 = Pi0.zzzz;\n    vec4 iz1 = Pi1.zzzz;\n    vec4 ixy = permute(permute(ix) + iy);\n    vec4 ixy0 = permute(ixy + iz0);\n    vec4 ixy1 = permute(ixy + iz1);\n    vec4 gx0 = ixy0 * (1.0 / 7.0);\n    vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;\n    gx0 = fract(gx0);\n    vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);\n    vec4 sz0 = step(gz0, vec4(0.0));\n    gx0 -= sz0 * (step(0.0, gx0) - 0.5);\n    gy0 -= sz0 * (step(0.0, gy0) - 0.5);\n    vec4 gx1 = ixy1 * (1.0 / 7.0);\n    vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;\n    gx1 = fract(gx1);\n    vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);\n    vec4 sz1 = step(gz1, vec4(0.0));\n    gx1 -= sz1 * (step(0.0, gx1) - 0.5);\n    gy1 -= sz1 * (step(0.0, gy1) - 0.5);\n    vec3 g000 = vec3(gx0.x, gy0.x, gz0.x);\n    vec3 g100 = vec3(gx0.y, gy0.y, gz0.y);\n    vec3 g010 = vec3(gx0.z, gy0.z, gz0.z);\n    vec3 g110 = vec3(gx0.w, gy0.w, gz0.w);\n    vec3 g001 = vec3(gx1.x, gy1.x, gz1.x);\n    vec3 g101 = vec3(gx1.y, gy1.y, gz1.y);\n    vec3 g011 = vec3(gx1.z, gy1.z, gz1.z);\n    vec3 g111 = vec3(gx1.w, gy1.w, gz1.w);\n    vec4 norm0 = taylorInvSqrt(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));\n    g000 *= norm0.x;\n    g010 *= norm0.y;\n    g100 *= norm0.z;\n    g110 *= norm0.w;\n    vec4 norm1 = taylorInvSqrt(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));\n    g001 *= norm1.x;\n    g011 *= norm1.y;\n    g101 *= norm1.z;\n    g111 *= norm1.w;\n    float n000 = dot(g000, Pf0);\n    float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));\n    float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));\n    float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));\n    float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));\n    float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));\n    float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));\n    float n111 = dot(g111, Pf1);\n    vec3 fade_xyz = fade(Pf0);\n    vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);\n    vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);\n    float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);\n    return 2.2 * n_xyz;\n}\nfloat turb(vec3 P, vec3 rep, float lacunarity, float gain)\n{\n    float sum = 0.0;\n    float sc = 1.0;\n    float totalgain = 1.0;\n    for (float i = 0.0; i < 6.0; i++)\n    {\n        sum += totalgain * pnoise(P * sc, rep);\n        sc *= lacunarity;\n        totalgain *= gain;\n    }\n    return abs(sum);\n}\n"))||this;o.parallel=!0,o.time=0,o._angle=0,o.uniforms.dimensions=new Float32Array(2);var i=Object.assign(n.defaults,r);return o._angleLight=new t.Point,o.angle=i.angle,o.gain=i.gain,o.lacunarity=i.lacunarity,o.alpha=i.alpha,o.parallel=i.parallel,o.center=i.center,o.time=i.time,o}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.light=this.parallel?this._angleLight:this.center,this.uniforms.parallel=this.parallel,this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,this.uniforms.aspect=l/i,this.uniforms.time=this.time,this.uniforms.alpha=this.alpha,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"angle",{get:function(){return this._angle},set:function(e){this._angle=e;var n=e*t.DEG_TO_RAD;this._angleLight.x=Math.cos(n),this._angleLight.y=Math.sin(n)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"gain",{get:function(){return this.uniforms.gain},set:function(e){this.uniforms.gain=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lacunarity",{get:function(){return this.uniforms.lacunarity},set:function(e){this.uniforms.lacunarity=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this.uniforms.alpha},set:function(e){this.uniforms.alpha=e},enumerable:!1,configurable:!0}),n.defaults={angle:30,gain:.5,lacunarity:2.5,time:0,parallel:!0,center:[0,0],alpha:1},n}(n.Filter),j=function(e){function n(n,r,o){void 0===n&&(n=[0,0]),void 0===r&&(r=5),void 0===o&&(o=0);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform vec2 uVelocity;\nuniform int uKernelSize;\nuniform float uOffset;\n\nconst int MAX_KERNEL_SIZE = 2048;\n\n// Notice:\n// the perfect way:\n//    int kernelSize = min(uKernelSize, MAX_KERNELSIZE);\n// BUT in real use-case , uKernelSize < MAX_KERNELSIZE almost always.\n// So use uKernelSize directly.\n\nvoid main(void)\n{\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    if (uKernelSize == 0)\n    {\n        gl_FragColor = color;\n        return;\n    }\n\n    vec2 velocity = uVelocity / filterArea.xy;\n    float offset = -uOffset / length(uVelocity) - 0.5;\n    int k = uKernelSize - 1;\n\n    for(int i = 0; i < MAX_KERNEL_SIZE - 1; i++) {\n        if (i == k) {\n            break;\n        }\n        vec2 bias = velocity * (float(i) / float(k) + offset);\n        color += texture2D(uSampler, vTextureCoord + bias);\n    }\n    gl_FragColor = color / float(uKernelSize);\n}\n")||this;return i.kernelSize=5,i.uniforms.uVelocity=new Float32Array(2),i._velocity=new t.ObservablePoint(i.velocityChanged,i),i.setVelocity(n),i.kernelSize=r,i.offset=o,i}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=this.velocity,i=o.x,l=o.y;this.uniforms.uKernelSize=0!==i||0!==l?this.kernelSize:0,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"velocity",{get:function(){return this._velocity},set:function(e){this.setVelocity(e)},enumerable:!1,configurable:!0}),n.prototype.setVelocity=function(e){if(Array.isArray(e)){var n=e[0],t=e[1];this._velocity.set(n,t)}else this._velocity.copyFrom(e)},n.prototype.velocityChanged=function(){this.uniforms.uVelocity[0]=this._velocity.x,this.uniforms.uVelocity[1]=this._velocity.y,this.padding=1+(Math.max(Math.abs(this._velocity.x),Math.abs(this._velocity.y))>>0)},Object.defineProperty(n.prototype,"offset",{get:function(){return this.uniforms.uOffset},set:function(e){this.uniforms.uOffset=e},enumerable:!1,configurable:!0}),n}(n.Filter),M=function(e){function n(n,t,r){void 0===t&&(t=.05),void 0===r&&(r=n.length);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform float epsilon;\n\nconst int MAX_COLORS = %maxColors%;\n\nuniform vec3 originalColors[MAX_COLORS];\nuniform vec3 targetColors[MAX_COLORS];\n\nvoid main(void)\n{\n    gl_FragColor = texture2D(uSampler, vTextureCoord);\n\n    float alpha = gl_FragColor.a;\n    if (alpha < 0.0001)\n    {\n      return;\n    }\n\n    vec3 color = gl_FragColor.rgb / alpha;\n\n    for(int i = 0; i < MAX_COLORS; i++)\n    {\n      vec3 origColor = originalColors[i];\n      if (origColor.r < 0.0)\n      {\n        break;\n      }\n      vec3 colorDiff = origColor - color;\n      if (length(colorDiff) < epsilon)\n      {\n        vec3 targetColor = targetColors[i];\n        gl_FragColor = vec4((targetColor + colorDiff) * alpha, alpha);\n        return;\n      }\n    }\n}\n".replace(/%maxColors%/g,r.toFixed(0)))||this;return o._replacements=[],o._maxColors=0,o.epsilon=t,o._maxColors=r,o.uniforms.originalColors=new Float32Array(3*r),o.uniforms.targetColors=new Float32Array(3*r),o.replacements=n,o}return u(n,e),Object.defineProperty(n.prototype,"replacements",{get:function(){return this._replacements},set:function(e){var n=this.uniforms.originalColors,t=this.uniforms.targetColors,r=e.length;if(r>this._maxColors)throw new Error("Length of replacements ("+r+") exceeds the maximum colors length ("+this._maxColors+")");n[3*r]=-1;for(var i=0;i<r;i++){var l=e[i],a=l[0];"number"==typeof a?a=o.hex2rgb(a):l[0]=o.rgb2hex(a),n[3*i]=a[0],n[3*i+1]=a[1],n[3*i+2]=a[2];var s=l[1];"number"==typeof s?s=o.hex2rgb(s):l[1]=o.rgb2hex(s),t[3*i]=s[0],t[3*i+1]=s[1],t[3*i+2]=s[2]}this._replacements=e},enumerable:!1,configurable:!0}),n.prototype.refresh=function(){this.replacements=this._replacements},Object.defineProperty(n.prototype,"maxColors",{get:function(){return this._maxColors},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"epsilon",{get:function(){return this.uniforms.epsilon},set:function(e){this.uniforms.epsilon=e},enumerable:!1,configurable:!0}),n}(n.Filter),R=function(e){function n(t,r){void 0===r&&(r=0);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec2 dimensions;\n\nuniform float sepia;\nuniform float noise;\nuniform float noiseSize;\nuniform float scratch;\nuniform float scratchDensity;\nuniform float scratchWidth;\nuniform float vignetting;\nuniform float vignettingAlpha;\nuniform float vignettingBlur;\nuniform float seed;\n\nconst float SQRT_2 = 1.414213;\nconst vec3 SEPIA_RGB = vec3(112.0 / 255.0, 66.0 / 255.0, 20.0 / 255.0);\n\nfloat rand(vec2 co) {\n    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nvec3 Overlay(vec3 src, vec3 dst)\n{\n    // if (dst <= 0.5) then: 2 * src * dst\n    // if (dst > 0.5) then: 1 - 2 * (1 - dst) * (1 - src)\n    return vec3((dst.x <= 0.5) ? (2.0 * src.x * dst.x) : (1.0 - 2.0 * (1.0 - dst.x) * (1.0 - src.x)),\n                (dst.y <= 0.5) ? (2.0 * src.y * dst.y) : (1.0 - 2.0 * (1.0 - dst.y) * (1.0 - src.y)),\n                (dst.z <= 0.5) ? (2.0 * src.z * dst.z) : (1.0 - 2.0 * (1.0 - dst.z) * (1.0 - src.z)));\n}\n\n\nvoid main()\n{\n    gl_FragColor = texture2D(uSampler, vTextureCoord);\n    vec3 color = gl_FragColor.rgb;\n\n    if (sepia > 0.0)\n    {\n        float gray = (color.x + color.y + color.z) / 3.0;\n        vec3 grayscale = vec3(gray);\n\n        color = Overlay(SEPIA_RGB, grayscale);\n\n        color = grayscale + sepia * (color - grayscale);\n    }\n\n    vec2 coord = vTextureCoord * filterArea.xy / dimensions.xy;\n\n    if (vignetting > 0.0)\n    {\n        float outter = SQRT_2 - vignetting * SQRT_2;\n        vec2 dir = vec2(vec2(0.5, 0.5) - coord);\n        dir.y *= dimensions.y / dimensions.x;\n        float darker = clamp((outter - length(dir) * SQRT_2) / ( 0.00001 + vignettingBlur * SQRT_2), 0.0, 1.0);\n        color.rgb *= darker + (1.0 - darker) * (1.0 - vignettingAlpha);\n    }\n\n    if (scratchDensity > seed && scratch != 0.0)\n    {\n        float phase = seed * 256.0;\n        float s = mod(floor(phase), 2.0);\n        float dist = 1.0 / scratchDensity;\n        float d = distance(coord, vec2(seed * dist, abs(s - seed * dist)));\n        if (d < seed * 0.6 + 0.4)\n        {\n            highp float period = scratchDensity * 10.0;\n\n            float xx = coord.x * period + phase;\n            float aa = abs(mod(xx, 0.5) * 4.0);\n            float bb = mod(floor(xx / 0.5), 2.0);\n            float yy = (1.0 - bb) * aa + bb * (2.0 - aa);\n\n            float kk = 2.0 * period;\n            float dw = scratchWidth / dimensions.x * (0.75 + seed);\n            float dh = dw * kk;\n\n            float tine = (yy - (2.0 - dh));\n\n            if (tine > 0.0) {\n                float _sign = sign(scratch);\n\n                tine = s * tine / period + scratch + 0.1;\n                tine = clamp(tine + 1.0, 0.5 + _sign * 0.5, 1.5 + _sign * 0.5);\n\n                color.rgb *= tine;\n            }\n        }\n    }\n\n    if (noise > 0.0 && noiseSize > 0.0)\n    {\n        vec2 pixelCoord = vTextureCoord.xy * filterArea.xy;\n        pixelCoord.x = floor(pixelCoord.x / noiseSize);\n        pixelCoord.y = floor(pixelCoord.y / noiseSize);\n        // vec2 d = pixelCoord * noiseSize * vec2(1024.0 + seed * 512.0, 1024.0 - seed * 512.0);\n        // float _noise = snoise(d) * 0.5;\n        float _noise = rand(pixelCoord * noiseSize * seed) - 0.5;\n        color += _noise * noise;\n    }\n\n    gl_FragColor.rgb = color;\n}\n")||this;return o.seed=0,o.uniforms.dimensions=new Float32Array(2),"number"==typeof t?(o.seed=t,t=void 0):o.seed=r,Object.assign(o,n.defaults,t),o}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i;this.uniforms.dimensions[0]=null===(o=n.filterFrame)||void 0===o?void 0:o.width,this.uniforms.dimensions[1]=null===(i=n.filterFrame)||void 0===i?void 0:i.height,this.uniforms.seed=this.seed,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"sepia",{get:function(){return this.uniforms.sepia},set:function(e){this.uniforms.sepia=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noise",{get:function(){return this.uniforms.noise},set:function(e){this.uniforms.noise=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noiseSize",{get:function(){return this.uniforms.noiseSize},set:function(e){this.uniforms.noiseSize=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"scratch",{get:function(){return this.uniforms.scratch},set:function(e){this.uniforms.scratch=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"scratchDensity",{get:function(){return this.uniforms.scratchDensity},set:function(e){this.uniforms.scratchDensity=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"scratchWidth",{get:function(){return this.uniforms.scratchWidth},set:function(e){this.uniforms.scratchWidth=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignetting",{get:function(){return this.uniforms.vignetting},set:function(e){this.uniforms.vignetting=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingAlpha",{get:function(){return this.uniforms.vignettingAlpha},set:function(e){this.uniforms.vignettingAlpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingBlur",{get:function(){return this.uniforms.vignettingBlur},set:function(e){this.uniforms.vignettingBlur=e},enumerable:!1,configurable:!0}),n.defaults={sepia:.3,noise:.3,noiseSize:1,scratch:.5,scratchDensity:.3,scratchWidth:1,vignetting:.3,vignettingAlpha:1,vignettingBlur:.3},n}(n.Filter),E=function(e){function n(t,r,o){void 0===t&&(t=1),void 0===r&&(r=0),void 0===o&&(o=.1);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec2 thickness;\nuniform vec4 outlineColor;\nuniform vec4 filterClamp;\n\nconst float DOUBLE_PI = 3.14159265358979323846264 * 2.;\n\nvoid main(void) {\n    vec4 ownColor = texture2D(uSampler, vTextureCoord);\n    vec4 curColor;\n    float maxAlpha = 0.;\n    vec2 displaced;\n    for (float angle = 0.; angle <= DOUBLE_PI; angle += ${angleStep}) {\n        displaced.x = vTextureCoord.x + thickness.x * cos(angle);\n        displaced.y = vTextureCoord.y + thickness.y * sin(angle);\n        curColor = texture2D(uSampler, clamp(displaced, filterClamp.xy, filterClamp.zw));\n        maxAlpha = max(maxAlpha, curColor.a);\n    }\n    float resultAlpha = max(maxAlpha, ownColor.a);\n    gl_FragColor = vec4((ownColor.rgb + outlineColor.rgb * (1. - ownColor.a)) * resultAlpha, resultAlpha);\n}\n".replace(/\$\{angleStep\}/,n.getAngleStep(o)))||this;return i._thickness=1,i.uniforms.thickness=new Float32Array([0,0]),i.uniforms.outlineColor=new Float32Array([0,0,0,1]),Object.assign(i,{thickness:t,color:r,quality:o}),i}return u(n,e),n.getAngleStep=function(e){var t=Math.max(e*n.MAX_SAMPLES,n.MIN_SAMPLES);return(2*Math.PI/t).toFixed(7)},n.prototype.apply=function(e,n,t,r){this.uniforms.thickness[0]=this._thickness/n._frame.width,this.uniforms.thickness[1]=this._thickness/n._frame.height,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"color",{get:function(){return o.rgb2hex(this.uniforms.outlineColor)},set:function(e){o.hex2rgb(e,this.uniforms.outlineColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"thickness",{get:function(){return this._thickness},set:function(e){this._thickness=e,this.padding=e},enumerable:!1,configurable:!0}),n.MIN_SAMPLES=1,n.MAX_SAMPLES=100,n}(n.Filter),I=function(e){function n(n){void 0===n&&(n=10);var t=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform vec2 size;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 pixelate(vec2 coord, vec2 size)\n{\n\treturn floor( coord / size ) * size;\n}\n\nvoid main(void)\n{\n    vec2 coord = mapCoord(vTextureCoord);\n\n    coord = pixelate(coord, size);\n\n    coord = unmapCoord(coord);\n\n    gl_FragColor = texture2D(uSampler, coord);\n}\n")||this;return t.size=n,t}return u(n,e),Object.defineProperty(n.prototype,"size",{get:function(){return this.uniforms.size},set:function(e){"number"==typeof e&&(e=[e,e]),this.uniforms.size=e},enumerable:!1,configurable:!0}),n}(n.Filter),k=function(e){function n(n,t,r,o){void 0===n&&(n=0),void 0===t&&(t=[0,0]),void 0===r&&(r=5),void 0===o&&(o=-1);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform float uRadian;\nuniform vec2 uCenter;\nuniform float uRadius;\nuniform int uKernelSize;\n\nconst int MAX_KERNEL_SIZE = 2048;\n\nvoid main(void)\n{\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    if (uKernelSize == 0)\n    {\n        gl_FragColor = color;\n        return;\n    }\n\n    float aspect = filterArea.y / filterArea.x;\n    vec2 center = uCenter.xy / filterArea.xy;\n    float gradient = uRadius / filterArea.x * 0.3;\n    float radius = uRadius / filterArea.x - gradient * 0.5;\n    int k = uKernelSize - 1;\n\n    vec2 coord = vTextureCoord;\n    vec2 dir = vec2(center - coord);\n    float dist = length(vec2(dir.x, dir.y * aspect));\n\n    float radianStep = uRadian;\n    if (radius >= 0.0 && dist > radius) {\n        float delta = dist - radius;\n        float gap = gradient;\n        float scale = 1.0 - abs(delta / gap);\n        if (scale <= 0.0) {\n            gl_FragColor = color;\n            return;\n        }\n        radianStep *= scale;\n    }\n    radianStep /= float(k);\n\n    float s = sin(radianStep);\n    float c = cos(radianStep);\n    mat2 rotationMatrix = mat2(vec2(c, -s), vec2(s, c));\n\n    for(int i = 0; i < MAX_KERNEL_SIZE - 1; i++) {\n        if (i == k) {\n            break;\n        }\n\n        coord -= center;\n        coord.y *= aspect;\n        coord = rotationMatrix * coord;\n        coord.y /= aspect;\n        coord += center;\n\n        vec4 sample = texture2D(uSampler, coord);\n\n        // switch to pre-multiplied alpha to correctly blur transparent images\n        // sample.rgb *= sample.a;\n\n        color += sample;\n    }\n\n    gl_FragColor = color / float(uKernelSize);\n}\n")||this;return i._angle=0,i.angle=n,i.center=t,i.kernelSize=r,i.radius=o,i}return u(n,e),n.prototype.apply=function(e,n,t,r){this.uniforms.uKernelSize=0!==this._angle?this.kernelSize:0,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"angle",{get:function(){return this._angle},set:function(e){this._angle=e,this.uniforms.uRadian=e*Math.PI/180},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.uCenter},set:function(e){this.uniforms.uCenter=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.uRadius},set:function(e){(e<0||e===1/0)&&(e=-1),this.uniforms.uRadius=e},enumerable:!1,configurable:!0}),n}(n.Filter),L=function(e){function n(t){var r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform vec2 dimensions;\n\nuniform bool mirror;\nuniform float boundary;\nuniform vec2 amplitude;\nuniform vec2 waveLength;\nuniform vec2 alpha;\nuniform float time;\n\nfloat rand(vec2 co) {\n    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nvoid main(void)\n{\n    vec2 pixelCoord = vTextureCoord.xy * filterArea.xy;\n    vec2 coord = pixelCoord / dimensions;\n\n    if (coord.y < boundary) {\n        gl_FragColor = texture2D(uSampler, vTextureCoord);\n        return;\n    }\n\n    float k = (coord.y - boundary) / (1. - boundary + 0.0001);\n    float areaY = boundary * dimensions.y / filterArea.y;\n    float v = areaY + areaY - vTextureCoord.y;\n    float y = mirror ? v : vTextureCoord.y;\n\n    float _amplitude = ((amplitude.y - amplitude.x) * k + amplitude.x ) / filterArea.x;\n    float _waveLength = ((waveLength.y - waveLength.x) * k + waveLength.x) / filterArea.y;\n    float _alpha = (alpha.y - alpha.x) * k + alpha.x;\n\n    float x = vTextureCoord.x + cos(v * 6.28 / _waveLength - time) * _amplitude;\n    x = clamp(x, filterClamp.x, filterClamp.z);\n\n    vec4 color = texture2D(uSampler, vec2(x, y));\n\n    gl_FragColor = color * _alpha;\n}\n")||this;return r.time=0,r.uniforms.amplitude=new Float32Array(2),r.uniforms.waveLength=new Float32Array(2),r.uniforms.alpha=new Float32Array(2),r.uniforms.dimensions=new Float32Array(2),Object.assign(r,n.defaults,t),r}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i;this.uniforms.dimensions[0]=null===(o=n.filterFrame)||void 0===o?void 0:o.width,this.uniforms.dimensions[1]=null===(i=n.filterFrame)||void 0===i?void 0:i.height,this.uniforms.time=this.time,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"mirror",{get:function(){return this.uniforms.mirror},set:function(e){this.uniforms.mirror=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"boundary",{get:function(){return this.uniforms.boundary},set:function(e){this.uniforms.boundary=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"amplitude",{get:function(){return this.uniforms.amplitude},set:function(e){this.uniforms.amplitude[0]=e[0],this.uniforms.amplitude[1]=e[1]},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"waveLength",{get:function(){return this.uniforms.waveLength},set:function(e){this.uniforms.waveLength[0]=e[0],this.uniforms.waveLength[1]=e[1]},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this.uniforms.alpha},set:function(e){this.uniforms.alpha[0]=e[0],this.uniforms.alpha[1]=e[1]},enumerable:!1,configurable:!0}),n.defaults={mirror:!0,boundary:.5,amplitude:[0,20],waveLength:[30,100],alpha:[1,1],time:0},n}(n.Filter),N=function(e){function n(n,t,r){void 0===n&&(n=[-10,0]),void 0===t&&(t=[0,10]),void 0===r&&(r=[0,0]);var o=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec2 red;\nuniform vec2 green;\nuniform vec2 blue;\n\nvoid main(void)\n{\n   gl_FragColor.r = texture2D(uSampler, vTextureCoord + red/filterArea.xy).r;\n   gl_FragColor.g = texture2D(uSampler, vTextureCoord + green/filterArea.xy).g;\n   gl_FragColor.b = texture2D(uSampler, vTextureCoord + blue/filterArea.xy).b;\n   gl_FragColor.a = texture2D(uSampler, vTextureCoord).a;\n}\n")||this;return o.red=n,o.green=t,o.blue=r,o}return u(n,e),Object.defineProperty(n.prototype,"red",{get:function(){return this.uniforms.red},set:function(e){this.uniforms.red=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"green",{get:function(){return this.uniforms.green},set:function(e){this.uniforms.green=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blue",{get:function(){return this.uniforms.blue},set:function(e){this.uniforms.blue=e},enumerable:!1,configurable:!0}),n}(n.Filter),X=function(e){function n(t,r,o){void 0===t&&(t=[0,0]),void 0===o&&(o=0);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\n\nuniform vec2 center;\n\nuniform float amplitude;\nuniform float wavelength;\n// uniform float power;\nuniform float brightness;\nuniform float speed;\nuniform float radius;\n\nuniform float time;\n\nconst float PI = 3.14159;\n\nvoid main()\n{\n    float halfWavelength = wavelength * 0.5 / filterArea.x;\n    float maxRadius = radius / filterArea.x;\n    float currentRadius = time * speed / filterArea.x;\n\n    float fade = 1.0;\n\n    if (maxRadius > 0.0) {\n        if (currentRadius > maxRadius) {\n            gl_FragColor = texture2D(uSampler, vTextureCoord);\n            return;\n        }\n        fade = 1.0 - pow(currentRadius / maxRadius, 2.0);\n    }\n\n    vec2 dir = vec2(vTextureCoord - center / filterArea.xy);\n    dir.y *= filterArea.y / filterArea.x;\n    float dist = length(dir);\n\n    if (dist <= 0.0 || dist < currentRadius - halfWavelength || dist > currentRadius + halfWavelength) {\n        gl_FragColor = texture2D(uSampler, vTextureCoord);\n        return;\n    }\n\n    vec2 diffUV = normalize(dir);\n\n    float diff = (dist - currentRadius) / halfWavelength;\n\n    float p = 1.0 - pow(abs(diff), 2.0);\n\n    // float powDiff = diff * pow(p, 2.0) * ( amplitude * fade );\n    float powDiff = 1.25 * sin(diff * PI) * p * ( amplitude * fade );\n\n    vec2 offset = diffUV * powDiff / filterArea.xy;\n\n    // Do clamp :\n    vec2 coord = vTextureCoord + offset;\n    vec2 clampedCoord = clamp(coord, filterClamp.xy, filterClamp.zw);\n    vec4 color = texture2D(uSampler, clampedCoord);\n    if (coord != clampedCoord) {\n        color *= max(0.0, 1.0 - length(coord - clampedCoord));\n    }\n\n    // No clamp :\n    // gl_FragColor = texture2D(uSampler, vTextureCoord + offset);\n\n    color.rgb *= 1.0 + (brightness - 1.0) * p * fade;\n\n    gl_FragColor = color;\n}\n")||this;return i.center=t,Object.assign(i,n.defaults,r),i.time=o,i}return u(n,e),n.prototype.apply=function(e,n,t,r){this.uniforms.time=this.time,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.center},set:function(e){this.uniforms.center=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"amplitude",{get:function(){return this.uniforms.amplitude},set:function(e){this.uniforms.amplitude=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"wavelength",{get:function(){return this.uniforms.wavelength},set:function(e){this.uniforms.wavelength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"brightness",{get:function(){return this.uniforms.brightness},set:function(e){this.uniforms.brightness=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"speed",{get:function(){return this.uniforms.speed},set:function(e){this.uniforms.speed=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.radius},set:function(e){this.uniforms.radius=e},enumerable:!1,configurable:!0}),n.defaults={amplitude:30,wavelength:160,brightness:1,speed:500,radius:-1},n}(n.Filter),B=function(e){function n(n,t,r){void 0===t&&(t=0),void 0===r&&(r=1);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform sampler2D uLightmap;\nuniform vec4 filterArea;\nuniform vec2 dimensions;\nuniform vec4 ambientColor;\nvoid main() {\n    vec4 diffuseColor = texture2D(uSampler, vTextureCoord);\n    vec2 lightCoord = (vTextureCoord * filterArea.xy) / dimensions;\n    vec4 light = texture2D(uLightmap, lightCoord);\n    vec3 ambient = ambientColor.rgb * ambientColor.a;\n    vec3 intensity = ambient + light.rgb;\n    vec3 finalColor = diffuseColor.rgb * intensity;\n    gl_FragColor = vec4(finalColor, diffuseColor.a);\n}\n")||this;return o._color=0,o.uniforms.dimensions=new Float32Array(2),o.uniforms.ambientColor=new Float32Array([0,0,0,r]),o.texture=n,o.color=t,o}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i;this.uniforms.dimensions[0]=null===(o=n.filterFrame)||void 0===o?void 0:o.width,this.uniforms.dimensions[1]=null===(i=n.filterFrame)||void 0===i?void 0:i.height,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"texture",{get:function(){return this.uniforms.uLightmap},set:function(e){this.uniforms.uLightmap=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"color",{get:function(){return this._color},set:function(e){var n=this.uniforms.ambientColor;"number"==typeof e?(o.hex2rgb(e,n),this._color=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],n[3]=e[3],this._color=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this.uniforms.ambientColor[3]},set:function(e){this.uniforms.ambientColor[3]=e},enumerable:!1,configurable:!0}),n}(n.Filter),G=function(e){function n(n,r,o,i){void 0===n&&(n=100),void 0===r&&(r=600);var l=e.call(this,c,"varying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float blur;\nuniform float gradientBlur;\nuniform vec2 start;\nuniform vec2 end;\nuniform vec2 delta;\nuniform vec2 texSize;\n\nfloat random(vec3 scale, float seed)\n{\n    return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);\n}\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n    float total = 0.0;\n\n    float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);\n    vec2 normal = normalize(vec2(start.y - end.y, end.x - start.x));\n    float radius = smoothstep(0.0, 1.0, abs(dot(vTextureCoord * texSize - start, normal)) / gradientBlur) * blur;\n\n    for (float t = -30.0; t <= 30.0; t++)\n    {\n        float percent = (t + offset - 0.5) / 30.0;\n        float weight = 1.0 - abs(percent);\n        vec4 sample = texture2D(uSampler, vTextureCoord + delta / texSize * percent * radius);\n        sample.rgb *= sample.a;\n        color += sample * weight;\n        total += weight;\n    }\n\n    color /= total;\n    color.rgb /= color.a + 0.00001;\n\n    gl_FragColor = color;\n}\n")||this;return l.uniforms.blur=n,l.uniforms.gradientBlur=r,l.uniforms.start=o||new t.Point(0,window.innerHeight/2),l.uniforms.end=i||new t.Point(600,window.innerHeight/2),l.uniforms.delta=new t.Point(30,30),l.uniforms.texSize=new t.Point(window.innerWidth,window.innerHeight),l.updateDelta(),l}return u(n,e),n.prototype.updateDelta=function(){this.uniforms.delta.x=0,this.uniforms.delta.y=0},Object.defineProperty(n.prototype,"blur",{get:function(){return this.uniforms.blur},set:function(e){this.uniforms.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"gradientBlur",{get:function(){return this.uniforms.gradientBlur},set:function(e){this.uniforms.gradientBlur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"start",{get:function(){return this.uniforms.start},set:function(e){this.uniforms.start=e,this.updateDelta()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"end",{get:function(){return this.uniforms.end},set:function(e){this.uniforms.end=e,this.updateDelta()},enumerable:!1,configurable:!0}),n}(n.Filter),K=function(e){function n(){return null!==e&&e.apply(this,arguments)||this}return u(n,e),n.prototype.updateDelta=function(){var e=this.uniforms.end.x-this.uniforms.start.x,n=this.uniforms.end.y-this.uniforms.start.y,t=Math.sqrt(e*e+n*n);this.uniforms.delta.x=e/t,this.uniforms.delta.y=n/t},n}(G),q=function(e){function n(){return null!==e&&e.apply(this,arguments)||this}return u(n,e),n.prototype.updateDelta=function(){var e=this.uniforms.end.x-this.uniforms.start.x,n=this.uniforms.end.y-this.uniforms.start.y,t=Math.sqrt(e*e+n*n);this.uniforms.delta.x=-n/t,this.uniforms.delta.y=e/t},n}(G),W=function(e){function n(n,t,r,o){void 0===n&&(n=100),void 0===t&&(t=600);var i=e.call(this)||this;return i.tiltShiftXFilter=new K(n,t,r,o),i.tiltShiftYFilter=new q(n,t,r,o),i}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=e.getFilterTexture();this.tiltShiftXFilter.apply(e,n,o,1),this.tiltShiftYFilter.apply(e,o,t,r),e.returnFilterTexture(o)},Object.defineProperty(n.prototype,"blur",{get:function(){return this.tiltShiftXFilter.blur},set:function(e){this.tiltShiftXFilter.blur=this.tiltShiftYFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"gradientBlur",{get:function(){return this.tiltShiftXFilter.gradientBlur},set:function(e){this.tiltShiftXFilter.gradientBlur=this.tiltShiftYFilter.gradientBlur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"start",{get:function(){return this.tiltShiftXFilter.start},set:function(e){this.tiltShiftXFilter.start=this.tiltShiftYFilter.start=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"end",{get:function(){return this.tiltShiftXFilter.end},set:function(e){this.tiltShiftXFilter.end=this.tiltShiftYFilter.end=e},enumerable:!1,configurable:!0}),n}(n.Filter),Y=function(e){function n(t){var r=e.call(this,c,"varying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float radius;\nuniform float angle;\nuniform vec2 offset;\nuniform vec4 filterArea;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 twist(vec2 coord)\n{\n    coord -= offset;\n\n    float dist = length(coord);\n\n    if (dist < radius)\n    {\n        float ratioDist = (radius - dist) / radius;\n        float angleMod = ratioDist * ratioDist * angle;\n        float s = sin(angleMod);\n        float c = cos(angleMod);\n        coord = vec2(coord.x * c - coord.y * s, coord.x * s + coord.y * c);\n    }\n\n    coord += offset;\n\n    return coord;\n}\n\nvoid main(void)\n{\n\n    vec2 coord = mapCoord(vTextureCoord);\n\n    coord = twist(coord);\n\n    coord = unmapCoord(coord);\n\n    gl_FragColor = texture2D(uSampler, coord );\n\n}\n")||this;return Object.assign(r,n.defaults,t),r}return u(n,e),Object.defineProperty(n.prototype,"offset",{get:function(){return this.uniforms.offset},set:function(e){this.uniforms.offset=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.radius},set:function(e){this.uniforms.radius=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"angle",{get:function(){return this.uniforms.angle},set:function(e){this.uniforms.angle=e},enumerable:!1,configurable:!0}),n.defaults={radius:200,angle:4,padding:20,offset:new t.Point},n}(n.Filter),Z=function(e){function n(t){var r,o=Object.assign(n.defaults,t),i=o.maxKernelSize,l=function(e,n){var t={};for(var r in e)Object.prototype.hasOwnProperty.call(e,r)&&n.indexOf(r)<0&&(t[r]=e[r]);if(null!=e&&"function"==typeof Object.getOwnPropertySymbols){var o=0;for(r=Object.getOwnPropertySymbols(e);o<r.length;o++)n.indexOf(r[o])<0&&Object.prototype.propertyIsEnumerable.call(e,r[o])&&(t[r[o]]=e[r[o]])}return t}(o,["maxKernelSize"]);return r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform vec2 uCenter;\nuniform float uStrength;\nuniform float uInnerRadius;\nuniform float uRadius;\n\nconst float MAX_KERNEL_SIZE = ${maxKernelSize};\n\n// author: http://byteblacksmith.com/improvements-to-the-canonical-one-liner-glsl-rand-for-opengl-es-2-0/\nhighp float rand(vec2 co, float seed) {\n    const highp float a = 12.9898, b = 78.233, c = 43758.5453;\n    highp float dt = dot(co + seed, vec2(a, b)), sn = mod(dt, 3.14159);\n    return fract(sin(sn) * c + seed);\n}\n\nvoid main() {\n\n    float minGradient = uInnerRadius * 0.3;\n    float innerRadius = (uInnerRadius + minGradient * 0.5) / filterArea.x;\n\n    float gradient = uRadius * 0.3;\n    float radius = (uRadius - gradient * 0.5) / filterArea.x;\n\n    float countLimit = MAX_KERNEL_SIZE;\n\n    vec2 dir = vec2(uCenter.xy / filterArea.xy - vTextureCoord);\n    float dist = length(vec2(dir.x, dir.y * filterArea.y / filterArea.x));\n\n    float strength = uStrength;\n\n    float delta = 0.0;\n    float gap;\n    if (dist < innerRadius) {\n        delta = innerRadius - dist;\n        gap = minGradient;\n    } else if (radius >= 0.0 && dist > radius) { // radius < 0 means it's infinity\n        delta = dist - radius;\n        gap = gradient;\n    }\n\n    if (delta > 0.0) {\n        float normalCount = gap / filterArea.x;\n        delta = (normalCount - delta) / normalCount;\n        countLimit *= delta;\n        strength *= delta;\n        if (countLimit < 1.0)\n        {\n            gl_FragColor = texture2D(uSampler, vTextureCoord);\n            return;\n        }\n    }\n\n    // randomize the lookup values to hide the fixed number of samples\n    float offset = rand(vTextureCoord, 0.0);\n\n    float total = 0.0;\n    vec4 color = vec4(0.0);\n\n    dir *= strength;\n\n    for (float t = 0.0; t < MAX_KERNEL_SIZE; t++) {\n        float percent = (t + offset) / MAX_KERNEL_SIZE;\n        float weight = 4.0 * (percent - percent * percent);\n        vec2 p = vTextureCoord + dir * percent;\n        vec4 sample = texture2D(uSampler, p);\n\n        // switch to pre-multiplied alpha to correctly blur transparent images\n        // sample.rgb *= sample.a;\n\n        color += sample * weight;\n        total += weight;\n\n        if (t > countLimit){\n            break;\n        }\n    }\n\n    color /= total;\n    // switch back from pre-multiplied alpha\n    // color.rgb /= color.a + 0.00001;\n\n    gl_FragColor = color;\n}\n".replace("${maxKernelSize}",i.toFixed(1)))||this,Object.assign(r,l),r}return u(n,e),Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.uCenter},set:function(e){this.uniforms.uCenter=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"strength",{get:function(){return this.uniforms.uStrength},set:function(e){this.uniforms.uStrength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"innerRadius",{get:function(){return this.uniforms.uInnerRadius},set:function(e){this.uniforms.uInnerRadius=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.uRadius},set:function(e){(e<0||e===1/0)&&(e=-1),this.uniforms.uRadius=e},enumerable:!1,configurable:!0}),n.defaults={strength:.1,center:[0,0],innerRadius:0,radius:-1,maxKernelSize:32},n}(n.Filter);return e.AdjustmentFilter=m,e.AdvancedBloomFilter=h,e.AsciiFilter=g,e.BevelFilter=v,e.BloomFilter=y,e.BulgePinchFilter=b,e.CRTFilter=z,e.ColorMapFilter=x,e.ColorOverlayFilter=_,e.ColorReplaceFilter=C,e.ConvolutionFilter=S,e.CrossHatchFilter=F,e.DotFilter=O,e.DropShadowFilter=P,e.EmbossFilter=A,e.GlitchFilter=T,e.GlowFilter=w,e.GodrayFilter=D,e.KawaseBlurFilter=d,e.MotionBlurFilter=j,e.MultiColorReplaceFilter=M,e.OldFilmFilter=R,e.OutlineFilter=E,e.PixelateFilter=I,e.RGBSplitFilter=N,e.RadialBlurFilter=k,e.ReflectionFilter=L,e.ShockwaveFilter=X,e.SimpleLightmapFilter=B,e.TiltShiftAxisFilter=G,e.TiltShiftFilter=W,e.TiltShiftXFilter=K,e.TiltShiftYFilter=q,e.TwistFilter=Y,e.ZoomBlurFilter=Z,Object.defineProperty(e,"__esModule",{value:!0}),e}({},PIXI,PIXI,PIXI,PIXI.utils,PIXI,PIXI.filters,PIXI.filters);Object.assign(PIXI.filters,__filters);
+//# sourceMappingURL=pixi-filters.js.map
+
+
 // Generated by CoffeeScript 2.6.1
 // ==========================================================================
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -1093,7 +1389,7 @@ window.SQOpenOrHideTasksWindow = function() {
 // * LIBRARY WITH MZ AND MZ SUPPORT
 //! {OUTER FILE}
 
-//?rev 08.12.22
+//?rev 23.11.24
 var KDCore;
 
 window.Imported = window.Imported || {};
@@ -1104,7 +1400,9 @@ KDCore = KDCore || {};
 
 // * Двузначные числа нельзя в версии, сравнение идёт по первой цифре поулчается (3.43 - нельзя, можно 3.4.3)
 //%[МЕНЯТЬ ПРИ ИЗМЕНЕНИИ]
-KDCore._fileVersion = '3.2.2';
+KDCore._fileVersion = '3.6.2';
+
+KDCore.nuiVersion = '1.4.1';
 
 // * Методы и библиотеки данной версии
 KDCore._loader = 'loader_' + KDCore._fileVersion;
@@ -1188,7 +1486,7 @@ KDCore.registerLibraryToLoad(function() {
     return this.getByField('id', id);
   };
   // * Ищет элемент, у которого поле FIELD (имя поля) == value
-  return Array.prototype.getByField = function(field, value) {
+  Array.prototype.getByField = function(field, value) {
     var e;
     try {
       return this.find(function(item) {
@@ -1200,6 +1498,39 @@ KDCore.registerLibraryToLoad(function() {
       return null;
     }
   };
+  Object.defineProperty(Array.prototype, "delete", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "max", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "min", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "sample", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "first", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "last", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "shuffle", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "count", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "isEmpty", {
+    enumerable: false
+  });
+  Object.defineProperty(Array.prototype, "getById", {
+    enumerable: false
+  });
+  return Object.defineProperty(Array.prototype, "getByField", {
+    enumerable: false
+  });
 });
 
 
@@ -1212,7 +1543,7 @@ KDCore.registerLibraryToLoad(function() {
     return Math.min(Math.max(this, min), max);
   };
   return Number.prototype.any = function(number) {
-    return (number != null) && number > 0;
+    return (number != null) && typeof number === 'number' && number > 0;
   };
 });
 
@@ -1246,37 +1577,48 @@ KDCore.registerLibraryToLoad(function() {
 });
 
 
-// Generated by CoffeeScript 2.6.1
-KDCore.registerLibraryToLoad(function() {
-  KDCore.isMV = function() {
-    return Utils.RPGMAKER_NAME.contains("MV");
-  };
-  KDCore.isMZ = function() {
-    return !KDCore.isMV();
-  };
-  KDCore.warning = function(msg, error) {
-    if (msg != null) {
-      console.warn(msg);
-    }
-    if (error != null) {
-      console.warn(error);
-    }
-  };
-  KDCore.makeid = function(length) {
-    var characters, charactersLength, i, result;
-    result = '';
-    characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    charactersLength = characters.length;
-    i = 0;
-    while (i < length) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-      i++;
-    }
-    return result;
-  };
-  return KDCore.makeId = function() {
-    return KDCore.makeid(...arguments);
-  };
+KDCore.registerLibraryToLoad(() => {
+    /**
+     * Checks if the RPG Maker version is MV.
+     * @returns {boolean} True if the RPG Maker version is MV, otherwise false.
+     */
+    KDCore.isMV = () => Utils.RPGMAKER_NAME.includes("MV");
+    /**
+     * Checks if the RPG Maker version is MZ.
+     * @returns {boolean} True if the RPG Maker version is MZ, otherwise false.
+     */
+    KDCore.isMZ = () => !KDCore.isMV();
+    /**
+     * Logs warnings to the console.
+     * @param {...any[]} args - The arguments to log as warnings.
+     */
+    KDCore.warning = (...args) => {
+        args.forEach(element => {
+            console.warn(element);
+        });
+    };
+    /**
+     * Generates a random string of the specified length.
+     * @param {number} length - The length of the generated string.
+     * @returns {string} The generated string.
+     */
+    KDCore.makeId = (length) => {
+        let result = '';
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const charactersLength = characters.length;
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+    };
+    //@[DEPREACTED]
+    /**
+     * Generates a random string of the specified length.
+     * @deprecated Use makeId instead.
+     * @param {number} length - The length of the generated string.
+     * @returns {string} The generated string.
+     */
+    KDCore.makeid = (length) => KDCore.makeId(length);
 });
 
 
@@ -1426,6 +1768,60 @@ KDCore.registerLibraryToLoad(function() {
 
 
 // Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  //?[NEW]
+  return DataManager.pkdRegisterNUIFile = function(folder, name) {
+    var _name, src;
+    _name = "$" + folder + "_" + name;
+    src = folder + "/" + name + ".json";
+    return DataManager._databaseFiles.push({
+      name: _name,
+      src: src
+    });
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  KDCore.EasingFuncs = KDCore.EasingFuncs || {};
+  return (function() {
+    var _;
+    _ = KDCore.EasingFuncs;
+    _.linear = function(t, b, c, d) {
+      return c * t / d + b;
+    };
+    _.easeInQuad = function(t, b, c, d) {
+      return c * (t /= d) * t + b;
+    };
+    _.easeOutQuad = function(t, b, c, d) {
+      return -c * (t /= d) * (t - 2) + b;
+    };
+    _.easeInOutQuad = function(t, b, c, d) {
+      if ((t /= d / 2) < 1) {
+        return c / 2 * t * t + b;
+      } else {
+        return -c / 2 * ((--t) * (t - 2) - 1) + b;
+      }
+    };
+    _.easeInCubic = function(t, b, c, d) {
+      return c * (t /= d) * t * t + b;
+    };
+    _.easeOutCubic = function(t, b, c, d) {
+      return c * ((t = t / d - 1) * t * t + 1) + b;
+    };
+    return _.easeInOutCubic = function(t, b, c, d) {
+      if ((t /= d / 2) < 1) {
+        return c / 2 * t * t * t + b;
+      } else {
+        return c / 2 * ((t -= 2) * t * t + 2) + b;
+      }
+    };
+  })();
+});
+
+
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Game_CharacterBase.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -1458,6 +1854,23 @@ KDCore.registerLibraryToLoad(function() {
 
 // ■ END Game_CharacterBase.coffee
 //---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  // * В MZ нету данной функции, а она часто используется в моих плагинах
+  if (!KDCore.isMZ()) {
+    return;
+  }
+  //?[NEW] (from MV)
+  return ImageManager.loadEmptyBitmap = function() {
+    if (this._emptyBitmap != null) {
+      return this._emptyBitmap;
+    } else {
+      return new Bitmap();
+    }
+  };
+});
 
 
 // Generated by CoffeeScript 2.6.1
@@ -1654,12 +2067,18 @@ KDCore.registerLibraryToLoad(function() {
         return false;
       }
     };
+    _.isMapScene = function() {
+      return this.isSceneMap();
+    };
     _.isSceneBattle = function() {
       try {
         return !SceneManager.isSceneChanging() && SceneManager._scene instanceof Scene_Battle;
       } catch (error) {
         return false;
       }
+    };
+    _.isBattleScene = function() {
+      return this.isSceneBattle();
     };
     _.getEventCommentValue = function(commentCode, list) {
       var comment, e, i, item;
@@ -2091,6 +2510,165 @@ KDCore.registerLibraryToLoad(function() {
       }
       return [];
     };
+    //@[3.2.7] since
+    _.getIndexIn2DArrayByIJ = function(row, col, cols) {
+      return row * cols + col;
+    };
+    //@[3.2.7] since
+    // * row - строка
+    // * col - столбец
+    _.getIJByIndexIn2DArray = function(index, cols) {
+      var col, e, row;
+      try {
+        row = Math.floor(index / cols);
+        col = index % cols;
+        return [row, col];
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return [0, 0];
+      }
+    };
+    //@[3.2.7] since
+    _.isSwitchIsTRUE = function(switchId) {
+      var e;
+      if (switchId == null) {
+        return true;
+      }
+      if (switchId <= 0) {
+        return true;
+      }
+      try {
+        return $gameSwitches.value(switchId) === true;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return false;
+    };
+    //@[3.5] since
+    _.convertBindingValue = function(sourceObj, bindingValue, element = null) {
+      var e;
+      try {
+        return KDCore.UI.Builder._convertBindingValue(...arguments);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
+    };
+    //@[3.5] since
+    _.getRealSpriteSize = function(forField = 'x', sprite = null) {
+      var e, h, w;
+      try {
+        if (sprite == null) {
+          return 0;
+        }
+        if (forField === 'x' || forField === 'width') {
+          if (sprite.realWidth != null) {
+            w = sprite.realWidth();
+          } else {
+            w = sprite.width;
+          }
+          return w;
+        } else if (forField === 'y' || forField === 'height') {
+          if (sprite.realHeight != null) {
+            h = sprite.realHeight();
+          } else {
+            h = sprite.height;
+          }
+          return h;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return 0;
+    };
+    //@[3.5] since
+    _.string2hex = function(string) {
+      var e;
+      try {
+        if (typeof string === 'string' && string[0] === '#') {
+          string = string.substr(1);
+        }
+        return parseInt(string, 16);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return 0xffffff;
+    };
+    //@[3.5] since
+    _.convertDP = function(value = 0, isHalf = false) {
+      var d, e, mod, modX, modY;
+      try {
+        if (Graphics.width === 816 && Graphics.height === 624) {
+          return value;
+        }
+        modX = Graphics.width / 816;
+        modY = Graphics.height / 624;
+        // Aprox
+        mod = (modX + modY) / 2;
+        if (mod === 0) {
+          return 0;
+        }
+        if (isHalf === true) {
+          if (mod < 1) {
+            d = 1 - mod;
+            mod += d / 2;
+          } else if (mod > 1) {
+            d = mod - 1;
+            mod = 1 + (d / 2);
+          }
+        }
+        return Math.round(value * mod);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return 0;
+    };
+    //@[3.5.6] since
+    _.getValueWithDP = function(value) {
+      var dpValue, e, negative, r, result, resultValue;
+      try {
+        if (typeof value === "string") {
+          value = value.trim();
+          // * Replace all HDP and DP
+          if (value.contains("hdp") || value.contains("dp")) {
+            if (value[0] === '-') {
+              value = value.replace("-", "");
+              negative = true;
+            } else {
+              negative = false;
+            }
+            if (value.contains("hdp")) {
+              r = new RegExp("(\\d+)hdp", "g");
+              result = r.exec(value);
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, true);
+              value = value.replace(/(\d+)hdp/, resultValue);
+            } else if (value.contains("dp")) {
+              r = new RegExp("(\\d+)dp", "g");
+              result = r.exec(value);
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, false);
+              value = value.replace(/(\d+)dp/, resultValue);
+            }
+          }
+          value = parseInt(value);
+          if (negative) {
+            value = -value;
+          }
+        }
+        return value;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return 0;
+      }
+    };
     //@[2.9.7] since
     // * Shrink number 100000 to "100k" and ect, returns STRING
     _.formatNumberToK = function(num) {
@@ -2123,6 +2701,67 @@ KDCore.registerLibraryToLoad(function() {
     this.drawFace(faceName, faceIndex, x, y);
   };
 });
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ Window_Selectable.coffee
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    //---------------------------------------------------------------------------
+    var ALIAS__select, _;
+    //@[DEFINES]
+    _ = Window_Selectable.prototype;
+    //@[ALIAS]
+    ALIAS__select = _.select;
+    _.select = function(index) {
+      var e;
+      ALIAS__select.call(this, ...arguments);
+      try {
+        return this._pOnSelectionChanged(index);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._pOnSelectionChanged = function(newIndex) {
+      var e;
+      try {
+        if (this._pkdLastSelectedIndex == null) {
+          this._pkdLastSelectedIndex = newIndex;
+          return this.pOnSelectionChanged();
+        } else {
+          if (this._pkdLastSelectedIndex !== newIndex) {
+            this._pkdLastSelectedIndex = newIndex;
+            return this.pOnSelectionChanged();
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.safeSelect = function(index = 0) {
+      var e;
+      try {
+        if (this.maxItems() > index) {
+          return this.select(index);
+        } else {
+          return this.select(-1);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    
+    // * Called only when new (different) index is selected
+    _.pOnSelectionChanged = function() {};
+  })();
+});
+
+// ■ END Window_Selectable.coffee
+//---------------------------------------------------------------------------
 
 
 // Generated by CoffeeScript 2.6.1
@@ -2486,7 +3125,7 @@ KDCore.registerLibraryToLoad(function() {
 
     // * Меняем прозрачность 4 раза, туда-сюда, затем выводим done в консоль
 
-    //@changer = new AA.Changer(someSprite)
+    //@changer = new KDCore.Changer(someSprite)
   //@changer.change('opacity').from(255)
   //            .to(0).step(5).speed(1).delay(30).repeat(4).reverse()
   //            .start().done(() -> console.log('done'))
@@ -2798,6 +3437,7 @@ KDCore.registerLibraryToLoad(function() {
 KDCore.registerLibraryToLoad(function() {
   var Color;
   Color = (function() {
+    //rev 29.04.2024
     class Color {
       constructor(r1 = 255, g1 = 255, b1 = 255, a1 = 255) {
         this.r = r1;
@@ -2887,7 +3527,12 @@ KDCore.registerLibraryToLoad(function() {
       }
 
       static FromHex(hexString) {
-        var color, result;
+        var color, result, shorthandRegex;
+        //Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+        shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+        hexString = hexString.replace(shorthandRegex, function(m, r, g, b) {
+          return r + r + g + g + b + b;
+        });
         result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexString);
         color = null;
         if (result != null) {
@@ -3223,6 +3868,52 @@ KDCore.registerLibraryToLoad(function() {
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
   //@[AUTO EXTEND]
+  return KDCore.MapAnchorPoint = class MapAnchorPoint {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this._realX = this.x;
+      this._realY = this.y;
+    }
+
+    shiftY() {
+      return 0;
+    }
+
+    jumpHeight() {
+      return 0;
+    }
+
+    scrolledX() {
+      return Game_CharacterBase.prototype.scrolledX.call(this);
+    }
+
+    scrolledY() {
+      return Game_CharacterBase.prototype.scrolledY.call(this);
+    }
+
+    screenX() {
+      return Game_CharacterBase.prototype.screenX.call(this);
+    }
+
+    screenY() {
+      return Game_CharacterBase.prototype.screenY.call(this);
+    }
+
+    moveTo(x, y) {
+      this.x = x;
+      this.y = y;
+      this._realX = this.x;
+      this._realY = this.y;
+    }
+
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  //@[AUTO EXTEND]
   //?[DEPRECATED]
   return KDCore.ParametersManager = class ParametersManager {
     constructor(pluginName) {
@@ -3386,6 +4077,7 @@ KDCore.registerLibraryToLoad(function() {
       params = {};
       for (key in paramSet) {
         value = paramSet[key];
+        KDCore.__ppNameToParseNext = key;
         clearKey = this.parseKey(key);
         typeKey = this.parseKeyType(key);
         params[clearKey] = this.parseParamItem(typeKey, value);
@@ -3399,6 +4091,19 @@ KDCore.registerLibraryToLoad(function() {
 
     parseKeyType(keyRaw) {
       return keyRaw.split(":")[1];
+    }
+
+    writeDetailedError() {
+      var e;
+      try {
+        if (!String.any(KDCore.__ppNameToParseNext)) {
+          return;
+        }
+        return console.warn("Please, check Plugin Parameter " + KDCore.__ppNameToParseNext + " in plugin " + this.pluginName);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     }
 
     // * Проверка, загружены ли параметры плагина
@@ -3461,12 +4166,15 @@ KDCore.registerLibraryToLoad(function() {
           case "json":
           case "j":
             return this.parseJson(item);
+          case "jA":
+            return this.parseArray(item, 'json');
           default:
             return item;
         }
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
         return item;
       }
     }
@@ -3488,6 +4196,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return elements;
     }
@@ -3508,6 +4217,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return null;
     }
@@ -3524,11 +4234,13 @@ KDCore.registerLibraryToLoad(function() {
           } catch (error) {
             e = error;
             console.warn(e);
+            this.writeDetailedError();
           }
         }
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return elements;
     }
@@ -3543,6 +4255,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return item;
     }
@@ -3571,6 +4284,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         KDCore.warning(e);
+        this.writeDetailedError();
         return null; // * Чтобы default value был возвращён
       }
     }
@@ -3694,6 +4408,10 @@ KDCore.registerLibraryToLoad(function() {
       return new Point(this[0], this[1]);
     };
 
+    Object.defineProperty(Array.prototype, "toPoint", {
+      enumerable: false
+    });
+
     Sprite.prototype.toPoint = function() {
       return new Point(this.x, this.y);
     };
@@ -3713,10 +4431,467 @@ KDCore.registerLibraryToLoad(function() {
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
   return KDCore.Sprite = (function(superClass) {
-    //@[AUTO EXTEND]
+    //rev 07.05.22
+
+      //@[AUTO EXTEND]
     class Sprite extends superClass {
       constructor() {
         super(...arguments);
+        this.pHandledIndex = 0;
+        this._create2();
+        return;
+      }
+
+      _create2() {} // * FOR CHILDRENS
+
+      pIsSupportKeyboardHandle() {
+        return false;
+      }
+
+      pIsVerticalKeyboardNavigation() {
+        return true;
+      }
+
+      pIsFreeKeyboardNavigation() {
+        return false;
+      }
+
+      // * For Childrens
+      isLoaded() {
+        return true;
+      }
+
+      isNotHaveBounds() {
+        return this._isNotHaveBounds === true;
+      }
+
+      realWidth() {
+        var child;
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if (this.width === 0) {
+          child = this.zeroChild();
+          if (child != null) {
+            if (child.realWidth != null) {
+              return child.realWidth();
+            } else {
+              return child.width;
+            }
+          }
+        }
+        return this.width;
+      }
+
+      realHeight() {
+        var child;
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if (this.height === 0) {
+          child = this.zeroChild();
+          if (child != null) {
+            if (child.realHeight != null) {
+              return child.realHeight();
+            } else {
+              return child.height;
+            }
+          }
+        }
+        return this.height;
+      }
+
+      dataBindings() {
+        return {
+          x: function(v) {
+            if (v != null) {
+              return this.setPosition(v, this.y);
+            }
+          },
+          y: function(v) {
+            if (v != null) {
+              return this.setPosition(this.x, v);
+            }
+          },
+          position: function(v) {
+            if (v != null) {
+              return this.setPosition(v);
+            }
+          },
+          anchor: function(v) {
+            if (v != null) {
+              return this.setCommonAnchor(v);
+            }
+          },
+          animation: function(v) {
+            if (v != null) {
+              return this.addAnimationRule(v);
+            }
+          },
+          opacity: function(v) {
+            if (v != null) {
+              return this.opacity = v;
+            }
+          },
+          visible: function(v) {
+            if (v != null) {
+              return this.visible = v;
+            }
+          },
+          scale: function(v) {
+            if (v != null) {
+              return this.scale.set(v);
+            }
+          },
+          rotation: function(v) {
+            if (v != null) {
+              return this.rotation = v;
+            }
+          },
+          centeredScale: function(v) {
+            if (v != null) {
+              return this.setCenteredScale(v);
+            }
+          },
+          physicalBounds: function(v) {
+            if (v != null) {
+              return this._isNotHaveBounds = !v;
+            }
+          }
+        };
+      }
+
+      setCenteredScale(value) {
+        var e;
+        try {
+          if (!this.isLoaded()) {
+            this._requireFunc('setCenteredScale', arguments);
+            return;
+          }
+          this._refreshAnchoredCenter();
+          return this._scaleFactor = value;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      callBinding(binding, value) {
+        var e, func;
+        try {
+          func = this.dataBindings()[binding];
+          if (func != null) {
+            return func.call(this, value);
+          } else {
+            return console.warn("Binding " + binding + " not found!");
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      refreshBindings(dataObject = null, recursive = true) {
+        var child, e, j, len, ref, results;
+        try {
+          if (dataObject == null) {
+            dataObject = this;
+          }
+          KDCore.UI.Builder.RefreshBindings(this, dataObject);
+          if (recursive === true) {
+            ref = this.children;
+            results = [];
+            for (j = 0, len = ref.length; j < len; j++) {
+              child = ref[j];
+              try {
+                if (child.refreshBindings != null) {
+                  results.push(child.refreshBindings(dataObject, true));
+                } else {
+                  results.push(void 0);
+                }
+              } catch (error) {
+                e = error;
+                results.push(KDCore.warning(e));
+              }
+            }
+            return results;
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      uiConstant(name) {
+        var e;
+        try {
+          if (this.uiConstants != null) {
+            return this.uiConstants[name];
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return null;
+      }
+
+      addLoadListener(listener) {
+        var e;
+        try {
+          if (listener == null) {
+            return;
+          }
+          if (this.isLoaded()) {
+            try {
+              return listener();
+            } catch (error) {
+              e = error;
+              return KDCore.warning(e);
+            }
+          } else {
+            return this._addLoadListener(listener);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      setPosition(x = 0, y = null, bindedObj = null) {
+        var _x, _y, e;
+        try {
+          if (!this.isLoaded()) {
+            this._requireFunc('setPosition', arguments);
+            return;
+          }
+          // * Check first Argument as Object
+          if (typeof x === 'object') {
+            if (x.x != null) {
+              _x = x.x;
+              if (x.y != null) {
+                _y = x.y;
+              }
+              x = _x;
+              y = _y;
+            } else if (x.position != null) {
+              this.setPosition(x.position, null, bindedObj);
+              return;
+            } else if (x.margins != null) {
+              this.setPosition(x.margins, null, bindedObj);
+              return;
+            }
+          }
+          if (typeof x === 'string') {
+            this.x = this._getValueByStr(x, 'x', bindedObj);
+            if (y == null) {
+              y = x;
+            }
+          } else {
+            this.x = x; // * Number
+          }
+          if (typeof y === 'string') {
+            return this.y = this._getValueByStr(y, 'y', bindedObj);
+          } else {
+            if (y != null) {
+              return this.y = y;
+            }
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _getValueByStr(value = '0', forField = 'x', owner = null) {
+        var dpValue, e, exValue, parentRefSize, percentValue, r, result, resultValue, v;
+        try {
+          if (typeof value === 'number') {
+            return value;
+          }
+          if (isFinite(value)) {
+            return Number(value);
+          }
+          if (typeof value !== 'string') {
+            return 0;
+          }
+          // * NO REPLACEMENT
+          if (value[0] === '$' || value[0] === '@') {
+            v = KDCore.Utils.convertBindingValue(owner, value, this);
+            return this._getValueByStr(v, forField, owner);
+          }
+          if (value.contains("prevX")) {
+            value = value.replace("prevX", this._getPreviousChildData('x'));
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("prevY")) {
+            value = value.replace("prevY", this._getPreviousChildData('y'));
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("prevHeight")) {
+            value = value.replace("prevHeight", this._getPreviousChildData('height'));
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("prevWidth")) {
+            value = value.replace("prevWidth", this._getPreviousChildData('width'));
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("prevEndX")) {
+            value = value.replace("prevEndX", "prevX + prevWidth");
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("prevEndY")) {
+            value = value.replace("prevEndY", "prevY + prevHeight");
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("end")) {
+            value = value.replace("end", "100%");
+          }
+          if (value.contains("begin")) {
+            if (forField === 'y') {
+              value = value.replace("begin", "-height");
+            } else {
+              value = value.replace("begin", "-width");
+            }
+          }
+          if (value.contains("right")) {
+            value = value.replace("right", "100% - width");
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("left")) {
+            value = value.replace("left", "0");
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("top")) {
+            value = value.replace("top", "0");
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("bottom")) {
+            value = value.replace("bottom", "100% - height");
+            return this._getValueByStr(value, forField, owner);
+          }
+          // * Replace all X%
+          if (value.contains("%")) {
+            r = new RegExp("(\\d+)%", "g");
+            result = r.exec(value);
+            while ((result != null)) {
+              percentValue = Number(result[1]);
+              resultValue = 0;
+              if (this.parent != null) {
+                parentRefSize = KDCore.Utils.getRealSpriteSize(forField, this.parent);
+                resultValue = parentRefSize * (percentValue / 100.0);
+              }
+              value = value.replace(/(\d+)%/, resultValue);
+              result = r.exec(value);
+            }
+          }
+          // * Replace all HDP
+          if (value.contains("hdp")) {
+            r = new RegExp("(\\d+)hdp", "g");
+            result = r.exec(value);
+            while ((result != null)) {
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, true);
+              value = value.replace(/(\d+)hdp/, resultValue);
+              result = r.exec(value);
+            }
+          }
+          // * Replace all DP
+          if (value.contains("dp")) {
+            r = new RegExp("(\\d+)dp", "g");
+            result = r.exec(value);
+            while ((result != null)) {
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, false);
+              value = value.replace(/(\d+)dp/, resultValue);
+              result = r.exec(value);
+            }
+          }
+          if (value.contains('center')) {
+            v = this._getValueByStr('50%', forField, owner);
+            exValue = KDCore.Utils.getRealSpriteSize(forField, this);
+            exValue = v - (exValue / 2);
+            value = value.replace("center", exValue);
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("height")) {
+            exValue = KDCore.Utils.getRealSpriteSize("height", this);
+            value = value.replace("height", exValue);
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("width")) {
+            exValue = KDCore.Utils.getRealSpriteSize("width", this);
+            value = value.replace("width", exValue);
+            return this._getValueByStr(value, forField, owner);
+          }
+          v = eval(value);
+          return this._getValueByStr(v, forField, owner);
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return 0;
+      }
+
+      _getPreviousChildData(forField) {
+        var e, myIndex, prevChild;
+        try {
+          if (this.parent == null) {
+            return 0;
+          }
+          if (this.parent.children.length <= 1) {
+            return 0;
+          }
+          myIndex = this.parent.children.indexOf(this);
+          prevChild = this.parent.children[myIndex - 1];
+          if (prevChild == null) {
+            return 0;
+          }
+          if (forField === "x") {
+            return prevChild.x;
+          } else if (forField === "y") {
+            return prevChild.y;
+          } else {
+            return KDCore.Utils.getRealSpriteSize(forField, prevChild);
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return 0;
+      }
+
+      setCommonAnchor(x, y) {
+        var c, e, j, len, ref;
+        try {
+          if (y == null) {
+            y = x;
+          }
+          this.anchor.x = x;
+          this.anchor.y = y;
+          ref = this.children;
+          for (j = 0, len = ref.length; j < len; j++) {
+            c = ref[j];
+            if (c == null) {
+              continue;
+            }
+            if (c.setCommonAnchor != null) {
+              c.setCommonAnchor(x, y);
+            } else {
+              if (c.anchor == null) {
+                continue;
+              }
+              c.anchor.x = x;
+              c.anchor.y = y;
+            }
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+      }
+
+      zeroChild() {
+        return this.children[0];
       }
 
       appear(step, delay = 0) {
@@ -3748,6 +4923,20 @@ KDCore.registerLibraryToLoad(function() {
           var ref;
           return (ref = this._opChanger) != null ? ref.update() : void 0;
         };
+      }
+
+      moveWithAnimation(dx, dy, duration = 30, easingType = 2) {
+        var e;
+        try {
+          this._moveAnimationItem = new Game_Picture();
+          this._moveAnimationItem._x = this.x;
+          this._moveAnimationItem._y = this.y;
+          this._moveAnimationItem.move(0, this.x + dx, this.y + dy, 1, 1, 255, 0, duration, easingType);
+          this.updateMovingAnimation = this.updateMovingAnimationBody;
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
       }
 
       assignTooltip(content, params) {
@@ -3803,10 +4992,161 @@ KDCore.registerLibraryToLoad(function() {
         }
       }
 
+      //@[DYNAMIC]
+      updateMovingAnimation() {} // * EMPTY
+
+      updateMovingAnimationBody() {
+        var e;
+        try {
+          if (this._moveAnimationItem == null) {
+            return;
+          }
+          this._moveAnimationItem.update();
+          this.x = this._moveAnimationItem._x;
+          this.y = this._moveAnimationItem._y;
+          if (this._moveAnimationItem._duration <= 0) {
+            this._moveAnimationItem = null;
+            this.updateMovingAnimation = function() {};
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+          this.updateMovingAnimation = function() {};
+        }
+      }
+
+      addAnimationRule(rule) {
+        var e, r;
+        try {
+          if (rule == null) {
+            return;
+          }
+          if (this._animationRules == null) {
+            this._animationRules = [];
+          }
+          if (typeof rule === 'object' && (rule.animationConfig != null) && (rule.update != null)) {
+            r = rule;
+          } else {
+            r = new KDCore.AnimationRule(rule, this);
+          }
+          this._animationRules.push(r);
+          return r;
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return null;
+      }
+
+      setAnimationRule(rule) {
+        var e;
+        try {
+          this._animationRules = [];
+          return this.addAnimationRule(rule);
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return null;
+      }
+
+      isShouldAlwaysKeepCenter() {
+        return this.__anchoredCenterX != null;
+      }
+
+      // * For Animation Rule (callback)
+      onBeforeChangeScaleFactor() {
+        var e;
+        try {
+          if (this.isShouldAlwaysKeepCenter()) {
+            return this._refreshAnchoredCenter();
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
       update() {
         super.update();
         this._updateOpChanger();
-        return this.updateTooltip();
+        this.updateTooltip();
+        if (this.updateMovingAnimation != null) {
+          this.updateMovingAnimation();
+        }
+        if (this.pIsHandlerActive()) {
+          this._pHandleKeyboardInputs();
+        }
+        if (this.devdrag === true) {
+          this._pUpdateDevDrag();
+        }
+        if (this._animationRules != null) {
+          this._pUpdateAnimationRules();
+        }
+        if (this._scaleFactor != null) {
+          this._pUpdateScaleFactor();
+        }
+      }
+
+      _pUpdateScaleFactor() {
+        var e;
+        try {
+          if (this.scale.x !== this._scaleFactor || this.scale.y !== this._scaleFactor) {
+            this.scale.set(this._scaleFactor);
+            if (this.isShouldAlwaysKeepCenter()) {
+              return this._refreshRelativeCenterPosition();
+            }
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _refreshAnchoredCenter() {
+        var e;
+        try {
+          if (this.__lastCenterBaseX !== this.x || this.__lastCenterBaseY !== this.y) {
+            this.__lastCenterBaseX = this.x;
+            this.__lastCenterBaseY = this.y;
+          }
+          this.__anchoredCenterX = this.__lastCenterBaseX + this.realWidth() / 2;
+          return this.__anchoredCenterX = this.__lastCenterBaseY + this.realHeight() / 2;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _refreshRelativeCenterPosition() {
+        var e, newHeight, newWidth;
+        try {
+          // Смещение позиции для сохранения центра
+          newWidth = this.realWidth() * this.scale.x;
+          newHeight = this.realHeight() * this.scale.y;
+          this.x = this.__anchoredCenterX - newWidth / 2;
+          return this.y = this.__anchoredCenterX - newHeight / 2;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pUpdateAnimationRules() {
+        var e, j, len, ref, results, rule;
+        try {
+          ref = this._animationRules;
+          results = [];
+          for (j = 0, len = ref.length; j < len; j++) {
+            rule = ref[j];
+            rule.update();
+            results.push(rule.applyAnimation(this));
+          }
+          return results;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
       }
 
       //@[DYNAMIC]
@@ -3820,8 +5160,8 @@ KDCore.registerLibraryToLoad(function() {
         return this.bitmap.clear();
       }
 
-      add(child) {
-        return this.addChild(child);
+      add() {
+        return this.addChild(...arguments);
       }
 
       bNew(w, h) {
@@ -3971,6 +5311,562 @@ KDCore.registerLibraryToLoad(function() {
         }
       }
 
+      activateHandlerManagment() {
+        var e;
+        try {
+          if (this.pIsFreeKeyboardNavigation()) {
+            this.handleUpAction = this.freeSelectUpHandlerItem;
+            this.handleDownAction = this.freeSelectDownHandlerItem;
+            this.handleRightAction = this.freeSelectRightHandlerItem;
+            this.handleLeftAction = this.freeSelectLeftHandlerItem;
+          } else {
+            this.handleUpAction = this.selectPreviousHandlerItem;
+            this.handleDownAction = this.selectNextHandlerItem;
+          }
+          return this._handleManagerActive = true;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      deactivateHandlerManagment() {
+        var ref;
+        this._handleManagerActive = false;
+        this.handleUpAction = function() {}; // * EMPTY
+        this.handleDownAction = function() {}; // * EMPTY
+        this.handleRightAction = function() {}; // * EMPTY
+        this.handleLeftAction = function() {}; // * EMPTY
+        if ((ref = $gameTemp.__pkdActiveKeyboardHandler) != null) {
+          ref.pDeactivateHandler();
+        }
+        $gameTemp.__pkdActiveKeyboardHandler = null;
+      }
+
+      addChild(item) {
+        var c, handlers;
+        c = super.addChild(...arguments);
+        if (item instanceof KDCore.Sprite && (item.pIsSupportKeyboardHandle != null) && item.pIsSupportKeyboardHandle()) {
+          handlers = this._pGetAllHandlers();
+          item.pHandledIndex = handlers.length - 1;
+        }
+        return c;
+      }
+
+      pIsAnyHandlerSelected() {
+        return $gameTemp.__pkdActiveKeyboardHandler != null;
+      }
+
+      selectPreviousHandlerItem() {
+        var e;
+        try {
+          if (!this.pIsAnyHandlerSelected()) {
+            return this._trySelectHandler(0);
+          } else {
+            return this._trySelectHandler(this._selectedHandlerIndex() - 1);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _selectedHandlerIndex() {
+        return $gameTemp.__pkdActiveKeyboardHandler.pHandledIndex;
+      }
+
+      _trySelectHandler(index) {
+        var e, handlerItemToSelect;
+        try {
+          handlerItemToSelect = this._pGetAllHandlers().find(function(i) {
+            return i.pHandledIndex === index;
+          });
+          if (handlerItemToSelect != null) {
+            handlerItemToSelect.pActivateHandler();
+          }
+          return this._pOnHandled();
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pGetAllHandlers() {
+        return this.children.filter(function(i) {
+          return i instanceof KDCore.Sprite && (i.pIsSupportKeyboardHandle != null) && i.pIsSupportKeyboardHandle();
+        });
+      }
+
+      selectNextHandlerItem() {
+        var e;
+        try {
+          if (!this.pIsAnyHandlerSelected()) {
+            return this._trySelectHandler(0);
+          } else {
+            return this._trySelectHandler(this._selectedHandlerIndex() + 1);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      activeItemFilterOptions() {
+        return {
+          distance: 15,
+          outerStrength: 4
+        };
+      }
+
+      pIsHandlerActive() {
+        return this._handleManagerActive === true || this._handlerActive === true;
+      }
+
+      destroy() {
+        if ($gameTemp.__pkdActiveKeyboardHandler === this) {
+          $gameTemp.__pkdActiveKeyboardHandler = null;
+        }
+        return super.destroy();
+      }
+
+      _pOnHandled() {
+        return Input.clear();
+      }
+
+      _pHandleKeyL(ignoreNavigation = false) {
+        var e;
+        try {
+          if (this.pIsVerticalKeyboardNavigation() || ignoreNavigation) {
+            if (this.handleLeftAction != null) {
+              this.handleLeftAction();
+              return this._pOnHandled();
+            }
+          } else {
+            return this._pHandleKeyU(true);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyR(ignoreNavigation = false) {
+        var e;
+        try {
+          if (this.pIsVerticalKeyboardNavigation() || ignoreNavigation) {
+            if (this.handleRightAction != null) {
+              this.handleRightAction();
+              return this._pOnHandled();
+            }
+          } else {
+            return this._pHandleKeyD(true);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyU(ignoreNavigation = false) {
+        var e;
+        try {
+          if (this.pIsVerticalKeyboardNavigation() || ignoreNavigation) {
+            if (this.handleUpAction != null) {
+              this.handleUpAction();
+              return this._pOnHandled();
+            }
+          } else {
+            return this._pHandleKeyL(true);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyD(ignoreNavigation = false) {
+        var e;
+        try {
+          if (this.pIsVerticalKeyboardNavigation() || ignoreNavigation) {
+            if (this.handleDownAction != null) {
+              this.handleDownAction();
+              return this._pOnHandled();
+            }
+          } else {
+            return this._pHandleKeyR(true);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyOK() {
+        var e;
+        try {
+          if (this.handleOKAction != null) {
+            this.handleOKAction();
+            return this._pOnHandled();
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      pActivateHandler() {
+        if (!this.pIsSupportKeyboardHandle()) {
+          return;
+        }
+        if (($gameTemp.__pkdActiveKeyboardHandler != null) && $gameTemp.__pkdActiveKeyboardHandler !== this) {
+          $gameTemp.__pkdActiveKeyboardHandler.pDeactivateHandler();
+        }
+        this._handlerActive = true;
+        this._activateHandlerVisually();
+        $gameTemp.__pkdActiveKeyboardHandler = this;
+      }
+
+      _activateHandlerVisually() {
+        var e;
+        try {
+          //@filters = [new PIXI.filters.OutlineFilter(0.8, 0x99ff99, 0.5)]
+          //@filters = [new PIXI.filters.GlowFilter(2, 0.8, 0, 0x09f9, 0.5)]
+          return this.filters = [new PIXI.filters.GlowFilter(this.activeItemFilterOptions())];
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      pDeactivateHandler() {
+        if ($gameTemp.__pkdActiveKeyboardHandler === this) {
+          $gameTemp.__pkdActiveKeyboardHandler = null;
+        }
+        this._handlerActive = false;
+        this.filters = [];
+      }
+
+      _pHandleKeyboardInputs() {
+        var e;
+        try {
+          if (Input.isTriggered('left')) {
+            return this._pHandleKeyL();
+          } else if (Input.isTriggered('right')) {
+            return this._pHandleKeyR();
+          } else if (Input.isTriggered('up')) {
+            return this._pHandleKeyU();
+          } else if (Input.isTriggered('down')) {
+            return this._pHandleKeyD();
+          } else if (Input.isTriggered('ok')) {
+            return this._pHandleKeyOK();
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      pSelectedHandlerItem() {
+        return $gameTemp.__pkdActiveKeyboardHandler;
+      }
+
+      freeSelectUpHandlerItem() {
+        var allItems, e, item;
+        try {
+          allItems = this._pGetAllHandlers();
+          if (allItems.length === 0) {
+            return;
+          }
+          if (this.pIsAnyHandlerSelected()) {
+            item = this._pGetClosestItemToYx(this.pSelectedHandlerItem().x, -this.pSelectedHandlerItem().y, allItems);
+            if (item != null) {
+              item.pActivateHandler();
+            }
+          } else {
+            allItems[0].pActivateHandler();
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return this._pOnHandled();
+      }
+
+      freeSelectDownHandlerItem() {
+        var allItems, e, item;
+        try {
+          allItems = this._pGetAllHandlers();
+          if (allItems.length === 0) {
+            return;
+          }
+          if (this.pIsAnyHandlerSelected()) {
+            item = this._pGetClosestItemToYx(this.pSelectedHandlerItem().x, this.pSelectedHandlerItem().y, allItems);
+            if (item != null) {
+              item.pActivateHandler();
+            }
+          } else {
+            allItems[0].pActivateHandler();
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return this._pOnHandled();
+      }
+
+      freeSelectRightHandlerItem() {
+        var allItems, e, item;
+        try {
+          allItems = this._pGetAllHandlers();
+          if (allItems.length === 0) {
+            return;
+          }
+          if (this.pIsAnyHandlerSelected()) {
+            // * We should find item by X,Y position
+            // * If we search in RIGHT direction, we should find closest item with X > currentX, but on the same Y
+            // * If we can't find such item, we should again, but modify Y
+            item = this._pGetClosestItemToXy(this.pSelectedHandlerItem().x, this.pSelectedHandlerItem().y, allItems);
+            if (item != null) {
+              item.pActivateHandler();
+            }
+          } else {
+            allItems[0].pActivateHandler();
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return this._pOnHandled();
+      }
+
+      freeSelectLeftHandlerItem() {
+        var allItems, e, item;
+        try {
+          allItems = this._pGetAllHandlers();
+          if (allItems.length === 0) {
+            return;
+          }
+          if (this.pIsAnyHandlerSelected()) {
+            item = this._pGetClosestItemToXy(-this.pSelectedHandlerItem().x, this.pSelectedHandlerItem().y, allItems);
+            if (item != null) {
+              item.pActivateHandler();
+            }
+          } else {
+            allItems[0].pActivateHandler();
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return this._pOnHandled();
+      }
+
+      _pGetClosestItemToXy(x, y, fromItems) {
+        var distances, index, item, items, itemsInRow, j, len, rX;
+        items = this._pGetItemsByX(x, fromItems);
+        if (items.length === 0) {
+          return null;
+        }
+        itemsInRow = items.filter(function(item) {
+          return item.y === y;
+        });
+        if (itemsInRow.length > 0) {
+          itemsInRow.sort(function(a, b) {
+            return a.x - b.x;
+          });
+          return itemsInRow[0];
+        } else {
+          distances = [];
+          rX = Math.abs(x);
+          for (index = j = 0, len = items.length; j < len; index = ++j) {
+            item = items[index];
+            distances.push([index, Math.abs(item.x - rX) + Math.abs(item.y - y)]);
+          }
+          distances.sort(function(a, b) {
+            return a[1] - b[1];
+          });
+          return items[distances[0][0]];
+        }
+      }
+
+      _pGetItemsByX(x, fromItems) {
+        if (x >= 0) {
+          return fromItems.filter(function(item) {
+            return item.x > x;
+          });
+        } else {
+          return fromItems.filter(function(item) {
+            return item.x < Math.abs(x);
+          });
+        }
+      }
+
+      _pGetClosestItemToYx(x, y, fromItems) {
+        var distances, index, item, items, itemsInRow, j, len, rY;
+        items = this._pGetItemsByY(y, fromItems);
+        if (items.length === 0) {
+          return null;
+        }
+        itemsInRow = items.filter(function(item) {
+          return item.x === x;
+        });
+        if (itemsInRow.length > 0) {
+          itemsInRow.sort(function(a, b) {
+            return a.y - b.y;
+          });
+          return itemsInRow[0];
+        } else {
+          distances = [];
+          rY = Math.abs(y);
+          for (index = j = 0, len = items.length; j < len; index = ++j) {
+            item = items[index];
+            distances.push([index, Math.abs(item.x - x) + Math.abs(item.y - rY)]);
+          }
+          distances.sort(function(a, b) {
+            return a[1] - b[1];
+          });
+          return items[distances[0][0]];
+        }
+      }
+
+      _pGetItemsByY(y, fromItems) {
+        if (y >= 0) {
+          return fromItems.filter(function(item) {
+            return item.y > y;
+          });
+        } else {
+          return fromItems.filter(function(item) {
+            return item.y < Math.abs(y);
+          });
+        }
+      }
+
+      _applyRequiredData() {
+        var _n, e, func, j, len, ref;
+        try {
+          if (this._requiredFuncs == null) {
+            return;
+          }
+          ref = this._requiredFuncs;
+          for (j = 0, len = ref.length; j < len; j++) {
+            func = ref[j];
+            try {
+              _n = func[0];
+              if ((_n != null) && (this[_n] != null)) {
+                this[_n](...func[1]);
+              }
+            } catch (error) {
+              e = error;
+              KDCore.warning(e);
+            }
+          }
+          return this._requiredFuncs = null;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _requireFunc(name, args) {
+        var e;
+        try {
+          if (this._requiredFuncs == null) {
+            this._requiredFuncs = [];
+          }
+          return this._requiredFuncs.push([name, args]);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _addLoadListener(listener) {
+        var e;
+        try {
+          if (this._loadListeners == null) {
+            this._loadListeners = [];
+          }
+          return this._loadListeners.push(listener);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _executeLoadListeners() {
+        var e, j, l, len, ref;
+        try {
+          if (!this._loadListeners) {
+            return;
+          }
+          ref = this._loadListeners;
+          for (j = 0, len = ref.length; j < len; j++) {
+            l = ref[j];
+            try {
+              l();
+            } catch (error) {
+              e = error;
+              KDCore.warning(e);
+            }
+          }
+          return this._loadListeners = null;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      // * DEVELOPER TOOL ====================================
+      _pUpdateDevDrag() {
+        if (TouchInput.isLongPressed()) {
+          if (this.__ddIn === true) {
+            return this._pDD_moving();
+          } else {
+            if (this.isUnderMouse()) {
+              return this._pDD_startMove();
+            }
+          }
+        } else {
+          if (this.__ddIn === true) {
+            return this._pDD_stopMove();
+          }
+        }
+      }
+
+      _pDD_moving() {
+        this.x = TouchInput.x - this._pDDTDelta.x;
+        return this.y = TouchInput.y - this._pDDTDelta.y;
+      }
+
+      _pDD_startMove() {
+        var x, y;
+        ({x, y} = TouchInput);
+        this._pDDTDelta = {x, y};
+        this.__ddIn = true;
+      }
+
+      _pDD_stopMove() {
+        this.__ddIn = false;
+        console.log("DD DRAG POS: ");
+        return console.log(this.x, this.y);
+      }
+
+      // * STATIC ==================================================
+      static WhiteRect(w, h) {
+        return KDCore.Sprite.ColorRect(w, h, '#FFF');
+      }
+
+      static BlackRect(w, h) {
+        return KDCore.Sprite.ColorRect(w, h, '#000');
+      }
+
+      static ColorRect(w, h, color) {
+        var s;
+        s = KDCore.Sprite.FromBitmap(w, h);
+        s.b().fillAll(color);
+        return s;
+      }
+
       static FromImg(filename, sourceFolder) {
         var s;
         s = new KDCore.Sprite();
@@ -3995,7 +5891,7 @@ KDCore.registerLibraryToLoad(function() {
 
       // * Загрузчик из параметров плагина (безопасный)
       static FromParams(pluginParams) {
-        var e, h, margins, s, size, w;
+        var e, h, height, margins, s, size, w, width;
         try {
           size = pluginParams.size;
           ({w, h} = size);
@@ -4018,6 +5914,33 @@ KDCore.registerLibraryToLoad(function() {
                 h = Number(h);
               } else {
                 h = eval(h);
+              }
+            }
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+            h = 100;
+          }
+          ({width, height} = size);
+          try {
+            if (String.any(width)) {
+              if (isFinite(width)) {
+                w = Number(width);
+              } else {
+                w = eval(width);
+              }
+            }
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+            w = 100;
+          }
+          try {
+            if (String.any(height)) {
+              if (isFinite(height)) {
+                h = Number(height);
+              } else {
+                h = eval(height);
               }
             }
           } catch (error) {
@@ -4066,6 +5989,11 @@ KDCore.registerLibraryToLoad(function() {
       this._once = false;
     }
 
+    setAfter(_repeatsLeft, afterCallback) {
+      this._repeatsLeft = _repeatsLeft;
+      this.afterCallback = afterCallback;
+    }
+
     update() {
       if (this.interval == null) {
         return;
@@ -4073,6 +6001,14 @@ KDCore.registerLibraryToLoad(function() {
       if (this._timer++ >= this.interval) {
         this.call();
         this._timer = 0;
+        if (this._repeatsLeft != null) {
+          this._repeatsLeft -= 1;
+          if (this._repeatsLeft <= 0) {
+            if (this.afterCallback != null) {
+              this.afterCallback();
+            }
+          }
+        }
         if (this._once === true) {
           return this.stop();
         }
@@ -4106,8 +6042,390 @@ KDCore.registerLibraryToLoad(function() {
     }
 
     call() {
-      if (this.method != null) {
-        return this.method();
+      var e;
+      try {
+        if (this.method != null) {
+          return this.method();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  //@[AUTO EXTEND]
+  return KDCore.AnimationKeyFrame = class AnimationKeyFrame {
+    constructor(startValue, endValue, duration = 1, func = 'linear') {
+      this.startValue = startValue;
+      this.endValue = endValue;
+      this.func = func;
+      this._t = 0; // * Timer
+      this._d = duration * 60; // * Convert to Frames
+      this._c = this.endValue - this.startValue; // * Change
+      if (this.func == null) {
+        this.func = 'linear';
+      }
+      return;
+    }
+
+    reset() {
+      return this._t = 0;
+    }
+
+    update() {
+      if (this._t < this._d) {
+        return this._t += 1;
+      }
+    }
+
+    isEnd() {
+      return this._t >= this._d || this._d <= 0;
+    }
+
+    getValue() {
+      if (this._d <= 0) {
+        return this.endValue;
+      } else {
+        return this.easingFunc()(this._t, this.startValue, this._c, this._d);
+      }
+    }
+
+    easingFunc() {
+      if ((this.func != null) && (KDCore.EasingFuncs[this.func] != null)) {
+        return KDCore.EasingFuncs[this.func];
+      } else {
+        console.warn("Easing func " + this.func + " not found!");
+        return this.linear;
+      }
+    }
+
+    // * Default one
+    linear(t, b, c, d) {
+      return c * t / d + b;
+    }
+
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  //@[AUTO EXTEND]
+  return KDCore.AnimationKeyLine = class AnimationKeyLine {
+    constructor(keyFramesList, totalDuration = 1, func = 'linear') {
+      this.totalDuration = totalDuration;
+      this.keyFrames = this._parseKeyFrames(keyFramesList, func);
+      this.repeatsLeftBase = 0;
+      this.repeatsLeft = 0;
+      this.keyIndex = 0;
+      this._relativeValue = 0;
+      this._isStarted = false;
+      return;
+    }
+
+    setRelativeValue(_relativeValue) {
+      this._relativeValue = _relativeValue;
+    }
+
+    setRepeatsCount(repeatsLeftBase) {
+      this.repeatsLeftBase = repeatsLeftBase;
+      return this.repeatsLeft = this.repeatsLeftBase;
+    }
+
+    setLoop() {
+      return this.setRepeatsCount(-1);
+    }
+
+    start(startDelay = 0) {
+      this.startDelay = startDelay;
+      if (this.startDelay === 0) {
+        return this._isStarted = true;
+      } else {
+        return this._startTimer = this.startDelay * 60;
+      }
+    }
+
+    pause() {
+      this._isStarted = false;
+      this._startTimer = null;
+    }
+
+    isStarted() {
+      return this._isStarted === true;
+    }
+
+    complete() {
+      this.keyIndex = this.keyFrames.length;
+      this.repeatsLeft = 0;
+    }
+
+    reset() {
+      this.repeatsLeft = this.repeatsLeftBase;
+      this._resetKeyframes();
+    }
+
+    update() {
+      if (this._startTimer != null) {
+        this._updateStartTimer();
+      }
+      if (!this.isStarted()) {
+        return;
+      }
+      if (this.isEnd()) {
+        if (this.repeatsLeft === 0) { // * No repeats at all
+          return;
+        } else if (this.repeatsLeft < 0) { // * Infinite Loop
+          this._resetKeyframes();
+        } else {
+          this.repeatsLeft -= 1;
+          this._resetKeyframes();
+        }
+      }
+      this.keyFrames[this.keyIndex].update();
+      if (this.keyFrames[this.keyIndex].isEnd()) {
+        //console.log("NEXT")
+        this.keyIndex++;
+      }
+    }
+
+    isEnd() {
+      return this.keyIndex > this.keyFrames.length - 1;
+    }
+
+    getValue() {
+      var value;
+      if (this.isEnd()) {
+        value = this.keyFrames.last().getValue();
+      } else {
+        value = this.keyFrames[this.keyIndex].getValue();
+      }
+      return value + this._relativeValue;
+    }
+
+    _parseKeyFrames(keyframes, func) {
+      var duration, e, endValue, endValues, index, key, keyframesOutput, keys, kf, prevKey, startValue, value;
+      try {
+        keyframesOutput = [];
+        endValues = [];
+        keys = [];
+        index = 0;
+        for (key in keyframes) {
+          value = keyframes[key];
+          if (endValues.length > 0) {
+            startValue = endValues[index - 1];
+          } else {
+            startValue = 0;
+          }
+          value = KDCore.Utils.getValueWithDP(value);
+          endValue = value;
+          if (key === "0") {
+            duration = 0;
+          } else {
+            prevKey = keys[index - 1];
+            duration = this._calculateDuration(prevKey, key);
+          }
+          kf = new KDCore.AnimationKeyFrame(startValue, endValue, duration, func);
+          keys[index] = key;
+          endValues[index] = value;
+          keyframesOutput.push(kf);
+          index++;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return keyframesOutput;
+    }
+
+    _calculateDuration(rateA, rateB) {
+      var d, e, timeA, timeB;
+      try {
+        rateA = Number(rateA) / 100.0;
+        rateB = Number(rateB) / 100.0;
+        timeA = this.totalDuration * rateA;
+        timeB = this.totalDuration * rateB;
+        d = timeB - timeA;
+        return d;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return 0;
+    }
+
+    _resetKeyframes() {
+      var e, f, i, len, ref, results;
+      try {
+        this.keyIndex = 0;
+        ref = this.keyFrames;
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          f = ref[i];
+          results.push(f.reset());
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _updateStartTimer() {
+      var e;
+      try {
+        if (this._startTimer == null) {
+          return;
+        }
+        this._startTimer -= 1;
+        if (this._startTimer <= 0) {
+          this._isStarted = true;
+          return this._startTimer = null;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  //@[AUTO EXTEND]
+  return KDCore.AnimationRule = class AnimationRule {
+    constructor(animationConfig, obj) {
+      var condition, delay, duration, func, keyframes, repeats;
+      if (typeof animationConfig === "string") {
+        animationConfig = KDCore.UI.Builder.ConvertShortcut(animationConfig);
+      }
+      this.animationConfig = Object.assign(this.defaultConfig(), animationConfig);
+      ({condition} = this.animationConfig);
+      if (String.any(condition)) {
+        if (eval(condition) === false) {
+          return;
+        }
+      }
+      ({keyframes, duration, func, repeats, delay} = this.animationConfig);
+      this.prepareKeyFrames(keyframes, obj);
+      this.keyLine = new KDCore.AnimationKeyLine(keyframes, duration, func);
+      if (repeats == null) {
+        repeats = 0;
+      }
+      this.keyLine.setRepeatsCount(repeats);
+      if ((obj != null) && this.animationConfig.field === "_scaleFactor") {
+        this.prepareObject(obj);
+      }
+      if (this.animationConfig.relative === true && (obj != null)) {
+        this.keyLine.setRelativeValue(obj[this.animationConfig.field]);
+      }
+      this.keyLine.start(delay);
+      if ((obj != null) && delay <= 0) {
+        this.applyAnimation(obj);
+      }
+      return;
+    }
+
+    prepareKeyFrames(keyframes, obj) {
+      var key, value;
+      for (key in keyframes) {
+        value = keyframes[key];
+        if (value === "@") {
+          if ((obj != null) && (obj[this.animationConfig.field] != null)) {
+            keyframes[key] = obj[this.animationConfig.field];
+          } else {
+            keyframes[key] = 0;
+          }
+        }
+      }
+    }
+
+    setEndCallback(onEndCallback) {
+      this.onEndCallback = onEndCallback;
+    }
+
+    isHaveEndCallback() {
+      var e;
+      try {
+        if (this.animationConfig.repeats !== 0) {
+          // * Callback works only for single-shot animations
+          return false;
+        }
+        return this.onEndCallback != null;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return false;
+    }
+
+    defaultConfig() {
+      return {
+        field: "opacity",
+        duration: 1,
+        func: "linear",
+        delay: 0,
+        repeats: 0,
+        relative: false,
+        keyframes: {
+          "0": 0,
+          "100": 255
+        },
+        condition: null
+      };
+    }
+
+    update() {
+      var e;
+      if (this.keyLine == null) {
+        return;
+      }
+      this.keyLine.update();
+      if (this.isHaveEndCallback()) {
+        if (this.keyLine.isEnd()) {
+          try {
+            this.onEndCallback();
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+          }
+          this.onEndCallback = null;
+        }
+      }
+    }
+
+    applyAnimation(obj) {
+      var e;
+      try {
+        if (obj == null) {
+          return;
+        }
+        if (this.keyLine == null) {
+          return;
+        }
+        return obj[this.animationConfig.field] = this.keyLine.getValue();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    prepareObject(obj) {
+      var e;
+      try {
+        if ((obj != null) && (obj.onBeforeChangeScaleFactor != null)) {
+          return obj.onBeforeChangeScaleFactor();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
       }
     }
 
@@ -4658,6 +6976,913 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
+  var Sprite_ActorFace;
+  //NUI 1.2
+  //rev 18.08.24
+
+    //"type": "face"
+  Sprite_ActorFace = class Sprite_ActorFace extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._create();
+      this.draw(this.settings.faceName, this.settings.faceIndex);
+      this.flipX(this.settings.mirror);
+      return;
+    }
+
+    isLoaded() {
+      return true;
+    }
+
+    defaultSettings() {
+      return {
+        faceName: "",
+        faceIndex: 0,
+        size: 144,
+        mirror: false
+      };
+    }
+
+    realWidth() {
+      if (this.isNotHaveBounds()) {
+        return 0;
+      }
+      return this.settings.size;
+    }
+
+    realHeight() {
+      if (this.isNotHaveBounds()) {
+        return 0;
+      }
+      return this.settings.size;
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        size: function(v) {
+          return this.setSize(v);
+        },
+        faceName: function(v) {
+          return this.draw(v, this.settings.faceIndex);
+        },
+        faceIndex: function(v) {
+          return this.draw(this.settings.faceName, v);
+        },
+        mirror: function(v) {
+          return this.flipX(v);
+        }
+      });
+    }
+
+    setSize(size = 144) {
+      var e;
+      try {
+        size = this._getValueByStr(size, 'width', this);
+        if (size != null) {
+          this.settings.size = size;
+        }
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    draw(faceName = "", faceIndex = 0) {
+      var e;
+      try {
+        this.settings.faceName = faceName;
+        this.settings.faceIndex = faceIndex;
+        if (faceName === "") {
+          this.image.bitmap.clear();
+          return;
+        }
+        return this._drawFaceImage(faceName);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    flipX(isMirror) {
+      var e;
+      try {
+        if (isMirror) {
+          this.image.scale.x = -1;
+          return this.image.x = this.settings.size;
+        } else {
+          this.image.scale.x = 1;
+          return this.image.x = 0;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _create() {
+      var e;
+      try {
+        this.image = new KDCore.Sprite(new Bitmap(1, 1));
+        return this.addChild(this.image);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawFaceImage(faceName) {
+      var e;
+      try {
+        this._srcBitmap = ImageManager.loadFace(faceName);
+        return this._srcBitmap.addLoadListener(this._onBitmapLoaded.bind(this));
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onBitmapLoaded() {
+      var e;
+      try {
+        this._onResize();
+        this._applyRequiredData();
+        return this._executeLoadListeners();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var b, e, fh, fw, size, sx, sy;
+      try {
+        this.image.bitmap = new Bitmap(this.realWidth(), this.realHeight());
+        if (this._srcBitmap == null) {
+          return;
+        }
+        b = this._srcBitmap;
+        if (KDCore.isMZ()) {
+          fw = ImageManager.faceWidth;
+          fh = ImageManager.faceHeight;
+        } else {
+          fw = Window_Base._faceWidth;
+          fh = Window_Base._faceHeight;
+        }
+        size = this.settings.size;
+        sx = (this.settings.faceIndex % 4) * fw;
+        sy = Math.floor(this.settings.faceIndex / 4) * fh;
+        this.image.bitmap.blt(b, sx, sy, fw, fh, 0, 0, size, size);
+        this.setFrame(0, 0, size, size);
+        return this.flipX(this.settings.mirror);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_ActorFace = Sprite_ActorFace;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_BaseCircle;
+  //NUI 1.0
+  //rev 28.04.24
+
+    //"type": "circle"
+  Sprite_BaseCircle = class Sprite_BaseCircle extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._create();
+      this._applySettings();
+      this._onResize();
+      return;
+    }
+
+    defaultSettings() {
+      return {
+        width: 100,
+        height: 100,
+        fillGradient: null, // { gradient stops }
+        gradientStart: {
+          x: 0,
+          y: 100,
+          r: 30
+        },
+        gradientEnd: {
+          x: 100,
+          y: 100,
+          r: 70
+        },
+        fillColor: 0xffffff,
+        fillAlpha: 1,
+        strokeWidth: 4,
+        strokeColor: 0x000000,
+        strokeAlpha: 1
+      };
+    }
+
+    defaultGradientSettings() {
+      return {
+        "0": "#9ff",
+        "1": "#033"
+      };
+    }
+
+    isHaveGradient() {
+      return false; //@settings.fillGradient?
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        stroke: function(v) {
+          if (v != null) {
+            return this.setStroke(v.width, v.color, v.alpha);
+          }
+        },
+        fill: function(v) {
+          if (v != null) {
+            return this.setFill(v.color, v.alpha);
+          }
+        }
+      });
+    }
+
+    setFill(color = "#FFF", alpha = 1) {
+      var e;
+      try {
+        this.settings.fillColor = color;
+        this.settings.fillAlpha = alpha;
+        this.settings.fillGradient = null;
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setStroke(color = "#FFF", width = 0, alpha = 1) {
+      var e;
+      try {
+        this.settings.strokeColor = color;
+        this.settings.strokeAlpha = alpha;
+        this.settings.strokeWidth = width;
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setSize(width = 100, height = 100) {
+      var e, h, w;
+      try {
+        w = this._getValueByStr(width, 'width', this);
+        h = this._getValueByStr(height, 'height', this);
+        if (w != null) {
+          this.settings.width = w;
+        }
+        if (h != null) {
+          this.settings.height = h;
+        }
+        this._applySettings();
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _create() {
+      var e;
+      try {
+        this.graphics = new PIXI.Graphics();
+        return this.addChild(this.graphics);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applySettings() {
+      var e, gradientSettings;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        this.graphics.clear();
+        if (this.settings.fillGradient != null) {
+          gradientSettings = Object.assign(this.defaultGradientSettings(), this.settings.fillGradient);
+        }
+        this._applyGradientTexture(gradientSettings);
+        return this._drawBaseCircle();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applyGradientTexture(fillGradient) {
+      var e;
+      try {
+
+      } catch (error) {
+        /*{ width, height } = @settings
+        c = document.createElement("canvas")
+        ctx = c.getContext("2d")*/
+        /*grd = ctx.createRadialGradient(
+            @settings.gradientStart.x,
+            @settings.gradientStart.y,
+            @settings.gradientStart.r,
+            @settings.gradientEnd.x,
+            @settings.gradientEnd.y,
+            @settings.gradientEnd.r
+        )*/
+        //grd = ctx.createRadialGradient(110, 90, 30, 100, 100, 70)
+        /*for key, value of fillGradient
+        try
+            grd.addColorStop(Number(key), value)
+        catch e
+            KDCore.warning e*/
+        /*grd.addColorStop(0, "pink")
+        grd.addColorStop(0.9, "white")
+        grd.addColorStop(1, "green")
+
+        ctx.fillStyle = grd
+        ctx.fillRect(0, 0, 400, 400)
+        texture = new PIXI.Texture.from(c)
+        @graphics.beginTextureFill(texture)*/
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawBaseCircle() {
+      var colorData, d, e, fillAlpha, fillColor, height, strokeAlpha, strokeColor, strokeColorData, width;
+      try {
+        ({width, height} = this.settings);
+        ({fillColor, fillAlpha} = this.settings);
+        colorData = this._buildColorData(fillColor, fillAlpha);
+        if (this.settings.strokeWidth > 0) {
+          ({strokeColor, strokeAlpha} = this.settings);
+          strokeColorData = this._buildColorData(strokeColor, strokeAlpha);
+          d = this.settings.strokeWidth;
+          // * Base Fill
+          this._drawElipse(0, 0, width, height, colorData);
+          // * Stroke
+          return this._drawStroke(0, 0, width, height, d, strokeColorData);
+        } else {
+          // * Base Fill only
+          return this._drawElipse(0, 0, width, height, colorData);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _buildColorData(c = 0xfff, a = 1) {
+      var e;
+      try {
+        if (typeof c === 'string') {
+          c = KDCore.Utils.string2hex(c);
+        }
+        return [c, a];
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return [0xfff, 1];
+      }
+    }
+
+    _drawElipse(x, y, w, h, colorData) {
+      var e, g;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        g = this.graphics;
+        if (!this.isHaveGradient()) {
+          g.beginFill(...colorData);
+        }
+        g.drawEllipse(x, y, w / 2, h / 2);
+        if (!this.isHaveGradient()) {
+          return g.endFill();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawStroke(x, y, w, h, d, colorData) {
+      var e, g;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        g = this.graphics;
+        g.lineStyle(d, ...colorData);
+        return g.drawEllipse(x, y, w / 2, h / 2);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var e;
+      try {
+        this.width = this.settings.width;
+        this.height = this.settings.height;
+        // * Круг (элипс) рисуется от центра, что не удобно
+        // при расчёте координат, поэтому сдвигаем в левый вверхний угол
+        this.graphics.x = this.settings.width * 0.5;
+        return this.graphics.y = this.settings.height * 0.5;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_BaseCircle = Sprite_BaseCircle;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_BaseRect;
+  //NUI 1.0
+  //rev 28.04.24
+
+    //"type": "rect"
+  Sprite_BaseRect = class Sprite_BaseRect extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._create();
+      this._applySettings();
+      this._onResize();
+      return;
+    }
+
+    defaultSettings() {
+      return {
+        width: 100,
+        height: 100,
+        corners: 0, // {  topLeft, topRight, bottomRight, bottomLeft }
+        fillGradient: null, // { gradient stops }
+        gradientStart: {
+          x: 0,
+          y: 0
+        },
+        gradientEnd: {
+          x: 0,
+          y: 100
+        },
+        fillColor: 0xffffff,
+        fillAlpha: 1,
+        strokeWidth: 4,
+        strokeColor: 0x000000,
+        strokeAlpha: 1
+      };
+    }
+
+    defaultGradientSettings() {
+      return {
+        "0": "#9ff",
+        "1": "#033"
+      };
+    }
+
+    defaultCornersSettings() {
+      return {
+        topLeft: 0,
+        topRight: 0,
+        bottomRight: 0,
+        bottomLeft: 0
+      };
+    }
+
+    isHaveGradient() {
+      return this.settings.fillGradient != null;
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        stroke: function(v) {
+          if (v != null) {
+            return this.setStroke(v.width, v.color, v.alpha);
+          }
+        },
+        fill: function(v) {
+          if (v != null) {
+            return this.setFill(v.color, v.alpha);
+          }
+        },
+        gradientStart: function(v) {
+          if (v != null) {
+            return this.setGradientStartEnd(v, this.settings.gradientEnd);
+          }
+        },
+        gradientEnd: function(v) {
+          if (v != null) {
+            return this.setGradientStartEnd(this.settings.gradientStart, v);
+          }
+        }
+      });
+    }
+
+    setGradientStartEnd(start, end) {
+      var e;
+      try {
+        if (start != null) {
+          start.x = this._getValueByStr(start.x, 'width', this);
+          start.y = this._getValueByStr(start.y, 'height', this);
+        }
+        if (end != null) {
+          end.x = this._getValueByStr(end.x, 'width', this);
+          end.y = this._getValueByStr(end.y, 'height', this);
+        }
+        if (start != null) {
+          this.settings.gradientStart = start;
+        }
+        if (end != null) {
+          this.settings.gradientEnd = end;
+        }
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setFill(color = "#FFF", alpha = 1) {
+      var e;
+      try {
+        this.settings.fillColor = color;
+        this.settings.fillAlpha = alpha;
+        this.settings.fillGradient = null;
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setStroke(color = "#FFF", width = 0, alpha = 1) {
+      var e;
+      try {
+        this.settings.strokeColor = color;
+        this.settings.strokeAlpha = alpha;
+        this.settings.strokeWidth = width;
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setSize(width = 100, height = 100) {
+      var e, h, w;
+      try {
+        w = this._getValueByStr(width, 'width', this);
+        h = this._getValueByStr(height, 'height', this);
+        if (w != null) {
+          this.settings.width = w;
+        }
+        if (h != null) {
+          this.settings.height = h;
+        }
+        this._applySettings();
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _create() {
+      var e;
+      try {
+        this.graphics = new PIXI.Graphics();
+        return this.addChild(this.graphics);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applySettings() {
+      var cornersSettings, e, gradientSettings;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        this.graphics.clear();
+        if (this.settings.fillGradient != null) {
+          gradientSettings = Object.assign(this.defaultGradientSettings(), this.settings.fillGradient);
+        }
+        this._applyGradientTexture(gradientSettings);
+        if (typeof this.settings.corners === "number") {
+          return this._drawBaseRoundedRect();
+        } else if (this.settings.corners != null) {
+          cornersSettings = Object.assign(this.defaultCornersSettings(), this.settings.corners);
+          return this._drawComplexRoundedRect(cornersSettings);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applyGradientTexture(fillGradient) {
+      var c, convertedValue, ctx, e, grd, height, key, texture, value, width;
+      try {
+        if (KDCore.isMV()) {
+          return;
+        }
+        ({width, height} = this.settings);
+        c = document.createElement("canvas");
+        ctx = c.getContext("2d");
+        grd = ctx.createLinearGradient(this.settings.gradientStart.x, this.settings.gradientStart.y, this.settings.gradientEnd.x, this.settings.gradientEnd.y);
+        for (key in fillGradient) {
+          value = fillGradient[key];
+          try {
+            convertedValue = this._convertGradientStopColor(value);
+            grd.addColorStop(Number(key), convertedValue);
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+          }
+        }
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, width, height);
+        texture = new PIXI.Texture.from(c);
+        return this.graphics.beginTextureFill(texture);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _convertGradientStopColor(color) {
+      var alpha, c, e, parts;
+      try {
+        if (color == null) {
+          return "#FFF";
+        }
+        if (!String.any(color)) {
+          return "#FFF";
+        }
+        if (color.contains("%")) {
+          parts = color.split("%");
+          color = parts[0];
+          alpha = Number(parts[1]);
+          c = KDCore.Color.FromHex(color);
+          c = c.reAlpha(alpha * 255);
+          return c.CSS;
+        } else {
+          return color;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return "#FFF";
+      }
+    }
+
+    _drawBaseRoundedRect() {
+      var colorData, corners, d, e, fillAlpha, fillColor, height, strokeAlpha, strokeColor, strokeColorData, width;
+      try {
+        ({width, height, corners} = this.settings);
+        ({fillColor, fillAlpha} = this.settings);
+        colorData = this._buildColorData(fillColor, fillAlpha);
+        if (this.settings.strokeWidth > 0) {
+          ({strokeColor, strokeAlpha} = this.settings);
+          strokeColorData = this._buildColorData(strokeColor, strokeAlpha);
+          d = this.settings.strokeWidth;
+          // * Base Fill
+          this._drawRect(0, 0, width, height, corners, colorData);
+          // * Stroke
+          return this._drawStroke(-d / 2, -d / 2, width + d / 2, height + d / 2, corners, d, strokeColorData);
+        } else {
+          // * Base Fill only
+          return this._drawRect(0, 0, width, height, corners, colorData);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _buildColorData(c = 0xfff, a = 1) {
+      var e;
+      try {
+        if (typeof c === 'string') {
+          c = KDCore.Utils.string2hex(c);
+        }
+        return [c, a];
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return [0xfff, 1];
+      }
+    }
+
+    _drawRect(x, y, w, h, r, colorData) {
+      var e, g;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        g = this.graphics;
+        if (!this.isHaveGradient()) {
+          g.beginFill(...colorData);
+        }
+        if (r > 0) {
+          g.drawRoundedRect(x, y, w, h, r);
+        } else {
+          g.drawRect(x, y, w, h);
+        }
+        if (!this.isHaveGradient()) {
+          return g.endFill();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawStroke(x, y, w, h, r, d, colorData) {
+      var e, g;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        g = this.graphics;
+        g.lineStyle(d, ...colorData);
+        if (r > 0) {
+          return g.drawRoundedRect(x, y, w, h, r);
+        } else {
+          return g.drawRect(x, y, w, h);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawComplexRoundedRect(cornersSettings) {
+      var bottomLeft, bottomRight, colorData, d, e, fillAlpha, fillColor, height, strokeAlpha, strokeColor, strokeColorData, topLeft, topRight, width;
+      try {
+        if (cornersSettings == null) {
+          return;
+        }
+        ({width, height} = this.settings);
+        ({fillColor, fillAlpha} = this.settings);
+        colorData = this._buildColorData(fillColor, fillAlpha);
+        ({topLeft, topRight, bottomRight, bottomLeft} = cornersSettings);
+        if (this.settings.strokeWidth > 0) {
+          ({strokeColor, strokeAlpha} = this.settings);
+          strokeColorData = this._buildColorData(strokeColor, strokeAlpha);
+          d = this.settings.strokeWidth;
+          this._drawComplexRect(0, 0, width, height, colorData, topLeft, topRight, bottomRight, bottomLeft);
+          return this._drawComplexStroke(-d / 2, -d / 2, width + (d / 2), height + (d / 2), strokeColorData, d, topLeft, topRight, bottomRight, bottomLeft);
+        } else {
+          return this._drawComplexRect(0, 0, width, height, colorData, topLeft, topRight, bottomRight, bottomLeft);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawComplexRect(x, y, width, height, colorData, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius) {
+      var e;
+      try {
+        if (!this.isHaveGradient()) {
+          this.graphics.beginFill(...colorData);
+        }
+        // Starting from the top left corner.
+        this.graphics.moveTo(x + topLeftRadius, y);
+        // Drawing the top line with top right corner.
+        this.graphics.lineTo(x + width - topRightRadius, y);
+        if (topRightRadius > 0) {
+          this.graphics.quadraticCurveTo(x + width, y, x + width, y + topRightRadius);
+        }
+        // Drawing the right line with bottom right corner.
+        this.graphics.lineTo(x + width, y + height - bottomRightRadius);
+        if (bottomRightRadius > 0) {
+          this.graphics.quadraticCurveTo(x + width, y + height, x + width - bottomRightRadius, y + height);
+        }
+        // Drawing the bottom line with bottom left corner.
+        this.graphics.lineTo(x + bottomLeftRadius, y + height);
+        if (bottomLeftRadius > 0) {
+          this.graphics.quadraticCurveTo(x, y + height, x, y + height - bottomLeftRadius);
+        }
+        // Drawing the left line with top left corner and closing the shape.
+        this.graphics.lineTo(x, y + topLeftRadius);
+        if (topLeftRadius > 0) {
+          this.graphics.quadraticCurveTo(x, y, x + topLeftRadius, y);
+        }
+        if (!this.isHaveGradient()) {
+          return this.graphics.endFill();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawComplexStroke(x, y, width, height, colorData, d, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius) {
+      var e, graphics;
+      try {
+        graphics = this.graphics;
+        graphics.lineStyle(d, ...colorData);
+        // Starting from the top left corner.
+        graphics.moveTo(x + topLeftRadius, y);
+        // Drawing the top line with top right corner.
+        graphics.lineTo(x + width - topRightRadius, y);
+        if (topRightRadius > 0) {
+          graphics.quadraticCurveTo(x + width, y, x + width, y + topRightRadius);
+        }
+        // Drawing the right line with bottom right corner.
+        graphics.lineTo(x + width, y + height - bottomRightRadius);
+        if (bottomRightRadius > 0) {
+          graphics.quadraticCurveTo(x + width, y + height, x + width - bottomRightRadius, y + height);
+        }
+        // Drawing the bottom line with bottom left corner.
+        graphics.lineTo(x + bottomLeftRadius, y + height);
+        if (bottomLeftRadius > 0) {
+          graphics.quadraticCurveTo(x, y + height, x, y + height - bottomLeftRadius);
+        }
+        // Drawing the left line with top left corner and closing the shape.
+        graphics.lineTo(x, y + topLeftRadius);
+        if (topLeftRadius > 0) {
+          graphics.quadraticCurveTo(x, y, x + topLeftRadius, y);
+        }
+        return graphics.closePath();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var e;
+      try {
+        this.width = this.settings.width;
+        return this.height = this.settings.height;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_BaseRect = Sprite_BaseRect;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
   var Sprite_ButtonsGroup;
   // * Класс для реализации набора кнопок переключателей (Tabs)
   // * Когда только одна кнопка может быть нажата (выбрана)
@@ -4806,6 +8031,3586 @@ KDCore.registerLibraryToLoad(function() {
   // ■ END PRIVATE
   //---------------------------------------------------------------------------
   return KDCore.Sprite_ButtonsGroupHandler = Sprite_ButtonsGroupHandler;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_Gauge;
+  //NUI 1.1
+  //rev 16.06.24
+
+    //"type": "gauge"
+  Sprite_Gauge = class Sprite_Gauge extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._loaded = false;
+      this._lastValue = 1;
+      this._gaugeBaseLayer = new KDCore.Sprite();
+      this.add(this._gaugeBaseLayer);
+      this._applySettings();
+      return;
+    }
+
+    defaultSettings() {
+      return {
+        fillMode: "color", //image, plane, color
+        fillColor: "#ffffff",
+        fillOpacity: 255,
+        imageName: "", // * for fill, if fillMode is image, for plane if fillMode is plane
+        folderName: "pictures",
+        margins: 2, // * For plane image
+        width: "auto",
+        height: "auto",
+        mask: "",
+        backColor: "#000000",
+        backImage: "",
+        backOpacity: 255,
+        vertical: false
+      };
+    }
+
+    isLoaded() {
+      var e;
+      try {
+        return this._loaded === true;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return false;
+    }
+
+    realWidth() {
+      var e;
+      try {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if (this.settings.width !== "auto") {
+          return this.settings.width;
+        } else if (this._gaugeSpr != null) {
+          return this._gaugeSpr.realWidth(); //TODO: Gauge Modes
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.width;
+    }
+
+    realHeight() {
+      var e;
+      try {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if (this.settings.height !== "auto") {
+          return this.settings.height;
+        } else if (this._gaugeSpr != null) {
+          return this._gaugeSpr.realHeight(); //TODO: Gauge Modes
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.height;
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        rate: function(v) {
+          if (v != null) {
+            return this.draw(v);
+          }
+        },
+        fillImage: function(v) {
+          if (v != null) {
+            return this.setFillImage(v);
+          }
+        },
+        fillColor: function(v) {
+          if (v != null) {
+            return this.setFillColor(v);
+          }
+        },
+        fillOpacity: function(v) {
+          if (v != null) {
+            return this.setFillOpacity(v);
+          }
+        }
+      });
+    }
+
+    //TODO:!
+    //backImage: (v) ->
+    //backColor: (v) ->
+    //backOpacity: (v) ->
+    draw(percent = 1) {
+      var e;
+      try {
+        if (!this.isLoaded()) {
+          this._requireFunc('draw', arguments);
+          return;
+        }
+        this._lastValue = percent;
+        return this._drawGauge(percent);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setFillOpacity(opacity) {
+      var e, ref;
+      try {
+        this.settings.fillOpacity = opacity;
+        return (ref = this.fillLayer) != null ? ref.opacity = opacity : void 0;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setFillColor(color) {
+      var e;
+      try {
+        this.settings.fillColor = color;
+        if (this.fillColorBitmap != null) {
+          this._createColorGaugeFillColorBitmap();
+          return this._drawGauge(this._lastValue);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setFillImage(imageName) {
+      var e;
+      try {
+
+      } catch (error) {
+        //TODO:
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setSize(width = "auto", height = "auto") {
+      var e;
+      try {
+        if (width !== "auto") {
+          width = this._getValueByStr(width, 'width', this);
+        }
+        if (height !== "auto") {
+          height = this._getValueByStr(height, 'height', this);
+        }
+        if (width != null) {
+          this.settings.width = width;
+        }
+        if (height != null) {
+          this.settings.height = height;
+        }
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applySettings() {
+      var e;
+      try {
+        this._loaded = false;
+        this._destroyExistGauge();
+        this._createGaugeFromSettings();
+        return this.draw(this._lastValue);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _destroyExistGauge() {
+      var e;
+      try {
+        if (this._gaugeSpr == null) {
+          return;
+        }
+        this._gaugeSpr.removeFromParent();
+        return this._gaugeSpr = null;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createGaugeFromSettings() {
+      var e;
+      try {
+        this._gaugeSpr = new KDCore.Sprite();
+        this._gaugeBaseLayer.add(this._gaugeSpr);
+        switch (this.settings.fillMode) {
+          case "image":
+            return this._createImageGauge();
+          case "plane":
+            return this._createPlaneGauge();
+          case "color":
+            return this._createColorGauge();
+          default:
+            return console.warn("Unknown Gauge fillMode: " + this.settings.fillMode);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createImageGauge() {
+      var e;
+      try {
+        this._gaugeSourceImage = new KDCore.Sprite_Image({
+          imageName: this.settings.imageName,
+          folderName: this.settings.folderName,
+          width: this.settings.width,
+          height: this.settings.height
+        });
+        return this._gaugeSourceImage.addLoadListener(this._onGaugeFillImageLoaded.bind(this));
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onGaugeFillImageLoaded() {
+      var e;
+      try {
+        this._addBackground(this._gaugeSourceImage.realWidth(), this._gaugeSourceImage.realHeight());
+        this.fillLayer = KDCore.Sprite.FromBitmap(this._gaugeSourceImage.realWidth(), this._gaugeSourceImage.realHeight());
+        this.fillLayer.opacity = this.settings.fillOpacity;
+        this._gaugeSpr.add(this.fillLayer);
+        this._addMask();
+        return this._onGaugeLoadedAndReady();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onGaugeLoadedAndReady() {
+      var e;
+      try {
+        this._loaded = true;
+        this.width = this.realWidth();
+        this.height = this.realHeight();
+        this._applyRequiredData();
+        return this._executeLoadListeners();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createPlaneGauge() {
+      var e;
+      try {
+        if (this.settings.width === "auto") {
+          // * Нельзя создать Plane Gauge с auto размером, поэтому задаём стандартные значения
+          this.settings.width = 80;
+        }
+        if (this.settings.height === "auto") {
+          this.settings.height = 20;
+        }
+        this._addBackground(this.settings.width, this.settings.height);
+        this.fillLayer = new KDCore.Sprite_Plane({
+          imageName: this.settings.imageName,
+          folderName: this.settings.folderName,
+          width: this.settings.width,
+          height: this.settings.height,
+          margins: this.settings.margins
+        });
+        this.fillLayer.opacity = this.settings.fillOpacity;
+        this._gaugeSpr.add(this.fillLayer);
+        this._addMask();
+        return this._onGaugeLoadedAndReady();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createColorGauge() {
+      var e;
+      try {
+        if (this.settings.width === "auto") {
+          // * Нельзя создать цветную Gauge с auto размером, поэтому задаём стандартные значения
+          this.settings.width = 80;
+        }
+        if (this.settings.height === "auto") {
+          this.settings.height = 20;
+        }
+        this._addBackground(this.settings.width, this.settings.height);
+        this.fillLayer = KDCore.Sprite.FromBitmap(this.settings.width, this.settings.height);
+        this.fillLayer.opacity = this.settings.fillOpacity;
+        this._createColorGaugeFillColorBitmap();
+        this._gaugeSpr.add(this.fillLayer);
+        this._addMask();
+        return this._onGaugeLoadedAndReady();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createColorGaugeFillColorBitmap() {
+      var e;
+      try {
+        this.fillColorBitmap = new Bitmap(this.settings.width, this.settings.height);
+        return this.fillColorBitmap.fillAll(this.settings.fillColor);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _addBackground(width, height) {
+      var background, e;
+      try {
+        if (this._gaugeSpr == null) {
+          return;
+        }
+        background = null;
+        if (String.any(this.settings.backImage)) {
+          background = this._createGaugeBackgroundImage();
+        } else if (String.any(this.settings.backColor)) {
+          background = this._createGaugeBackgroundColor(width, height, this.settings.backColor);
+        }
+        if (background != null) {
+          if (this.settings.backOpacity != null) {
+            background.opacity = this.settings.backOpacity;
+          }
+          return this._gaugeSpr.add(background);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _addMask() {
+      var e, gaugeMask;
+      try {
+        if (this._gaugeSpr == null) {
+          return;
+        }
+        if (String.isNullOrEmpty(this.settings.mask)) {
+          return;
+        }
+        gaugeMask = new KDCore.Sprite_Image({
+          imageName: this.settings.mask,
+          folderName: this.settings.folderName,
+          width: this.settings.width,
+          height: this.settings.height
+        });
+        this._gaugeSpr.mask = gaugeMask.image;
+        this._gaugeSpr.add(gaugeMask);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        this._gaugeSpr.mask = null;
+      }
+    }
+
+    _createGaugeBackgroundColor(width, height, color) {
+      var background, e;
+      try {
+        background = KDCore.Sprite.FromBitmap(width, height);
+        background.b().fillAll(color);
+        return background;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return new KDCore.Sprite();
+      }
+    }
+
+    _createGaugeBackgroundImage() {
+      var e;
+      try {
+        return new KDCore.Sprite_Image({
+          imageName: this.settings.backImage,
+          folderName: this.settings.folderName,
+          width: this.settings.width,
+          height: this.settings.height
+        });
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return new KDCore.Sprite();
+      }
+    }
+
+    _drawGauge(percent) {
+      var e;
+      try {
+        if (this.fillLayer == null) {
+          return;
+        }
+        // * See COE, Fill Indicator
+        //if @settings.vertical is true
+        //TODO: VERTICAL
+        //else
+        return this._drawHorizontal(percent);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawHorizontal(percent) {
+      var e;
+      try {
+        switch (this.settings.fillMode) {
+          case "image":
+            return this._drawImageGauge(percent);
+          case "plane":
+            return this._drawPlaneGauge(percent);
+          case "color":
+            return this._drawColorGauge(percent);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawImageGauge(percent) {
+      var e, fillBitmap;
+      try {
+        this.fillLayer.clear();
+        fillBitmap = this._gaugeSourceImage.image.bitmap;
+        return this._drawGaugeBitmapBased(percent, fillBitmap);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawGaugeBitmapBased(percent, fillBitmap) {
+      var e, h, w;
+      try {
+        w = this.realWidth() * percent;
+        h = this.realHeight();
+        return this.fillLayer.b().blt(fillBitmap, 0, 0, w, h, 0, 0);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawColorGauge(percent) {
+      var e, fillBitmap;
+      try {
+        this.fillLayer.clear();
+        fillBitmap = this.fillColorBitmap;
+        return this._drawGaugeBitmapBased(percent, fillBitmap);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawPlaneGauge(percent) {
+      var e, h, w;
+      try {
+        w = this.realWidth() * percent;
+        h = this.realHeight();
+        return this.fillLayer.setSize(w, h);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_Gauge = Sprite_Gauge;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_Group;
+  //NUI 1.0
+  //rev 02.08.24
+  Sprite_Group = class Sprite_Group extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      if (this.settings.horizontalNavigation === true) {
+        this.pIsVerticalKeyboardNavigation = function() {
+          return false;
+        };
+      }
+      if (this.settings.freeNagivation === true) {
+        this.pIsFreeKeyboardNavigation = function() {
+          return true;
+        };
+      }
+      this._applySettings();
+      this._onResize();
+      return;
+    }
+
+    update() {
+      var e;
+      super.update();
+      try {
+        if (this._isNeedWaitLoadingChild === true) {
+          //console.log("REFRESH BY LOAD")
+          return this.refreshBindings(this._dataObjectRef, true);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    refreshBindings(dataObject, recursive) {
+      var c, i, len, ref;
+      super.refreshBindings(...arguments);
+      ref = this.children;
+      for (i = 0, len = ref.length; i < len; i++) {
+        c = ref[i];
+        if ((c.isLoaded != null) && !c.isLoaded()) {
+          this._startWaitLoading(dataObject);
+          return;
+        }
+      }
+      this._isNeedWaitLoadingChild = false;
+    }
+
+    _startWaitLoading(_dataObjectRef) {
+      var e;
+      this._dataObjectRef = _dataObjectRef;
+      try {
+        return this._isNeedWaitLoadingChild = true;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    defaultSettings() {
+      return {
+        keyboardHandling: false,
+        horizontalNavigation: false,
+        freeNagivation: false,
+        width: "auto",
+        height: "auto"
+      };
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        }
+      });
+    }
+
+    setSize(width = "auto", height = "auto") {
+      var e;
+      try {
+        if (width !== "auto") {
+          width = this._getValueByStr(width, 'width', this);
+        }
+        if (height !== "auto") {
+          height = this._getValueByStr(height, 'height', this);
+        }
+        if (width != null) {
+          this.settings.width = width;
+        }
+        if (height != null) {
+          this.settings.height = height;
+        }
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    realWidth() {
+      var e;
+      try {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if (this.settings.width === "auto") {
+          return this._calculateMax("x", "width");
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.settings.width;
+    }
+
+    realHeight() {
+      var e;
+      try {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if (this.settings.height === "auto") {
+          return this._calculateMax("y", "height");
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.settings.height;
+    }
+
+    _calculateMax(a, b) {
+      var child, e, i, len, ref, size, value;
+      try {
+        value = 0;
+        ref = this.children;
+        for (i = 0, len = ref.length; i < len; i++) {
+          child = ref[i];
+          size = child[a] + KDCore.Utils.getRealSpriteSize(b, child);
+          if (size > value) {
+            value = size;
+          }
+        }
+        if (value < 0) {
+          value = 0;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return 0;
+      }
+      return value;
+    }
+
+    _applySettings() {
+      var e;
+      try {
+        if (this.settings.keyboardHandling === true) {
+          return this.activateHandlerManagment();
+        } else {
+          return this.deactivateHandlerManagment();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var e;
+      try {
+        this.width = this.realWidth();
+        return this.height = this.realHeight();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_Group = Sprite_Group;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_Image;
+  //NUI 1.0
+  //rev 09.08.24
+
+    //"type": "image"
+  Sprite_Image = class Sprite_Image extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._loaded = false;
+      this._create();
+      this._onResize();
+      this.draw(this.settings.imageName);
+      return;
+    }
+
+    isLoaded() {
+      var e;
+      try {
+        if (this.settings.width !== "auto" && this.settings.height !== "auto") {
+          return true;
+        } else {
+          return this._loaded === true;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return false;
+    }
+
+    defaultSettings() {
+      return {
+        imageName: "",
+        folderName: "pictures",
+        width: "auto",
+        height: "auto",
+        keepAspect: false
+      };
+    }
+
+    realWidth() {
+      var e;
+      try {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if (this.settings.width === "auto") {
+          if (this._srcBitmap != null) {
+            return this._srcBitmap.width;
+          } else {
+            if ((this.image.bitmap != null) && this.image.bitmap.isReady()) {
+              return this.image.bitmap.width;
+            }
+          }
+        } else {
+          return this.settings.width;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.width;
+    }
+
+    realHeight() {
+      var e;
+      try {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if (this.settings.height === "auto") {
+          if (this._srcBitmap != null) {
+            return this._srcBitmap.height;
+          } else {
+            if ((this.image.bitmap != null) && this.image.bitmap.isReady()) {
+              return this.image.bitmap.height;
+            }
+          }
+        } else {
+          return this.settings.height;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.height;
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        image: function(v) {
+          return this.draw(v);
+        },
+        icon: function(v) {
+          return this.drawIcon(v);
+        }
+      });
+    }
+
+    setSize(width = "auto", height = "auto") {
+      var e;
+      try {
+        if (width !== "auto") {
+          width = this._getValueByStr(width, 'width', this);
+        }
+        if (height !== "auto") {
+          height = this._getValueByStr(height, 'height', this);
+        }
+        if (width != null) {
+          this.settings.width = width;
+        }
+        if (height != null) {
+          this.settings.height = height;
+        }
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setImage(imageName, folderName = null) {
+      var e;
+      try {
+        if (String.any(folderName)) {
+          this.settings.folderName = folderName;
+        }
+        return this.draw(imageName);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    // * Если не иконка (число), то ничего не рисует (защита)
+    drawIcon(iconIndex) {
+      var e;
+      try {
+        if (isFinite(iconIndex)) {
+          return this.draw(iconIndex);
+        } else {
+          return this.draw("");
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    draw(imageName = "") {
+      var e;
+      try {
+        if (String.any(imageName) && isFinite(imageName)) {
+          return this._drawIcon(imageName);
+        } else if (String.any(imageName)) {
+          return this._drawImage(imageName);
+        } else {
+          this._srcBitmap = null;
+          return this._onResize();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _create() {
+      var e;
+      try {
+        this.image = new KDCore.Sprite(new Bitmap(1, 1));
+        return this.addChild(this.image);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawIcon(iconIndex) {
+      var e, w;
+      try {
+        w = this.settings.width;
+        if (w === "auto") {
+          w = 32;
+        }
+        this.settings.height = w;
+        this._srcBitmap = new Bitmap(w, w);
+        this._srcBitmap.drawIcon(0, 0, iconIndex, w, true);
+        this._loaded = true;
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawImage(imageName) {
+      var e, folderName;
+      try {
+        ({folderName} = this.settings);
+        this._loaded = false;
+        this._srcBitmap = ImageManager.loadBitmap('img/' + folderName + "/", imageName);
+        return this._srcBitmap.addLoadListener(this._onBitmapLoaded.bind(this));
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onBitmapLoaded() {
+      var e;
+      try {
+        this._loaded = true;
+        this._onResize();
+        this._applyRequiredData();
+        return this._executeLoadListeners();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var b, e, fh, fw, height, width;
+      try {
+        this.image.bitmap = new Bitmap(this.realWidth(), this.realHeight());
+        if (this._srcBitmap == null) {
+          return;
+        }
+        b = this._srcBitmap;
+        //TODO: Опция, чтобы размер был с учётом аспекта
+        if (this.settings.keepAspect === true) {
+          ({width, height} = this._calculateAspectRatio(this.image.bitmap.width, this.image.bitmap.height, this._srcBitmap.width, this._srcBitmap.height));
+          fw = width;
+          fh = height;
+        } else {
+          fw = this.realWidth();
+          fh = this.realHeight();
+        }
+        return this.image.bitmap.blt(b, 0, 0, b.width, b.height, 0, 0, fw, fh);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _calculateAspectRatio(containerWidth, containerHeight, width, height) {
+      var aspectRatio, containerAspectRatio, e;
+      try {
+        aspectRatio = width / height;
+        containerAspectRatio = containerWidth / containerHeight;
+        if (aspectRatio > containerAspectRatio) {
+          width = containerWidth;
+          height = width / aspectRatio;
+        } else {
+          height = containerHeight;
+          width = height * aspectRatio;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return {width, height};
+    }
+
+  };
+  return KDCore.Sprite_Image = Sprite_Image;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_ImgButton;
+  //NUI 1.0
+  //rev 24.07.24
+
+    //"type": "legacyButton"
+  Sprite_ImgButton = class Sprite_ImgButton extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._create();
+      return;
+    }
+
+    defaultSettings() {
+      return {
+        width: "auto",
+        height: "auto",
+        imageName: "",
+        isFull: false,
+        folderName: "pictures",
+        isCheckAlpha: false,
+        handler: null,
+        forceSize: false // * Force change button bitmaps size
+      };
+    }
+
+    isLoaded() {
+      var e;
+      try {
+        if (this.settings.width !== "auto" && this.settings.height !== "auto") {
+          return true;
+        } else {
+          return this._loaded === true;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    realWidth() {
+      var e;
+      try {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if (this.settings.width === "auto") {
+          return this.button.realWidth();
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.settings.width;
+    }
+
+    realHeight() {
+      var e;
+      try {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if (this.settings.height === "auto") {
+          return this.button.realHeight();
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.settings.height;
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        image: function(v) {
+          return this.setImage(v);
+        },
+        enable: function(v) {
+          if (v != null) {
+            return this.setEnabledState(v);
+          }
+        },
+        handler: function(v) {
+          return this.setClickHandler(v);
+        }
+      });
+    }
+
+    setSize(width = "auto", height = "auto") {
+      var e;
+      try {
+        if (width !== "auto") {
+          width = this._getValueByStr(width, 'width', this);
+        }
+        if (height !== "auto") {
+          height = this._getValueByStr(height, 'height', this);
+        }
+        if (width != null) {
+          this.settings.width = width;
+        }
+        if (height != null) {
+          this.settings.height = height;
+        }
+        if (this.settings.forceSize === true) {
+          this._create();
+        }
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setImage(imageName = "") {
+      var e;
+      try {
+        if (this.button != null) {
+          this._lastButtonState = this.button.isEnabled();
+          this._lastButtonHandler = this.button._handler;
+        }
+        this.settings.imageName = imageName;
+        this._create();
+        // * Может не быть кнопки, если imageName == ""
+        if (this.button == null) {
+          return;
+        }
+        if (this._lastButtonState != null) {
+          this.setEnabledState(this._lastButtonState);
+          this._lastButtonState = null;
+        }
+        if (this._lastButtonHandler != null) {
+          this.setClickHandler(this._lastButtonHandler);
+          return this._lastButtonHandler = null;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setEnabledState(state = true) {
+      var e;
+      try {
+        if (this.button == null) {
+          return;
+        }
+        if (state === true) {
+          return this.button.enable();
+        } else {
+          return this.button.disable();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    // * В отличии от AddClickHandler, удаляет все предидущие
+    setClickHandler(handler) {
+      var e;
+      try {
+        if (this.button == null) {
+          return;
+        }
+        this.button.clearClickHandler();
+        if ((handler != null) && typeof handler === "function") {
+          this.settings.handler = handler;
+          return this.button.addClickHandler(handler);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    // * EXPAND FIELDS
+    click() {
+      var ref;
+      return (ref = this.button) != null ? ref.click() : void 0;
+    }
+
+    setManualHover() {
+      var ref;
+      return (ref = this.button) != null ? ref.setManualHover() : void 0;
+    }
+
+    disableManualHover() {
+      var ref;
+      return (ref = this.button) != null ? ref.disableManualHover() : void 0;
+    }
+
+    setManualSelected() {
+      var ref;
+      return (ref = this.button) != null ? ref.setManualSelected(...arguments) : void 0;
+    }
+
+    enableClick() {
+      var ref;
+      return (ref = this.button) != null ? ref.enableClick() : void 0;
+    }
+
+    disableClick() {
+      var ref;
+      return (ref = this.button) != null ? ref.disableClick() : void 0;
+    }
+
+    desaturate() {
+      var ref;
+      return (ref = this.button) != null ? ref.desaturate() : void 0;
+    }
+
+    isMouseIn() {
+      return (this.button != null) && this.button.isMouseIn();
+    }
+
+    isActive() {
+      return (this.button != null) && this.button.isActive();
+    }
+
+    isDisabled() {
+      return this.isEnabled();
+    }
+
+    isEnabled() {
+      return (this.button != null) && this.button.isEnabled();
+    }
+
+    addClickHandler() {
+      return this.setClickHandler(...arguments);
+    }
+
+    clearClickHandler() {
+      var ref;
+      return (ref = this.button) != null ? ref.clearClickHandler() : void 0;
+    }
+
+    simulateClick() {
+      var ref;
+      return (ref = this.button) != null ? ref.simulateClick() : void 0;
+    }
+
+    refreshState() {
+      var ref;
+      return (ref = this.button) != null ? ref.refreshState(...arguments) : void 0;
+    }
+
+    disable() {
+      var e, ref;
+      try {
+        this.settings.enabled = false;
+        return (ref = this.button) != null ? ref.disable() : void 0;
+      } catch (error) {
+        e = error;
+        return console.warn(e);
+      }
+    }
+
+    enable() {
+      var e, ref;
+      try {
+        this.settings.enabled = true;
+        return (ref = this.button) != null ? ref.enable() : void 0;
+      } catch (error) {
+        e = error;
+        return console.warn(e);
+      }
+    }
+
+    // * ==============
+    _create() {
+      var e, size, sourceFolder;
+      try {
+        this._loaded = false;
+        if (this.button != null) {
+          this._destroyButton();
+        }
+        if (!String.any(this.settings.imageName)) {
+          return;
+        }
+        this.button = new KDCore.ButtonM(this.settings.imageName, this.settings.isFull, this.settings.folderName);
+        if (this.settings.forceSize === true && this.settings.width !== "auto" && this.settings.height !== "auto") {
+          sourceFolder = this.settings.folderName;
+          size = {
+            width: this.settings.width,
+            height: this.settings.height
+          };
+          this.button._getGetter = function() {
+            var getterFunc;
+            getterFunc = function(filename) {
+              var bitmap, outputBitmap;
+              outputBitmap = new Bitmap(size.width, size.height);
+              bitmap = ImageManager.loadBitmap('img/' + sourceFolder + '/', filename);
+              bitmap.addLoadListener(function() {
+                return outputBitmap.blt(bitmap, 0, 0, bitmap.width, bitmap.height, 0, 0, size.width, size.height);
+              });
+              return outputBitmap;
+            };
+            return getterFunc;
+          };
+          this.button._bitmaps = [];
+          this.button._loadBitmaps(this.settings.imageName, this.settings.isFull, this.settings.folderName);
+          this.button._setImageState(0);
+        }
+        if (this.settings.isCheckAlpha === true) {
+          this.button.isCheckAlpha = function() {
+            return true;
+          };
+        }
+        if (this.settings.handler != null) {
+          this.setClickHandler(this.settings.handler);
+        }
+        if (this.settings.enabled === false) {
+          this.button.disable();
+        }
+        this.button.addLoadListener(this._onLoaded.bind(this));
+        return this.addChild(this.button);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onLoaded() {
+      var e;
+      try {
+        this._loaded = true;
+        this._onResize();
+        this._applyRequiredData();
+        return this._executeLoadListeners();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _destroyButton() {
+      var e;
+      try {
+        if (this.button == null) {
+          return;
+        }
+        this.button.removeFromParent();
+        this._loaded = false;
+        if ($gameTemp.kdButtonUnderMouse === this.button) {
+          return $gameTemp.kdButtonUnderMouse = null;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var e;
+      try {
+        this.width = this.realWidth();
+        return this.height = this.realHeight();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_ImgButton = Sprite_ImgButton;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_ItemsList;
+  // * Класс который позволяет сделать список (на основе Window_Selectable), но из Sprite элементов, а не Draw на Bitmap
+
+    //rev 02.05.24
+
+    //TODO: Dynamic items height, controls handlers support
+  Sprite_ItemsList = class Sprite_ItemsList extends Window_Selectable {
+    constructor(r, settings = {}) {
+      if (KDCore.isMV()) {
+        super(r.x, r.y, r.width, r.height);
+      } else {
+        super(r);
+      }
+      this.settings = Object.assign(this.defaultSetting(), settings);
+      this.padding = this.settings.itemsPadding;
+      this._prevSelectedIndex = -1;
+      this._createItemsContainer();
+      this._createWindowContentMask();
+      this._setupBackgroundType();
+      return;
+    }
+
+    defaultSetting() {
+      return {
+        maxCols: 1,
+        isHaveSelectionEffect: false,
+        selectionEffects: ["glow;distance:12;outerStrength:3"],
+        scaleItemsWidth: false,
+        scaleItemsHeight: false,
+        defautItemHeight: 36,
+        isDrawDefaultItemBack: false,
+        backgroundType: 2,
+        itemsPadding: 12,
+        isHaveInOutAnimation: false,
+        inAnimation: "field:x;duration:0.15;keyframes:0=0,100=4",
+        outAnimation: "field:x;duration:0.15;keyframes:0=4,100=0"
+      };
+    }
+
+    activate(index) {
+      var e;
+      try {
+        this.refresh();
+        if (index != null) {
+          this.safeSelect(index);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return super.activate();
+    }
+
+    maxItems() {
+      return this.getAllItems().length;
+    }
+
+    maxCols() {
+      if (this.settings != null) {
+        return this.settings.maxCols || 1;
+      } else {
+        return 1;
+      }
+    }
+
+    getAllItems() {
+      return this.itemsSet || [];
+    }
+
+    setItems(itemsSet, singleItemHeight = null) {
+      this.itemsSet = itemsSet;
+      this.singleItemHeight = singleItemHeight;
+      this._prevSelectedIndex = -1;
+      this.setTopRow(0);
+      this._clearPreviousItems();
+      if (this.singleItemHeight == null) {
+        this._adjustAutoItemsHeight(this.itemsSet[0]);
+      }
+      this.refresh();
+      this._drawNewItems();
+    }
+
+    selectedItem() {
+      return this.itemAt(this.index());
+    }
+
+    setOkHandler(handler) {
+      return this.setHandler('ok', handler);
+    }
+
+    setCancelHandler(handler) {
+      return this.setHandler('cancel', handler);
+    }
+
+    setSelectionHandler(handler) {
+      return this.pOnSelectionChanged = handler;
+    }
+
+    itemAt(index) {
+      return this.getAllItems()[index];
+    }
+
+    isNeedScaleItemsW() {
+      return this.settings.scaleItemsWidth === true;
+    }
+
+    isNeedScaleItemsH() {
+      return this.settings.scaleItemsHeight === true;
+    }
+
+    // * NOT WORKS!!!
+    isUseDynamicHeight() {
+      return false;
+    }
+
+    lineHeight(index) {
+      if (this.settings != null) {
+        return this.singleItemHeight || this.settings.defautItemHeight;
+      } else {
+        return this.singleItemHeight || 36;
+      }
+    }
+
+    isDrawWindowDefaultItemsBack() {
+      return this.settings.isDrawDefaultItemBack === true;
+    }
+
+    //$[OVER]
+    _updateCursor() {
+      if (KDCore.isMV()) {
+        return this.setCursorRect(0, 0, 0, 0);
+      } else {
+        return this._cursorSprite.visible = false;
+      }
+    }
+
+    update() {
+      super.update();
+      this._itemsContainer.y = -this._scrollY;
+      return this._updateItemsSelectionState();
+    }
+
+  };
+  (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ PRIVATE
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    //---------------------------------------------------------------------------
+    var _;
+    //@[DEFINES]
+    _ = Sprite_ItemsList.prototype;
+    _._createItemsContainer = function() {
+      var ref;
+      if (!this.isDrawWindowDefaultItemsBack()) {
+        if ((ref = this._contentsBackSprite) != null) {
+          ref.visible = false;
+        }
+      }
+      this._windowItemsContentLayer = new Sprite();
+      this._windowItemsContentLayer.move(this._padding, this._padding);
+      this.addChild(this._windowItemsContentLayer);
+      this._itemsContainer = new KDCore.Sprite();
+      this._windowItemsContentLayer.addChild(this._itemsContainer);
+      this.addChild(this._downArrowSprite);
+      return this.addChild(this._upArrowSprite);
+    };
+    _._setupBackgroundType = function() {
+      return this.setBackgroundType(this.settings.backgroundType);
+    };
+    _._createWindowContentMask = function() {
+      var e, m, maskBitmap;
+      try {
+        maskBitmap = new Bitmap(this.width - this._padding * 2, this.height - this._padding * 2);
+        maskBitmap.fillAll("#FFF");
+        m = new Sprite(maskBitmap);
+        this._windowItemsContentLayer.mask = m;
+        return this._windowItemsContentLayer.addChild(m);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._adjustAutoItemsHeight = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          this.singleItemHeight = 36;
+          return;
+        }
+        if (item.realHeight != null) {
+          this.singleItemHeight = item.realHeight();
+        } else {
+          if (item.height > 0) {
+            this.singleItemHeight = item.height;
+          }
+        }
+        if (this.singleItemHeight === 0 || !this.singleItemHeight) {
+          return this.singleItemHeight = 36;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._clearPreviousItems = function() {
+      var c, e, i, j, len, len1, ref, results, toRemove;
+      try {
+        toRemove = [];
+        ref = this._itemsContainer.children;
+        for (i = 0, len = ref.length; i < len; i++) {
+          c = ref[i];
+          toRemove.push(c);
+        }
+        results = [];
+        for (j = 0, len1 = toRemove.length; j < len1; j++) {
+          c = toRemove[j];
+          results.push(c.removeFromParent());
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._drawNewItems = function() {
+      var e, i, index, item, len, ref, results;
+      try {
+        ref = this.getAllItems();
+        results = [];
+        for (index = i = 0, len = ref.length; i < len; index = ++i) {
+          item = ref[index];
+          results.push(this._addNewItemToList(item, index));
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._addNewItemToList = function(item, index) {
+      var e, rect;
+      try {
+        if (item == null) {
+          return;
+        }
+        rect = this.itemRect(index);
+        item.x = rect.x;
+        item.y = rect.y;
+        this._adjustItemWidthAndHeight(item);
+        return this._itemsContainer.addChild(item);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._adjustItemWidthAndHeight = function(item) {
+      var e, scaleFactor;
+      try {
+        if (item == null) {
+          return;
+        }
+        if (this.isNeedScaleItemsW()) {
+          scaleFactor = this._defaultItemWidth() / this._getItemWidth(item);
+          item.scale.x = scaleFactor;
+        }
+        if (this.isNeedScaleItemsH()) {
+          scaleFactor = this.lineHeight() / this._getItemHeight(item);
+          return item.scale.y = scaleFactor;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._getItemWidth = function(item) {
+      var e, v;
+      v = this._defaultItemWidth();
+      try {
+        if (item == null) {
+          return v;
+        }
+        if (item.realWidth != null) {
+          v = item.realWidth();
+        } else {
+          if (item.width > 0) {
+            v = item.width;
+          }
+        }
+        if (v === 0 || !v) {
+          v = this._defaultItemWidth();
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return v;
+    };
+    _._defaultItemWidth = function() {
+      return this.width - this._padding * 2;
+    };
+    _._getItemHeight = function(item) {
+      var e, v;
+      v = 36;
+      try {
+        if (item == null) {
+          return v;
+        }
+        if (item.realHeight != null) {
+          v = item.realHeight();
+        } else {
+          if (item.height > 0) {
+            v = item.height;
+          }
+        }
+        if (v === 0 || !v) {
+          v = 36;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return v;
+    };
+    _._updateItemsSelectionState = function() {
+      var e;
+      try {
+        if (KDCore.isMZ()) {
+          if (!this.active || this.index() < 0 || !this.cursorVisible) {
+            this._disableSelectionForAll();
+            return;
+          }
+        } else {
+          if (!this.active || this.index() < 0 || !this.isCursorVisible()) {
+            this._disableSelectionForAll();
+            return;
+          }
+        }
+        return this._selectItemAtIndex(this.index());
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._disableSelectionForAll = function() {
+      var e, i, item, len, ref, results;
+      try {
+        if (this._prevSelectedIndex === -2) {
+          return;
+        }
+        this._prevSelectedIndex = -2;
+        ref = this.getAllItems();
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          results.push(this._deselectItem(item));
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._selectItem = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        if ((this._prevSelectedIndex != null) && this._prevSelectedIndex >= 0) {
+          this._deselectItem(this.itemAt(this._prevSelectedIndex));
+        }
+        this._playItemInAnimation(item);
+        if (item.activateInList != null) {
+          return item.activateInList();
+        } else {
+          return this._selectItemVisually(item);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._playItemInAnimation = function(item) {
+      var e;
+      try {
+        if (!this.settings.isHaveInOutAnimation) {
+          return;
+        }
+        if (this.settings.inAnimation == null) {
+          return;
+        }
+        if (item == null) {
+          return;
+        }
+        this._playItemAnimation(item, this.settings.inAnimation);
+        return this._isHaveInAnimation = true;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._selectItemVisually = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        if (!this.settings.isHaveSelectionEffect) {
+          return;
+        }
+        //item.filters = [new PIXI.filters.GlowFilter({ distance: 15, outerStrength: 4 })]
+        if (this.settings.selectionEffects == null) {
+          return;
+        }
+        if (this.settings.selectionEffects.length === 0) {
+          return;
+        }
+        KDCore.UI.Builder.ApplyEffects(item, this.settings.selectionEffects);
+        return this._isSelectionEffectBeenAdded = true;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._deselectItem = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        this._playItemOutAnimation(item);
+        if (item.deactivateInList != null) {
+          return item.deactivateInList();
+        } else {
+          return this._deselectItemVisually(item);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._playItemOutAnimation = function(item) {
+      var e;
+      try {
+        if (!this.settings.isHaveInOutAnimation) {
+          return;
+        }
+        if (!this._isHaveInAnimation) {
+          return;
+        }
+        if (this.settings.outAnimation == null) {
+          return;
+        }
+        if (item == null) {
+          return;
+        }
+        this._playItemAnimation(item, this.settings.outAnimation);
+        return this._isHaveInAnimation = false;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._playItemAnimation = function(item, animation) {
+      var e, root;
+      try {
+        if (item == null) {
+          return;
+        }
+        root = item.children[0];
+        if (root == null) {
+          return;
+        }
+        if (typeof animation === "string") {
+          animation = KDCore.UI.Builder.ConvertShortcut(animation);
+        }
+        return root.setAnimationRule(animation);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._deselectItemVisually = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        if (this._isSelectionEffectBeenAdded === true) {
+          item.filters = [];
+          return this._isSelectionEffectBeenAdded = false;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._selectItemAtIndex = function(index) {
+      var e, item;
+      try {
+        if (this._prevSelectedIndex !== index) {
+          item = this.itemAt(index);
+          if (item == null) {
+            return;
+          }
+          this._selectItem(item);
+          return this._prevSelectedIndex = index;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+  })();
+  // ■ END PRIVATE
+  //---------------------------------------------------------------------------
+  return KDCore.Sprite_ItemsList = Sprite_ItemsList;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_ItemsListN;
+  //NUI 1.0
+  //rev 03.05.24
+
+    //type: "list"
+  // * Этот класс служит только как Wrapper, чтобы можно было задавать настроки List через NUI схему
+  Sprite_ItemsListN = class Sprite_ItemsListN extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign(this.defaultSettings(), settings);
+      this._applySettings();
+      return;
+    }
+
+    defaultSettings() {
+      return Object.assign({
+        width: 240,
+        height: 420
+      }, KDCore.Sprite_ItemsList.prototype.defaultSetting());
+    }
+
+    /* (See parent class, this is just for reference)
+           defaultSetting: -> {
+               maxCols: 1,
+               isHaveSelectionEffect: false,
+               selectionEffects: ["glow;distance:12;outerStrength:3"],
+               scaleItemsWidth: false,
+               scaleItemsHeight: false,
+               defautItemHeight: 36,
+               isDrawDefaultItemBack: false,
+               backgroundType: 2,
+               itemsPadding: 12,
+               isHaveInOutAnimation: false,
+               inAnimation: "field:x;duration:0.15;keyframes:0=0,100=4",
+               outAnimation: "field:x;duration:0.15;keyframes:0=4,100=0"
+           }*/
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        maxCols: function(v) {
+          if (v != null) {
+            return this.setMaxCols(v);
+          }
+        }
+      });
+    }
+
+    realWidth() {
+      if (this.isNotHaveBounds()) {
+        return 0;
+      }
+      return this.settings.width;
+    }
+
+    realHeight() {
+      if (this.isNotHaveBounds()) {
+        return 0;
+      }
+      return this.settings.height;
+    }
+
+    setSize(width, height) {
+      var e;
+      try {
+        width = this._getValueByStr(width, 'width', this);
+        height = this._getValueByStr(height, 'height', this);
+        if (width != null) {
+          this.settings.width = width;
+        }
+        if (height != null) {
+          this.settings.height = height;
+        }
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setMaxCols(maxCols) {
+      var e;
+      try {
+        this.settings.maxCols = maxCols;
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    clear() {
+      var ref;
+      return (ref = this.list) != null ? ref.setItems([]) : void 0;
+    }
+
+    // * WRAPPED
+    setItems() {
+      var ref;
+      return (ref = this.list) != null ? ref.setItems(...arguments) : void 0;
+    }
+
+    activate() {
+      var ref;
+      return (ref = this.list) != null ? ref.activate(...arguments) : void 0;
+    }
+
+    deactivate() {
+      var ref;
+      return (ref = this.list) != null ? ref.deactivate(...arguments) : void 0;
+    }
+
+    setOkHandler() {
+      var ref;
+      return (ref = this.list) != null ? ref.setOkHandler(...arguments) : void 0;
+    }
+
+    setCancelHandler() {
+      var ref;
+      return (ref = this.list) != null ? ref.setCancelHandler(...arguments) : void 0;
+    }
+
+    setSelectionHandler() {
+      var ref;
+      return (ref = this.list) != null ? ref.setSelectionHandler(...arguments) : void 0;
+    }
+
+    refresh() {
+      var ref;
+      return (ref = this.list) != null ? ref.refresh(...arguments) : void 0;
+    }
+
+    selectedItem() {
+      var ref;
+      return (ref = this.list) != null ? ref.selectedItem() : void 0;
+    }
+
+    itemAt() {
+      var ref;
+      return (ref = this.list) != null ? ref.itemAt(...arguments) : void 0;
+    }
+
+    maxItems() {
+      var ref;
+      return (ref = this.list) != null ? ref.maxItems() : void 0;
+    }
+
+    getAllItems() {
+      var ref;
+      return (ref = this.list) != null ? ref.getAllItems() : void 0;
+    }
+
+    maxCols() {
+      var ref;
+      return (ref = this.list) != null ? ref.maxCols() : void 0;
+    }
+
+    // * END WRAPPED
+
+      // * Dev, (not use settings) , чтобы визуально видеть размеры окна при подгонке
+    setBackgroundType() {
+      var ref;
+      return (ref = this.list) != null ? ref.setBackgroundType(...arguments) : void 0;
+    }
+
+    // * Shortcut
+    showBack() {
+      return this.setBackgroundType(0);
+    }
+
+    _applySettings() {
+      var e;
+      try {
+        this._destroyList();
+        this._createListWithSettings(this.settings);
+        if (this._isHaveStoredData === true) {
+          return this._restoreData();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _destroyList() {
+      var e;
+      try {
+        if (this.list == null) {
+          return;
+        }
+        this._isHaveStoredData = true;
+        this._lastItems = this.list.getAllItems();
+        this._isBeenActive = this.list.active === true;
+        this._lastSelectedIndex = this.list.index();
+        this._lastHandlers = this.list._handlers;
+        this.removeChild(this.list);
+        return this.list = null;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createListWithSettings(settings) {
+      var e;
+      try {
+        this.list = new KDCore.Sprite_ItemsList({
+          x: 0,
+          y: 0,
+          width: settings.width,
+          height: settings.height
+        }, settings);
+        return this.addChild(this.list);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _restoreData() {
+      var e;
+      try {
+        if (this.list == null) {
+          return;
+        }
+        if (this._lastHandlers != null) {
+          this.list._handlers = this._lastHandlers;
+        }
+        if (this._lastItems == null) {
+          return;
+        }
+        this.list.setItems(this._lastItems);
+        if (this._lastSelectedIndex != null) {
+          this.list.safeSelect(this._lastSelectedIndex);
+        }
+        if (this._isBeenActive === true) {
+          this.list.activate();
+        }
+        return this._isHaveStoredData = false;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_ItemsListN = Sprite_ItemsListN;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_NUI;
+  //NUI 1.0
+  //rev 06.05.24
+  Sprite_NUI = class Sprite_NUI extends KDCore.Sprite {
+    constructor(nuiScheme, owner = null) {
+      super();
+      this.nuiScheme = nuiScheme;
+      if (this.nuiScheme != null) {
+        this.loadNuiScheme(this.nuiScheme, owner);
+      }
+      return;
+    }
+
+    // * DIRECT nuiElement,без Sprite_NUI (надо присоединять к OWNER)
+    static FromScheme(scheme, owner) {
+      var e, spr;
+      try {
+        spr = new Sprite_NUI(scheme, owner);
+        if (owner != null) {
+          owner.addChild(spr.nuiElement);
+        }
+        return spr.nuiElement;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return new KDCore.Sprite_NUI();
+      }
+    }
+
+    _afterLoadNuiAutoRefreshTime() {
+      return 100;
+    }
+
+    loadNuiScheme(scheme, owner = null) {
+      var e;
+      try {
+        if (this.nuiElement != null) {
+          this.destroyNuiElement();
+        }
+        if (scheme == null) {
+          return;
+        }
+        if (owner == null) {
+          owner = this;
+        }
+        if (scheme["type"] != null) {
+          this.nuiElement = KDCore.UI.Builder.Make(scheme, owner, this);
+        } else {
+          this.nuiElement = KDCore.UI.Builder.Factory(scheme, owner, this._afterLoadNuiAutoRefreshTime())[0];
+        }
+        this.addChild(this.nuiElement);
+        return this.refreshBindings(owner, true);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    destroyNuiElement() {
+      var e;
+      try {
+        if (this.nuiElement == null) {
+          return;
+        }
+        this.nuiElement.removeFromParent();
+        return this.nuiElement = null;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_NUI = Sprite_NUI;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_Plane;
+  //NUI 1.0
+  //rev 25.04.24
+
+    //type: "plane"
+  Sprite_Plane = class Sprite_Plane extends KDCore.Sprite {
+    constructor(settings) {
+      var bottom, folderName, imageName, left, margins, right, textureSource, top;
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this.plane = null;
+      this.planeContainer = new KDCore.Sprite();
+      this.addChild(this.planeContainer);
+      ({imageName, margins, folderName} = this.settings);
+      if (isFinite(margins)) {
+        left = top = right = bottom = margins;
+      } else {
+        ({left, top, right, bottom} = margins);
+      }
+      textureSource = ImageManager.loadBitmap('img/' + folderName + '/', imageName);
+      textureSource.addLoadListener(() => {
+        var texture;
+        texture = new PIXI.Texture(textureSource._baseTexture);
+        if (KDCore.isMV()) {
+          this.plane = new PIXI.mesh.NineSlicePlane(texture, left, top, right, bottom);
+        } else {
+          this.plane = new PIXI.NineSlicePlane(texture, left, top, right, bottom);
+        }
+        this.planeContainer.addChild(this.plane);
+        return this._onResize();
+      });
+      this._onResize();
+      return;
+    }
+
+    realWidth() {
+      if (this.isNotHaveBounds()) {
+        return 0;
+      }
+      return this.settings.width;
+    }
+
+    realHeight() {
+      if (this.isNotHaveBounds()) {
+        return 0;
+      }
+      return this.settings.height;
+    }
+
+    defaultSettings() {
+      return {
+        imageName: "",
+        width: 100,
+        height: 100,
+        margins: 20,
+        folderName: "pictures"
+      };
+    }
+
+    setSize(w = 100, h = 100) {
+      var e;
+      try {
+        w = this._getValueByStr(w, 'width', this);
+        h = this._getValueByStr(h, 'height', this);
+        if (w != null) {
+          this.settings.width = w;
+        }
+        if (h != null) {
+          this.settings.height = h;
+        }
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    //TODO: IMAGE
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.plane.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.plane.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        }
+      });
+    }
+
+    _onResize() {
+      var e;
+      try {
+        this.width = this.settings.width;
+        this.height = this.settings.height;
+        if (this.plane == null) {
+          return;
+        }
+        this.plane.width = this.settings.width;
+        return this.plane.height = this.settings.height;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_Plane = Sprite_Plane;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_SButton;
+  //NUI 1.0
+  //rev 23.07.24
+  //"type": "button"
+  Sprite_SButton = class Sprite_SButton extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._isEnabled = true;
+      this._isUnderMouse = false;
+      this._isPressActive = false;
+      this._isMouseOver = false;
+      this._create();
+      this._refreshSettings();
+      return;
+    }
+
+    realWidth() {
+      if (this.isNotHaveBounds()) {
+        return 0;
+      }
+      return this.settings.width;
+    }
+
+    realHeight() {
+      if (this.isNotHaveBounds()) {
+        return 0;
+      }
+      return this.settings.height;
+    }
+
+    isDisabled() {
+      return !this.isEnabled();
+    }
+
+    isEnabled() {
+      return this._isEnabled === true;
+    }
+
+    _enable() {
+      var e;
+      try {
+        if (this._desaturated === true) {
+          this.filters = [];
+          this._desaturated = false;
+        }
+        if ((this.settings.disabledTint != null) && this._isEnabled === false) { // * Return to normal Tint
+          this.applyTint(this.settings.activeTint, this.settings.tintAlpha);
+        }
+        this._isEnabled = true;
+        return this._refreshTint();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _disable() {
+      var e;
+      try {
+        this._applyDisabledEffect();
+        return this._isEnabled = false;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applyDisabledEffect() {
+      var e;
+      try {
+        if (this.settings.desaturateWhenDisabled === true) {
+          return this.desaturate();
+        } else if (this.settings.disabledTint != null) {
+          return this.applyTint(this.settings.disabledTint, this.settings.disabledTintAlpha);
+        } else {
+          return this.applyTint(this.settings.tint, this.settings.tintAlpha);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    isActive() {
+      return this._isEnabled === true && this.visible === true && this.opacity !== 0;
+    }
+
+    pIsSupportKeyboardHandle() {
+      return this.settings.keyboardHandled === true;
+    }
+
+    desaturate() {
+      this.filters = [new PIXI.filters.ColorMatrixFilter()];
+      this.filters[0].desaturate();
+      this._desaturated = true;
+    }
+
+    defaultSettings() {
+      return {
+        imageName: '',
+        folderName: 'pictures',
+        imageMargins: 20,
+        width: 160,
+        height: 60,
+        clickSe: "Cursor1",
+        desaturateWhenDisabled: false,
+        tint: "",
+        overTint: 0xFFFFDD,
+        activeTint: 0xAAAAAA,
+        tintAlpha: 0.5,
+        disabledTint: 0xAAAAAA,
+        disabledTintAlpha: 0.5,
+        keyboardKey: "",
+        keyboardHandled: true,
+        enabled: true
+      };
+    }
+
+    //TODO: IMAGE!
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        style: function(v) {
+          if (v != null) {
+            return this.updateStyle(v);
+          }
+        },
+        handler: function(v) {
+          return this.setClickHandler(v);
+        },
+        enable: function(v) {
+          if (v != null) {
+            return this.setEnabledState(v);
+          }
+        }
+      });
+    }
+
+    setEnabledState(state = true) {
+      var e;
+      try {
+        this.settings.enabled = state;
+        if (state === true) {
+          return this._enable();
+        } else {
+          return this._disable();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    enable() {
+      return this.setEnabledState(true);
+    }
+
+    disable() {
+      return this.setEnabledState(false);
+    }
+
+    updateStyle(style) {
+      var e;
+      try {
+        this.settings = Object.assign(this.settings, style);
+        return this._refreshSettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    addClickHandler() {
+      return this.setClickHandler(...arguments);
+    }
+
+    setClickHandler(handler = null) {
+      var e;
+      try {
+        this.settings.onClick = null;
+        if ((handler != null) && typeof handler === 'function') {
+          return this.settings.onClick = handler;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setSize(width = 160, height = 60) {
+      var e, h, w;
+      try {
+        w = this._getValueByStr(width, 'width', this);
+        h = this._getValueByStr(height, 'height', this);
+        if (w != null) {
+          this.settings.width = w;
+        }
+        if (h != null) {
+          this.settings.height = h;
+        }
+        return this._refreshSettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    executeAction() {
+      var e;
+      try {
+        KDCore.Utils.playSE(this.settings.clickSe);
+        if (this.settings.onClick != null) {
+          return this.settings.onClick();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onTap() {
+      var e;
+      try {
+        return this.executeAction();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    //console.log("TAP")
+    _onOver() {
+      this._isMouseOver = true;
+      return this._refreshSettings();
+    }
+
+    //console.log("OVER")
+    _onOut() {
+      this._isMouseOver = false;
+      return this._refreshSettings();
+    }
+
+    //console.log("OUT")
+    _onDown() {
+      this._isPressActive = true;
+      return this._refreshSettings();
+    }
+
+    //console.log("DOWN")
+    _onUp() {
+      this._isPressActive = false;
+      return this._refreshSettings();
+    }
+
+    //console.log("UP")
+    _create() {
+      var e, height, width;
+      try {
+        this.buttonPlane = new KDCore.Sprite_Plane({
+          imageName: this.settings.imageName,
+          margins: this.settings.imageMargins,
+          folderName: this.settings.folderName
+        });
+        ({width, height} = this.settings);
+        this.buttonPlane.setSize(width, height);
+        return this.addChild(this.buttonPlane);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _refreshSettings() {
+      var e;
+      try {
+        this._refreshTint();
+        if (this.settings.keyboardHandled === true) {
+          this.handleOKAction = this._onTap;
+        } else {
+          this.handleOKAction = null;
+        }
+        this.setEnabledState(this.settings.enabled);
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _refreshTint() {
+      var e;
+      try {
+        if (this._isPressActive === true) {
+          return this.applyTint(this.settings.activeTint, this.settings.tintAlpha);
+        } else if (this._isMouseOver === true) {
+          return this.applyTint(this.settings.overTint, this.settings.tintAlpha);
+        } else {
+          return this.applyTint(this.settings.tint, this.settings.tintAlpha);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    applyTint(tintValue, tintAlpha = 0.5) {
+      var e;
+      try {
+        if (tintValue == null) {
+          this._resetTintFilter();
+          return;
+        }
+        if (typeof tintValue === "string") {
+          if (!String.any(tintValue)) {
+            this._resetTintFilter();
+            return;
+          }
+          tintValue = KDCore.Utils.string2hex(tintValue);
+        }
+        return this.buttonPlane.filters = [new PIXI.filters.ColorOverlayFilter(tintValue, tintAlpha)];
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _resetTintFilter() {
+      var e;
+      try {
+        return this.buttonPlane.filters = [];
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _activateHandlerVisually() {
+      var e;
+      try {
+        return this.applyTint(this.settings.overTint);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    pDeactivateHandler() {
+      super.pDeactivateHandler();
+      return this.applyTint(this.settings.tint);
+    }
+
+    update() {
+      super.update();
+      if (this.isActive()) {
+        this._updateKeyboardHandling();
+        this._updateMouseHandling();
+      } else {
+        if (this._isUnderMouse === true) {
+          this._onOut();
+        }
+        if ($gameTemp.kdButtonUnderMouse === this) {
+          $gameTemp.kdButtonUnderMouse = null;
+        }
+      }
+    }
+
+    _updateKeyboardHandling() {
+      var e;
+      try {
+        if (String.any(this.settings.keyboardKey)) {
+          if (Input.isTriggered(this.settings.keyboardKey)) {
+            Input.clear();
+            return this._onTap();
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _updateMouseHandling() {
+      var e;
+      try {
+        if (this.isUnderMouse()) {
+          if (!this._isUnderMouse) {
+            this._onOver();
+            $gameTemp.kdButtonUnderMouse = this;
+            try {
+              if ($gameTemp.__pkdActiveKeyboardHandler != null) {
+                $gameTemp.__pkdActiveKeyboardHandler.pDeactivateHandler();
+              }
+            } catch (error) {
+              e = error;
+              KDCore.warning(e);
+            }
+            this._isUnderMouse = true;
+          }
+        } else {
+          if (this._isUnderMouse === true) {
+            this._onOut();
+            if ($gameTemp.kdButtonUnderMouse === this) {
+              $gameTemp.kdButtonUnderMouse = null;
+            }
+            this._isUnderMouse = false;
+          }
+        }
+        if (TouchInput.isPressed()) {
+          if (this._isUnderMouse === true) {
+            if (!this._isMousePressed) {
+              this._onDown();
+              this._isMousePressed = true;
+            }
+          }
+        }
+        if (TouchInput.isReleased()) {
+          if (this._isMousePressed === true) {
+            this._onUp();
+            if (this._isUnderMouse === true) {
+              this._onTap();
+            }
+            return this._isMousePressed = false;
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var e, ref;
+      try {
+        this.width = this.settings.width;
+        this.height = this.settings.height;
+        return (ref = this.buttonPlane) != null ? ref.setSize(this.width, this.height) : void 0;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_SButton = Sprite_SButton;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  return (function() {    //NUI 1.3
+    //rev 18.11.24
+
+    //"type": "textPro"
+    var TextProElementsBuilder, TextProParser;
+    TextProParser = class TextProParser {
+      // * settings - it's a Sprite_TextPro settings
+      constructor(settings1) {
+        this.settings = settings1;
+        this._textsConfigs = [];
+        this._parseAllText();
+        return;
+      }
+
+      static ParseText(settings) {
+        var parser;
+        parser = new TextProParser(settings);
+        return parser.getConfigs();
+      }
+
+      isControlSeparator(char) {
+        return '\x1b' === char;
+      }
+
+      getConfigs() {
+        return this._textsConfigs;
+      }
+
+      _parseAllText() {
+        var e, preparedText, textState;
+        try {
+          preparedText = this._convertControlCharacters(this.settings.text);
+          //console.log "PREPARED TEXT: " + preparedText
+          textState = this._makeInitialTextState(preparedText);
+          return this._processAllText(textState);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _convertControlCharacters(inputText) {
+        var e;
+        try {
+          return TextProParser.ConvertControlCharacters(inputText);
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+          return "";
+        }
+        return outputText;
+      }
+
+      static ConvertControlCharacters(inputText) {
+        var e, outputText;
+        try {
+          if (String.any(inputText)) {
+            if (window.__kdSharedTextProTextColorSourceWindow == null) {
+              if (KDCore.isMV()) {
+                window.__kdSharedTextProTextColorSourceWindow = new Window_Base(0, 0, 0, 0);
+              } else {
+                window.__kdSharedTextProTextColorSourceWindow = new Window_Base(new Rectangle(0, 0, 0, 0));
+              }
+            }
+            outputText = window.__kdSharedTextProTextColorSourceWindow.convertEscapeCharacters(inputText);
+          } else {
+            outputText = "";
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+          return "";
+        }
+        return outputText;
+      }
+
+      _makeInitialTextState(text) {
+        return {
+          "text": text,
+          "buffer": "",
+          "index": 0,
+          "color": "", // * "" default
+          "fontSize": -1, // * -1 default
+          "iconIndex": -1 // * -1 none
+        };
+      }
+
+      _processAllText(textState) {
+        var e;
+        try {
+          while (textState.index < textState.text.length) {
+            this._processCharacter(textState);
+          }
+          return this._saveTextConfig(textState);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _processCharacter(textState) {
+        var c, e;
+        try {
+          c = textState.text[textState.index++];
+          if (c.charCodeAt(0) < 0x20) {
+            this._saveTextConfig(textState);
+            return this._processControlCharacter(textState, c);
+          } else {
+            return textState.buffer += c;
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _saveTextConfig(textState) {
+        var e;
+        try {
+          if (textState.buffer.length > 0 || textState.iconIndex > 0) {
+            this._textsConfigs.push({
+              "text": textState.buffer,
+              "color": textState.color,
+              "fontSize": textState.fontSize,
+              "iconIndex": textState.iconIndex
+            });
+            textState.buffer = "";
+            return textState.iconIndex = -1;
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _processControlCharacter(textState, c) {
+        var code, e;
+        try {
+          if (this.isControlSeparator(c)) {
+            code = this._obtainEscapeCode(textState);
+            return this._processEscapeCharacter(code, textState);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _obtainEscapeCode(textState) {
+        var arr, e, regExp;
+        try {
+          regExp = /^[$.|^!><{}\\]|^[A-Z]+/i;
+          arr = regExp.exec(textState.text.slice(textState.index));
+          if (arr != null) {
+            textState.index += arr[0].length;
+            return arr[0].toUpperCase();
+          } else {
+            return "";
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+          return "";
+        }
+      }
+
+      _processEscapeCharacter(code, textState) {
+        var colorIndex, currentFontSize, e, fontSize, iconIndex;
+        try {
+          //TODO: chex param?
+          switch (code) {
+            case "C":
+              colorIndex = this._obtainEscapeParam(textState);
+              if (colorIndex > 0) {
+                if (KDCore.isMV()) {
+                  return textState.color = window.__kdSharedTextProTextColorSourceWindow.textColor(colorIndex);
+                } else {
+                  return textState.color = ColorManager.textColor(colorIndex);
+                }
+              } else {
+                return textState.color = "";
+              }
+              break;
+            case "I":
+              iconIndex = this._obtainEscapeParam(textState);
+              if (iconIndex > 0) {
+                textState.iconIndex = iconIndex;
+                // * Иконка - это отдельный спрайт, так что сохраняем текущий текст как отдельный
+                return this._saveTextConfig(textState);
+              } else {
+                return textState.iconIndex = -1;
+              }
+              break;
+            case "FS":
+              fontSize = this._obtainEscapeParam(textState);
+              return textState.fontSize = fontSize;
+            case "{": // * Make font bigger by 1
+              currentFontSize = textState.fontSize;
+              if (currentFontSize === -1) {
+                //TODO: ???
+                currentFontSize = this.settings.font.size;
+              }
+              return textState.fontSize = currentFontSize + 1;
+            case "}":
+              currentFontSize = textState.fontSize;
+              if (currentFontSize === -1) {
+                //TODO: ???
+                currentFontSize = this.settings.font.size;
+              }
+              return textState.fontSize = currentFontSize - 1;
+            default:
+              return KDCore.warning("Sprite_TextPro: Unknown escape code: " + code);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _obtainEscapeParam(textState) {
+        var arr, e, regExp;
+        try {
+          regExp = /^\[\d+\]/;
+          arr = regExp.exec(textState.text.slice(textState.index));
+          if (arr != null) {
+            textState.index += arr[0].length;
+            return parseInt(arr[0].slice(1));
+          } else {
+            return "";
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+          return "";
+        }
+      }
+
+    };
+    KDCore.TextProParser = TextProParser;
+    TextProElementsBuilder = class TextProElementsBuilder {
+      // * settings - it's a Sprite_TextPro settings
+      constructor(configs1, settings1, userTextStyle1) {
+        this.configs = configs1;
+        this.settings = settings1;
+        this.userTextStyle = userTextStyle1;
+        this._elements = new KDCore.Sprite_Group({});
+        this._buildElements();
+        return;
+      }
+
+      getElements() {
+        return this._elements;
+      }
+
+      static Build(configs, settings, userTextStyle) {
+        var builder;
+        builder = new TextProElementsBuilder(configs, settings, userTextStyle);
+        return builder.getElements();
+      }
+
+      _buildElements() {
+        var config, e, i, index, len, ref, results;
+        try {
+          ref = this.configs;
+          results = [];
+          for (index = i = 0, len = ref.length; i < len; index = ++i) {
+            config = ref[index];
+            //console.log(config)
+            if (config.iconIndex >= 0) {
+              results.push(this._createIconElement(config, this._elements));
+            } else {
+              results.push(this._createTextElement(config, this._elements));
+            }
+          }
+          return results;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _createIconElement(config, line) {
+        var e, icon, iconSize, paddingGroup;
+        try {
+          if (this.settings.isStaticIconSize === true) {
+            iconSize = this.settings.iconSize;
+          } else {
+            if (config.fontSize > 0) {
+              iconSize = config.fontSize * this.settings.iconSize;
+            } else {
+              iconSize = this.settings.font.size * this.settings.iconSize;
+            }
+          }
+          icon = new KDCore.Sprite_Image({
+            imageName: config.iconIndex,
+            width: iconSize,
+            height: iconSize
+          });
+          paddingGroup = new KDCore.Sprite_Group({
+            width: iconSize + this.settings.iconPadding.left + this.settings.iconPadding.right,
+            height: iconSize + this.settings.iconPadding.top + this.settings.iconPadding.bottom
+          });
+          paddingGroup.addChild(icon);
+          icon.setPosition("center", "center");
+          line.addChild(paddingGroup);
+          return paddingGroup.setPosition("prevEndX", this._textElementVerticalPosition());
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _createTextElement(config, line) {
+        var e, metrics, text, textSettings;
+        try {
+          textSettings = Object.assign({}, this.settings);
+          textSettings.text = config.text;
+          if (config.fontSize > 0) {
+            textSettings.font.size = config.fontSize;
+          }
+          if (String.any(config.color)) {
+            textSettings.textColor = config.color;
+          }
+          textSettings.alignment = "left";
+          textSettings.multiline = false;
+          textSettings.verticalCentered = false;
+          textSettings.actualSize = true;
+          //TODO: margins control code \MX, \MY?
+          textSettings.margins = {
+            "x": 0,
+            "y": 0
+          };
+          //console.log("Create text with settings " + JSON.stringify(textSettings))
+          text = new KDCore.UI.Sprite_UIText2(textSettings, this.userTextStyle);
+          // * Add to line
+          line.addChild(text);
+          //console.log(text.realWidth())
+          metrics = text.getMetrics();
+          //console.log(metrics)
+          //f = -> @getMetrics().width
+          //f2 = -> @getMetrics().height
+          //text.realWidth = f.bind(text)
+          //text.realHeight = f2.bind(text)
+          //text.setSize(metrics.width, metrics.height)
+          return text.setPosition("prevEndX", this._textElementVerticalPosition());
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _textElementVerticalPosition() {
+        var e;
+        try {
+          if (this.settings.verticalCentered === true) {
+            return "center";
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return 0;
+      }
+
+    };
+    return KDCore.Sprite_TextPro = class Sprite_TextPro extends KDCore.Sprite {
+      constructor(settings = {}, userTextStyle1 = {}) {
+        super();
+        this.userTextStyle = userTextStyle1;
+        this.settings = Object.assign({}, this.defaultSettings(), settings);
+        this._textsContainer = new KDCore.Sprite_Group({});
+        this._textLines = [];
+        this.addChild(this._textsContainer);
+        if (String.any(this.settings.text)) {
+          this.drawText(this.settings.text);
+        }
+        return;
+      }
+
+      draw() {
+        return this.drawText(...arguments);
+      }
+
+      drawText(text) {
+        this.settings.text = text;
+        this._createTextSprites();
+        this._applyAlignment();
+        this._applyMargins();
+      }
+
+      realWidth() {
+        var e;
+        try {
+          if (this.isNotHaveBounds()) {
+            return 0;
+          }
+          if (this.settings.actualSize === true) {
+            return this._textsContainer.realWidth();
+          }
+          return this.settings.size.width;
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+          return 0;
+        }
+      }
+
+      realHeight() {
+        var e;
+        try {
+          if (this.isNotHaveBounds()) {
+            return 0;
+          }
+          if (this.settings.actualSize === true) {
+            return this._textsContainer.realHeight();
+          }
+          return this.settings.size.height;
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+          return 0;
+        }
+      }
+
+      dataBindings() {
+        return Object.assign(super.dataBindings(), {
+          text: function(v) {
+            return this.drawText(v);
+          },
+          style: function(v) {
+            if (v != null) {
+              return this.updateStyle(v);
+            }
+          },
+          width: function(v) {
+            if (v != null) {
+              return this.setSize(v, this.realHeight());
+            }
+          },
+          height: function(v) {
+            if (v != null) {
+              return this.setSize(this.realWidth(), v);
+            }
+          },
+          size: function(v) {
+            if (v != null) {
+              return this.setSize(v.width, v.height);
+            }
+          },
+          textColor: function(v) {
+            if (v != null) {
+              return this.updateStyle({
+                textColor: v
+              });
+            }
+          },
+          fontSize: function(v) {
+            if (v != null) {
+              return this.updateFontSize(v);
+            }
+          },
+          iconSize: function(v) {
+            if (v != null) {
+              return this.updateIconSize(v);
+            }
+          },
+          verticalSpacing: function(v) {
+            if (v != null) {
+              return this.updateVerticalSpacing(v);
+            }
+          }
+        });
+      }
+
+      setSize(w = 60, h = 20) {
+        var e;
+        try {
+          w = this._getValueByStr(w, 'width', this);
+          h = this._getValueByStr(h, 'height', this);
+          return this.updateStyle({
+            size: {
+              width: w,
+              height: h
+            }
+          });
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      updateFontSize(fontSize) {
+        var e, font;
+        try {
+          font = Object.assign({}, this.settings.font);
+          if (typeof fontSize === "string") {
+            fontSize = this._getValueByStr(fontSize, 'height', this);
+          }
+          font.size = fontSize;
+          return this.updateStyle({font});
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      updateIconSize(iconSize) {
+        var e;
+        try {
+          if (typeof iconSize === "string") {
+            iconSize = this._getValueByStr(iconSize, 'height', this);
+          }
+          return this.updateStyle({iconSize});
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      updateVerticalSpacing(spacing) {
+        var e;
+        try {
+          if (typeof spacing === "string") {
+            spacing = this._getValueByStr(spacing, 'height', this);
+          }
+          return this.updateStyle({
+            verticalSpacing: spacing
+          });
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      updateStyle(newStyleInOldFormat = {}, newStyleInNewFormat = {}) {
+        var e;
+        try {
+          this.settings = Object.assign(this.settings, newStyleInOldFormat);
+          this.userTextStyle = Object.assign(this.userTextStyle, newStyleInNewFormat);
+          // * Redraw Text
+          return this.drawText(this.settings.text);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      defaultSettings() {
+        var defaultTextSettings, e;
+        try {
+          defaultTextSettings = KDCore.UI.Sprite_UIText2.prototype.defaultParams.call();
+          return Object.assign({}, defaultTextSettings, {
+            trimWidth: false,
+            trimHeight: false,
+            alignment: 'center',
+            verticalAlignment: 'top', //center, bottom,
+            multiline: false,
+            verticalCentered: true,
+            isStaticIconSize: false, // * If true, icon size will be iconSize in PX
+            iconSize: 1, //% of font size, 1 = 100%
+            iconPadding: {
+              left: 2,
+              right: 2,
+              top: 0,
+              bottom: 0
+            },
+            actualSize: false,
+            verticalSpacing: 4 // * only for multiline
+          });
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return {};
+      }
+
+      _applyMargins() {
+        var e;
+        try {
+          this._textsContainer.x += this.settings.margins.x;
+          return this._textsContainer.y += this.settings.margins.y;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _applyAlignment() {
+        var e;
+        try {
+          return this._textsContainer.setPosition(this.settings.alignment, this.settings.verticalAlignment);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _createTextSprites() {
+        var e, elements, i, len, line, lines, results, textsConfigs;
+        try {
+          this._clearTextSprites();
+          textsConfigs = TextProParser.ParseText(this.settings);
+          elements = TextProElementsBuilder.Build(textsConfigs, this.settings, this.userTextStyle);
+          if (this.settings.multiline === true || this.settings.trimWidth === true) {
+            lines = this._separateTextToLines(elements);
+            results = [];
+            for (i = 0, len = lines.length; i < len; i++) {
+              line = lines[i];
+              this._textLines.push(line);
+              this._textsContainer.addChild(line);
+              this._refreshTextElementsVerticalPosition(line);
+              results.push(this._applyLineAligmnent(line));
+            }
+            return results;
+          } else {
+            this._textLines.push(elements);
+            this._textsContainer.addChild(elements);
+            return this._refreshTextElementsVerticalPosition(elements);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _applyLineAligmnent(line) {
+        var e;
+        try {
+          return line.setPosition(this.settings.alignment, line.y);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _textElementVerticalPosition() {
+        var e;
+        try {
+          if (this.settings.verticalCentered === true) {
+            return "center";
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return 0;
+      }
+
+      _refreshTextElementsVerticalPosition(groupWithElements) {
+        var child, e, i, len, ref, results;
+        try {
+          ref = groupWithElements.children;
+          results = [];
+          for (i = 0, len = ref.length; i < len; i++) {
+            child = ref[i];
+            results.push(child.setPosition(child.x, this._textElementVerticalPosition()));
+          }
+          return results;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _separateTextToLines(allTextElements) {
+        var child, currentHeight, currentWidth, e, el, elements, i, j, len, len1, line, lines, maxHeight, maxLineWidth, newHeight, ref;
+        try {
+          lines = [];
+          maxLineWidth = this.settings.size.width;
+          maxHeight = this.settings.size.height;
+          currentWidth = 0;
+          currentHeight = function() {
+            return lines.reduce(function(sum, line) {
+              return sum + line.realHeight();
+            }, 0);
+          };
+          elements = [];
+          ref = allTextElements.children;
+          for (i = 0, len = ref.length; i < len; i++) {
+            child = ref[i];
+            elements.push(child);
+          }
+          line = new KDCore.Sprite_Group({});
+          lines.push(line);
+          for (j = 0, len1 = elements.length; j < len1; j++) {
+            el = elements[j];
+            currentWidth += el.realWidth();
+            if (currentWidth > maxLineWidth) {
+              currentWidth = 0;
+              if (this.settings.multiline === false) {
+                break;
+              }
+              newHeight = currentHeight() + el.realHeight();
+              if (newHeight > maxHeight) {
+                if (this.settings.trimHeight === true) {
+                  break;
+                }
+              }
+              line = new KDCore.Sprite_Group({});
+              line.addChild(el);
+              el.setPosition(0, this._textElementVerticalPosition());
+              lines.push(line);
+              line.y += line.realHeight() + this.settings.verticalSpacing;
+            } else {
+              line.addChild(el);
+              el.setPosition("prevEndX", this._textElementVerticalPosition());
+            }
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return lines;
+      }
+
+      _clearTextSprites() {
+        var e, i, len, ref, spr;
+        try {
+          this._textsContainer.move(0, 0);
+          ref = this._textLines;
+          for (i = 0, len = ref.length; i < len; i++) {
+            spr = ref[i];
+            spr.removeFromParent();
+          }
+          return this._textLines = [];
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+    };
+  })();
 });
 
 
@@ -4971,12 +11776,15 @@ KDCore.registerLibraryToLoad(function() {
   // * Данное окно используется как основа для Sprite_UITextExt
   //rev 07.10.21
   Window_ExtTextLineBase = class Window_ExtTextLineBase extends Window_Base {
-    constructor(rect, fontSettings) {
+    constructor(rect, fontSettings, styleSettings = {}) {
       super(rect);
       this.fontSettings = fontSettings;
+      this.styleSettings = styleSettings;
       this.createContents();
       // * Всегда прозрачное окно
       this.setBackgroundType(2);
+      this.resetFontSettings();
+      return;
     }
 
     // * Нет отступов
@@ -5013,6 +11821,16 @@ KDCore.registerLibraryToLoad(function() {
     makeFontSmaller() {
       if (this.contents.fontSize > 1) {
         return this.contents.fontSize -= 1;
+      }
+    }
+
+    resetTextColor() {
+      super.resetTextColor();
+      if (this.styleSettings == null) {
+        return;
+      }
+      if (this.styleSettings.textColor != null) {
+        return this.contents.textColor = this.styleSettings.textColor;
       }
     }
 
@@ -5070,6 +11888,14 @@ KDCore.registerLibraryToLoad(function() {
       this._createThread();
     }
 
+    realWidth() {
+      return this._bitmaps[0].width;
+    }
+
+    realHeight() {
+      return this._bitmaps[0].height;
+    }
+
     setManualHover() {
       return this._isManualHoverMode = true;
     }
@@ -5095,6 +11921,11 @@ KDCore.registerLibraryToLoad(function() {
       this.filters[0].desaturate();
     }
 
+    isLoaded() {
+      var ref;
+      return (ref = this._bitmaps[0]) != null ? ref.isReady() : void 0;
+    }
+
     isMouseIn() {
       if (this._isManualHoverMode === true) {
         return this._isManualSelected;
@@ -5103,15 +11934,38 @@ KDCore.registerLibraryToLoad(function() {
       }
     }
 
+    isAllParentsActive() {
+      var e, parent;
+      try {
+        parent = this.parent;
+        while (parent != null) {
+          if (parent.visible === false) {
+            return false;
+          }
+          if (parent.opacity === 0) {
+            return false;
+          }
+          parent = parent.parent;
+        }
+        return true;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return false;
+      }
+    }
+
     isActive() {
       if (this._isCanBeClicked === false) {
         return false;
       }
-      if (this.parent != null) {
-        return this.parent.visible === true && this.visible === true;
-      } else {
-        return this.visible === true;
+      if (this.visible === false) {
+        return false;
       }
+      if (this.opacity === 0) {
+        return false;
+      }
+      return this.isAllParentsActive();
     }
 
     isDisabled() {
@@ -5190,9 +12044,19 @@ KDCore.registerLibraryToLoad(function() {
       var getterFunc;
       getterFunc = this._getGetter(sourceFolder);
       this._bitmaps.push(getterFunc(filename + '_00'));
+      this._bitmaps[0].addLoadListener(this._onBitmapLoaded.bind(this));
       this._bitmaps.push(getterFunc(filename + '_01'));
       if (isFull) {
         this._bitmaps.push(getterFunc(filename + '_03'));
+      }
+    };
+    _._onBitmapLoaded = function() {
+      var e;
+      try {
+        return this._executeLoadListeners();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
       }
     };
     _._getGetter = function(sourceFolder = null) {
@@ -5233,6 +12097,7 @@ KDCore.registerLibraryToLoad(function() {
       return this._updateMouseClick();
     };
     _._updateHover = function() {
+      var e;
       if (!this.isActive()) {
         return;
       }
@@ -5246,6 +12111,14 @@ KDCore.registerLibraryToLoad(function() {
             this._setImageState(1);
           }
           $gameTemp.kdButtonUnderMouse = this;
+          try {
+            if ($gameTemp.__pkdActiveKeyboardHandler != null) {
+              $gameTemp.__pkdActiveKeyboardHandler.pDeactivateHandler();
+            }
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+          }
         }
       } else {
         if (this._lastState !== 0) {
@@ -5267,7 +12140,7 @@ KDCore.registerLibraryToLoad(function() {
       if (this.isDisabled()) {
         return;
       }
-      if (TouchInput.isTriggered() && this.isMouseIn()) {
+      if (TouchInput.isTriggered() && this.isUnderMouse()) {
         this._isTriggered = true;
         this._setImageState(0);
       }
@@ -5382,7 +12255,7 @@ KDCore.registerLibraryToLoad(function() {
   // * Пространство имён для всех UIElements
   KDCore.UI = KDCore.UI || {};
   (function() {    // * Общий класс для всех UI элементов
-    //?rev 13.10.20
+    //?rev 07.02.2024
     var Sprite_UIElement;
     Sprite_UIElement = (function() {
       // * ABSTRACT значит что класс сам по себе ничего не создаёт, не хранит данные
@@ -5430,6 +12303,10 @@ KDCore.registerLibraryToLoad(function() {
           this.filters[0].desaturate();
         }
 
+        clearFilters() {
+          return this.filters = [];
+        }
+
         // * Общий метод (можно ли редактировать визуально)
         isCanBeEdited() {
           return false;
@@ -5443,7 +12320,39 @@ KDCore.registerLibraryToLoad(function() {
         // * Общий метод (находится ли объект под мышкой)
         isUnderMouse() {
           var ref;
-          return (ref = this.zeroChild()) != null ? ref.isUnderMouse() : void 0;
+          return ((ref = this.zeroChild()) != null ? ref.isUnderMouse() : void 0) && this.isFullVisible();
+        }
+
+        // * Полностью ли виден объект? (включае всех его родителей)
+        isFullVisible() {
+          return this.visible === true && this.allParentsIsVisible();
+        }
+
+        // * Все ли родители объекта видимы
+        allParentsIsVisible() {
+          var e, p;
+          if (!this.visible) {
+            return false;
+          }
+          try {
+            if (this.parent != null) {
+              p = this.parent;
+              while (p != null) {
+                if (p.visible === true) {
+                  p = p.parent;
+                } else {
+                  return false;
+                }
+              }
+              return true;
+            } else {
+              return this.visible === true;
+            }
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+            return true;
+          }
         }
 
         // * Параметры первого элемента (если он есть)
@@ -5471,11 +12380,6 @@ KDCore.registerLibraryToLoad(function() {
             }
           }
           return 0;
-        }
-
-        // * Первый "физический" элемент (спрайт)
-        zeroChild() {
-          return this.children[0];
         }
 
         // * Метод восстановления значения на стандартные настройки
@@ -5529,10 +12433,11 @@ KDCore.registerLibraryToLoad(function() {
     
     // * Подготовка элемента (проверка параметров)
     _._prepare = function() {
-      if (this.params == null) {
-        this.params = this.defaultParams();
+      //@params = @defaultParams() unless @params?
+      this.params = Object.assign({}, this.defaultParams(), this.params);
+      if (this.params.visible != null) {
+        this.visible = this.params.visible;
       }
-      return this.visible = this.params.visible;
     };
     // * Наследники создают свои элементы в этом методе
     _._createContent = function() {}; // * EMPTY
@@ -5545,10 +12450,18 @@ KDCore.registerLibraryToLoad(function() {
       }
       try {
         ({x, y} = this.params.position);
+        if (isFinite(x) && isFinite(y)) {
+          x = Number(x);
+          y = Number(y);
+        } else {
+          x = Number(eval(x));
+          y = Number(eval(y));
+        }
         this.move(x, y);
       } catch (error) {
         e = error;
         KDCore.warning(e);
+        this.move(0, 0);
       }
     };
   })();
@@ -5556,6 +12469,129 @@ KDCore.registerLibraryToLoad(function() {
 
 // ■ END PRIVATE.coffee
 //---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_ItemsListNHor;
+  //TODO: NOT USED IN NUI 1.0
+  //NUI 1.X !#!
+  //rev 03.05.24
+
+    //"type": "horList"
+  Sprite_ItemsListNHor = class Sprite_ItemsListNHor extends KDCore.Sprite_ItemsListN {
+    constructor() {
+      super(...arguments);
+    }
+
+    //$[OVER]
+    defaultSettings() {
+      var settings;
+      settings = super.defaultSettings();
+      settings.width = 420;
+      settings.height = 120;
+      settings.maxCols = 4;
+      return settings;
+    }
+
+    //$[OVER]
+    setMaxCols(maxCols) {} // * AUTO
+
+    setItems(items) {
+      var e, l;
+      try {
+        if (items != null) {
+          l = this.maxItems();
+          if (l !== items.length) {
+            this.settings.maxCols = items.length;
+            this.clear();
+            this._applySettings();
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return super.setItems(items);
+    }
+
+  };
+  return KDCore.Sprite_ItemsListNHor = Sprite_ItemsListNHor;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_Screen;
+  //NUI 1.0
+  //rev 04.05.24
+
+    //"type": "screen"
+  Sprite_Screen = class Sprite_Screen extends KDCore.Sprite_Group {
+    constructor(settings) {
+      super(settings);
+      this._applyExtraSettings();
+    }
+
+    //TODO: В режиме linkToMap, должен иметь width и height карты (size * tileSize)
+    realWidth() {
+      if (this.isNotHaveBounds()) {
+        return 0;
+      }
+      return Graphics.width;
+    }
+
+    realHeight() {
+      if (this.isNotHaveBounds()) {
+        return 0;
+      }
+      return Graphics.height;
+    }
+
+    defaultSettings() {
+      var defaultSettings;
+      defaultSettings = super.defaultSettings();
+      return Object.assign(defaultSettings, {
+        width: Graphics.width,
+        height: Graphics.height,
+        linkToMap: false //TODO: NOT USED IN NUI 1.0
+      });
+    }
+
+    _applyExtraSettings() {
+      var e;
+      try {
+        if (this.settings.linkToMap === true) {
+          return this.anchorPoint = new KDCore.MapAnchorPoint(0, 0);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    update() {
+      super.update();
+      return this._refreshScreenPosition();
+    }
+
+    _refreshScreenPosition() {
+      var e;
+      try {
+        if (this.anchorPoint == null) {
+          return;
+        }
+        this.x = this.anchorPoint.screenX();
+        return this.y = this.anchorPoint.screenY();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_Screen = Sprite_Screen;
+});
 
 
 // Generated by CoffeeScript 2.6.1
@@ -5772,7 +12808,7 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
-  (function() {    //TODO: ROOT IMAGE FOLDER AS PARAMETER!!!
+  (function() {
     var Sprite_UIGauge;
     Sprite_UIGauge = class Sprite_UIGauge extends KDCore.UI.Sprite_UIElement {
       constructor() {
@@ -6133,11 +13169,17 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
-  (function() {    //rev 17.11.22
+  (function() {    //NUI 1.0
+    //rev 11.05.22
+
+    //"type": "legacyText"
     var Sprite_UIText;
     Sprite_UIText = class Sprite_UIText extends KDCore.UI.Sprite_UIElement {
       constructor() {
         super(...arguments);
+        if (String.any(this.params.text)) {
+          this.drawText(this.params.text);
+        }
       }
 
       // * Стандартный набор настроек
@@ -6145,8 +13187,8 @@ KDCore.registerLibraryToLoad(function() {
         return {
           visible: true,
           size: {
-            w: 60,
-            h: 20
+            width: 60,
+            height: 20
           },
           alignment: "center",
           font: {
@@ -6162,23 +13204,156 @@ KDCore.registerLibraryToLoad(function() {
             color: null,
             width: 2
           },
-          textColor: "#FFFFFF".toCss(),
-          // ? can be Null or not exists
+          textColor: "#ffffff",
           shadow: {
             color: "#000",
-            opacity: 200,
+            opacity: 0,
             margins: {
               x: 1,
               y: 1
             }
-          }
+          },
+          text: ""
         };
+      }
+
+      // * For compatibility with old style configurations
+      sizeWidth() {
+        if (this.params.size.w != null) {
+          return this.params.size.w;
+        } else {
+          if (this.params.size.width != null) {
+            this.params.size.w = this.params.size.width;
+            return this.params.size.width;
+          }
+        }
+        return 0;
+      }
+
+      // * For compatibility with old style configurations
+      sizeHeight() {
+        if (this.params.size.h != null) {
+          return this.params.size.h;
+        } else {
+          if (this.params.size.height != null) {
+            this.params.size.h = this.params.size.height;
+            return this.params.size.height;
+          }
+        }
+        return 0;
+      }
+
+      realWidth() {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        return this.sizeWidth();
+      }
+
+      realHeight() {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        return this.sizeHeight();
+      }
+
+      dataBindings() {
+        return Object.assign(super.dataBindings(), {
+          text: function(v) {
+            return this.drawText(v);
+          },
+          style: function(v) {
+            return this.updateStyle(v);
+          },
+          width: function(v) {
+            if (v != null) {
+              return this.setSize(v, this.sizeHeight());
+            }
+          },
+          height: function(v) {
+            if (v != null) {
+              return this.setSize(this.sizeWidth(), v);
+            }
+          },
+          size: function(v) {
+            if (v != null) {
+              return this.setSize(v.width, v.height);
+            }
+          },
+          textColor: function(v) {
+            if (v != null) {
+              return this.updateStyle({
+                textColor: v
+              });
+            }
+          },
+          fontSize: function(v) {
+            if (v != null) {
+              return this.updateFontSize(v);
+            }
+          }
+        });
+      }
+
+      setSize(w = 60, h = 20) {
+        var e;
+        try {
+          w = this._getValueByStr(w, 'width', this);
+          h = this._getValueByStr(h, 'height', this);
+          return this.updateStyle({
+            size: {
+              w: w,
+              h: h,
+              width: w,
+              height: h
+            }
+          });
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      updateStyle(newStyle) {
+        var e;
+        try {
+          this.params = Object.assign({}, this.params, newStyle);
+          this._destroyOldContent();
+          this._createContent();
+          // * Redraw Text
+          return this.drawText(this._lastText || "");
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      updateFontSize(fontSize) {
+        var e, font;
+        try {
+          font = Object.assign({}, this.params.font);
+          if (typeof fontSize === "string") {
+            fontSize = this._getValueByStr(fontSize, 'height', this);
+          }
+          font.size = fontSize;
+          return this.updateStyle({font});
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
       }
 
       //?DYNAMIC
       // * Сперва рисуем по готовности, а как загрузился спрайт, меняем
       drawText(text) {
-        return this._drawTextWhenReady(text);
+        var e;
+        try {
+          this.params.text = text;
+          return this._drawTextWhenReady(text);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
       }
 
       // * Сборка текста с учётом формата
@@ -6209,6 +13384,18 @@ KDCore.registerLibraryToLoad(function() {
     var _;
     //@[DEFINES]
     _ = KDCore.UI.Sprite_UIText.prototype;
+    _._destroyOldContent = function() {
+      var e, ref, ref1;
+      try {
+        if ((ref = this._shadowSpr) != null) {
+          ref.removeFromParent();
+        }
+        return (ref1 = this._textSpr) != null ? ref1.removeFromParent() : void 0;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
     //$[OVER]
     _._createContent = function() {
       if (this.params.shadow != null) {
@@ -6233,6 +13420,7 @@ KDCore.registerLibraryToLoad(function() {
       this._drawOnReady = null;
     };
     _._drawText = function(text) {
+      this._lastText = text;
       if (this._textSpr == null) {
         return;
       }
@@ -6294,7 +13482,383 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
-  (function() {    //rev 30.12.21
+  (function() {    //NUI 1.0
+    //rev 11.05.22
+    var Sprite_UIText2;
+    
+      //"type": "text"
+    Sprite_UIText2 = class Sprite_UIText2 extends KDCore.UI.Sprite_UIElement {
+      constructor(params, userTextStyle) {
+        super(params);
+        this.userTextStyle = userTextStyle;
+        this._applyParameters(params);
+        this._createTextSprite();
+        if (String.any(this.params.text)) {
+          this.drawText(this.params.text);
+        }
+        return;
+      }
+
+      // * Стандартный набор настроек
+      defaultParams() {
+        return {
+          visible: true,
+          size: {
+            width: 60,
+            height: 20
+          },
+          alignment: "center",
+          font: {
+            face: null,
+            size: 18,
+            italic: false,
+            bold: false,
+            weight: 0 // * 0 - not used
+          },
+          margins: {
+            x: 0,
+            y: 0
+          },
+          outline: {
+            color: null,
+            width: 2
+          },
+          textColor: "#FFFFFF",
+          shadow: {
+            color: "#000",
+            opacity: 0,
+            margins: {
+              x: 1,
+              y: 1
+            }
+          },
+          text: "",
+          multiline: false,
+          verticalCentered: true,
+          actualSize: false
+        };
+      }
+
+      // * For compatibility with old style configurations
+      sizeWidth() {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if ((this._textSpr != null) && this.params.actualSize === true) {
+          return this.getMetrics().width;
+        }
+        if (this.params.size.w != null) {
+          return this.params.size.w;
+        } else {
+          if (this.params.size.width != null) {
+            this.params.size.w = this.params.size.width;
+            return this.params.size.width;
+          }
+        }
+        return 0;
+      }
+
+      // * For compatibility with old style configurations
+      sizeHeight() {
+        if (this.isNotHaveBounds()) {
+          return 0;
+        }
+        if ((this._textSpr != null) && this.params.actualSize === true) {
+          return this.getMetrics().height;
+        }
+        if (this.params.size.h != null) {
+          return this.params.size.h;
+        } else {
+          if (this.params.size.height != null) {
+            this.params.size.h = this.params.size.height;
+            return this.params.size.height;
+          }
+        }
+        return 0;
+      }
+
+      dataBindings() {
+        return Object.assign(super.dataBindings(), {
+          text: function(v) {
+            return this.drawText(v);
+          },
+          style: function(v) {
+            if (v != null) {
+              return this.updateStyle(v);
+            }
+          },
+          width: function(v) {
+            if (v != null) {
+              return this.setSize(v, this.sizeHeight());
+            }
+          },
+          height: function(v) {
+            if (v != null) {
+              return this.setSize(this.sizeWidth(), v);
+            }
+          },
+          size: function(v) {
+            if (v != null) {
+              return this.setSize(v.width, v.height);
+            }
+          },
+          textColor: function(v) {
+            if (v != null) {
+              return this.updateStyle({
+                textColor: v
+              });
+            }
+          },
+          fontSize: function(v) {
+            if (v != null) {
+              return this.updateFontSize(v);
+            }
+          }
+        });
+      }
+
+      realWidth() {
+        return this.sizeWidth();
+      }
+
+      realHeight() {
+        return this.sizeHeight();
+      }
+
+      setSize(w = 60, h = 20) {
+        var e;
+        try {
+          w = this._getValueByStr(w, 'width', this);
+          h = this._getValueByStr(h, 'height', this);
+          return this.updateStyle({
+            size: {
+              w: w,
+              h: h
+            }
+          });
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      defaultStyle() {
+        return {};
+      }
+
+      drawText(text) {
+        if (text == null) {
+          text = "";
+        }
+        this.params.text = text;
+        this._drawText(text);
+      }
+
+      // * Сборка текста с учётом формата
+      // * Заменить вхождения %1, %2 на значения параметров
+      drawTextWithFormat(/*format string, arguments parameters... */) {
+        var text;
+        text = this._convertFormatedString(...arguments);
+        this.drawText(text);
+      }
+
+      // * Пишет текст с определённым цветом (один раз)
+      drawTextColor(text, colorCss = "#FFF") {
+        if (this._textSpr == null) {
+          return;
+        }
+        this.updateStyle({
+          textColor: colorCss
+        });
+        this.drawText(text);
+      }
+
+      updateFontSize(fontSize) {
+        var e, font;
+        try {
+          font = Object.assign({}, this.params.font);
+          if (typeof fontSize === "string") {
+            fontSize = this._getValueByStr(fontSize, 'height', this);
+          }
+          font.size = fontSize;
+          return this.updateStyle({font});
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      updateStyle(newStyleInOldFormat = {}, newStyleInNewFormat = {}) {
+        var e;
+        try {
+          this.textStyle = this._convertOldStyle(newStyleInOldFormat, newStyleInNewFormat);
+          this._textSpr.style = this.textStyle;
+          // * Redraw Text
+          return this.drawText(this._textSpr.text);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      getMetrics() {
+        return PIXI.TextMetrics.measureText(this._textSpr.text, this._textSpr.style);
+      }
+
+    };
+    KDCore.UI.Sprite_UIText2 = Sprite_UIText2;
+  })();
+  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ PRIVATE.coffee
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    //---------------------------------------------------------------------------
+    var _;
+    //@[DEFINES]
+    _ = KDCore.UI.Sprite_UIText2.prototype;
+    _._applyParameters = function(params) {
+      var e;
+      try {
+        return this.textStyle = this._convertOldStyle(params, {});
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._convertOldStyle = function(params = {}, style = {}) {
+      var _textStyle, color, e, margins, opacity;
+      try {
+        this.params = Object.assign({}, this.params, params);
+        _textStyle = Object.assign({}, this.defaultStyle(), this.userTextStyle, style);
+        if (String.any(this.params.font.face)) {
+          _textStyle.fontFamily = this.params.font.face;
+        }
+        _textStyle.fontSize = this.params.font.size;
+        if (this.params.font.italic === true) {
+          _textStyle.fontStyle = 'italic';
+        }
+        if (this.params.font.bold === true) {
+          _textStyle.fontWeight = 'bold';
+        }
+        if ((this.params.font.weight != null) && this.params.font.weight > 0) {
+          _textStyle.fontWeight = this.params.font.weight;
+        }
+        if (String.any(this.params.outline.color) && this.params.outline.width > 0) {
+          _textStyle.stroke = this.params.outline.color;
+          _textStyle.strokeThickness = this.params.outline.width;
+        }
+        _textStyle.fill = this.params.textColor;
+        if ((this.params.shadow != null) && this.params.shadow.opacity > 0) {
+          ({color, opacity, margins} = this.params.shadow);
+          _textStyle.dropShadow = true;
+          _textStyle.dropShadowAngle = margins.y;
+          _textStyle.dropShadowColor = color;
+          _textStyle.dropShadowDistance = margins.x;
+          _textStyle.dropShadowAlpha = opacity / 255.0;
+        }
+        if (this.params.multiline === true) {
+          _textStyle.align = this.params.alignment || 'left';
+          _textStyle.wordWrap = true;
+          if (this.params.font.size != null) {
+            _textStyle.lineHeight = this.params.font.size + 2;
+          }
+          if (this.sizeWidth() > 0) {
+            _textStyle.wordWrapWidth = this.sizeWidth();
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return _textStyle;
+    };
+    _._createTextSprite = function() {
+      var style;
+      style = new PIXI.TextStyle(this.textStyle);
+      this._textSpr = new PIXI.Text('', style);
+      this.add(this._textSpr);
+      if (this._needToDrawText != null) {
+        this.draw(this._needToDrawText);
+        this._needToDrawText = null;
+      }
+    };
+    _._drawText = function(text) {
+      var e, h, height, maxLineWidth, textMetrics, w;
+      if (this._textSpr == null) {
+        this._needToDrawText = text;
+        return;
+      }
+      this._textSpr.text = text;
+      if (this.params.size.height != null) {
+        this.params.size.h = this.params.size.height;
+      }
+      if (this.params.size.width != null) {
+        this.params.size.w = this.params.size.width;
+      }
+      ({w, h} = this.params.size);
+      try {
+        if (typeof text !== "string") {
+          text = String(text);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        text = "[wrong text input]";
+      }
+      textMetrics = PIXI.TextMetrics.measureText(text, this._textSpr.style);
+      ({height, maxLineWidth} = textMetrics);
+      if (this.params.verticalCentered === true) {
+        this._textSpr.y = (h - height) / 2;
+      } else {
+        this._textSpr.y = 0;
+      }
+      if (this.params.alignment === 'center') {
+        this._textSpr.x = (w - maxLineWidth) / 2;
+      } else if (this.params.alignment === 'right') {
+        this._textSpr.x = w - maxLineWidth;
+      } else {
+        this._textSpr.x = 0;
+      }
+      this._textSpr.x += this.params.margins.x;
+      this._textSpr.y += this.params.margins.y;
+    };
+    // * Заменить вхождения %1, %2 на значения параметров
+    _._convertFormatedString = function(/*text, args...*/) {
+      var e, i, j, ref, text;
+      try {
+        text = arguments[0];
+        for (i = j = 1, ref = arguments.length; (1 <= ref ? j < ref : j > ref); i = 1 <= ref ? ++j : --j) {
+          try {
+            if (arguments[i] == null) {
+              continue;
+            }
+            text = text.replace("%" + i, arguments[i]);
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+            text = "[wrong format text input]";
+          }
+        }
+        return text;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return "[wrong format text input]";
+      }
+    };
+  })();
+});
+
+// ■ END PRIVATE.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  (function() {    //TODO: NOT USED IN NUI 1.0
+    //NUI 1.X !#!
+    //rev 03.05.22
+
+    //"type": "textExt"
     var Sprite_UITextExt;
     Sprite_UITextExt = class Sprite_UITextExt extends KDCore.UI.Sprite_UIText {
       constructor() {
@@ -6306,8 +13870,8 @@ KDCore.registerLibraryToLoad(function() {
         return {
           visible: true,
           size: {
-            w: 200,
-            h: 60
+            width: 200,
+            height: 60
           },
           font: {
             face: null,
@@ -6342,20 +13906,42 @@ KDCore.registerLibraryToLoad(function() {
     //@[DEFINES]
     _ = KDCore.UI.Sprite_UITextExt.prototype;
     //$[OVER]
+    _._destroyOldContent = function() {
+      var e;
+      try {
+        if (this._textSpr == null) {
+          return;
+        }
+        return this.removeChild(this._textSpr);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    //$[OVER]
     _._createTextSprite = function() {
       var rect;
-      rect = new Rectangle(0, 0, this.params.size.w, this.params.size.h);
-      this._textSpr = new KDCore.Window_ExtTextLineBase(rect, this.params.font);
+      rect = new Rectangle(0, 0, this.sizeWidth(), this.sizeHeight());
+      this._textSpr = new KDCore.Window_ExtTextLineBase(rect, this.params.font, this.params);
       this._textSpr.x = this.params.margins.x || 0;
       this._textSpr.y = this.params.margins.y || 0;
       this.add(this._textSpr);
       // * На следующий кадр, чтобы не было потери текста (опасно)
-      //setTimeout (=> @_onReady() ), 10
+      setTimeout((() => {
+        var e;
+        try {
+          return this._onReady();
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }), 10);
       this._onReady(); // * Сразу
     };
     
     //$[OVER]
     _._drawText = function(text) {
+      this._lastText = text;
       if (this._textSpr == null) {
         return;
       }
@@ -7386,6 +14972,163 @@ KDCore.registerLibraryToLoad(function() {
       this._parent.style.width = Graphics._canvas.style.width;
       this._parent.style.height = Graphics._canvas.style.height;
     };
+    _.initReactComponents = function(withBabel = true) {
+      var e;
+      try {
+        if (withBabel) {
+          this._loadBabel();
+        }
+        return this._loadReact();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._loadBabel = function() {
+      var e;
+      try {
+        return this._loadScript('https://unpkg.com/babel-standalone@6/babel.min.js');
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._loadReact = function() {
+      var e;
+      try {
+        this._loadScript('https://unpkg.com/react@18/umd/react.production.min.js');
+        return this._loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js');
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._loadScript = function(src, isReact = false) {
+      var e, script;
+      try {
+        script = document.createElement("script");
+        if (isReact === true) {
+          script.type = "text/babel";
+        } else {
+          script.type = "text/javascript";
+          script.crossorigin = true;
+        }
+        script.src = src;
+        script.async = false;
+        script.defer = true;
+        script.onerror = function(e) {
+          KDCore.warning('HUI: Failed to load script');
+          return KDCore.warning(e);
+        };
+        document.body.appendChild(script);
+        if (isReact === true) {
+          return window.dispatchEvent(new Event('DOMContentLoaded'));
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.loadReactComponent = function(componentName, folder = 'data/uiComponents') {
+      var e, src;
+      try {
+        src = folder + "/" + componentName + ".js";
+        return this._loadScript(src, true);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.addReactComponent = function(componentName, props, uniqueId = null) {
+      var e, element, reactElement, root;
+      try {
+        if (window[componentName] == null) {
+          KDCore.warning("Cant find " + componentName + ", make sure to load it first");
+          return null;
+        }
+        if (uniqueId == null) {
+          uniqueId = componentName;
+        }
+        // * Создаём отдельный DIV для каждого элемента (чтобы можно было удалять)
+        element = this._getElementForReactComponent(uniqueId);
+        root = ReactDOM.createRoot(element);
+        reactElement = React.createElement(window[componentName], props);
+        root.render(reactElement);
+        return KDCore.HUI.getElement(uniqueId);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return null;
+      }
+    };
+    // * Simple React Component (without JSX!)
+    _.loadReactComponentFromFile = function(filename, props, uniqueId, handler, folder = "data/uiComponents") {
+      var e, url, xhr;
+      try {
+        xhr = new XMLHttpRequest();
+        url = folder + "/" + filename + ".js";
+        xhr.open("GET", url);
+        xhr.overrideMimeType("plain/text");
+        xhr.onload = function() {
+          var e, element;
+          eval(xhr.responseText);
+          element = KDCore.HUI.addReactComponent(filename, props, uniqueId);
+          try {
+            if (handler != null) {
+              return handler(element, filename);
+            }
+          } catch (error) {
+            e = error;
+            return KDCore.warning(e);
+          }
+        };
+        return xhr.send();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._getElementForReactComponent = function(componentId) {
+      var e, element;
+      try {
+        this.removeElementById(componentId);
+        element = this.addElement(componentId, '', null);
+        return element;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
+    };
+    _.loadElementFromFile = function(filename, handler, folder = "data/uiComponents") {
+      var e, url, xhr;
+      try {
+        xhr = new XMLHttpRequest();
+        url = folder + "/" + filename + ".html";
+        xhr.open("GET", url);
+        xhr.overrideMimeType("plain/text");
+        xhr.onload = function() {
+          var e, element, htmlElementText;
+          // * Хотел отдельные данные передавать и заменять в HTML текст
+          // * Но если у нас есть React компоненты, то это не надо
+          //htmlElementText = @convertDataKeys(xhr.responseText, dataKeys)
+          htmlElementText = xhr.responseText;
+          element = KDCore.HUI.addElement(filename, htmlElementText, null);
+          try {
+            if (handler != null) {
+              return handler(element, filename);
+            }
+          } catch (error) {
+            e = error;
+            return KDCore.warning(e);
+          }
+        };
+        return xhr.send();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
     _.addCSS = function(name, folder = "css") {
       var head;
       if (!this.isInited()) {
@@ -7412,6 +15155,15 @@ KDCore.registerLibraryToLoad(function() {
       }
       this._parent.appendChild(element);
       return element;
+    };
+    _.appendElement = function(element) {
+      var e;
+      try {
+        return this._parent.appendChild(element);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     };
     // * Может быть NULL
     _.getElement = function(id) {
@@ -7721,6 +15473,554 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
+  var Builder;
+  Builder = {};
+  (function() {    //NUI 1.0
+    //rev 18.08.24
+    var _;
+    //@[DEFINES]
+    _ = Builder;
+    _.Factory = function(jsonCollection, owner, exRefresh = 0) {
+      var e, item, items, j, key, len, value;
+      try {
+        if (jsonCollection == null) {
+          return;
+        }
+        items = [];
+        for (key in jsonCollection) {
+          value = jsonCollection[key];
+          item = KDCore.UI.Builder.Make(value, owner);
+          if (item != null) {
+            items.push(item); // * Skip not UI elements definitions
+          }
+        }
+//owner[key] = item if owner?
+        for (j = 0, len = items.length; j < len; j++) {
+          item = items[j];
+          item.refreshBindings(owner, true);
+        }
+        // * Обновить привязки через MS ещё раз
+        if (exRefresh > 0) {
+          setTimeout((function() {
+            var e, k, len1, results;
+            try {
+              results = [];
+              for (k = 0, len1 = items.length; k < len1; k++) {
+                item = items[k];
+                results.push(item.refreshBindings(owner, true));
+              }
+              return results;
+            } catch (error) {
+              e = error;
+              return KDCore.warning(e);
+            }
+          }), exRefresh);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return items;
+    };
+    _.Make = function(jsonStructure, owner = null, parent = null) {
+      var bindings, child, childrens, dataObject, e, item, j, len, parameters, shortcutData, subItem, type, value;
+      try {
+        if (jsonStructure == null) {
+          return null;
+        }
+        if (jsonStructure.type == null) {
+          return null;
+        }
+        if (jsonStructure.shortcut != null) {
+          shortcutData = KDCore.UI.Builder.ConvertShortcut(jsonStructure.shortcut);
+          ({type, parameters} = shortcutData);
+        } else {
+          ({type, parameters} = jsonStructure);
+        }
+        if (typeof parameters === "string") {
+          parameters = KDCore.UI.Builder.ConvertShortcut(parameters);
+        }
+        if (jsonStructure.createIf != null) {
+          value = this._convertBindingValue(owner, jsonStructure.createIf);
+          if (value !== true) {
+            return null;
+          }
+        }
+        item = KDCore.UI.Builder.CreateItemByType(type, parameters);
+        if (item == null) {
+          return null;
+        }
+        ({dataObject, bindings, childrens} = jsonStructure);
+        // * Parent нужен чтобы работали настройки положения (center, %) и т.д.
+        if (parent != null) {
+          parent.addChild(item);
+        } else {
+          // * Owner - это не только главный родитель, но и к кому мы
+          // * прописываем все поля по ID
+          if (owner != null) {
+            owner.addChild(item);
+          }
+        }
+        // * Сохраняем схему (но только этого элемента, без "детей")
+        item.uiJsonScheme = Object.assign({}, jsonStructure, {
+          childrens: []
+        });
+        // * Константы доступны не только у каждого элемента в схеме, но и у общего родителя
+        if (jsonStructure.constants != null) {
+          if (item.uiConstants == null) {
+            item.uiConstants = {};
+          }
+          item.uiConstants = Object.assign(item.uiConstants, jsonStructure.constants);
+          if (owner != null) {
+            if (owner.uiConstants == null) {
+              owner.uiConstants = {};
+            }
+            owner.uiConstants = Object.assign(owner.uiConstants, jsonStructure.constants);
+          }
+        }
+        if (bindings != null) {
+          if (dataObject == null) {
+            dataObject = owner;
+          }
+          KDCore.UI.Builder.ApplyBindings(item, bindings, dataObject);
+        }
+        try {
+          if (jsonStructure.effects != null) {
+            KDCore.UI.Builder.ApplyEffects(item, jsonStructure.effects);
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        if ((childrens != null) && childrens.length > 0) {
+          for (j = 0, len = childrens.length; j < len; j++) {
+            child = childrens[j];
+            // * Дети всегда имеют родителя - этот элемент (а не owner)
+            subItem = KDCore.UI.Builder.Make(child, owner, item);
+          }
+        }
+        if (jsonStructure.id != null) {
+          item.id = jsonStructure.id;
+          if (owner != null) {
+            owner[jsonStructure.id] = item;
+          }
+        }
+        if (jsonStructure.parent != null) {
+          parent = jsonStructure.parent;
+          if ((owner != null) && (owner[parent] != null)) {
+            owner[parent].addChild(item);
+          }
+        }
+        // * Update bindings for recalculate Positions and Sizes
+        if (bindings != null) {
+          KDCore.UI.Builder.RefreshBindings(item, dataObject);
+        }
+        if (jsonStructure.position != null) {
+          item.setPosition(jsonStructure.position);
+        }
+        try {
+          if (jsonStructure.animations != null) {
+            KDCore.UI.Builder.ApplyAnimations(item, jsonStructure.animations);
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return item;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
+    };
+    // * dataObject может быть Null, если нет binding c $
+    _.ApplyBindings = function(uiElement, bindings, dataObject) {
+      var dataBindings, e, field, value;
+      try {
+        if (uiElement == null) {
+          return;
+        }
+        if (bindings == null) {
+          return;
+        }
+        if (uiElement.dataBindings == null) {
+          return;
+        }
+        dataBindings = uiElement.dataBindings();
+        if (dataBindings == null) {
+          return;
+        }
+        for (field in dataBindings) {
+          if (bindings[field] != null) {
+            value = this.ConvertBindingValue(dataObject, bindings[field], uiElement);
+            dataBindings[field].call(uiElement, value);
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+    };
+    _.RefreshBindings = function(uiElement, dataObject) {
+      var bindings, e;
+      try {
+        if (uiElement == null) {
+          return;
+        }
+        if (uiElement.uiJsonScheme == null) {
+          return;
+        }
+        ({bindings} = uiElement.uiJsonScheme);
+        if (bindings == null) {
+          return;
+        }
+        KDCore.UI.Builder.ApplyBindings(uiElement, bindings, dataObject);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+    };
+    _.ApplyEffects = function(uiElement, effects) {
+      var alpha, color, e, ef, efData, effectsArray, j, len, quality, thickness;
+      try {
+        if (uiElement == null) {
+          return;
+        }
+        if (effects == null) {
+          return;
+        }
+        //TODO: Преобразование цвета!
+        effectsArray = [];
+        for (j = 0, len = effects.length; j < len; j++) {
+          ef = effects[j];
+          if (ef == null) {
+            continue;
+          }
+          efData = KDCore.UI.Builder.ConvertShortcut(ef);
+          if ((efData.shadow != null) && KDCore.isMZ()) {
+            effectsArray.push(new PIXI.filters.DropShadowFilter(efData));
+          }
+          if ((efData.outline != null) && KDCore.isMZ()) {
+            ({thickness, color, quality} = efData);
+            if (thickness == null) {
+              thickness = 1;
+            }
+            if (color == null) {
+              color = 0xffffff;
+            }
+            effectsArray.push(new PIXI.filters.OutlineFilter(thickness, color, quality));
+          }
+          if (efData.glow != null) {
+            effectsArray.push(new PIXI.filters.GlowFilter(efData));
+          }
+          if (efData.tint != null) {
+            ({color, alpha} = efData);
+            if (alpha == null) {
+              alpha = 0.5;
+            }
+            effectsArray.push(new PIXI.filters.ColorOverlayFilter(color, alpha));
+          }
+        }
+        if (effectsArray.length > 0) {
+          return uiElement.filters = effectsArray;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.ApplyAnimations = function(uiElement, animations) {
+      var a, e, j, len;
+      try {
+        if (uiElement == null) {
+          return;
+        }
+        if (animations == null) {
+          return;
+        }
+        if (uiElement.addAnimationRule == null) {
+          return;
+        }
+        if (animations.length === 0) {
+          return;
+        }
+        for (j = 0, len = animations.length; j < len; j++) {
+          a = animations[j];
+          if (typeof a === 'string') {
+            a = KDCore.UI.Builder.ConvertShortcut(a);
+          }
+          if (a != null) {
+            uiElement.addAnimationRule(a);
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+    };
+    _.ConvertBindingValue = function(sourceObj, bindingValue, element = null) {
+      var e, i, j, ref, text, value;
+      try {
+        if (bindingValue instanceof Array) {
+          text = bindingValue[0];
+          for (i = j = 1, ref = bindingValue.length; (1 <= ref ? j < ref : j > ref); i = 1 <= ref ? ++j : --j) {
+            if (bindingValue[i] == null) {
+              continue;
+            }
+            value = this.ConvertBindingValue(sourceObj, bindingValue[i], element);
+            if (value != null) {
+              text = text.replace("%" + i, value);
+            }
+          }
+          return text;
+        } else {
+          return this._convertBindingValue(sourceObj, bindingValue, element);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return bindingValue;
+    };
+    _.CreateItemByType = function(type, initialParameters = {}) {
+      var e;
+      try {
+        // * SHOULD HAVE: dataBingins(size), realWidth, realHeight
+        switch (type) {
+          case 'button':
+            return new KDCore.Sprite_SButton(initialParameters);
+          case 'text':
+            return new KDCore.UI.Sprite_UIText2(initialParameters);
+          case 'plane':
+            return new KDCore.Sprite_Plane(initialParameters);
+          case 'rect':
+            return new KDCore.Sprite_BaseRect(initialParameters);
+          case 'image':
+            return new KDCore.Sprite_Image(initialParameters);
+          case 'legacyText':
+            return new KDCore.UI.Sprite_UIText(initialParameters);
+          case 'textExt':
+            return new KDCore.UI.Sprite_UITextExt(initialParameters);
+          case 'group':
+            return new KDCore.Sprite_Group(initialParameters);
+          case 'legacyButton':
+            return new KDCore.Sprite_ImgButton(initialParameters);
+          case 'circle':
+            return new KDCore.Sprite_BaseCircle(initialParameters);
+          case 'gauge':
+            return new KDCore.Sprite_Gauge(initialParameters);
+          case 'list':
+            return new KDCore.Sprite_ItemsListN(initialParameters);
+          case 'horList':
+            return new KDCore.Sprite_ItemsListNHor(initialParameters);
+          case 'screen':
+            return new KDCore.Sprite_Screen(initialParameters);
+          case 'face':
+            return new KDCore.Sprite_ActorFace(initialParameters);
+          case 'textPro':
+            return new KDCore.Sprite_TextPro(initialParameters);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
+    };
+    _._convertValueDataFromShortcut = function(valueData) {
+      var data, e, item, j, len, n, outerItems, p, v;
+      try {
+        if (valueData.contains("|")) {
+          data = {};
+          outerItems = valueData.split("|");
+          for (j = 0, len = outerItems.length; j < len; j++) {
+            item = outerItems[j];
+            p = item.split("=");
+            n = p.shift();
+            v = p;
+            if (v.length === 0) {
+              v = true;
+            } else {
+              if (v.length === 1) {
+                v = v[0];
+                if (isFinite(v)) {
+                  v = Number(v);
+                }
+              } else {
+                v = KDCore.UI.Builder._convertValueDataFromShortcut(v.join("="));
+              }
+            }
+            data[n] = v;
+          }
+          return data;
+        }
+        data = KDCore.UI.Builder.ConvertShortcut(valueData, ",", "=");
+        return data;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.ConvertShortcut = function(shortcut, outerSep = ";", innerSep = ":") {
+      var config, e, j, len, pair, value, valueData, valueName, values;
+      try {
+        config = {};
+        values = shortcut.split(outerSep);
+//console.log(values)
+        for (j = 0, len = values.length; j < len; j++) {
+          value = values[j];
+          if (!String.any(value)) {
+            continue;
+          }
+          pair = value.split(innerSep);
+          valueName = pair[0];
+          valueData = pair[1];
+          if (String.any(valueData) && valueData.contains("=")) {
+            valueData = KDCore.UI.Builder._convertValueDataFromShortcut(valueData);
+          } else {
+            if (valueData == null) {
+              valueData = true;
+            } else {
+              if (isFinite(valueData)) {
+                valueData = Number(valueData);
+              }
+            }
+          }
+          config[valueName] = valueData;
+        }
+        //console.log(valueName, valueData)
+        return config;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._convertBindingValue = function(sourceObj, bindingValue, element = null) {
+      var captured, dpValue, e, evalString, r, result, resultValue;
+      try {
+        if (typeof bindingValue === 'string') {
+          // * Replace all HDP
+          if (bindingValue.contains("hdp")) {
+            r = new RegExp("(\\d+)hdp", "g");
+            result = r.exec(bindingValue);
+            while ((result != null)) {
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, true);
+              bindingValue = bindingValue.replace(/(\d+)hdp/, resultValue);
+              result = r.exec(bindingValue);
+            }
+          }
+          // * Replace all DP
+          if (bindingValue.contains("dp")) {
+            r = new RegExp("(\\d+)dp", "g");
+            result = r.exec(bindingValue);
+            while ((result != null)) {
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, false);
+              bindingValue = bindingValue.replace(/(\d+)dp/, resultValue);
+              result = r.exec(bindingValue);
+            }
+          }
+          // * FORCE EVAL
+          if (bindingValue.contains("@") && bindingValue[0] === "@") {
+            evalString = bindingValue.replace("@", "");
+            return eval(evalString);
+          }
+          // * EXTRA $ calculations
+          if (bindingValue.contains("~") && bindingValue[0] === "~") { // * POST EVAL
+            if (bindingValue.contains("$")) {
+              r = new RegExp("(\\$[\\w+.]*)", "g");
+              result = r.exec(bindingValue);
+              if (result != null) {
+                //console.log(result)
+                captured = result[1];
+                if (String.any(captured)) {
+                  resultValue = this._convertSingleBindingValue$(sourceObj, captured, element);
+                  if (resultValue == null) {
+                    return null;
+                  }
+                  if (typeof resultValue === 'function') {
+                    return resultValue;
+                  } else {
+                    if (String.any(resultValue)) {
+                      bindingValue = bindingValue.replace(captured, resultValue);
+                      return this._convertBindingValue(sourceObj, bindingValue, element);
+                    } else {
+                      return null;
+                    }
+                  }
+                }
+              }
+            } else {
+              evalString = bindingValue.replace("~", "");
+              return eval(evalString);
+            }
+          }
+          
+          // * Default old style simple $
+          if (bindingValue.contains("$")) {
+            return this._convertSingleBindingValue$(...arguments);
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return bindingValue;
+    };
+    _._convertSingleBindingValue$ = function(sourceObj, bindingValue, element) {
+      var e, field, parts, subData, subField;
+      try {
+        field = bindingValue.replace("$", "");
+        if (field.contains(".")) { //$parent.width
+          parts = field.split(".");
+          // * Только одно вхождение
+          field = parts[0];
+          subField = parts[1];
+          if (!String.any(field) && String.any(subField)) {
+            if (element != null) {
+              return this._convertSingleBindingValue$(element, "$" + subField, element);
+            } else {
+              return null;
+            }
+          }
+          if (String.any(field) && !String.any(subField)) {
+            return this._convertSingleBindingValue$(sourceObj, "$" + field, element);
+          }
+          if (sourceObj != null) {
+            if (typeof sourceObj[field] === 'function') {
+              subData = sourceObj[field]();
+            } else {
+              subData = sourceObj[field];
+            }
+            return this._convertSingleBindingValue$(subData, "$" + subField, element);
+          } else {
+            return null;
+          }
+        } else {
+          if ((sourceObj != null) && (sourceObj[field] != null)) {
+            if (typeof sourceObj[field] === 'function') {
+              return sourceObj[field]();
+            } else {
+              return sourceObj[field];
+            }
+          } else {
+            return null; // * We can't find value
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+  })();
+  //@[EXTEND]
+  KDCore.UI = KDCore.UI || {};
+  return KDCore.UI.Builder = Builder;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
   var alias_WBDTEX_KDCore29122021;
   // * <center>, для RPG Maker MZ и если нету Visu Message Core
   if (KDCore.isMZ()) {
@@ -7771,6 +16071,7 @@ KDCore.registerLibraryToLoad(function() {
     this.drawTextEx("", 0, 0, 100);
     maxWidth = this.contentsWidth();
     wrappedText = Window_Message.prototype.pWordWrap.call(this, text, width || maxWidth, maxLines);
+    this.__lastWrappedText = wrappedText;
     return this.drawTextEx(wrappedText, x, y, width);
   };
   //?NEW
@@ -7815,6 +16116,10 @@ KDCore.registerLibraryToLoad(function() {
 });
 
 
+
+
+
+
 // Generated by CoffeeScript 2.6.1
 // * Последний файл (после всех классов)
 // * Загружает библиотеки
@@ -7824,10 +16129,10 @@ if (KDCore._requireLoadLibrary === true) {
   ref = KDCore[KDCore._loader];
   for (i = 0, len = ref.length; i < len; i++) {
     lib = ref[i];
-    lib();
+    lib(KDCore);
   }
   KDCore[KDCore._loader] = [];
-  text = "%c  KDCore is loaded " + KDCore.Version;
+  text = "%c  KDCore is loaded " + KDCore.Version + " + NUI " + KDCore.nuiVersion;
   console.log(text, 'background: #222; color: #82b2ff');
 }
 
@@ -7840,7 +16145,7 @@ if (KDCore._requireLoadLibrary === true) {
 // ==========================================================================
 // ==========================================================================
 
-//Plugin KDCore builded by PKD PluginBuilder 2.2 - 08.12.2022
+//Plugin KDCore builded by PKD PluginBuilder 2.2.2 - 23.11.2024
 
 (function(){
 
@@ -7871,240 +16176,66 @@ if (KDCore._requireLoadLibrary === true) {
 
 (function(){
     
-    PKD_SQS.LoadPluginSettings = () => {
-
-        PKD_SQS.PP._loader = new KDCore.ParamLoader("sqsQuests:structA");
-
-        /*if(KDCore.isMZ())
-            RegisterPluginCommnadsMZ();
-        else {
-            RegisterPluginCommandsMV();
-        }*/
-        
-    };
-
-})();
-
-(function(){
-    
-    const patch = function(){
-        
-            if(!Window_SQSQuestsList) return;
-
-            // * В MV в этом методе позиция присваивается
-            Window_SQSQuestsList.prototype._refreshCursor = function() {
-                if(!KDCore.isMV()) return;
-                var pad = this._padding;
-                var x = this._cursorRect.x + pad - this.origin.x;
-                var y = this._cursorRect.y + pad - this.origin.y;
-                var w = this._cursorRect.width;
-                var h = this._cursorRect.height;
-                var m = 4;
-                var x2 = Math.max(x, pad);
-                var y2 = Math.max(y, pad);
-                var ox = x - x2;
-                var oy = y - y2;
-                var w2 = Math.min(w, this._width - pad - x2);
-                var h2 = Math.min(h, this._height - pad - y2);
-                var bitmap = new Bitmap(w2, h2);
-
-                this._windowCursorSprite.bitmap = bitmap;
-                this._windowCursorSprite.setFrame(0, 0, w2, h2);
-                this._windowCursorSprite.move(x2, y2);
-        };
-
-    };
-
-    setTimeout(() => {
-        patch();
-    }, 100);
-
-})();
-
-(function(){
-    
-    //@[ALIAS]
-    var _alias_DataManager_loadDatabase = DataManager.loadDatabase;
-    DataManager.loadDatabase = function () {
-        PKD_SQS.LoadPluginSettings();
-        _alias_DataManager_loadDatabase.call(this);
-    };
-
-})();
-
-(function(){
-    
     ImageManager.loadPKDSQS = function (filename) {
         return this.loadBitmap('img/pSQSystem/', filename, 0, false);
     };
 
 })();
 
-// Generated by CoffeeScript 2.5.1
-// * Общий класс для всех UI элементов
-//? FROM AABSZ (rev 13.10.20), modified
-(function() {
-  var Sprite_UIElement;
-  Sprite_UIElement = (function() {
-    // * ABSTRACT значит что класс сам по себе ничего не создаёт, не хранит данные
-    //@[ABSTRACT]
-    class Sprite_UIElement extends KDCore.Sprite {
-      constructor(params) {
-        super();
-        this.params = params;
-        this._init();
-      }
-
-      // * Стандартный набор настроек
-      defaultParams() {
-        return {
-          visible: true
-        };
-      }
-
-      // * Общий метод (есть у всех элементов)
-      // * По умолчанию вызывает drawText, но потомки могут переопределить
-      draw() {
-        return this.drawText(...arguments);
-      }
-
-      // * Общий метод
-      drawText() {} // * EMPTY
-
-      
-        // * Если изначально невидимый (из параметров), то не активный вообще
-      isActive() {
-        return this.params.visible === true;
-      }
-
-      rootImageFolder() {
-        return Sprite_UIElement.RootImageFolder;
-      }
-
-      // * Сделать чёрно белым
-      desaturate() {
-        this.filters = [new PIXI.filters.ColorMatrixFilter()];
-        this.filters[0].desaturate();
-      }
-
-      // * Общий метод (можно ли редактировать визуально)
-      isCanBeEdited() {
-        return false;
-      }
-
-      // * Общий метод (надо ли скрывать при игровом сообщнии)
-      isHaveHideWithMessageFlag() {
-        return false;
-      }
-
-      // * Общий метод (находится ли объект под мышкой)
-      isUnderMouse() {
-        var ref;
-        return (ref = this.zeroChild()) != null ? ref.isUnderMouse() : void 0;
-      }
-
-      // * Параметры первого элемента (если он есть)
-      realWidth() {
-        var child;
-        child = this.zeroChild();
-        if (child != null) {
-          if (child instanceof PKD_SQS.Sprite_UIElement) {
-            return child.realWidth();
-          } else {
-            return child.width;
-          }
-        }
-        return 0;
-      }
-
-      realHeight() {
-        var child;
-        child = this.zeroChild();
-        if (child != null) {
-          if (child instanceof PKD_SQS.Sprite_UIElement) {
-            return child.realHeight();
-          } else {
-            return child.height;
-          }
-        }
-        return 0;
-      }
-
-      // * Первый "физический" элемент (спрайт)
-      zeroChild() {
-        return this.children[0];
-      }
-
-      // * Метод восстановления значения на стандартные настройки
-      reset(property) {
-        var e;
+var Imported;
+(function (Imported) {
+    Imported.PKD_SQS = true;
+})(Imported || (Imported = {}));
+var PKD_SQS;
+(function (PKD_SQS) {
+    PKD_SQS.version = 17;
+    function link(library) {
         try {
-          switch (property) {
-            case "position":
-              this._resetPosition();
-              break;
-            default:
-              this[property] = this.params[property];
-          }
-        } catch (error) {
-          e = error;
-          KDCore.warning(e);
+            this[library.name] = library;
         }
-      }
-
-    };
-
-    // * Корневая директория для изображений
-    Sprite_UIElement.RootImageFolder = "pSQSystem";
-
-    return Sprite_UIElement;
-
-  }).call(this);
-  PKD_SQS.link(Sprite_UIElement);
-})();
-
-(function() {  //╒═════════════════════════════════════════════════════════════════════════╛
-  // ■ PRIVATE.coffee
-  //╒═════════════════════════════════════════════════════════════════════════╛
-  //---------------------------------------------------------------------------
-  var _;
-  //@[DEFINES]
-  _ = PKD_SQS.Sprite_UIElement.prototype;
-  _._init = function() {
-    var e;
-    this._prepare();
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    PKD_SQS.link = link;
+    function GetNUIFile(name) {
+        return window["$PKD_SimpleQuestsSystem_" + name];
+    }
+    PKD_SQS.GetNUIFile = GetNUIFile;
+})(PKD_SQS || (PKD_SQS = {}));
+function SQOpenQuestJournal() {
     try {
-      return this._createContent();
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
-      // * Если при создании произошла ошибка, отключаем элемент
-      return this.isActive = function() {
-        return false;
-      };
+        /*@ts-ignore*/
+        window.SQSM.OpenQuestJournal();
     }
-  };
-  
-  // * Подготовка элемента (проверка параметров)
-  _._prepare = function() {
-    if (this.params == null) {
-      this.params = this.defaultParams();
+    catch (error) {
+        console.warn(error);
     }
-    return this.visible = this.params.visible;
-  };
-  // * Наследники создают свои элементы в этом методе
-  _._createContent = function() {}; // * EMPTY
-  
-  // * Сброс позиции
-  _._resetPosition = function() {
-    var x, y;
-    ({x, y} = this.params.position);
-    this.move(x, y);
-  };
-})();
+}
+function SQOpenOrHideTasksWindow() {
+    try {
+        /*@ts-ignore*/
+        window.SQSM.SwitchOpenedClosedStateOfQuestsList();
+    }
+    catch (error) {
+        console.warn(error);
+    }
+}
 
-// ■ END PRIVATE.coffee
-//---------------------------------------------------------------------------
+
+
+
+var PKD_SQS;
+(function (PKD_SQS) {
+    let PP;
+    (function (PP) {
+    })(PP = PKD_SQS.PP || (PKD_SQS.PP = {}));
+    function LoadPluginSettings() {
+        /*@ts-ignore*/
+        PKD_SQS.PP._loader = new KDCore.ParamLoader("sqsQuests:structA");
+    }
+    PKD_SQS.LoadPluginSettings = LoadPluginSettings;
+})(PKD_SQS || (PKD_SQS = {}));
 
 
 // Generated by CoffeeScript 2.6.1
@@ -8131,50 +16262,8 @@ if (KDCore._requireLoadLibrary === true) {
   _.getQuestNotifyPosition = function() {
     return _._loader.getParam("journalNotifyPosition", {});
   };
-  _.getQuestListWindowSettings = function() {
-    return _._loader.getParam("questsListSettings", {});
-  };
-  _.getQuestHeaderSettings = function() {
-    return _._loader.getParam("questHeaderSettings", {});
-  };
-  _.getQuestDescSettings = function() {
-    return _._loader.getParam("questDescSettings", {});
-  };
-  _.getQuestTasksHeaderSettings = function() {
-    return _._loader.getParam("questTaskHeaderSettings", {});
-  };
-  _.getGroupButtonA = function() {
-    return _._loader.getParam("questGroupButtonA", {});
-  };
-  _.getGroupButtonB = function() {
-    return _._loader.getParam("questGroupButtonB", {});
-  };
-  _.getQuestTasksSettings = function() {
-    return _._loader.getParam("questsTasksSettings", {});
-  };
   _.getQuestsArrows = function() {
     return _._loader.getParam("visualPointers", []);
-  };
-  _.getQuestListCursorMargins = function() {
-    return _._loader.getParam("questsListCursor", {});
-  };
-  _.getQuestListActiveIconMargins = function() {
-    return _._loader.getParam("questsListActive", {});
-  };
-  _.getQuestJournalBackImgPosition = function() {
-    return _._loader.getParam("questJournalBackground", {});
-  };
-  _.getQuestActiveHelpImgPosition = function() {
-    return _._loader.getParam("questJournalActiveHelp", {});
-  };
-  _.getQuestJournalSeparateLinePosition = function() {
-    return _._loader.getParam("questJournalLine", {});
-  };
-  _.getQuestListNewMarkMargins = function() {
-    return _._loader.getParam("questsListNewMark", {
-      x: 2,
-      y: 0
-    });
   };
   _.getQuestJournalOpenButton = function() {
     return _._loader.getParam("buttonForOpenJournal", "j");
@@ -8212,8 +16301,9 @@ if (KDCore._requireLoadLibrary === true) {
     }
     return points;
   };
+  // * DEPRECATED
   _.isTasksWindowActive = function() {
-    return _._loader.getParam("tasksListActive", true);
+    return _._loader.getParam("tasksListActive", false);
   };
   _.tasksListSettings = function() {
     return _._loader.getParam("tasksListSettings", {
@@ -8249,9 +16339,72 @@ if (KDCore._requireLoadLibrary === true) {
   _.isUseAutoNavigation = function() {
     return _._loader.getParam("isUseAutoNavigation", false);
   };
+  // * Update 1.5
+  _.getQuestArrowDefaultOpacity = function() {
+    return _._loader.getParam("questArrowDefaultOpacity", 120);
+  };
+  _.isChangeOpacityOverDistance = function() {
+    return _._loader.getParam("changeOpacityOverDistance", true);
+  };
+  _.isHaveFailedQuests = function() {
+    return _._loader.getParam("isHaveFailedQuests", false);
+  };
+  _.nextCategoryKeyboardKey = function() {
+    return _._loader.getParam("nextCategoryKey", "");
+  };
+  _.prevCategoryKeyboardKey = function() {
+    return _._loader.getParam("prevCategoryKey", "");
+  };
+  _.isSupportGamepad = function() {
+    return _._loader.getParam("isSupportGamepad", false);
+  };
+  _.nextCategoryGamepadKey = function() {
+    return _._loader.getParam("nextCategoryGamepadKey", "RB");
+  };
+  _.prevCategoryGamepadKey = function() {
+    return _._loader.getParam("prevCategoryGamepadKey", "LB");
+  };
+  // * Update 1.6
+  _.isUseNewQuestsWindow = function() {
+    return _._loader.getParam("isUseNewQuestsWindow", true);
+  };
+  _.getNewQuestWindowShowMode = function() {
+    return _._loader.getParam("nqw_questsShowMode", "all");
+  };
 })();
 
 // ■ END Plugin Paramters.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ DataManager.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var ALIAS__loadDataFile, _, pkdRegisterLocalNUIFile;
+  //@[DEFINES]
+  _ = DataManager;
+  pkdRegisterLocalNUIFile = function(name) {
+    return DataManager.pkdRegisterNUIFile("PKD_SimpleQuestsSystem", name);
+  };
+  pkdRegisterLocalNUIFile("NUI_MapQuestsList");
+  pkdRegisterLocalNUIFile("NUI_MapQuestsListItem");
+  pkdRegisterLocalNUIFile("NUI_QuestsScene");
+  pkdRegisterLocalNUIFile("NUI_QuestListItem");
+  pkdRegisterLocalNUIFile("NUI_TaskListItem");
+  //@[ALIAS]
+  ALIAS__loadDataFile = _.loadDataFile;
+  _.loadDataFile = function(name, src) {
+    if (src.contains("PKD_SimpleQuestsSystem")) {
+      src = src.replace("Test_", "");
+    }
+    return ALIAS__loadDataFile.call(this, name, src);
+  };
+})();
+
+// ■ END DataManager.coffee
 //---------------------------------------------------------------------------
 
 
@@ -8436,7 +16589,7 @@ FWindow_SQSMapTW = class FWindow_SQSMapTW extends KDCore.FloatingWindow {
         return w.refresh();
       } catch (error) {
         e = error;
-        return KDCore.warning(e);
+        return console.warn(e);
       }
     }), 10);
     this.setSubWindow(w);
@@ -8522,6 +16675,8 @@ FWindow_SQSMapTW = class FWindow_SQSMapTW extends KDCore.FloatingWindow {
     }
   }
 
+  _openWindow() {}
+
   _createCloseButton() {
     super._createCloseButton();
     this._openButton = new KDCore.ButtonM("windowOpenButton", false, this.rootImageFolder());
@@ -8539,7 +16694,23 @@ FWindow_SQSMapTW = class FWindow_SQSMapTW extends KDCore.FloatingWindow {
 };
 
 
-// Generated by CoffeeScript 2.5.1
+(() => {
+    const _ = Game_Map.prototype;
+    //@[ALIAS]
+    const a_requestRefresh = _.requestRefresh;
+    _.requestRefresh = function (...args) {
+        a_requestRefresh.call(this, ...args);
+        try {
+            SQS_QuestAndTaskAutoConditionsManager.RefreshAllQuestsAndTasksAutoConditions();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    };
+})();
+
+
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Game_Player.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -8573,13 +16744,39 @@ FWindow_SQSMapTW = class FWindow_SQSMapTW extends KDCore.FloatingWindow {
 //---------------------------------------------------------------------------
 
 
+
+
+// Generated by CoffeeScript 2.6.1
+//╒═════════════════════════════════════════════════════════════════════════╛
+// ■ Scene_Boot.coffee
+//╒═════════════════════════════════════════════════════════════════════════╛
+//---------------------------------------------------------------------------
+(function() {
+  var ALIAS__start, _;
+  //@[DEFINES]
+  _ = Scene_Boot.prototype;
+  //@[ALIAS]
+  ALIAS__start = _.start;
+  _.start = function() {
+    PKD_SQS.LoadPluginSettings();
+    ALIAS__start.call(this, ...arguments);
+    if (PKD_SQS.PP.isSupportGamepad()) {
+      Input.activateExtendedKDGamepad();
+    }
+  };
+})();
+
+// ■ END Scene_Boot.coffee
+//---------------------------------------------------------------------------
+
+
 // Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Scene_Map.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
 (function() {
-  var ALIAS__onMapLoaded, ALIAS__update, _;
+  var ALIAS__onMapLoaded, ALIAS__stop, ALIAS__terminate, ALIAS__update, _;
   //@[DEFINES]
   _ = Scene_Map.prototype;
   //@[ALIAS]
@@ -8589,9 +16786,24 @@ FWindow_SQSMapTW = class FWindow_SQSMapTW extends KDCore.FloatingWindow {
     SQSM.init(); //?
     this.loadSQSPoints();
     this.loadSQSOpenButton();
+    if (PKD_SQS.PP.isUseNewQuestsWindow()) {
+      Sprite_MapQuestsList.Create();
+    }
     if (!$gameSystem._sqsIsTaskWindowDisabled) {
       this.loadSQSTasksWindow();
     }
+  };
+  //@[ALIAS]
+  ALIAS__terminate = _.terminate;
+  _.terminate = function() {
+    Sprite_MapQuestsList.Destroy();
+    return ALIAS__terminate.call(this, ...arguments);
+  };
+  //@[ALIAS]
+  ALIAS__stop = _.stop;
+  _.stop = function() {
+    Sprite_MapQuestsList.Destroy();
+    return ALIAS__stop.call(this, ...arguments);
   };
   //@[ALIAS]
   ALIAS__update = _.update;
@@ -8729,7 +16941,7 @@ FWindow_SQSMapTW = class FWindow_SQSMapTW extends KDCore.FloatingWindow {
       this.refreshSQSTaskWindowVisibility();
     } catch (error) {
       e = error;
-      KDCore.warning(e);
+      console.warn(e);
       this._sqTasksWindow = null;
     }
   };
@@ -8757,10 +16969,37 @@ FWindow_SQSMapTW = class FWindow_SQSMapTW extends KDCore.FloatingWindow {
       return this._sqTasksWindow._closeButtonClick();
     } catch (error) {
       e = error;
-      return KDCore.warning(e);
+      return console.warn(e);
     }
   };
-  //TODO:  вызывать после выполнения скриптов на модификацию тасков и квестов
+  _.openSQSTaskWindow = function() {
+    var e;
+    if (!this.sqIsTaskWindowExists()) {
+      return;
+    }
+    try {
+      if (this._sqTasksWindow._moveDir === 'out') {
+        return this._sqTasksWindow._closeButtonClick();
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
+  _.closeSQSTaskWindow = function() {
+    var e;
+    if (!this.sqIsTaskWindowExists()) {
+      return;
+    }
+    try {
+      if (this._sqTasksWindow._moveDir !== 'out') {
+        return this._sqTasksWindow._closeButtonClick();
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  };
   _.refreshSQSTaskWindow = function() {
     var e;
     if (!this.sqIsTaskWindowExists()) {
@@ -8771,7 +17010,7 @@ FWindow_SQSMapTW = class FWindow_SQSMapTW extends KDCore.FloatingWindow {
       this.refreshSQSTaskWindowVisibility();
     } catch (error) {
       e = error;
-      KDCore.warning(e);
+      console.warn(e);
     }
   };
 })();
@@ -8780,7 +17019,7 @@ FWindow_SQSMapTW = class FWindow_SQSMapTW extends KDCore.FloatingWindow {
 //---------------------------------------------------------------------------
 
 
-// Generated by CoffeeScript 2.5.1
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Scene_Menu.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -8801,7 +17040,7 @@ FWindow_SQSMapTW = class FWindow_SQSMapTW extends KDCore.FloatingWindow {
 //---------------------------------------------------------------------------
 
 
-// Generated by CoffeeScript 2.5.1
+// Generated by CoffeeScript 2.6.1
 var Scene_SQSJournal;
 
 Scene_SQSJournal = class Scene_SQSJournal extends Scene_MenuBase {
@@ -8809,10 +17048,17 @@ Scene_SQSJournal = class Scene_SQSJournal extends Scene_MenuBase {
     super();
   }
 
+  needsCancelButton() {
+    return false;
+  }
+
   create() {
     super.create();
-    this._createBackground();
-    this._createSepLine();
+    this._group = 0;
+    this._category = ""; // * All
+    this._data = [];
+    this._closeButton = PKD_SQS.PP.getQuestJournalOpenButton();
+    this._createMainScheme();
     this._createWindows();
     this._createHelpText();
     return this._onGroupClick(0);
@@ -8821,12 +17067,9 @@ Scene_SQSJournal = class Scene_SQSJournal extends Scene_MenuBase {
   update() {
     super.update();
     this._refreshSelectedQuestInfo();
-    return this._updateNavigation();
-  }
-
-  stop() {
-    this.ql.clearQuestMarks();
-    return super.stop();
+    this._updateNavigation();
+    this._updateCategoriesNavigation();
+    return this._updateCloseByButton();
   }
 
   setQuestInfo(questData) {
@@ -8837,75 +17080,148 @@ Scene_SQSJournal = class Scene_SQSJournal extends Scene_MenuBase {
     }
   }
 
-  _createBackground() {
-    var backSprite, pos, x, y;
-    pos = PKD_SQS.PP.getQuestJournalBackImgPosition();
-    x = eval(pos.x);
-    y = eval(pos.y);
-    backSprite = new Sprite(ImageManager.loadPKDSQS("JournalBackground"));
-    backSprite.move(x, y);
-    return this.addChild(backSprite);
-  }
-
-  _createSepLine() {
-    var lineSprite, pos, x, y;
-    pos = PKD_SQS.PP.getQuestJournalSeparateLinePosition();
-    x = eval(pos.x);
-    y = eval(pos.y);
-    lineSprite = new Sprite(ImageManager.loadPKDSQS("Line"));
-    lineSprite.move(x, y);
-    return this.addChild(lineSprite);
+  _createMainScheme() {
+    var e, ref;
+    try {
+      KDCore.Sprite_NUI.FromScheme(PKD_SQS.GetNUIFile("NUI_QuestsScene"), this);
+      return (ref = this._closeButtonSprite) != null ? ref.setClickHandler(this.popScene.bind(this)) : void 0;
+    } catch (error) {
+      e = error;
+      return console.warn('error', e);
+    }
   }
 
   _createWindows() {
     this._createCategories(); //?part 2, это группы текущие \ выполненные
     this._createQuestsList();
-    this._createQuestMain();
-    this._createQuestsCategories(); //?part 3 [PRO only]
+    this._createQuestMain(); //?part 1
+    this._createQuestsCategories(); //?part 3
   }
 
-  _createQuestsCategories() {} // * EMPTY
-
   _createQuestsList() {
-    var params, rect, textLineSettings, x, y;
-    params = PKD_SQS.PP.getQuestListWindowSettings();
-    textLineSettings = {
-      w: eval(params.textLine.lineSize.w),
-      h: eval(params.textLine.lineSize.h),
-      fontFace: params.textLine.face,
-      fontSize: params.textLine.size
-    };
-    x = eval(params.position.x);
-    y = eval(params.position.y);
-    rect = new Rectangle(x, y, textLineSettings.w, params.height);
-    this.ql = new Window_SQSQuestsList(rect);
-    this.ql.setSettings(textLineSettings);
-    this.ql.setHandler('cancel', this.popScene.bind(this));
-    this.ql.setHandler('ok', this.changeActiveQuest.bind(this));
-    this.ql.refresh();
-    this.ql.activate();
+    this._questsList.setOkHandler(this.changeActiveQuest.bind(this));
+    this._questsList.setCancelHandler(this.popScene.bind(this));
     this._refreshEmptyJournalHolder();
-    this.addChild(this.ql);
+  }
+
+  _refrshQuestsList() {
+    var _category, currentGroup, e, questsSprites;
+    try {
+      _category = this._category;
+      if (this._group === 0) {
+        this._data = SQSM.playerCurrentQuestsForCategory(_category);
+      } else if (this._group === 1) {
+        this._data = SQSM.playerCompletedQuestsForCategory(_category);
+      } else if (this._group === 2) {
+        this._data = SQSM.playerFailedQuestsForCategory(_category);
+      } else {
+        this._data = [];
+      }
+      this._applySortings();
+      currentGroup = this._group;
+      questsSprites = this._data.map(function(q) {
+        return new Sprite_SQSQuestListItem(q, currentGroup);
+      });
+      this._questsList.setItems(questsSprites);
+      return this._questsList.activate(0);
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  }
+
+  _applySortings() {
+    if (PKD_SQS.PP.isSortByNew()) {
+      this._sortByNewQuests();
+    }
+    if (PKD_SQS.PP.isSortByActive()) {
+      this._sortByActiveFirst();
+    }
+  }
+
+  _sortByNewQuests() {
+    var i, j, k, lastAddedQuests, len, len1, len2, newDataPre, q, ref, ref1;
+    // * Сортировка (новые сперва вверху)
+    lastAddedQuests = [];
+    newDataPre = [];
+    ref = this._data;
+    for (i = 0, len = ref.length; i < len; i++) {
+      q = ref[i];
+      if (SQSM.isQuestHaveNewMark(q.id)) {
+        lastAddedQuests.push(q);
+      }
+    }
+    for (j = 0, len1 = lastAddedQuests.length; j < len1; j++) {
+      q = lastAddedQuests[j];
+      newDataPre.push(q);
+    }
+    ref1 = this._data;
+    for (k = 0, len2 = ref1.length; k < len2; k++) {
+      q = ref1[k];
+      if (!newDataPre.contains(q)) {
+        newDataPre.push(q);
+      }
+    }
+    this._data = newDataPre;
+  }
+
+  _sortByActiveFirst() {
+    var activateQuests, i, j, k, len, len1, len2, newData, q, ref, ref1;
+    // * Сортировка (aктивные вверху)
+    activateQuests = [];
+    newData = [];
+    ref = this._data;
+    for (i = 0, len = ref.length; i < len; i++) {
+      q = ref[i];
+      if (SQSM.isQuestActive(q.id)) {
+        activateQuests.push(q);
+      }
+    }
+    for (j = 0, len1 = activateQuests.length; j < len1; j++) {
+      q = activateQuests[j];
+      newData.push(q);
+    }
+    ref1 = this._data;
+    for (k = 0, len2 = ref1.length; k < len2; k++) {
+      q = ref1[k];
+      if (!newData.contains(q)) {
+        newData.push(q);
+      }
+    }
+    this._data = newData;
   }
 
   changeActiveQuest() {
-    var q, state;
-    if (!this.ql.isCurrentItemEnabled()) {
+    var item, q, state;
+    this._questsList.activate();
+    item = this._questsList.selectedItem();
+    if (item == null) {
       return;
     }
-    q = this.ql.quest();
+    if (!item.isEnabled()) {
+      return;
+    }
+    q = item.quest;
+    if (q == null) {
+      return;
+    }
     state = SQSM.isQuestActive(q.id);
     SQSM.SetActiveQuest(q.id, !state);
-    this.ql.refresh();
-    this.ql.activate();
+    item.refresh();
   }
 
   _refreshSelectedQuestInfo() {
-    var newSelectedQuest;
-    if (this.ql == null) {
+    var item, newSelectedQuest;
+    if (this._questsList == null) {
       return;
     }
-    newSelectedQuest = this.ql.quest();
+    item = this._questsList.selectedItem();
+    if (item == null) {
+      this.setQuestInfo(null);
+      this._lastSelectedQuest = null;
+      return;
+    }
+    newSelectedQuest = item.quest;
     if (this._lastSelectedQuest !== newSelectedQuest) {
       this.setQuestInfo(newSelectedQuest);
       this._lastSelectedQuest = newSelectedQuest;
@@ -8913,27 +17229,484 @@ Scene_SQSJournal = class Scene_SQSJournal extends Scene_MenuBase {
   }
 
   _createHelpText() {
-    var pos, x, y;
-    pos = PKD_SQS.PP.getQuestActiveHelpImgPosition();
-    x = eval(pos.x);
-    y = eval(pos.y);
-    this._activeHelp = new Sprite(ImageManager.loadPKDSQS("ActiveHelp"));
-    this._activeHelp.move(x, y);
-    this._activeHelp.visible = false;
-    return this.addChild(this._activeHelp);
+    var ref;
+    return (ref = this._activeHelp) != null ? ref.visible = false : void 0;
   }
 
   _updateNavigation() {
-    if (Input.isTriggered('left') || Input.isTriggered('right')) {
-      this._onSwitchGroup();
+    if (PKD_SQS.PP.isHaveFailedQuests()) {
+      if (Input.isTriggered('left')) {
+        this._onSwitchPrevGroup();
+      } else {
+        if (Input.isTriggered('right')) {
+          this._onSwitchNextGroup();
+        }
+      }
+    } else {
+      if (Input.isTriggered('left') || Input.isTriggered('right')) {
+        this._onSwitchGroup();
+      }
     }
   }
 
+  _onSwitchPrevGroup() {
+    var currentGroupIndex, newIndex;
+    currentGroupIndex = this._group;
+    newIndex = currentGroupIndex - 1;
+    if (newIndex < 0) {
+      newIndex = 2;
+    }
+    this._onGroupClick(newIndex);
+  }
+
+  _onSwitchNextGroup() {
+    var currentGroupIndex, newIndex;
+    currentGroupIndex = this._group;
+    newIndex = currentGroupIndex + 1;
+    if (newIndex > 2) {
+      newIndex = 0;
+    }
+    this._onGroupClick(newIndex);
+  }
+
   _onSwitchGroup() {
-    if (this.groupA.isDisabled()) {
+    var ref;
+    if ((ref = this.groupA) != null ? ref.isDisabled() : void 0) {
       this._onGroupClick(1);
     } else {
       this._onGroupClick(0);
+    }
+  }
+
+  _updateCloseByButton() {
+    var e;
+    try {
+      if ((this._closeButton != null) && Input.isTriggered(this._closeButton)) {
+        this.popScene();
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
+var Sprite_MapQuestsListItem;
+
+Sprite_MapQuestsListItem = class Sprite_MapQuestsListItem extends KDCore.Sprite_NUI {
+  constructor(quest) {
+    super(PKD_SQS.GetNUIFile("NUI_MapQuestsListItem"));
+    this.quest = quest;
+    this.refresh();
+    if (this.uiConstant('autoRefreshIntervalInSeconds') > 0) {
+      this.startAutoRefreshThread();
+    }
+    return;
+  }
+
+  startAutoRefreshThread() {
+    var e;
+    try {
+      return this._autoRefreshThread = new KDCore.TimedUpdate(this.uiConstant('autoRefreshIntervalInSeconds') * 60, this.refreshIfNeeds.bind(this));
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  }
+
+  update() {
+    var ref;
+    super.update();
+    return (ref = this._autoRefreshThread) != null ? ref.update() : void 0;
+  }
+
+  questDifficulty() {
+    return this._getSafeQuestFieldOr('difficulty', 0);
+  }
+
+  questPriority() {
+    return this._getSafeQuestFieldOr('priority', 0);
+  }
+
+  questLongName() {
+    return this._getSafeQuestFieldOr('title', "???");
+  }
+
+  _getSafeQuestFieldOr(fieldName, defaultValue) {
+    if ((this.quest != null) && (this.quest[fieldName] != null)) {
+      return this.quest[fieldName];
+    } else {
+      return defaultValue;
+    }
+  }
+
+  questName() {
+    var appendText, e, name;
+    try {
+      if (this.quest != null) {
+        name = this.quest.titleForList;
+        if (this.isQuestAreActiveNow()) {
+          appendText = this.uiConstant('activeQuestAppendText');
+          if (String.any(appendText)) {
+            // * We replace %1 in appendText with quest name
+            name = appendText.format(name);
+          }
+        }
+        return name;
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
+    return "???";
+  }
+
+  questActivePointerColor() {
+    var e, index;
+    try {
+      if (this.isQuestAreActiveNow()) {
+        index = SQSM.getQuestActiveIndex(this.quest.id);
+        return SQSM.getQuestsArrows()[index].color.HEX;
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+      return "#FFFFFF";
+    }
+    return this.uiConstant("defaultQuestNameColor");
+  }
+
+  isQuestAreActiveNow() {
+    var e, index;
+    try {
+      if (this.quest != null) {
+        index = SQSM.getQuestActiveIndex(this.quest.id);
+        return index >= 0;
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
+    return false;
+  }
+
+  questLastTaskText() {
+    var e, tasks;
+    try {
+      if (this.quest != null) {
+        tasks = this.quest.getVisibleTasks();
+        return tasks.last().text;
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
+    return "???";
+  }
+
+  refresh() {
+    this.refreshBindings(this);
+  }
+
+  refreshIfNeeds() {
+    var e;
+    try {
+      if (this.isNeedRefresh()) {
+        return this.refresh();
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  }
+
+  isNeedRefresh() {
+    var e, parsedText, text;
+    try {
+      text = this.questLastTaskText();
+      if (text.contains("V[")) {
+        parsedText = this._convertControlCharacters(text);
+        if (this.__lastTaskText !== parsedText) {
+          this.__lastTaskText = parsedText;
+          return true;
+        }
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
+    return false;
+  }
+
+  _convertControlCharacters(inputText) {
+    var e;
+    try {
+      return KDCore.TextProParser.ConvertControlCharacters(inputText);
+    } catch (error) {
+      e = error;
+      console.warn(e);
+      return "";
+    }
+    return outputText;
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
+var Sprite_MapQuestsList;
+
+Sprite_MapQuestsList = class Sprite_MapQuestsList extends KDCore.Sprite_NUI {
+  constructor() {
+    super(PKD_SQS.GetNUIFile("NUI_MapQuestsList"));
+    this.opacity = this.uiConstant("initialOpacity");
+    this._isUnderMouseState = false;
+    this._questListItems = [];
+    //@startRefreshThread()
+    this._onUnderMouseExit();
+    this.makeQuestsItems();
+    this.refresh();
+    setTimeout((() => {
+      return this.refresh();
+    }), 100);
+    setTimeout((() => {
+      return this.refresh();
+    }), 200);
+    return;
+  }
+
+  static Instance() {
+    var e;
+    try {
+      if (!KDCore.Utils.isMapScene()) {
+        return null;
+      }
+      return SceneManager._scene._sqMapQuestsList;
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  }
+
+  static Create() {
+    var e, w;
+    if (Sprite_MapQuestsList.Instance() != null) {
+      return;
+    }
+    if (!KDCore.Utils.isMapScene()) {
+      return;
+    }
+    try {
+      w = new Sprite_MapQuestsList();
+      SceneManager._scene.addChild(w);
+      return SceneManager._scene._sqMapQuestsList = w;
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  }
+
+  static Destroy() {
+    var e, w;
+    try {
+      w = SceneManager._scene._sqMapQuestsList;
+      if (w == null) {
+        return;
+      }
+      w.visible = false;
+      return w.removeFromParent();
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  }
+
+  static Refresh() {
+    var e, w;
+    try {
+      w = Sprite_MapQuestsList.Instance();
+      if (w != null) {
+        w.makeQuestsItems();
+      }
+      return w != null ? w.refresh() : void 0;
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  }
+
+  allItemsHeight() {
+    var e, h;
+    try {
+      if (!this.isAutoResize()) {
+        return this.minimumHeight();
+      }
+      if (this.mapQuestsListItemsContainer != null) {
+        if (this.mapQuestsListItemsContainer.children.length > 0) {
+          h = this.mapQuestsListItemsContainer.realHeight();
+          if (h > this.minimumHeight()) {
+            return this.contentHeightPadding() + h;
+          } else {
+            return this.minimumHeight();
+          }
+        } else {
+          return this.minimumHeight();
+        }
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
+    return 300;
+  }
+
+  refresh() {
+    var i, item, len, ref, ref1;
+    //console.log("Sprite_MapQuestsList.refresh")
+    if ((ref = this.mapQuestsListRoot) != null) {
+      ref.refreshBindings(this);
+    }
+    ref1 = this._questListItems;
+    for (i = 0, len = ref1.length; i < len; i++) {
+      item = ref1[i];
+      item.refresh();
+    }
+  }
+
+  spaceBetweenItems() {
+    return KDCore.Utils.getValueWithDP(this.uiConstant('spaceBetweenItems'));
+  }
+
+  minimumHeight() {
+    return KDCore.Utils.getValueWithDP(this.uiConstant('minimumHeight'));
+  }
+
+  contentHeightPadding() {
+    return KDCore.Utils.getValueWithDP(this.uiConstant('contentHeightPadding'));
+  }
+
+  questsCount() {
+    if (this._questListItems != null) {
+      return this._questListItems.length;
+    } else {
+      return 0;
+    }
+  }
+
+  isAutoResize() {
+    return this.uiConstant('autoResize');
+  }
+
+  maximumVisibleItemsInList() {
+    return this.uiConstant('maximumVisibleItemsInList');
+  }
+
+  isUnderMouse() {
+    var ref;
+    return (ref = this.mapQuestsListDynamicBackground) != null ? ref.isUnderMouse() : void 0;
+  }
+
+  isShowActiveOnlyQuests() {
+    return PKD_SQS.PP.getNewQuestWindowShowMode() === "active";
+  }
+
+  //TODO: Maybe to Sprite_NUI ??
+  startRefreshThread() {
+    if (this.refreshThread != null) {
+      return;
+    }
+    this.refreshThread = new KDCore.TimedUpdate(2, this.refresh.bind(this));
+    this.refreshThread.setAfter(5, () => {
+      return this.refreshThread = null;
+    });
+  }
+
+  update() {
+    var ref;
+    super.update();
+    this.updateMouseHover();
+    return (ref = this.refreshThread) != null ? ref.update() : void 0;
+  }
+
+  updateMouseHover() {
+    var e;
+    try {
+      if (this.isUnderMouse()) {
+        if (this._isUnderMouseState === false) {
+          this._onUnderMouseEnter();
+          return this._isUnderMouseState = true;
+        }
+      } else {
+        if (this._isUnderMouseState === true) {
+          this._onUnderMouseExit();
+          return this._isUnderMouseState = false;
+        }
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  }
+
+  _onUnderMouseEnter() {
+    var animation, e;
+    try {
+      animation = this.uiConstant('mouseInAnimation');
+      if (String.any(animation)) {
+        return this.setAnimationRule(animation);
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  }
+
+  _onUnderMouseExit() {
+    var animation, e;
+    try {
+      animation = this.uiConstant('mouseOutAnimation');
+      if (String.any(animation)) {
+        return this.setAnimationRule(animation);
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
+    }
+  }
+
+  makeQuestsItems() {
+    var e, i, item, len, quest, quests, ref, ref1, y;
+    try {
+      this._questListItems = [];
+      if ((ref = this.mapQuestsListItemsContainer) != null) {
+        ref.removeChildren();
+      }
+      y = 0;
+      if (!this.isShowActiveOnlyQuests()) {
+        quests = SQSM.playerCurrentQuestsForCategory("");
+      } else {
+        quests = SQSM.getActiveQuests();
+      }
+      // * Slice quests if we have maximumVisibleItemsInList
+      if (this.maximumVisibleItemsInList() > 0) {
+        quests = quests.slice(0, this.maximumVisibleItemsInList());
+      }
+      for (i = 0, len = quests.length; i < len; i++) {
+        quest = quests[i];
+        item = new Sprite_MapQuestsListItem(quest);
+        if ((ref1 = this.mapQuestsListItemsContainer) != null) {
+          ref1.addChild(item);
+        }
+        item.setPosition(0, y);
+        y += item.realHeight() + this.spaceBetweenItems();
+        this._questListItems.push(item);
+      }
+    } catch (error) {
+      e = error;
+      return console.warn(e);
     }
   }
 
@@ -8957,6 +17730,14 @@ SQSQuestArrow = class SQSQuestArrow extends Sprite {
     return;
   }
 
+  baseOpacity() {
+    return PKD_SQS.PP.getQuestArrowDefaultOpacity();
+  }
+
+  isChangeOpacityOverDistance() {
+    return PKD_SQS.PP.isChangeOpacityOverDistance();
+  }
+
   setTargetEvId(id) {
     if (id <= 0) {
       this.tarEv = null;
@@ -8977,14 +17758,13 @@ SQSQuestArrow = class SQSQuestArrow extends Sprite {
   }
 
   applyArrowColor(arrowColor) {
-    //arrowColor = KDCore.Color.FromHex(hexColor)
     this.arrColor = [...arrowColor.ARR];
     this.arrColor[3] = 150;
     this.setBlendColor(this.arrColor);
   }
 
   resetArrowOpacity() {
-    return this.opacity = 120;
+    return this.opacity = this.baseOpacity();
   }
 
   update() {
@@ -9014,25 +17794,35 @@ SQSQuestArrow = class SQSQuestArrow extends Sprite {
   updateDistanceToTarget() {
     var dist;
     dist = $gameMap.distance($gamePlayer.x, $gamePlayer.y, this.tarEv.x, this.tarEv.y);
-    //console.log(dist)
-    if (dist > 24) {
+    if (this.isChangeOpacityOverDistance()) {
+      if (dist > 24) {
+        this.resetArrowOpacity();
+        return;
+      }
+      if (dist <= 1) {
+        this.opacity = 0;
+        return;
+      }
+      if (dist <= 2) {
+        this.opacity = 255;
+        return;
+      }
       this.resetArrowOpacity();
-      return;
+      // * Change opacity over distance, from 255 to @baseOpacity()
+      this.opacity = this.baseOpacity() + this.baseOpacity() - (dist * 10);
+      if (this.opacity < this.baseOpacity()) {
+        this.opacity = this.baseOpacity();
+      }
+    } else {
+      //console.log(@opacity)
+      if (dist <= 1) {
+        this.opacity = 0;
+      } else {
+        this.resetArrowOpacity();
+      }
     }
-    if (dist <= 1) {
-      this.opacity = 0;
-      return;
-    }
-    //@markTarget()
-    if (dist < 2) {
-      this.opacity = 255;
-      return;
-    }
-    this.resetArrowOpacity();
-    this.opacity += 200 / dist;
   }
 
-  //console.log(@opacity)
   markTarget() {
     var original, targetSprite;
     targetSprite = SceneManager._scene._spriteset.findTargetSprite(this.tarEv);
@@ -9050,7 +17840,7 @@ SQSQuestArrow = class SQSQuestArrow extends Sprite {
 };
 
 
-// Generated by CoffeeScript 2.5.1
+// Generated by CoffeeScript 2.6.1
 //1:41
 var Sprite_SQSNotifyLine;
 
@@ -9106,46 +17896,119 @@ Sprite_SQSNotifyLine = class Sprite_SQSNotifyLine extends Sprite {
 };
 
 
-// Generated by CoffeeScript 2.5.1
-var Sprite_SQSTaskLine;
-
-Sprite_SQSTaskLine = class Sprite_SQSTaskLine extends Sprite {
-  constructor(task) {
-    super();
-    this.task = task;
-    this.params = PKD_SQS.PP.getQuestTasksSettings();
-    this._createTaskStatusIcon();
-    this._createTaskText();
-    return;
-  }
-
-  _createTaskStatusIcon() {
-    var iconImage, taskIcon, x, y;
-    x = eval(this.params.position.x);
-    y = eval(this.params.position.y);
-    iconImage = "Task_A";
-    if (this.task.isComplete()) {
-      iconImage = "Task_B";
+class Sprite_SQSQuestListItem extends Sprite {
+    constructor(_quest, _groupIndex) {
+        super();
+        this._quest = _quest;
+        this._groupIndex = _groupIndex;
+        this._isSelected = false;
+        this._create();
+        this._refreshActiveMarkColor();
     }
-    taskIcon = new Sprite(ImageManager.loadPKDSQS(iconImage));
-    this.addChild(taskIcon);
-    taskIcon.move(x, y);
-  }
+    activateInList() {
+        this._isSelected = true;
+        this._questItem.refreshBindings(this);
+        this._clearNewMark();
+    }
+    deactivateInList() {
+        this._isSelected = false;
+        this._questItem.refreshBindings(this);
+    }
+    isNewQuest() {
+        //@ts-ignore
+        return SQSM.isQuestHaveNewMark(this.quest.id) && this._groupIndex === 0;
+    }
+    isSelected() {
+        return this._isSelected;
+    }
+    questName() {
+        return this.quest.titleForList;
+    }
+    isQuestActive() {
+        //@ts-ignore
+        return SQSM.isQuestActive(this.quest.id);
+    }
+    refresh() {
+        this._questItem.refreshBindings(this);
+        this._refreshActiveMarkColor();
+    }
+    // * Если мы в текущих заданиях, то используется для проверки можно ли задать квест активным
+    // * т.е. если у него путевые точки
+    isEnabled() {
+        //@ts-ignore
+        return SQSM.isQuestHavePoints(this.quest.id) && this._groupIndex === 0;
+    }
+    setActivatedInListState(value) { }
+    realWidth() {
+        return this._questItem.realWidth();
+    }
+    realHeight() {
+        return this._questItem.realHeight();
+    }
+    get quest() {
+        return this._quest;
+    }
+    _create() {
+        //@ts-ignore
+        KDCore.Sprite_NUI.FromScheme(this._scheme(), this);
+    }
+    _refreshActiveMarkColor() {
+        try {
+            //@ts-ignore
+            let index = SQSM.getQuestActiveIndex(this.quest.id);
+            if (index < 0)
+                return;
+            let opacity = this._questItem.uiConstant('ActiveQuestMarkColorOverlayOpacity');
+            if (opacity <= 0)
+                return;
+            //@ts-ignore
+            let arrowData = SQSM.getQuestsArrows()[index];
+            let colorArray = [...arrowData.color.ARR];
+            colorArray[3] = opacity;
+            this._questActiveMark.image.setBlendColor(colorArray);
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    _scheme() {
+        return PKD_SQS.GetNUIFile("NUI_QuestListItem");
+    }
+    _clearNewMark() {
+        //@ts-ignore
+        SQSM.clearQuestNewMark(this.quest.id);
+    }
+}
 
-  _createTaskText() {
-    var taskText, textSize;
-    textSize = this.params.textLine.lineSize;
-    taskText = new Sprite_SQSTextLine(this.task.text, {
-      w: eval(textSize.w),
-      h: eval(textSize.h),
-      fontFace: this.params.textLine.face,
-      fontSize: this.params.textLine.size
-    });
-    // * Позиция задаётся в массиве поизиций, поэтому нет доп. смещения самого текста
-    return this.addChild(taskText);
-  }
 
-};
+class Sprite_SQSTaskListItem extends Sprite {
+    constructor(_task) {
+        super();
+        this._task = _task;
+        this._create();
+    }
+    realWidth() {
+        return this._taskItem.realWidth();
+    }
+    realHeight() {
+        return this._taskItem.realHeight();
+    }
+    get task() {
+        return this._task;
+    }
+    _create() {
+        var _a, _b;
+        //@ts-ignore
+        KDCore.Sprite_NUI.FromScheme(this._scheme(), this);
+        let taskIconName = this.task.isComplete() ? "Task_B" : this.task.isFailed() ? "Task_C" : "Task_A";
+        (_a = this._taskStatusIcon) === null || _a === void 0 ? void 0 : _a.draw(taskIconName);
+        (_b = this._taskText) === null || _b === void 0 ? void 0 : _b.draw(this.task.text);
+        this._taskItem.refreshBindings();
+    }
+    _scheme() {
+        return PKD_SQS.GetNUIFile("NUI_TaskListItem");
+    }
+}
 
 
 // Generated by CoffeeScript 2.6.1
@@ -9193,20 +18056,26 @@ Sprite_SQSTextLine = class Sprite_SQSTextLine extends Sprite {
 };
 
 
-// Generated by CoffeeScript 2.5.1
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Spriteset_Map.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
 //---------------------------------------------------------------------------
 (function() {
-  var ALIAS__createTilemap, _;
+  var ALIAS__createUpperLayer, _;
   //@[DEFINES]
   _ = Spriteset_Map.prototype;
   //@[ALIAS]
-  ALIAS__createTilemap = _.createTilemap;
-  _.createTilemap = function() {
-    ALIAS__createTilemap.call(this);
-    return this.sqCreateQuestNavigatorLayer();
+  //ALIAS__createTilemap = _.createTilemap
+  //_.createTilemap = ->
+  //    ALIAS__createTilemap.call(@)
+  //    @sqCreateQuestNavigatorLayer()
+
+  //@[ALIAS]
+  ALIAS__createUpperLayer = _.createUpperLayer;
+  _.createUpperLayer = function() {
+    this.sqCreateQuestNavigatorLayer();
+    return ALIAS__createUpperLayer.call(this, ...arguments);
   };
 })();
 
@@ -9214,7 +18083,7 @@ Sprite_SQSTextLine = class Sprite_SQSTextLine extends Sprite {
 //---------------------------------------------------------------------------
 
 
-// Generated by CoffeeScript 2.5.1
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Spriteset_Map.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -9229,11 +18098,12 @@ Sprite_SQSTextLine = class Sprite_SQSTextLine extends Sprite {
   _.sqCreateQuestNavigatorLayer = function() {
     this._sqLayer01 = new Sprite();
     this._sqLayer01.z = 1;
-    this._tilemap.addChild(this._sqLayer01);
+    //@_tilemap.addChild @_sqLayer01
     // * Чтобы каждый кадр не считать, создадим переменные
     this.__tw = $gameMap.tileWidth();
     this.__tw2 = this.__tw / 2;
     this.__th = $gameMap.tileHeight();
+    this.addChild(this._sqLayer01);
   };
   _.sqClearQuestNavigator = function() {
     var c, i, len, ref;
@@ -9252,165 +18122,354 @@ Sprite_SQSTextLine = class Sprite_SQSTextLine extends Sprite {
 //---------------------------------------------------------------------------
 
 
-// Generated by CoffeeScript 2.6.1
-// * Данный класс отвечает за хранение данных у игрока (сохранение состояний)
-var SQS_Keep;
-
-SQS_Keep = class SQS_Keep {
-  constructor() {
-    this.reset();
-  }
-
-  reset() {
-    this._completedQuests = [];
-    this._visibleQuests = [];
-    this._newQuests = [];
-    // * ID квеста = массив выполненных задач
-    this._questCompleteTasksStatuses = {};
-    // * ID квеста = массив видимых задач
-    this._questVisibleTasksStatuses = {};
-    // * ID квеста = номер видимого описания
-    this._questVisibleDescription = {};
-    // * ID квестов, которые установленны активными
-    // * Статический массив, т.е. работа с индексами
-    this._activeQuests = [];
-  }
-
-  isAddedQuest(questId) {
-    return this._visibleQuests.contains(questId);
-  }
-
-  isCompleteQuest(questId) {
-    return this._completedQuests.contains(questId);
-  }
-
-  isActiveQuest(questId) {
-    return this._activeQuests.contains(questId);
-  }
-
-  isTaskVisible(questId, index) {
-    var data;
-    if (index === 0) {
-      // * Первая задача всегда видима!
-      return true;
+class SQS_Condition {
+    static FromConfig(config) {
+        let switchId = config.switchId || 0;
+        let variableId = config.variableId || 0;
+        let variableConditionMode = config.variableConditionMode || 'equal';
+        let variableValue = config.variableValue || 0;
+        let script = config.script || '';
+        return new SQS_Condition(switchId, variableId, variableConditionMode, variableValue, script);
     }
-    data = this._questVisibleTasksStatuses[questId];
-    if (data == null) {
-      return false;
+    constructor(switchId = 0, variableId = 0, variableConditionMode = 'equal', variableValue = 0, script = 'true') {
+        this.switchId = switchId;
+        this.variableId = variableId;
+        this.variableConditionMode = variableConditionMode;
+        this.variableValue = variableValue;
+        this.script = script;
     }
-    return this._questVisibleTasksStatuses[questId].contains(index);
-  }
+    evaluate() {
+        var switchResult = true;
+        var variableResult = true;
+        var scriptResult = true;
+        if (this.switchId > 0) {
+            if (!$gameSwitches.value(this.switchId)) {
+                switchResult = false;
+            }
+        }
+        if (this.variableId > 0) {
+            switch (this.variableConditionMode) {
+                case 'equal':
+                    if ($gameVariables.value(this.variableId) != this.variableValue) {
+                        variableResult = false;
+                    }
+                    break;
+                case 'more':
+                    if ($gameVariables.value(this.variableId) <= this.variableValue) {
+                        variableResult = false;
+                    }
+                    break;
+                case 'less':
+                    if ($gameVariables.value(this.variableId) >= this.variableValue) {
+                        variableResult = false;
+                    }
+                    break;
+            }
+        }
+        if (this.script !== '') {
+            scriptResult = eval(this.script);
+        }
+        return switchResult && variableResult && scriptResult;
+    }
+}
+window['SQS_Condition'] = SQS_Condition;
 
-  isTaskComplete(questId, index) {
-    var data;
-    data = this._questCompleteTasksStatuses[questId];
-    if (data == null) {
-      return false;
-    }
-    return this._questCompleteTasksStatuses[questId].contains(index);
-  }
 
-  getQuestDescriptionIndex(questId) {
-    if (this._questVisibleDescription[questId] == null) {
-      // * Первое описание видно всегда (базовое)
-      return 0;
+/**
+ * The SQS_Keep class manages the state of quests and tasks, including their visibility,
+ * completion, and failure statuses. It also tracks active quests and marks new quests.
+ */
+class SQS_Keep {
+    constructor() {
+        this.reset();
     }
-    return this._questVisibleDescription[questId];
-  }
-
-  //{VERSION}
-  setActiveQuest(questId) {
-    if (this.isActiveQuest(questId)) {
-      return;
+    /**
+     * Resets all quest and task statuses to their initial states.
+     */
+    reset() {
+        this._completedQuests = [];
+        this._visibleQuests = [];
+        this._failedQuests = [];
+        this._newQuests = [];
+        this._questCompleteTasksStatuses = {};
+        this._questFailedTasksStatuses = {};
+        this._questVisibleTasksStatuses = {};
+        this._questVisibleDescription = {};
+        this._activeQuests = [];
     }
-    this._activeQuests[0] = questId;
-  }
-
-  removeActiveQuest(questId) {
-    var index;
-    if (!this.isActiveQuest(questId)) {
-      return;
+    /**
+     * Checks if a quest has been added.
+     * @param questId - The ID of the quest.
+     * @returns True if the quest is added, false otherwise.
+     */
+    isAddedQuest(questId) {
+        if (!this._visibleQuests) {
+            this._visibleQuests = [];
+        }
+        return this._visibleQuests.includes(questId);
     }
-    index = this.getActiveQuestIndex(questId);
-    if (index >= 0) {
-      this._activeQuests[index] = null;
+    /**
+     * Checks if a quest is complete.
+     * @param questId - The ID of the quest.
+     * @returns True if the quest is complete, false otherwise.
+     */
+    isCompleteQuest(questId) {
+        if (!this._completedQuests) {
+            this._completedQuests = [];
+        }
+        return this._completedQuests.includes(questId);
     }
-  }
-
-  getActiveQuestIndex(questId) {
-    if (!this.isActiveQuest(questId)) {
-      return -1;
+    /**
+     * Checks if a quest has failed.
+     * @param questId - The ID of the quest.
+     * @returns True if the quest has failed, false otherwise.
+     */
+    isFailedQuest(questId) {
+        if (!this._failedQuests) {
+            this._failedQuests = [];
+        }
+        return this._failedQuests.includes(questId);
     }
-    return this._activeQuests.indexOf(questId);
-  }
-
-  addQuest(questId) {
-    if (!this.isAddedQuest(questId)) {
-      this._visibleQuests.push(questId);
-      // * Пометка new
-      return this.registerMarkForNewQuest(questId);
+    /**
+     * Checks if a quest is active.
+     * @param questId - The ID of the quest.
+     * @returns True if the quest is active, false otherwise.
+     */
+    isActiveQuest(questId) {
+        if (!this._activeQuests) {
+            this._activeQuests = [];
+        }
+        return this._activeQuests.includes(questId);
     }
-  }
-
-  registerMarkForNewQuest(questId) {
-    if (this._newQuests == null) {
-      // * Может и не быть, так как сохранение загруженно
-      this._newQuests = [];
+    /**
+     * Checks if a task within a quest is visible.
+     * @param questId - The ID of the quest.
+     * @param index - The index of the task.
+     * @returns True if the task is visible, false otherwise.
+     */
+    isTaskVisible(questId, index) {
+        if (!this._questVisibleTasksStatuses) {
+            this._questVisibleTasksStatuses = {};
+        }
+        if (index === 0)
+            return true;
+        const data = this._questVisibleTasksStatuses[questId];
+        if (!data)
+            return false;
+        return data.includes(index);
     }
-    if (!this._newQuests.contains(questId)) {
-      this._newQuests.push(questId);
+    /**
+     * Checks if a task within a quest is complete.
+     * @param questId - The ID of the quest.
+     * @param index - The index of the task.
+     * @returns True if the task is complete, false otherwise.
+     */
+    isTaskComplete(questId, index) {
+        if (!this._questCompleteTasksStatuses) {
+            this._questCompleteTasksStatuses = {};
+        }
+        const data = this._questCompleteTasksStatuses[questId];
+        if (!data)
+            return false;
+        return data.includes(index);
     }
-  }
-
-  completeQuest(questId) {
-    if (!this.isCompleteQuest(questId)) {
-      return this._completedQuests.push(questId);
+    /**
+     * Checks if a task within a quest has failed.
+     * @param questId - The ID of the quest.
+     * @param index - The index of the task.
+     * @returns True if the task has failed, false otherwise.
+     */
+    isTaskFailed(questId, index) {
+        if (!this._questFailedTasksStatuses) {
+            this._questFailedTasksStatuses = {};
+        }
+        const data = this._questFailedTasksStatuses[questId];
+        if (!data)
+            return false;
+        return data.includes(index);
     }
-  }
-
-  setDescriptionForQuest(questId, index) {
-    this._questVisibleDescription[questId] = index;
-  }
-
-  addVisibleTaskForQuest(questId, index) {
-    if (this._questVisibleTasksStatuses[questId] == null) {
-      this._questVisibleTasksStatuses[questId] = [];
+    /**
+     * Gets the description index for a quest.
+     * @param questId - The ID of the quest.
+     * @returns The description index of the quest.
+     */
+    getQuestDescriptionIndex(questId) {
+        if (!this._questVisibleDescription) {
+            this._questVisibleDescription = {};
+        }
+        if (!this._questVisibleDescription[questId])
+            return 0;
+        return this._questVisibleDescription[questId];
     }
-    if (!this._questVisibleTasksStatuses[questId].contains(index)) {
-      this._questVisibleTasksStatuses[questId].push(index);
+    /**
+     * Sets a quest as active.
+     * @param questId - The ID of the quest.
+     */
+    setActiveQuest(questId) {
+        if (this.isActiveQuest(questId))
+            return;
+        try {
+            let isAdded = false;
+            for (let i = 0; i < this._activeQuests.length; i++) {
+                if (!this._activeQuests[i]) {
+                    this._activeQuests[i] = questId;
+                    isAdded = true;
+                    break;
+                }
+            }
+            if (!isAdded) {
+                this._activeQuests.push(questId);
+            }
+        }
+        catch (error) {
+            console.warn(error);
+        }
     }
-  }
-
-  completeTaskForQuest(questId, index) {
-    if (this._questCompleteTasksStatuses[questId] == null) {
-      this._questCompleteTasksStatuses[questId] = [];
+    /**
+     * Removes a quest from the active quests.
+     * @param questId - The ID of the quest.
+     */
+    removeActiveQuest(questId) {
+        if (!this.isActiveQuest(questId))
+            return;
+        const index = this.getActiveQuestIndex(questId);
+        if (index >= 0)
+            this._activeQuests[index] = null;
     }
-    if (!this._questCompleteTasksStatuses[questId].contains(index)) {
-      this._questCompleteTasksStatuses[questId].push(index);
+    /**
+     * Gets the index of an active quest.
+     * @param questId - The ID of the quest.
+     * @returns The index of the active quest, or -1 if not found.
+     */
+    getActiveQuestIndex(questId) {
+        if (!this.isActiveQuest(questId))
+            return -1;
+        return this._activeQuests.indexOf(questId);
     }
-  }
-
-  clearMarkForNewQuest(questId) {
-    if (this._newQuests == null) {
-      return;
+    /**
+     * Adds a quest to the visible quests.
+     * @param questId - The ID of the quest.
+     */
+    addQuest(questId) {
+        if (!this.isAddedQuest(questId)) {
+            this._visibleQuests.push(questId);
+            this.registerMarkForNewQuest(questId);
+        }
     }
-    if (this._newQuests.contains(questId)) {
-      this._newQuests.delete(questId);
+    /**
+     * Registers a quest as new.
+     * @param questId - The ID of the quest.
+     */
+    registerMarkForNewQuest(questId) {
+        if (!this._newQuests)
+            this._newQuests = [];
+        if (!this._newQuests.includes(questId))
+            this._newQuests.push(questId);
     }
-  }
-
-  clearAllMarks() {
-    return this._newQuests = [];
-  }
-
-  isQuestMarkedAsNew(questId) {
-    if (this._newQuests == null) {
-      return false;
+    /**
+     * Marks a quest as complete.
+     * @param questId - The ID of the quest.
+     */
+    completeQuest(questId) {
+        if (!this.isCompleteQuest(questId))
+            this._completedQuests.push(questId);
     }
-    return this._newQuests.contains(questId);
-  }
-
-};
+    /**
+     * Marks a quest as failed.
+     * @param questId - The ID of the quest.
+     */
+    failQuest(questId) {
+        if (!this.isFailedQuest(questId))
+            this._failedQuests.push(questId);
+    }
+    /**
+     * Sets the description index for a quest.
+     * @param questId - The ID of the quest.
+     * @param index - The description index.
+     */
+    setDescriptionForQuest(questId, index) {
+        if (!this._questVisibleDescription) {
+            this._questVisibleDescription = {};
+        }
+        this._questVisibleDescription[questId] = index;
+    }
+    /**
+     * Adds a visible task to a quest.
+     * @param questId - The ID of the quest.
+     * @param index - The index of the task.
+     */
+    addVisibleTaskForQuest(questId, index) {
+        if (!this._questVisibleTasksStatuses) {
+            this._questVisibleTasksStatuses = {};
+        }
+        if (!this._questVisibleTasksStatuses[questId]) {
+            this._questVisibleTasksStatuses[questId] = [];
+        }
+        if (!this._questVisibleTasksStatuses[questId].includes(index)) {
+            this._questVisibleTasksStatuses[questId].push(index);
+        }
+    }
+    /**
+     * Marks a task within a quest as complete.
+     * @param questId - The ID of the quest.
+     * @param index - The index of the task.
+     */
+    completeTaskForQuest(questId, index) {
+        if (!this._questCompleteTasksStatuses) {
+            this._questCompleteTasksStatuses = {};
+        }
+        if (!this._questCompleteTasksStatuses[questId]) {
+            this._questCompleteTasksStatuses[questId] = [];
+        }
+        if (!this._questCompleteTasksStatuses[questId].includes(index)) {
+            this._questCompleteTasksStatuses[questId].push(index);
+        }
+    }
+    /**
+     * Marks a task within a quest as failed.
+     * @param questId - The ID of the quest.
+     * @param index - The index of the task.
+     */
+    failTaskForQuest(questId, index) {
+        if (!this._questFailedTasksStatuses) {
+            this._questFailedTasksStatuses = {};
+        }
+        if (!this._questFailedTasksStatuses[questId]) {
+            this._questFailedTasksStatuses[questId] = [];
+        }
+        if (!this._questFailedTasksStatuses[questId].includes(index)) {
+            this._questFailedTasksStatuses[questId].push(index);
+        }
+    }
+    /**
+     * Clears the mark for a new quest.
+     * @param questId - The ID of the quest.
+     */
+    clearMarkForNewQuest(questId) {
+        if (!this._newQuests)
+            return;
+        const index = this._newQuests.indexOf(questId);
+        if (index !== -1)
+            this._newQuests.splice(index, 1);
+    }
+    /**
+     * Clears all marks for new quests.
+     */
+    clearAllMarks() {
+        this._newQuests = [];
+    }
+    /**
+     * Checks if a quest is marked as new.
+     * @param questId - The ID of the quest.
+     * @returns True if the quest is marked as new, false otherwise.
+     */
+    isQuestMarkedAsNew(questId) {
+        if (!this._newQuests)
+            return false;
+        return this._newQuests.includes(questId);
+    }
+}
+window['SQS_Keep'] = SQS_Keep;
 
 
 // Generated by CoffeeScript 2.6.1
@@ -9432,7 +18491,7 @@ SQSM.quests = function() {
 SQSM.playerCurrentQuests = function() {
   var e, quests;
   quests = SQSM.quests().filter(function(q) {
-    return SQSM.isQuestVisible(q.id) && !SQSM.isQuestComplete(q.id);
+    return SQSM.isQuestVisible(q.id) && !SQSM.isQuestComplete(q.id) && !SQSM.isQuestFailed(q.id);
   });
   try {
     quests.sort(KDCore.Utils.dynamicSort("-priority"));
@@ -9473,10 +18532,40 @@ SQSM.playerCompletedQuests = function() {
   return quests;
 };
 
+// * Все квесты, которые есть у игрока (были провалены)
+SQSM.playerFailedQuests = function() {
+  var e, quests;
+  quests = SQSM.quests().filter(function(q) {
+    return SQSM.isQuestFailed(q.id);
+  });
+  try {
+    quests.sort(KDCore.Utils.dynamicSort("-priority"));
+  } catch (error) {
+    e = error;
+    console.warn(e);
+  }
+  return quests;
+};
+
 // * Все квесты, которые есть у игрока (были выполнены), в определённо группе
 SQSM.playerCompletedQuestsForCategory = function(catId) {
   var quests;
   quests = SQSM.playerCompletedQuests();
+  // * Если пусто, без фильтра, все
+  if (!String.any(catId)) {
+    return quests;
+  } else {
+    // * Фильтр по группе
+    return quests.filter(function(q) {
+      return q.catId === catId;
+    });
+  }
+};
+
+// * Все квесты, которые есть у игрока (были провалены), в определённо группе
+SQSM.playerFailedQuestsForCategory = function(catId) {
+  var quests;
+  quests = SQSM.playerFailedQuests();
   // * Если пусто, без фильтра, все
   if (!String.any(catId)) {
     return quests;
@@ -9494,6 +18583,25 @@ SQSM.keep = function() {
 
 SQSM.isQuestComplete = function(id) {
   return SQSM.keep().isCompleteQuest(id);
+};
+
+SQSM.isQuestFailed = function(id) {
+  return SQSM.keep().isFailedQuest(id);
+};
+
+// * Начинаем с 1, а не с нуля
+SQSM.isQuestTaskComplete = function(id, index) {
+  return SQSM.keep().isTaskComplete(id, index - 1);
+};
+
+// * Начинаем с 1, а не с нуля
+SQSM.isQuestTaskFailed = function(id, index) {
+  return SQSM.keep().isTaskFailed(id, index - 1);
+};
+
+// * Начинаем с 1, а не с нуля
+SQSM.isQuestTaskVisible = function(id, index) {
+  return SQSM.keep().isTaskVisible(id, index - 1);
 };
 
 SQSM.isQuestVisible = function(id) {
@@ -9547,6 +18655,8 @@ SQSM.onAnyQuestProgressChange = function() {
     SceneManager._scene.loadSQSPoints();
     SQSM.showNotify();
   }
+  Sprite_MapQuestsList.Refresh();
+  SQS_QuestAndTaskAutoConditionsManager.RefreshAllQuestsAndTasksAutoConditions();
 };
 
 SQSM.showNotify = function() {
@@ -9561,7 +18671,7 @@ SQSM.showNotify = function() {
       SQSM.RefreshMapQuestsList();
     } catch (error) {
       e = error;
-      KDCore.warning(e);
+      console.warn(e);
     }
   } catch (error) {
     e = error;
@@ -9595,11 +18705,13 @@ SQSM.RefreshMapQuestsList = function() {
   var e;
   try {
     if (KDCore.Utils.isSceneMap() && PKD_SQS.PP.isTasksWindowActive()) {
-      return SceneManager._scene.refreshSQSTaskWindow();
+      SceneManager._scene.refreshSQSTaskWindow();
     }
+    Sprite_MapQuestsList.Refresh();
+    return SQS_QuestAndTaskAutoConditionsManager.RefreshAllQuestsAndTasksAutoConditions();
   } catch (error) {
     e = error;
-    return KDCore.warning(e);
+    return console.warn(e);
   }
 };
 
@@ -9608,11 +18720,12 @@ SQSM.HideMapQuestsList = function() {
   try {
     $gameSystem._sqsIsTaskWindowDisabled = true;
     if (KDCore.Utils.isSceneMap()) {
-      return SceneManager._scene.refreshSQSTaskWindowVisibility();
+      SceneManager._scene.refreshSQSTaskWindowVisibility();
     }
+    return Sprite_MapQuestsList.Refresh();
   } catch (error) {
     e = error;
-    return KDCore.warning(e);
+    return console.warn(e);
   }
 };
 
@@ -9621,24 +18734,60 @@ SQSM.ShowMapQuestsList = function() {
   try {
     $gameSystem._sqsIsTaskWindowDisabled = null;
     if (KDCore.Utils.isSceneMap()) {
-      return SceneManager._scene.refreshSQSTaskWindowVisibility();
+      SceneManager._scene.refreshSQSTaskWindowVisibility();
     }
+    return Sprite_MapQuestsList.Refresh();
   } catch (error) {
     e = error;
-    return KDCore.warning(e);
+    return console.warn(e);
   }
 };
 
 SQSM.SwitchOpenedClosedStateOfQuestsList = function() {
   var e;
   try {
+    if (!PKD_SQS.PP.isTasksWindowActive()) {
+      return;
+    }
     if (!KDCore.Utils.isSceneMap()) {
       return;
     }
     return SceneManager._scene.tryOpenOrCloseSQSTaskWindow();
   } catch (error) {
     e = error;
-    return KDCore.warning(e);
+    return console.warn(e);
+  }
+};
+
+SQSM.OpenMapQuestsList = function() {
+  var e;
+  try {
+    if (!PKD_SQS.PP.isTasksWindowActive()) {
+      return;
+    }
+    if (!KDCore.Utils.isSceneMap()) {
+      return;
+    }
+    return SceneManager._scene.openSQSTaskWindow();
+  } catch (error) {
+    e = error;
+    return console.warn(e);
+  }
+};
+
+SQSM.CloseMapQuestsList = function() {
+  var e;
+  try {
+    if (!PKD_SQS.PP.isTasksWindowActive()) {
+      return;
+    }
+    if (!KDCore.Utils.isSceneMap()) {
+      return;
+    }
+    return SceneManager._scene.closeSQSTaskWindow();
+  } catch (error) {
+    e = error;
+    return console.warn(e);
   }
 };
 
@@ -9684,6 +18833,12 @@ SQSM.CompleteTaskForQuest = function(id, index) {
   }
 };
 
+// * Начинаем с 1, а не с нуля
+SQSM.FailTaskForQuest = function(id, index) {
+  SQSM.keep().failTaskForQuest(id, index - 1);
+  SQSM.onAnyQuestProgressChange();
+};
+
 SQSM._checkQuestAutoComplete = function(id) {
   var e, quest;
   try {
@@ -9704,17 +18859,30 @@ SQSM._checkQuestAutoComplete = function(id) {
     }
   } catch (error) {
     e = error;
-    KDCore.warning(e);
+    console.warn(e);
   }
   return false;
 };
 
 // * Добавить квест в группу выполненные квесты
+// * Неправильное название, но так было в первой версии, так что нельзя менять
 SQSM.CompletQuest = function(id) {
   SQSM.keep().completeQuest(id);
   SQSM.SetActiveQuest(id, false);
   SQSM.onAnyQuestProgressChange();
   SQSM._checkCompletedCallback(id);
+};
+
+SQSM.CompleteQuest = function(id) {
+  return SQSM.CompletQuest(id);
+};
+
+// * Добавить квест в группу проваленные квесты
+SQSM.FailQuest = function(id) {
+  SQSM.keep().failQuest(id);
+  SQSM.SetActiveQuest(id, false);
+  SQSM.onAnyQuestProgressChange();
+  SQSM._checkFailedCallback(id);
 };
 
 SQSM._checkCompletedCallback = function(id) {
@@ -9731,13 +18899,40 @@ SQSM._checkCompletedCallback = function(id) {
           return KDCore.Utils.startCE(ceId);
         } catch (error) {
           e = error;
-          return KDCore.warning(e);
+          return console.warn(e);
         }
       }), 1);
     }
   } catch (error) {
     e = error;
-    KDCore.warning(e);
+    console.warn(e);
+  }
+};
+
+SQSM._checkFailedCallback = function(id) {
+  var ceId, e, quest;
+  try {
+    quest = SQSM.playerFailedQuests().find(function(q) {
+      return q.id === id;
+    });
+    if (quest == null) {
+      return;
+    }
+    ceId = quest.onFailedCe;
+    if (ceId != null) {
+      setTimeout((function() {
+        var e;
+        try {
+          return KDCore.Utils.startCE(ceId);
+        } catch (error) {
+          e = error;
+          return console.warn(e);
+        }
+      }), 1);
+    }
+  } catch (error) {
+    e = error;
+    console.warn(e);
   }
 };
 
@@ -9766,8 +18961,13 @@ SQSM.ResetQuest = function(id) {
     if (keep._questCompleteTasksStatuses != null) {
       delete keep._questCompleteTasksStatuses[id];
     }
+    if (keep._questFailedTasksStatuses != null) {
+      delete keep._questFailedTasksStatuses[id];
+    }
     // * Remove from completed
     keep._completedQuests.delete(id);
+    // * Remove from failed
+    keep._failedQuests.delete(id);
     // * Remove descriptions
     if (keep._questVisibleDescription != null) {
       delete keep._questVisibleDescription[id];
@@ -9777,7 +18977,7 @@ SQSM.ResetQuest = function(id) {
     keep._newQuests.delete(id);
   } catch (error) {
     e = error;
-    KDCore.warning(e);
+    console.warn(e);
   }
 };
 
@@ -9794,7 +18994,7 @@ SQSM.ShowAllTasksForQuest = function(id) {
     SQSM.onAnyQuestProgressChange();
   } catch (error) {
     e = error;
-    KDCore.warning(e);
+    console.warn(e);
   }
 };
 
@@ -9851,7 +19051,7 @@ SQS_Points = class SQS_Points {
           }
         } catch (error) {
           e = error;
-          KDCore.warning(e);
+          console.warn(e);
           return 0;
         }
       } else {
@@ -9926,123 +19126,244 @@ SQS_Points = class SQS_Points {
 };
 
 
+class SQS_Quest {
+    constructor(questData) {
+        this.id = questData.id;
+        this.title = questData.title;
+        this.titleImage = questData.titleImage;
+        this.titleForList = questData.titleForList;
+        this.priority = questData.priority || 0;
+        this.catId = questData.categoryId || "";
+        this.difficulty = questData.difficulty || 0;
+        this.onCompletedCe = questData.onCompleted || 0;
+        this.onFailedCe = questData.onFailed || 0;
+        this.autoConditions = questData.autoConditions;
+        this.descriptions = questData.descriptions || [];
+        this.tasks = [];
+        this.createTasks(questData.tasks);
+        this.createDescriptions(this.descriptions);
+    }
+    createTasks(tasksData) {
+        for (let index = 0; index < tasksData.length; index++) {
+            const task = tasksData[index];
+            this.tasks.push(new SQS_Task(this.id, index, task));
+        }
+    }
+    createDescriptions(descriptions) {
+        this.descriptions = descriptions;
+    }
+    isHaveAutoConditions() {
+        return !!this.autoConditions;
+    }
+    addCondition() {
+        if (this.isHaveAutoConditions() && this.autoConditions.addConditions) {
+            return SQS_Condition.FromConfig(this.autoConditions.addConditions);
+        }
+        else {
+            return null;
+        }
+    }
+    failCondition() {
+        if (this.isHaveAutoConditions() && this.autoConditions.failConditions) {
+            return SQS_Condition.FromConfig(this.autoConditions.failConditions);
+        }
+        else {
+            return null;
+        }
+    }
+    completeCondition() {
+        if (this.isHaveAutoConditions() && this.autoConditions.completeConditions) {
+            return SQS_Condition.FromConfig(this.autoConditions.completeConditions);
+        }
+        else {
+            return null;
+        }
+    }
+    isComplete() {
+        /*@ts-ignore*/
+        return SQSM.isQuestComplete(this.id);
+    }
+    isFailed() {
+        /*@ts-ignore*/
+        return SQSM.isQuestFailed(this.id);
+    }
+    isVisible() {
+        /*@ts-ignore*/
+        return SQSM.isQuestVisible(this.id);
+    }
+    isActive() {
+        /*@ts-ignore*/
+        return SQSM.isQuestActive(this.id);
+    }
+    isTaskComplete(index) {
+        var _a;
+        return ((_a = this.getTask(index)) === null || _a === void 0 ? void 0 : _a.isComplete()) || false;
+    }
+    isTaskFailed(index) {
+        var _a;
+        return ((_a = this.getTask(index)) === null || _a === void 0 ? void 0 : _a.isFailed()) || false;
+    }
+    getTask(index = 0) {
+        return this.tasks[index];
+    }
+    getVisibleTasks() {
+        return this.tasks.filter(t => t.isVisible());
+    }
+    isAllTasksCompleted() {
+        return this.tasks.every(t => t.isComplete());
+    }
+    getTasksForPointers() {
+        return this.getVisibleTasks().filter(t => !t.isComplete());
+    }
+    getDescription(index = 0) {
+        return this.descriptions[index];
+    }
+    getActiveDescription() {
+        /*@ts-ignore*/
+        const index = SQSM.keep().getQuestDescriptionIndex(this.id);
+        const description = this.getDescription(index);
+        if (description) {
+            return description;
+        }
+        else {
+            return "You should add at least one description to Quest parameters!";
+        }
+    }
+    getDifficulty() {
+        return this.difficulty;
+    }
+}
+window['SQS_Quest'] = SQS_Quest;
+
+
+/**
+ * Manages the automatic conditions for quests and tasks.
+ */
+class SQS_QuestAndTaskAutoConditionsManager {
+    constructor() { }
+    /**
+     * Refreshes all auto conditions for quests and tasks.
+     */
+    static RefreshAllQuestsAndTasksAutoConditions() {
+        //console.log('RefreshAllQuestsAndTasksAutoConditions');
+        try {
+            this.RefreshAllQuestsAutoConditions();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    static RefreshAllQuestsAutoConditions() {
+        try {
+            this.AutoAddQuests();
+            this.AutoCompleteQuests();
+            this.AutoFailQuests();
+        }
+        catch (error) {
+            console.warn(error);
+        }
+    }
+    static AutoAddQuests() {
+        /*@ts-ignore*/
+        let allQuests = SQSM.quests();
+        /*@ts-ignore*/
+        let currentQuests = allQuests.filter(q => SQSM.isQuestVisible(q.id) ||
+            /*@ts-ignore*/
+            SQSM.isQuestComplete(q.id) ||
+            /*@ts-ignore*/
+            SQSM.isQuestFailed(q.id));
+        let newQuests = allQuests.filter(q => !currentQuests.includes(q));
+        if (newQuests.length > 0) {
+            newQuests.forEach(q => {
+                if (q.isHaveAutoConditions()) {
+                    let addCondition = q.addCondition();
+                    if (addCondition === null || addCondition === void 0 ? void 0 : addCondition.evaluate()) {
+                        console.log("Quest " + q.id + " is auto added");
+                        /*@ts-ignore*/
+                        SQSM.AddQuest(q.id);
+                        return;
+                    }
+                }
+            });
+        }
+    }
+    static AutoCompleteQuests() {
+        /*@ts-ignore*/
+        let quests = SQSM.quests().filter(q => SQSM.isQuestVisible(q.id) && !SQSM.isQuestComplete(q.id) && !SQSM.isQuestFailed(q.id));
+        quests.forEach(q => {
+            if (q.isHaveAutoConditions()) {
+                let completeCondition = q.completeCondition();
+                if (completeCondition === null || completeCondition === void 0 ? void 0 : completeCondition.evaluate()) {
+                    console.log("Quest " + q.id + " is auto completed");
+                    /*@ts-ignore*/
+                    SQSM.CompleteQuest(q.id);
+                }
+            }
+        });
+    }
+    static AutoFailQuests() {
+        /*@ts-ignore*/
+        let quests = SQSM.quests().filter(q => SQSM.isQuestVisible(q.id) && !SQSM.isQuestComplete(q.id) && !SQSM.isQuestFailed(q.id));
+        quests.forEach(q => {
+            if (q.isHaveAutoConditions()) {
+                let failCondition = q.failCondition();
+                if (failCondition === null || failCondition === void 0 ? void 0 : failCondition.evaluate()) {
+                    console.log("Quest " + q.id + " is auto failed");
+                    /*@ts-ignore*/
+                    SQSM.FailQuest(q.id);
+                }
+            }
+        });
+    }
+}
+window['SQS_QuestAndTaskAutoConditionsManager'] = SQS_QuestAndTaskAutoConditionsManager;
+
+
+/**
+ * Represents a task in the Simple Quest System.
+ */
+class SQS_Task {
+    /**
+     * Constructs a new instance of the SQS_Task class.
+     *
+     * @param {string} qid - The ID of the task.
+     * @param {number} index - The index of the task.
+     * @param {string} text - The text of the task.
+     */
+    constructor(qid, index, text) {
+        this.qid = qid;
+        this.index = index;
+        this.text = text;
+    }
+    /**
+     * Checks if the task is complete.
+     * @returns {boolean} True if the task is complete, false otherwise.
+     */
+    isComplete() {
+        /*@ts-ignore*/
+        return SQSM.keep().isTaskComplete(this.qid, this.index);
+    }
+    /**
+     * Checks if the task has failed.
+     * @returns {boolean} True if the task has failed, false otherwise.
+     */
+    isFailed() {
+        /*@ts-ignore*/
+        return SQSM.keep().isTaskFailed(this.qid, this.index);
+    }
+    /**
+     * Checks if the task is visible.
+     * @returns A boolean indicating whether the task is visible.
+     */
+    isVisible() {
+        /*@ts-ignore*/
+        return SQSM.keep().isTaskVisible(this.qid, this.index);
+    }
+}
+window['SQS_Task'] = SQS_Task;
+
+
 // Generated by CoffeeScript 2.6.1
-var SQS_Quest;
-
-SQS_Quest = class SQS_Quest {
-  constructor(questData) {
-    this.id = questData.id;
-    this.title = questData.title;
-    this.titleImage = questData.titleImage;
-    this.titleForList = questData.titleForList;
-    this.priority = questData.priority || 0;
-    this.catId = questData.categoryId || "";
-    this.difficulty = questData.difficulty || 0;
-    this.tasks = [];
-    this.onCompletedCe = questData.onCompleted || 0;
-    this.createTasks(questData.tasks);
-    this.createDescriptions(questData.descriptions);
-    return;
-  }
-
-  //{VERSION}
-  createTasks(tasksData) {
-    var i, index, len, task;
-    for (index = i = 0, len = tasksData.length; i < len; index = ++i) {
-      task = tasksData[index];
-      if (index < 4) {
-        this.tasks.push(new SQS_Task(this.id, index, task));
-      }
-    }
-  }
-
-  //{VERSION}
-  createDescriptions(descriptions) {
-    this.descriptions = descriptions;
-    if (this.descriptions.length > 4) {
-      this.descriptions = this.descriptions.slice(0, 4);
-    }
-  }
-
-  isComplete() {
-    return SQSM.isQuestComplete(this.id);
-  }
-
-  isVisible() {
-    return SQSM.isQuestVisible(this.id);
-  }
-
-  // * Активен в навигаторе (выбран для слежения)
-  isActive() {
-    return SQSM.isQuestActive(this.id);
-  }
-
-  getTask(index = 0) {
-    return this.tasks[index];
-  }
-
-  getVisibleTasks() {
-    return this.tasks.filter(function(t) {
-      return t.isVisible();
-    });
-  }
-
-  isAllTasksCompleted() {
-    return this.tasks.every(function(t) {
-      return t.isComplete();
-    });
-  }
-
-  getTasksForPointers() {
-    return this.getVisibleTasks().filter(function(t) {
-      return !t.isComplete();
-    });
-  }
-
-  getDescription(index = 0) {
-    return this.descriptions[index];
-  }
-
-  getActiveDescription() {
-    var description, index;
-    index = SQSM.keep().getQuestDescriptionIndex(this.id);
-    description = this.getDescription(index);
-    if (String.any(description)) {
-      return description;
-    } else {
-      return "You should add at least one description to Quest parameters!";
-    }
-  }
-
-  getDifficulty() {
-    return this.difficulty;
-  }
-
-};
-
-
-// Generated by CoffeeScript 2.5.1
-var SQS_Task;
-
-SQS_Task = class SQS_Task {
-  constructor(qid, index, text) {
-    this.qid = qid;
-    this.index = index;
-    this.text = text;
-  }
-
-  isComplete() {
-    return SQSM.keep().isTaskComplete(this.qid, this.index);
-  }
-
-  isVisible() {
-    return SQSM.keep().isTaskVisible(this.qid, this.index);
-  }
-
-};
-
-
-// Generated by CoffeeScript 2.5.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Window_MenuCommand.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -10062,341 +19383,6 @@ SQS_Task = class SQS_Task {
 })();
 
 // ■ END Window_MenuCommand.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.6.1
-var Window_SQSQuestsList;
-
-Window_SQSQuestsList = class Window_SQSQuestsList extends Window_Selectable {
-  constructor(rect, textLineSettings) {
-    super(rect);
-    this._group = 0;
-    this._category = ""; // * All
-    this._data = [];
-    this._prepareParams();
-    this.setBackgroundType(2);
-    this._createExtraCursor();
-    return;
-  }
-
-  setGroup(_group) {
-    this._group = _group;
-    this.refresh();
-    if (this.maxItems() === 0) {
-      return this.select(-1);
-    } else {
-      return this.select(0);
-    }
-  }
-
-  setCategory(_category) {
-    this._category = _category;
-    return this.setGroup(this._group);
-  }
-
-  maxItems() {
-    if (this._data != null) {
-      return this._data.length;
-    } else {
-      return 0;
-    }
-  }
-
-  rowSpacing() {
-    return 0;
-  }
-
-  select(index) {
-    super.select(index);
-    this._checkMarkViewedForClear(index);
-    return this.refresh();
-  }
-
-  quest() {
-    return this.questAt(this.index());
-  }
-
-  questAt(index) {
-    if ((this._data != null) && index >= 0) {
-      return this._data[index];
-    } else {
-      return null;
-    }
-  }
-
-  isCurrentItemEnabled() {
-    return this.isEnabled(this.quest());
-  }
-
-  drawItemBackground(index) {} // * nothing
-
-  
-    // * Если мы в текущих заданиях, то используется для проверки можно ли задать квест активным
-  // * т.е. если у него путевые точки
-  isEnabled(quest) {
-    if (quest == null) {
-      return false;
-    }
-    if (this._group === 0) {
-      return SQSM.isQuestHavePoints(quest.id);
-    } else {
-      return false;
-    }
-  }
-
-  makeItemList() {
-    if (this._group === 0) {
-      this._data = SQSM.playerCurrentQuestsForCategory(this._category);
-    } else {
-      this._data = SQSM.playerCompletedQuestsForCategory(this._category);
-    }
-    this._applySortings();
-  }
-
-  drawItem(index) {
-    var quest, rect;
-    quest = this.questAt(index);
-    if (quest == null) {
-      return;
-    }
-    if (this.index() !== index) {
-      this.contents.paintOpacity = 120;
-    } else {
-      this.changePaintOpacity(true); //@isEnabled(quest)
-    }
-    rect = this.itemRect(index);
-    this.drawTextEx(quest.titleForList, rect.x, rect.y, rect.width);
-    if (SQSM.isQuestActive(quest.id)) {
-      this.drawQuestActiveSymbol(quest, rect);
-    }
-    if (SQSM.isQuestHaveNewMark(quest.id) && this._group === 0) {
-      this.drawQuestNewMark(rect);
-    }
-  }
-
-  drawQuestActiveSymbol(quest, rect) {
-    var actSym, arrow, bc, dx, dy, index;
-    dx = rect.x + this._activeQuestMargins.x;
-    dy = rect.y + this._activeQuestMargins.y;
-    actSym = new Sprite(this._curActBitmap);
-    actSym.x = dx;
-    actSym.y = dy;
-    this.addChild(actSym);
-    this._activeSymbols.push(actSym);
-    index = SQSM.getQuestActiveIndex(quest.id);
-    if (index < 0) {
-      return;
-    }
-    arrow = SQSM.getQuestsArrows()[index];
-    bc = [...arrow.color.ARR];
-    bc[3] = 150;
-    actSym.setBlendColor(bc);
-  }
-
-  drawQuestNewMark(rect) {} // * EMPTY, PRO only
-
-  refresh() {
-    this._clearActiveFlags();
-    this._clearNewMarks();
-    this.makeItemList();
-    return super.refresh();
-  }
-
-  // * Вызывается, когда сцена закрывается (из сцены)
-  clearQuestMarks() {
-    var i, len, q, ref;
-    if (this._questsForClearMarks == null) {
-      return;
-    }
-    ref = this._questsForClearMarks;
-    for (i = 0, len = ref.length; i < len; i++) {
-      q = ref[i];
-      SQSM.clearQuestNewMark(q);
-    }
-  }
-
-  resetFontSettings() {
-    super.resetFontSettings();
-    if (this.textLineSettings == null) {
-      return;
-    }
-    if (String.any(this.textLineSettings.fontFace)) {
-      this.contents.fontFace = this.textLineSettings.fontFace;
-    }
-    if (this.textLineSettings.fontSize > 0) {
-      this.contents.fontSize = this.textLineSettings.fontSize;
-    }
-  }
-
-  _refreshCursor() {} // * EMPTY
-
-  _updateCursor() {
-    super._updateCursor();
-    this._curSpr.visible = this._cursorSprite.visible;
-    if (this._curSpr.visible === true) {
-      this._curSpr.visible = this.maxItems() > 0;
-    }
-    this._curSpr.y = this._cursorSprite.y + this._cursorMargins.y;
-    this._curSpr.x = this._cursorSprite.x + this._cursorMargins.x;
-  }
-
-};
-
-(function() {  //╒═════════════════════════════════════════════════════════════════════════╛
-  // ■ Window_SQSQuestsList.coffee
-  //╒═════════════════════════════════════════════════════════════════════════╛
-  //---------------------------------------------------------------------------
-  var _;
-  //@[DEFINES]
-  _ = Window_SQSQuestsList.prototype;
-  _._prepareParams = function() {
-    var _activeQuestMargins, _cursorMargins, _newMarkMargins;
-    _cursorMargins = PKD_SQS.PP.getQuestListCursorMargins();
-    _activeQuestMargins = PKD_SQS.PP.getQuestListActiveIconMargins();
-    _newMarkMargins = PKD_SQS.PP.getQuestListNewMarkMargins();
-    this._cursorMargins = {
-      x: eval(_cursorMargins.x),
-      y: eval(_cursorMargins.y)
-    };
-    this._activeQuestMargins = {
-      x: eval(_activeQuestMargins.x),
-      y: eval(_activeQuestMargins.y)
-    };
-    this._newMarkMargins = {
-      x: eval(_newMarkMargins.x),
-      y: eval(_newMarkMargins.y)
-    };
-  };
-  _._clearActiveFlags = function() {
-    var i, item, len, ref;
-    if (this._activeSymbols == null) {
-      this._activeSymbols = [];
-    }
-    ref = this._activeSymbols;
-    for (i = 0, len = ref.length; i < len; i++) {
-      item = ref[i];
-      item.visible = false;
-      this.removeChild(item);
-    }
-    this._activeSymbols = [];
-  };
-  _._clearNewMarks = function() {
-    var i, item, len, ref;
-    if (this._newMarks == null) {
-      this._newMarks = [];
-    }
-    ref = this._newMarks;
-    for (i = 0, len = ref.length; i < len; i++) {
-      item = ref[i];
-      item.visible = false;
-      this.removeChild(item);
-    }
-    this._newMarks = [];
-  };
-  _.setSettings = function(textLineSettings1) {
-    var h;
-    this.textLineSettings = textLineSettings1;
-    this.resetFontSettings();
-    h = this.textLineSettings.h;
-    this.lineHeight = function() {
-      return h;
-    };
-  };
-  _._createExtraCursor = function() {
-    if (KDCore.isMV()) {
-      this._cursorSprite = this._windowCursorSprite;
-    }
-    this._curActBitmap = ImageManager.loadPKDSQS("Quest_Active");
-    this._curMarkNewBitmap = ImageManager.loadPKDSQS("Quest_New");
-    this._curMarkNewBitmap.addLoadListener(() => {
-      var e;
-      try {
-        return this.refresh();
-      } catch (error) {
-        e = error;
-        return KDCore.warning(e);
-      }
-    });
-    this._curSpr = new Sprite(ImageManager.loadPKDSQS("Quest_Selected"));
-    this.addChild(this._curSpr);
-  };
-  // * Отмечаем, что данный квест был просмотрен, т.е. надо снять с него статус "новый"
-  _._checkMarkViewedForClear = function(index) {
-    var quest;
-    if (index < 0) {
-      return;
-    }
-    quest = this.questAt(index);
-    if (quest == null) {
-      return;
-    }
-    if (this._questsForClearMarks == null) {
-      this._questsForClearMarks = [];
-    }
-    this._questsForClearMarks.push(quest.id);
-  };
-  _._applySortings = function() {
-    if (PKD_SQS.PP.isSortByNew()) {
-      this._sortByNewQuests();
-    }
-    if (PKD_SQS.PP.isSortByActive()) {
-      this._sortByActiveFirst();
-    }
-  };
-  _._sortByNewQuests = function() {
-    var i, j, k, lastAddedQuests, len, len1, len2, newDataPre, q, ref, ref1;
-    // * Сортировка (новые сперва вверху)
-    lastAddedQuests = [];
-    newDataPre = [];
-    ref = this._data;
-    for (i = 0, len = ref.length; i < len; i++) {
-      q = ref[i];
-      if (SQSM.isQuestHaveNewMark(q.id)) {
-        lastAddedQuests.push(q);
-      }
-    }
-    for (j = 0, len1 = lastAddedQuests.length; j < len1; j++) {
-      q = lastAddedQuests[j];
-      newDataPre.push(q);
-    }
-    ref1 = this._data;
-    for (k = 0, len2 = ref1.length; k < len2; k++) {
-      q = ref1[k];
-      if (!newDataPre.contains(q)) {
-        newDataPre.push(q);
-      }
-    }
-    this._data = newDataPre;
-  };
-  _._sortByActiveFirst = function() {
-    var activateQuests, i, j, k, len, len1, len2, newData, q, ref, ref1;
-    // * Сортировка (aктивные вверху)
-    activateQuests = [];
-    newData = [];
-    ref = this._data;
-    for (i = 0, len = ref.length; i < len; i++) {
-      q = ref[i];
-      if (SQSM.isQuestActive(q.id)) {
-        activateQuests.push(q);
-      }
-    }
-    for (j = 0, len1 = activateQuests.length; j < len1; j++) {
-      q = activateQuests[j];
-      newData.push(q);
-    }
-    ref1 = this._data;
-    for (k = 0, len2 = ref1.length; k < len2; k++) {
-      q = ref1[k];
-      if (!newData.contains(q)) {
-        newData.push(q);
-      }
-    }
-    this._data = newData;
-  };
-})();
-
-// ■ END Window_SQSQuestsList.coffee
 //---------------------------------------------------------------------------
 
 
@@ -10477,7 +19463,7 @@ Window_SQSTasksWindowList = class Window_SQSTasksWindowList extends Window_Selec
       this.drawTextEx(text, rect.x, rect.y, this.width);
     } catch (error) {
       e = error;
-      KDCore.warning(e);
+      console.warn(e);
     }
     this.resetTextColor();
   }
@@ -10518,7 +19504,7 @@ Window_SQSTasksWindowList = class Window_SQSTasksWindowList extends Window_Selec
       return tasks.last().text;
     } catch (error) {
       e = error;
-      KDCore.warning(e);
+      console.warn(e);
       return "???";
     }
   }
@@ -10599,7 +19585,7 @@ Window_SQSTasksWindowList = class Window_SQSTasksWindowList extends Window_Selec
 };
 
 
-// Generated by CoffeeScript 2.5.1
+// Generated by CoffeeScript 2.6.1
 var Window_SQSTextBase;
 
 Window_SQSTextBase = class Window_SQSTextBase extends Window_Base {
@@ -10632,7 +19618,7 @@ Window_SQSTextBase = class Window_SQSTextBase extends Window_Base {
 };
 
 
-// Generated by CoffeeScript 2.5.1
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Scene_Map.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -10663,7 +19649,7 @@ Window_SQSTextBase = class Window_SQSTextBase extends Window_Base {
 //---------------------------------------------------------------------------
 
 
-// Generated by CoffeeScript 2.5.1
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Scene_SQSJournal.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -10673,29 +19659,30 @@ Window_SQSTextBase = class Window_SQSTextBase extends Window_Base {
   //@[DEFINES]
   _ = Scene_SQSJournal.prototype;
   _._clearQuestInfo = function() {
-    var ref, ref1;
+    var ref, ref1, ref2, ref3;
     this.qiTitleImage.visible = false;
-    this.qiTitleText.setText("");
-    this.qiDesc.setText("");
+    this.qiTitleText.draw("");
+    if ((ref = this.qiDesc) != null) {
+      ref.setText("");
+    }
     this.qiTasksHeader.visible = false;
-    if (this.qiTasks != null) {
-      this.removeChild(this.qiTasks);
-      this._createQuestTasks(); // * Пересоздаём холдер
+    if ((ref1 = this._qiTasksList) != null) {
+      ref1.setItems([]);
     }
-    if ((ref = this._activeHelp) != null) {
-      ref.visible = false;
+    if ((ref2 = this._activeHelp) != null) {
+      ref2.visible = false;
     }
-    if ((ref1 = this._difficultyLevel) != null) {
-      ref1.visible = false;
+    if ((ref3 = this._difficultyLevel) != null) {
+      ref3.visible = false;
     }
   };
   _._showActiveQuestData = function() {
-    var descText, descrpt, e, e2;
+    var descText, descrpt, e, e2, ref;
     if (String.any(this.activeQuestData.titleImage)) {
       this.qiTitleImage.visible = true;
-      this.qiTitleImage.bitmap = ImageManager.loadPKDSQS(this.activeQuestData.titleImage);
+      this.qiTitleImage.draw(this.activeQuestData.titleImage);
     }
-    this.qiTitleText.setText(this.activeQuestData.title);
+    this.qiTitleText.draw(this.activeQuestData.title);
     descrpt = this.activeQuestData.getActiveDescription();
     try {
       descText = JsonEx.parse(descrpt);
@@ -10708,108 +19695,77 @@ Window_SQSTextBase = class Window_SQSTextBase extends Window_Base {
         descText = "Something wrong with Description text, maybe you lost quotes";
       }
     }
-    this.qiDesc.setText(descText);
+    if ((ref = this.qiDesc) != null) {
+      ref.setText(descText);
+    }
     this.qiTasksHeader.visible = true;
     this._showActiveTasks();
     this._showQuestDifficulty();
     this._refreshActiveHelp();
   };
-  //?VERSION
-  _._showQuestDifficulty = function() {}; // * EMPTY
-  _._showActiveTasks = function() {
-    var i, index, len, params, posArray, task, tasks;
-    params = PKD_SQS.PP.getQuestTasksSettings();
-    posArray = params.positions.map(function(p) {
-      return [eval(p.x), eval(p.y)];
-    });
-    tasks = this.activeQuestData.getVisibleTasks();
-    //TODO: Сортировка по выполненным? Или просто по добавленным
-    tasks.reverse();
-    for (index = i = 0, len = tasks.length; i < len; index = ++i) {
-      task = tasks[index];
-      if (index < posArray.length) {
-        this._showNextTask(task, posArray[index]);
-      }
+  _._showQuestDifficulty = function() {
+    var diffLevel;
+    if (this.activeQuestData == null) {
+      return;
+    }
+    if (this._difficultyLevel == null) {
+      return;
+    }
+    diffLevel = this.activeQuestData.difficulty;
+    if (diffLevel >= 1) {
+      this._difficultyLevel.visible = true;
+      this._difficultyLevel.draw("questDiff_" + diffLevel);
+    } else {
+      this._difficultyLevel.visible = false;
     }
   };
-  _._showNextTask = function(task, pos) {
-    var taskItem;
-    taskItem = new Sprite_SQSTaskLine(task);
-    taskItem.move(pos[0], pos[1]);
-    return this.qiTasks.addChild(taskItem);
+  _._showActiveTasks = function() {
+    var e, ref, tasks, tasksSprites;
+    try {
+      tasks = this.activeQuestData.getVisibleTasks();
+      tasks.reverse();
+      tasksSprites = tasks.map(function(t) {
+        return new Sprite_SQSTaskListItem(t);
+      });
+      if ((ref = this._qiTasksList) != null) {
+        ref.setItems(tasksSprites);
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
+    }
   };
   _._createQuestMain = function() {
-    this._createQuestTitle();
     this._createQuestDescription();
-    this._createQuestTasksHeader();
-    this._createQuestTasks();
-    this._createDifficultyLevel();
     return this._clearQuestInfo();
   };
-  _._createQuestTitle = function() {
-    var imgX, imgY, params, textSize, x, y;
-    params = PKD_SQS.PP.getQuestHeaderSettings();
-    this.qiTitleImage = new Sprite();
-    imgX = eval(params.position2.x);
-    imgY = eval(params.position2.y);
-    this.qiTitleImage.move(imgX, imgY);
-    this.addChild(this.qiTitleImage);
-    textSize = params.textLine.lineSize;
-    this.qiTitleText = new Sprite_SQSTextLine("", {
-      w: eval(textSize.w),
-      h: eval(textSize.h),
-      fontFace: params.textLine.face,
-      fontSize: params.textLine.size
-    });
-    x = eval(params.position.x);
-    y = eval(params.position.y);
-    this.qiTitleText.move(x, y);
-    this.addChild(this.qiTitleText);
-  };
   _._createQuestDescription = function() {
-    var params, textSize, x, y;
-    params = PKD_SQS.PP.getQuestDescSettings();
-    //TODO: Проверял область описания, 140 высоты хватило
-    //@xx = KDCore.Sprite.FromBitmap(460, 140)
-    //@xx.fillAll()
-    //@xx.move 240, 160
-    //@addChild @xx
-    textSize = params.textLine.lineSize;
+    var fontFace, fontSize, height, width;
+    if (this._questDescriptionContainer == null) {
+      return;
+    }
+    width = this._questDescriptionContainer.realWidth();
+    height = this._questDescriptionContainer.realHeight();
+    fontFace = this._questDescriptionContainer.uiConstant('fontFace');
+    fontSize = this._questDescriptionContainer.uiConstant('fontSize');
     this.qiDesc = new Sprite_SQSTextLine("", {
-      w: eval(textSize.w),
-      h: eval(textSize.h),
-      fontFace: params.textLine.face,
-      fontSize: params.textLine.size
+      w: width,
+      h: height,
+      fontFace: fontFace,
+      fontSize: fontSize
     });
-    x = eval(params.position.x);
-    y = eval(params.position.y);
-    this.qiDesc.move(x, y);
-    return this.addChild(this.qiDesc);
-  };
-  _._createQuestTasksHeader = function() {
-    var params, x, y;
-    params = PKD_SQS.PP.getQuestTasksHeaderSettings();
-    this.qiTasksHeader = new Sprite(ImageManager.loadPKDSQS("tasksHeader"));
-    x = eval(params.x);
-    y = eval(params.y);
-    this.qiTasksHeader.move(x, y);
-    this.addChild(this.qiTasksHeader);
-  };
-  _._createQuestTasks = function() {
-    this.qiTasks = new Sprite(); // * holder
-    this.addChild(this.qiTasks);
-  };
-  _._createDifficultyLevel = function() {
-    var params, x, y;
-    this._difficultyLevel = new Sprite();
-    params = PKD_SQS.PP.getDifficultyLevelSettings();
-    x = eval(params.x);
-    y = eval(params.y);
-    this._difficultyLevel.move(x, y);
-    this.addChild(this._difficultyLevel);
+    this._questDescriptionContainer.addChild(this.qiDesc);
   };
   _._refreshActiveHelp = function() {
-    return this._activeHelp.visible = this.ql.isCurrentItemEnabled();
+    var ref, ref1;
+    if (this._questsList == null) {
+      return;
+    }
+    if (this._questsList.selectedItem() != null) {
+      return (ref = this._activeHelp) != null ? ref.visible = this._questsList.selectedItem().isEnabled() : void 0;
+    } else {
+      return (ref1 = this._activeHelp) != null ? ref1.visible = false : void 0;
+    }
   };
 })();
 
@@ -10817,7 +19773,7 @@ Window_SQSTextBase = class Window_SQSTextBase extends Window_Base {
 //---------------------------------------------------------------------------
 
 
-// Generated by CoffeeScript 2.5.1
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Scene_SQSJournal.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -10827,65 +19783,74 @@ Window_SQSTextBase = class Window_SQSTextBase extends Window_Base {
   //@[DEFINES]
   _ = Scene_SQSJournal.prototype;
   _._createCategories = function() {
-    var paramsA, paramsB, x, y;
-    this.groupA = new KDCore.ButtonM("GroupA", true, "pSQSystem");
-    this.groupB = new KDCore.ButtonM("GroupB", true, "pSQSystem");
-    this.addChild(this.groupA);
-    this.addChild(this.groupB);
-    this.groupA.addClickHandler(() => {
-      return this._onGroupClick(0);
-    });
-    this.groupB.addClickHandler(() => {
-      return this._onGroupClick(1);
-    });
-    // * По умолчанию включена (выбрана)
-    this.groupA.disable();
-    paramsA = PKD_SQS.PP.getGroupButtonA();
-    x = eval(paramsA.x);
-    y = eval(paramsA.y);
-    this.groupA.move(x, y);
-    paramsB = PKD_SQS.PP.getGroupButtonB();
-    x = eval(paramsB.x);
-    y = eval(paramsB.y);
-    this.groupB.move(x, y);
+    var ref, ref1, ref2;
+    if ((ref = this.groupA) != null) {
+      ref.addClickHandler(() => {
+        return this._onGroupClick(0);
+      });
+    }
+    if ((ref1 = this.groupB) != null) {
+      ref1.addClickHandler(() => {
+        return this._onGroupClick(1);
+      });
+    }
+    if ((ref2 = this.groupC) != null) {
+      ref2.addClickHandler(() => {
+        return this._onGroupClick(2);
+      });
+    }
   };
   _._onGroupClick = function(index) {
+    var ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, ref8;
     if (index === 0) {
-      this.groupA.disable();
-      this.groupB.enable();
-    } else {
-      this.groupB.disable();
-      this.groupA.enable();
+      if ((ref = this.groupA) != null) {
+        ref.disable();
+      }
+      if ((ref1 = this.groupB) != null) {
+        ref1.enable();
+      }
+      if ((ref2 = this.groupC) != null) {
+        ref2.enable();
+      }
+    } else if (index === 1) {
+      if ((ref3 = this.groupB) != null) {
+        ref3.disable();
+      }
+      if ((ref4 = this.groupA) != null) {
+        ref4.enable();
+      }
+      if ((ref5 = this.groupC) != null) {
+        ref5.enable();
+      }
+    } else if (index === 2) {
+      if ((ref6 = this.groupC) != null) {
+        ref6.disable();
+      }
+      if ((ref7 = this.groupA) != null) {
+        ref7.enable();
+      }
+      if ((ref8 = this.groupB) != null) {
+        ref8.enable();
+      }
     }
-    this.ql.setGroup(index);
+    this._group = index;
+    this._refrshQuestsList();
     this._refreshEmptyJournalHolder();
   };
   _._refreshEmptyJournalHolder = function() {
-    if (this.ql.maxItems() <= 0) {
+    if (this._questsList.maxItems() <= 0) {
       return this._showEmptyJournalHolder();
     } else {
       return this._hideEmptyJournalHolder();
     }
   };
   _._showEmptyJournalHolder = function() {
-    var image;
-    if (this.emptyJournalHolder == null) {
-      this.emptyJournalHolder = new Sprite();
-      image = ImageManager.loadPKDSQS("noQuestsHolder");
-      image.addLoadListener(() => {
-        this.emptyJournalHolder.x = Graphics.width / 2 - image.width / 2;
-        return this.emptyJournalHolder.y = Graphics.height / 2 - image.height / 2;
-      });
-      this.emptyJournalHolder.bitmap = image;
-      this.addChild(this.emptyJournalHolder);
-    }
-    return this.emptyJournalHolder.visible = true;
+    var ref;
+    return (ref = this._noAvailableQuestsSprite) != null ? ref.visible = true : void 0;
   };
   _._hideEmptyJournalHolder = function() {
-    if (this.emptyJournalHolder == null) {
-      return;
-    }
-    return this.emptyJournalHolder.visible = false;
+    var ref;
+    return (ref = this._noAvailableQuestsSprite) != null ? ref.visible = false : void 0;
   };
 })();
 
@@ -10893,7 +19858,7 @@ Window_SQSTextBase = class Window_SQSTextBase extends Window_Base {
 //---------------------------------------------------------------------------
 
 
-// Generated by CoffeeScript 2.5.1
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ Scene_SQSJournal.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -10930,6 +19895,7 @@ Window_SQSTextBase = class Window_SQSTextBase extends Window_Base {
     catButton.move(x, y);
     this._categoriesButtons.push(catButton);
     id = cat.categoryId;
+    //id = "all" if !String.any(id)
     catButton.catId = id;
     catButton.addClickHandler(() => {
       return this._onCategoryClick(id);
@@ -10948,22 +19914,63 @@ Window_SQSTextBase = class Window_SQSTextBase extends Window_Base {
     if (btn != null) {
       btn.disable();
     }
-    this.ql.setCategory(catId);
+    this._category = catId;
+    this._refrshQuestsList();
+    this._refreshEmptyJournalHolder();
   };
-  _._showQuestDifficulty = function() {
-    var diffLevel;
-    if (this.activeQuestData == null) {
+  _._updateCategoriesNavigation = function() {
+    if (KDGamepad.isKey(PKD_SQS.PP.nextCategoryGamepadKey())) {
+      this._onSwitchNextCategory();
+      return;
+    } else if (KDGamepad.isKey(PKD_SQS.PP.prevCategoryGamepadKey())) {
+      this._onSwitchPrevCategory();
+      return;
+    } else if (Input.isTriggered(PKD_SQS.PP.prevCategoryKeyboardKey())) {
+      this._onSwitchPrevCategory();
+      return;
+    } else if (Input.isTriggered(PKD_SQS.PP.nextCategoryKeyboardKey())) {
+      this._onSwitchNextCategory();
       return;
     }
-    if (this._difficultyLevel == null) {
-      return;
+  };
+  _._onSwitchPrevCategory = function() {
+    var button, currentCatIndex, currentCategoryName, e, newIndex;
+    try {
+      currentCategoryName = this._category;
+      button = this._categoriesButtons.find(function(b) {
+        return b.catId === currentCategoryName;
+      });
+      currentCatIndex = this._categoriesButtons.indexOf(button);
+      newIndex = currentCatIndex - 1;
+      if (newIndex < 0) {
+        newIndex = this._categoriesButtons.length - 1;
+      }
+      if (this._categoriesButtons[newIndex] != null) {
+        this._onCategoryClick(this._categoriesButtons[newIndex].catId);
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
     }
-    diffLevel = this.activeQuestData.difficulty;
-    if (diffLevel >= 1) {
-      this._difficultyLevel.visible = true;
-      this._difficultyLevel.bitmap = ImageManager.loadPKDSQS("questDiff_" + diffLevel);
-    } else {
-      this._difficultyLevel.visible = false;
+  };
+  _._onSwitchNextCategory = function() {
+    var button, currentCatIndex, currentCategoryName, e, newIndex;
+    try {
+      currentCategoryName = this._category;
+      button = this._categoriesButtons.find(function(b) {
+        return b.catId === currentCategoryName;
+      });
+      currentCatIndex = this._categoriesButtons.indexOf(button);
+      newIndex = currentCatIndex + 1;
+      if (newIndex >= this._categoriesButtons.length) {
+        newIndex = 0;
+      }
+      if (this._categoriesButtons[newIndex] != null) {
+        this._onCategoryClick(this._categoriesButtons[newIndex].catId);
+      }
+    } catch (error) {
+      e = error;
+      console.warn(e);
     }
   };
 })();
@@ -10971,99 +19978,4 @@ Window_SQSTextBase = class Window_SQSTextBase extends Window_Base {
 // ■ END Scene_SQSJournal.coffee
 //---------------------------------------------------------------------------
 
-
-// Generated by CoffeeScript 2.5.1
-//╒═════════════════════════════════════════════════════════════════════════╛
-// ■ SQS_Keep.coffee
-//╒═════════════════════════════════════════════════════════════════════════╛
-//---------------------------------------------------------------------------
-(function() {
-  var _;
-  //@[DEFINES]
-  _ = SQS_Keep.prototype;
-  _.setActiveQuest = function(questId) {
-    var i, index, isAdded, len, q, ref;
-    if (this.isActiveQuest(questId)) {
-      return;
-    }
-    isAdded = false;
-    ref = this._activeQuests;
-    for (index = i = 0, len = ref.length; i < len; index = ++i) {
-      q = ref[index];
-      if (q == null) {
-        this._activeQuests[index] = questId;
-        isAdded = true;
-        break;
-      }
-    }
-    if (!isAdded) {
-      this._activeQuests.push(questId);
-    }
-  };
-})();
-
-// ■ END SQS_Keep.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.5.1
-//╒═════════════════════════════════════════════════════════════════════════╛
-// ■ SQS_Quest.coffee
-//╒═════════════════════════════════════════════════════════════════════════╛
-//---------------------------------------------------------------------------
-(function() {
-  var _;
-  //@[DEFINES]
-  _ = SQS_Quest.prototype;
-  _.createTasks = function(tasksData) {
-    var i, index, len, task;
-    for (index = i = 0, len = tasksData.length; i < len; index = ++i) {
-      task = tasksData[index];
-      this.tasks.push(new SQS_Task(this.id, index, task));
-    }
-  };
-  _.createDescriptions = function(descriptions) { // * no limits
-    this.descriptions = descriptions;
-  };
-})();
-
-// ■ END SQS_Quest.coffee
-//---------------------------------------------------------------------------
-
-
-// Generated by CoffeeScript 2.5.1
-//╒═════════════════════════════════════════════════════════════════════════╛
-// ■ Window_SQSQuestsList.coffee
-//╒═════════════════════════════════════════════════════════════════════════╛
-//---------------------------------------------------------------------------
-(function() {
-  var _;
-  //@[DEFINES]
-  _ = Window_SQSQuestsList.prototype;
-  _.drawQuestNewMark = function(rect) {
-    /*dx = rect.x + @_newMarkMargins.x
-    dy = rect.y + @_newMarkMargins.y
-    markSym = new Sprite(@_curMarkNewBitmap)
-    markSym.x = dx
-    markSym.y = dy
-    @addChild markSym
-    @_newMarks.push(markSym)*/
-    var dx, dy, e;
-    if (this._newMarkMargins == null) {
-      return;
-    }
-    try {
-      dx = rect.x + this._newMarkMargins.x;
-      dy = rect.y + this._newMarkMargins.y;
-      this.contents.drawOnMe(this._curMarkNewBitmap, dx, dy);
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
-    }
-  };
-})();
-
-// ■ END Window_SQSQuestsList.coffee
-//---------------------------------------------------------------------------
-
-//Plugin PKD_SimpleQuestSystem builded by PKD PluginBuilder 2.2 - 26.01.2023
+//Plugin PKD_SimpleQuestSystem builded by PKD PluginBuilder 2.2.2 - 27.11.2024

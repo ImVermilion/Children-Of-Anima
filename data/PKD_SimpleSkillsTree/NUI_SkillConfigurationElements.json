@@ -1,0 +1,529 @@
+{
+    "skillConfiturationScene": {
+        "type": "screen",
+        "id": "skillConfigurationRoot",
+        "constants": {
+            "deleteSkillHelpText": "Delete the current skill?"
+        },
+        "childrens": [{
+            "type": "button",
+            "id": "skillDeleteButton",
+            "effects": ["shadow"],
+            "parameters": {
+                "folderName": "pSimpleSkillsTree",
+                "imageName": "buttonNew",
+                "imageMargins": 28,
+                "clickSe": "Cursor1",
+                "keyboardKey": "",
+                "tint": "#d91111",
+                "overTint": "#f72a2a",
+                "activeTint": "#d91111",
+                "tintAlpha": 0.45
+            },
+            "bindings": {
+                "position": {
+                    "x": "right - 16hdp",
+                    "y": "bottom - 16hdp"
+                },
+                "size": {
+                    "width": "132hdp",
+                    "height": "50hdp"
+                }
+            },
+            "childrens": [{
+                "type": "text",
+                "parameters": "textColor:#eac98a",
+                "bindings": {
+                    "position": {
+                        "x": "center",
+                        "y": "center"
+                    },
+                    "size": {
+                        "width": "100%",
+                        "height": "100%"
+                    },
+                    "text": "DELETE",
+                    "fontSize": "25hdp"
+                }
+            }]
+        }]
+    },
+    "toolSkillChoice": {
+        "type": "screen",
+        "constants": {
+            "spaceBetweenPrevNextButtonsForSkillChoice": "88dp"
+        },
+        "bindings": {
+            "position": { "x": "20hdp", "y": "20hdp" }
+        },
+        "childrens": [
+            {
+                "type": "image",
+                "parameters": "folderName:pSimpleSkillsTree;imageName:skillsEditToolMain",
+                "bindings": {
+                    "size": {
+                        "width": "275hdp",
+                        "height": "133hdp"
+                    }
+                },
+                "childrens": [
+                    {
+                        "type": "group",
+                        "id": "skillIconParent",
+                        "bindings": {
+                            "position": { "x": "44hdp", "y": "36hdp" }
+                        }
+                    },
+                    {
+                        "type": "group",
+                        "id": "prevNextSkillButtonsParent",
+                        "bindings": {
+                            "position": { "x": "12hdp", "y": "42hdp" }
+                        }
+                    },
+                    {
+                        "type": "group",
+                        "id": "editButtonParent",
+                        "bindings": {
+                            "position": { "x": "150hdp", "y": "42hdp" }
+                        }
+                    },
+                    {
+                        "type": "text",
+                        "parameters": "textColor:#e7c788",
+                        "bindings": {
+                            "position": { "x": "center", "y": "92hdp" },
+                            "size": { "width": "100%", "height": "28hdp" },
+                            "text": "$skillName",
+                            "fontSize": "15hdp"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "toolSkillLinksAddRemove": {
+        "type": "screen",
+        "constants": {
+            "spacingBetweenLinksIcons": "58dp"
+        },
+        "bindings": {
+            "position": { "x": "30hdp", "y": "180hdp" }
+        },
+        "childrens": [
+            {
+                "type": "image",
+                "parameters": "folderName:pSimpleSkillsTree;imageName:skillsEditToolLinks",
+                "bindings": {
+                    "size": {
+                        "width": "238hdp",
+                        "height": "138hdp"
+                    }
+                },
+                "childrens": [
+                    {
+                        "type": "group",
+                        "bindings": {
+                            "position": { "x": "16hdp", "y": "56hdp" }
+                        },
+                        "childrens": [
+                            {
+                                "type": "group",
+                                "id": "skillLinksItemsParent"
+                            },
+                            {
+                                "type": "button",
+                                "id": "btnAddLink",
+                                "effects": ["shadow"],
+                                "parameters": {
+                                    "folderName": "pSimpleSkillsTree",
+                                    "imageName": "addLinkButton",
+                                    "imageMargins": 0,
+                                    "clickSe": "Cursor1",
+                                    "tintAlpha": 0.15
+                                },
+                                "bindings": {
+                                    "x": "$addLinkButtonX",
+                                    "visible": "$isAddLinkButtonVisible",
+                                    "size": {
+                                        "width": "34hdp",
+                                        "height": "34hdp"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "toolSkillDescription": {
+        "type": "screen",
+        "constants": {
+            "helpText": "Enter extra description (instead one in Database)",
+            "defaultDescTextOpacity": 100,
+            "extraDescTextOpacity": 240
+        },
+        "bindings": {
+            "position": { "x": "30hdp", "y": "400hdp" }
+        },
+        "childrens": [{
+            "type": "image",
+            "parameters": "folderName:pSimpleSkillsTree;imageName:skillsEditToolDescription",
+            "bindings": {
+                "size": {
+                    "width": "358hdp",
+                    "height": "138hdp"
+                }
+            },
+            "childrens": [
+                {
+                    "type": "textExt",
+                    "id": "descriptionTextSpr",
+                    "parameters": "",
+                    "bindings": {
+                        "size": {
+                            "width": "90%",
+                            "height": "60hdp"
+                        },
+                        "position": {
+                            "x": "center",
+                            "y": "center + 4"
+                        },
+                        "text": ["%1", "$skillDescription"],
+                        "fontSize": "13hdp",
+                        "opacity": "$skillDescriptionOpacity"
+                    }
+                },
+                {
+                    "type": "group",
+                    "id": "editButtonParent",
+                    "bindings": {
+                        "position": { "x": "266hdp", "y": "10hdp" }
+                    }
+                }
+            ]
+        }]
+    },
+    "toolSkillRequirements": {
+        "type": "screen",
+        "constants": {
+            "helpText": "Information about special condition"
+        },
+        "bindings": {
+            "position": { "x": "300hdp", "y": "34hdp" }
+        },
+        "childrens": [{
+            "type": "image",
+            "parameters": "folderName:pSimpleSkillsTree;imageName:skillsEditToolRequirements",
+            "bindings": {
+                "size": {
+                    "width": "275hdp",
+                    "height": "258hdp"
+                }
+            },
+            "childrens": [
+                {
+                    "type": "group",
+                    "id": "levelRequirementToolParent",
+                    "bindings": {
+                        "position": { "x": "108hdp", "y": "42hdp" }
+                    }
+                },
+                {
+                    "type": "group",
+                    "id": "skillPointsRequirementToolParent",
+                    "bindings": {
+                        "position": { "x": "132hdp", "y": "88hdp" }
+                    }
+                },
+                {
+                    "type": "group",
+                    "id": "editButtonParent",
+                    "bindings": {
+                        "position": { "x": "168hdp", "y": "178hdp" }
+                    }
+                },
+                {
+                    "type": "group",
+                    "id": "numberChoiceToolParent",
+                    "bindings": {
+                        "position": { "x": "106hdp", "y": "134hdp" }
+                    }
+                },
+                {
+                    "type": "text",
+                    "id": "specialConditionTextSpr",
+                    "parameters": "textColor:#e7c788",
+                    "bindings": {
+                        "size": {
+                            "width": "100%",
+                            "height": "24hdp"
+                        },
+                        "position": {
+                            "x": 0,
+                            "y": "210hdp"
+                        },
+                        "text": ["%1", "$specialConditionText"],
+                        "fontSize": "13hdp"
+                    }
+                }
+            ]
+        }]
+    },
+    "toolSkillImagePreview" : {
+        "type": "screen",
+        "bindings": {
+            "position": { "x": "420hdp", "y": "300hdp" }
+        },
+        "childrens": [{
+            "type": "image",
+            "parameters": "folderName:pSimpleSkillsTree;imageName:skillsEditToolPreview",
+            "bindings": {
+                "size": {
+                    "width": "364hdp",
+                    "height": "238hdp"
+                }
+            },
+            "childrens": [
+                {
+                    "type": "group",
+                    "id": "imageChangeButtonParent",
+                    "bindings": {
+                        "position": { "x": "86hdp", "y": "34hdp" }
+                    }
+                },
+                {
+                    "type": "group",
+                    "createIf": "$isCanShowGif",
+                    "id": "gifVideoChangeButtonParent",
+                    "bindings": {
+                        "position": { "x": "prevX + 170hdp", "y": "prevY" }
+                    }
+                },
+                {
+                    "type": "image",
+                    "id": "skillPreviewImageSpr",
+                    "parameters": "folderName:pSimpleSkillsTree/preview;keepAspect",
+                    "bindings": {
+                        "size": { "width": "340hdp", "height": "160hdp" },
+                        "position": { "x": "center", "y": "68hdp" },
+                        "image": "$skillPreviewImage"
+                    }
+                }
+            ]
+        }]
+    },
+    "toolSkillActionOnLearn": {
+        "type": "screen",
+        "bindings": {
+            "position": { "x": "580hdp", "y": "34hdp" }
+        },
+        "constants": {
+            "spaceBetweenPrevNextButtons": "150hdp"
+        },
+        "childrens": [{
+            "type": "image",
+            "parameters": "folderName:pSimpleSkillsTree;imageName:skillsEditToolAction",
+            "bindings": {
+                "size": {
+                    "width": "218hdp",
+                    "height": "268hdp"
+                }
+            },
+            "childrens": [
+                {
+                    "type": "text",
+                    "id": "selectedActionModeText",
+                    "parameters": "textColor:#e7c788",
+                    "bindings": {
+                        "size": {
+                            "width": "120hdp",
+                            "height": "28hdp"
+                        },
+                        "position": {
+                            "x": "50hdp",
+                            "y": "50hdp"
+                        },
+                        "text": "$selectedModeText",
+                        "fontSize": "14hdp"
+                    }
+                },
+                {
+                    "type": "group",
+                    "id": "modeSelectionButtonsPairParent",
+                    "bindings": {
+                        "position": { "x": "20hdp", "y": "44hdp" }
+                    }
+                },
+                {
+                    "type": "group",
+                    "id": "commonEventSelectionButtonsParent",
+                    "bindings": {
+                        "position": { "x": "26hdp", "y": "116hdp" }
+                    }
+                },
+                {
+                    "type": "group",
+                    "id": "switchSelectionButtonsParent",
+                    "bindings": {
+                        "position": { "x": "prevX", "y": "224hdp" }
+                    }
+                }
+            ]
+        }]
+    },
+    "prevNextButtonsPair": {
+        "type": "group",
+        "childrens": [
+            {
+                "type": "button",
+                "id": "selectPrevButton",
+                "parameters": "folderName:pSimpleSkillsTree;imageName:leftArrow;imageMargins:0;overTint:#eac98a;tintAlpha:0.24",
+                "bindings": {
+                    "position": { "x": "0", "y": "0" },
+                    "size": { "width": "24dp", "height": "32dp" }
+                }
+            },
+            {
+                "type": "button",
+                "id": "selectNextButton",
+                "parameters": "folderName:pSimpleSkillsTree;imageName:rightArrow;imageMargins:0;overTint:#eac98a;tintAlpha:0.24",
+                "bindings": {
+                    "x": "$spaceBetween",
+                    "y": 0,
+                    "size": { "width": "24dp", "height": "32dp" }
+                }
+            }
+        ]
+    },
+    "linkItem": {
+        "type": "group",
+        "constants": {
+            "removeLinkHelpText": "Remove link to skill?",
+            "skillIconScale": 0.8
+        },
+        "childrens": [
+            {
+                "type": "group",
+                "id": "skillIconParent"
+            },
+            {
+                "type": "button",
+                "id": "removeSkillLinkButton",
+                "parameters": "folderName:pSimpleSkillsTree;imageName:removeCategoryButton;imageMargins:0;overTint:#eac98a;tintAlpha:0.32",
+                "bindings": {
+                    "position": { "x": "10hdp", "y": "42hdp" },
+                    "size": { "width": "22dp", "height": "22dp" }
+                }
+            }
+        ]
+    },
+    "editorSkillIcon": {
+        "type": "image",
+        "id": "_cellImage",
+        "parameters": "folderName:pSimpleSkillsTree;",
+        "bindings": {
+            "size": {
+                "width": "48hdp",
+                "height": "48hdp"
+            },
+            "image": "$skillIconImage"
+        }
+    },
+    "editButton": {
+        "type": "button",
+        "id": "_editButton",
+        "parameters": {
+            "folderName": "pSimpleSkillsTree",
+            "imageName": "buttonNew",
+            "imageMargins": 28,
+            "clickSe": "Cursor1",
+            "keyboardKey": "",
+            "tintAlpha": 0.15
+        },
+        "bindings": {
+            "size": {
+                "width": "78hdp",
+                "height": "26hdp"
+            }
+        },
+        "childrens": [{
+            "type": "text",
+            "parameters": "textColor:#eac98a",
+            "bindings": {
+                "position": {
+                    "x": "center",
+                    "y": "center"
+                },
+                "size": {
+                    "width": "100%",
+                    "height": "100%"
+                },
+                "text": "EDIT",
+                "fontSize": "18hdp"
+            }
+        }]
+    },
+    "toolValueWithPrevNextPair": {
+        "type": "group",
+        "constants": {
+            "spaceBetweenPrevNextButtons": "72hdp"
+        },
+        "childrens": [
+            {
+                "type": "group",
+                "id": "prevNextButtonsPairToolParent"
+            },
+            {
+                "type": "text",
+                "id": "valueTextSpr",
+                "parameters": "textColor:#e7c788",
+                "bindings": {
+                    "size": {
+                        "width": "60hdp",
+                        "height": "28hdp"
+                    },
+                    "position": {
+                        "x": "16hdp",
+                        "y": "center"
+                    },
+                    "text": "$valueText",
+                    "fontSize": "18hdp"
+                }
+            }
+        ]
+    },
+    "toolItemNumberChoiceInput": {
+        "type": "group",
+        "constants": {
+            "spaceBetweenPrevNextButtons": "72hdp"
+        },
+        "childrens": [
+            {
+                "type": "group",
+                "id": "editButtonParent",
+                "bindings": {
+                    "position": { "x": "56hdp", "y": 0 }
+                }
+            },
+            {
+                "type": "text",
+                "id": "valueTextSpr",
+                "parameters": "textColor:#e7c788",
+                "bindings": {
+                    "size": {
+                        "width": "60hdp",
+                        "height": "28hdp"
+                    },
+                    "position": {
+                        "x": 0,
+                        "y": 0
+                    },
+                    "text": "$valueText",
+                    "fontSize": "18hdp"
+                }
+            }
+        ]
+    }
+}

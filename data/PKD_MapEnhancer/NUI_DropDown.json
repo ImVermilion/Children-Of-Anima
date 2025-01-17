@@ -1,0 +1,73 @@
+{
+    "type": "group",
+    "childrens": [
+        {
+            "type": "button",
+            "id": "dropDownButton",
+            "parameters": {
+                "imageName": "field",
+                "margins": 16,
+                "folderName": "PKD_MapEnhancer/EditorUI",
+                "disabledTint": "#BED754"
+            },
+            "bindings": {
+                "width": "320hdp",
+                "height": "50hdp"
+            },
+            "childrens": [
+                {
+                    "type": "group",
+                    "bindings": {
+                        "width": "94%",
+                        "height": "100%",
+                        "x": "center"
+                    },
+                    "childrens": [
+                        {
+                            "type": "image",
+                            "parameters": {
+                                "folderName": "PKD_MapEnhancer/EditorUI"
+                            },
+                            "bindings": {
+                                "image": "$iconName",
+                                "width": "32hdp",
+                                "height": "32hdp",
+                                "x": "0",
+                                "y": "center"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "parameters": {
+                                "alignment": "left"
+                            },
+                            "bindings": {
+                                "text": "$currentButtonCaptionText",
+                                "x": "prevEndX + 8hdp",
+                                "width": "100% - prevWidth - 32hdp",
+                                "height": "100%",
+                                "fontSize": "40%"
+                            }
+                        },
+                        {
+                            "type": "image",
+                            "parameters": {
+                                "imageName": "dropdown",
+                                "folderName": "PKD_MapEnhancer/EditorUI"
+                            },
+                            "bindings": {
+                                "width": "24hdp",
+                                "height": "24hdp",
+                                "opacity": 200,
+                                "position": {
+                                    "x": "right",
+                                    "y": "center"
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,120 @@
+{
+    "type": "screen",
+    "id": "popUpItemRoot",
+    "constants": {
+        "exitAnimations": ["field:y;relative;duration:0.45;keyframes:0=0,100=-30hdp;", "field:opacity;duration:0.45;keyframes:0=255,100=0;"],
+        "moveNextAnimations": ["field:y;relative;duration:0.25;keyframes:0=0,100=-34hdp;"],
+        "stayAliveTimeSeconds": 3,
+        "itemAppearsSE": "",
+        "itemExitSE": ""
+    },
+    "availableFields": [
+        "$isHaveIcon",
+        "$iconIndex",
+        "$count",
+        "$itemName",
+        "$textColor",
+        "$itemData",
+        "$rareIconIndex"
+    ],
+    "childrens": [{
+        "type": "rect",
+        "parameters": "fillColor:0x000000;fillAlpha:0.6;strokeWidth:1;strokeColor:0x000000;strokeAlpha:0.8",
+        "id": "popUpItemBase",
+        "bindings": {
+            "size": {
+                "width": "172hdp",
+                "height": "30hdp"
+            },
+            "position": {
+                "x": "right - 4",
+                "y": "center"
+            }
+        },
+        "animations": [
+            "field:opacity;duration:0.35;keyframes:0=0,100=255;delay:0.1",
+            "field:x;relative;duration:0.45;keyframes:0=120hdp,60=-5hdp,90=5hdp,100=0;func:easeInQuad"
+        ],
+        "childrens": [{
+            "type": "group",
+            "id": "popUpItemElements",
+            "bindings": {
+                "size": {
+                    "width": "100%",
+                    "height": "100%"
+                }
+            },
+            "childrens": [
+                {
+                    "type": "image",
+                    "id": "popUpItemIcon",
+                    "createIf": "$isHaveIcon",
+                    "parameters": "folderName:pExtendedLoot",
+                    "bindings": {
+                        "size": {
+                            "width": "28hdp",
+                            "height": "28hdp"
+                        },
+                        "position": {
+                            "x": 2,
+                            "y": "center"
+                        },
+                        "icon": "$iconIndex"
+                    },
+                    "childrens": [
+                        {
+                            "type": "image",
+                            "id": "popUpItemRareIcon",
+                            "createIf": "$isHaveRarityIcon",
+                            "parameters": "folderName:pExtendedLoot",
+                            "bindings": {
+                                "size": {
+                                    "width": "100%",
+                                    "height": "100%"
+                                },
+                                "icon": "$rareIconIndex"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "legacyText",
+                    "id": "popUpItemName",
+                    "parameters": "alignment:left",
+                    "bindings": {
+                        "size": {
+                            "width": "100% - prevWidth - 36hdp",
+                            "height": "100%"
+                        },
+                        "position": {
+                            "x": "prevEndX + 2",
+                            "y": -4
+                        },
+                        "text": ["%1","$itemName"],
+                        "textColor": "$textColor",
+                        "fontSize": "15hdp"
+                    }
+                },
+                {
+                    "type": "legacyText",
+                    "id": "popUpItemCount",
+                    "effects": ["shadow"],
+                    "parameters": "alignment:right;textColor:#dbd9b2",
+                    "bindings": {
+                        "visible": "~$count > 1",
+                        "size": {
+                            "width": "26hdp",
+                            "height": "100%"
+                        },
+                        "position": {
+                            "x": "prevEndX + 2",
+                            "y": 6
+                        },
+                        "text": ["x%1","$count"],
+                        "fontSize": "14hdp"
+                    }
+                }
+            ]
+        }]
+    }]
+}

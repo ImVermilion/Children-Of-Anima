@@ -1,0 +1,16 @@
+{
+    "type": "image",
+    "id": "_cursorImage",
+    "parameters": {
+        "folderName": "pSimpleFishing",
+        "imageName": "cursorSmall",
+        "keepAspect": false,
+        "useAspectSize": false
+    },
+    "bindings": {
+        "size": {
+            "width": "26hdp",
+            "height": "39hdp"
+        }
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "type": "group",
+    "id": "_root",
+    "bindings": {
+        "width": "100%",
+        "height": "100%"
+    },
+    "childrens": [
+        {
+            "type": "group",
+            "id": "_deleteAllButtonContainer",
+            "bindings": {
+                "size": {
+                    "width": "90%",
+                    "height": "42hdp"
+                },
+                "position": {
+                    "x": "center",
+                    "y": "bottom - 10hdp"
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,79 @@
+{
+    "type": "screen",
+    "constants": {
+        "itemsPerPage": 30
+    },
+    "childrens": [
+        {
+            "type": "rect",
+            "parameters": "fillColor:#000000;fillAlpha:0.85;strokeWidth:0",
+            "bindings": {
+                "size": {
+                    "width": "100%",
+                    "height": "100%"
+                }
+            }
+        },
+        {
+            "type": "group",
+            "id": "listPagesNavigationGroup",
+            "bindings": {
+                "position": {
+                    "x": "center",
+                    "y": "20hdp"
+                },
+                "size": {
+                    "width": "60%",
+                    "height": "60hdp"
+                }
+            },
+            "childrens": [
+                {
+                    "type": "button",
+                    "id": "nextPageButton",
+                    "parameters": "folderName:pSimpleSkillsTree;imageName:rightArrow;imageMargins:0;overTint:#eac98a;tintAlpha:0.24;keyboardKey:pageup",
+                    "bindings": {
+                        "position": { "x": "end", "y": "center" },
+                        "size": { "width": "23dp", "height": "32dp" },
+                        "visible": "$isMoreThenOnePage"
+                    }
+                },
+                {
+                    "type": "button",
+                    "id": "prevPageButton",
+                    "parameters": "folderName:pSimpleSkillsTree;imageName:leftArrow;imageMargins:0;overTint:#eac98a;tintAlpha:0.24;keyboardKey:pagedown",
+                    "bindings": {
+                        "position": { "x": 0, "y": "center" },
+                        "size": { "width": "23dp", "height": "32dp" },
+                        "visible": "$isMoreThenOnePage"
+                    }
+                },
+                {
+                    "type": "text",
+                    "parameters": "textColor:#e7c788;",
+                    "bindings": {
+                        "position": { "x": "center", "y": "center" },
+                        "size": { "width": "100%", "height": "100%" },
+                        "text": ["Page %1 / %2", "$currentPage", "$maxPages"],
+                        "fontSize": "18hdp"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "list",
+            "id": "itemsList",
+            "parameters": {
+                "maxCols": 3,
+                "backgroundType": 0,
+                "isDrawDefaultItemBack": true,
+                "isHaveSelectionEffect": true,
+                "selectionEffects": ["tint;color:0xffffff;alpha:0.35", "shadow"]
+            },
+            "bindings": {
+                "position": { "x": "center", "y": "prevEndY + 10" },
+                "size": { "width": "80%", "height": "92% - 60hdp" }
+            }
+        }
+    ]
+}

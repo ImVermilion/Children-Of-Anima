@@ -1,74 +1,26 @@
 /*
- * Copyright (c) 2023 Vladimir Skrypnikov (Pheonix KageDesu)
- * <http://kdworkshop.net/>
+ * Copyright (c) 2024 Vladimir Skrypnikov (Pheonix KageDesu)
+ * <https://kdworkshop.net/>
  *
 
- * License: Creative Commons 4.0 Attribution, Share Alike, Non-Commercial
+* License: Creative Commons 4.0 Attribution, Share Alike, Commercial
 
  */
 
 /*:
- * @plugindesc (v.1.0)[BASIC] Skills Tree System
+ * @plugindesc (v.2.0)[PRO] Skills Tree System
  * @author Pheonix KageDesu
  * @target MZ MV
  * @url https://kdworkshop.net/plugins/simple-skills-tree
  *
  * @help
- * ===========================================================================
- * !!! Initial setup:
+ * ==================================================================
  *
- *  Add <pSkillPointsVarId:X> to Actor's Note and setup variable ID
- *       where game will store actor's skill points
- *  By default Skill points used for open (learn) skills
- *  (but you can set skill cost 0 skill points)
- *
- * Recommended remove all skills in classes Learnable Skills table in Database
- *
- * Example: <pSkillPointsVarId:120>
+ * GUIDE:
+ * https://gist.github.com/KageDesu/14103a269f604649d304e41497b92873
  *
  * ---------------------------------------------------------------------------
- * Script calls:
- *
- * OpenSkillTreeEditor(); - open skills tree editor for edit skills trees for classes
- *  !WARNING! This Script call works only in Playtest mode and require mouse
- *  !Game player not have access to skills tree editor!
- *
- *  OpenSkillTreeForActor(actorId); - open skills tree for Actor ID
- *      This script call for game player, for manage their skills in game
- *
- * ---------------------------------------------------------------------------
- * How change visuals:
- *
- * 1 - Edit Plugin Parameters
- * 2 - Edit .json files in data\PKD_SimpleSkillsTree\ folder (BUT NOT IN Generated folder!)
- * 3 - Edit images in img\pSimpleSkillsTree\
- *
- * ---------------------------------------------------------------------------
- * Extra info:
- *
- * Put your skills preview images to img\pSimpleSkillsTree\preview\ folder
- * Put your skills animated preview (.webm) to movies\ folder (required VPlayer plugin)
- *
- * How rename Skills Tree category for class:
  * 
- * Add <pSTCatName_X:CATEGORY_NAME> to Class Note section
- *
- * Where X - index, 0 - it's default first category name (by default used class name)
- * Next indexes - it's added categories names
- *
- * Example: <pSTCatName_0:Furry>
- * Example: <pSTCatName_1:Defense>
- * ---------------------------------------------------------------------------
-
- * This is BASIC plugin version and have some restrictions:
- *    - No updates with new features and content
- *    - Max 2 categories in Skill Tree per class
- *    - Max 14 skills in Skill Tree per category
- *    - Obfuscated code
- *    - Plugin usage allowed only in Non-Commercial project
- * 
- *  PRO version of plugin don't have this restrictions!
- 
  * ---------------------------------------------------------------------------
  * If you like my Plugins, want more and offten updates,
  * please support me on Boosty or Patreon!
@@ -83,36 +35,17 @@
  * You can use this plugin in your game thanks to all who supports me!
  * 
 
- * License: Creative Commons 4.0 Attribution, Share Alike, Non-Commercial
+* License: Creative Commons 4.0 Attribution, Share Alike, Commercial
 
  *
  * 
  * @param PKD_SimpleSkillsTree
  * 
- * @param visualsGroup
- * @parent PKD_SimpleSkillsTree
- * @text Visual
- * 
- * @param mainSceneSettings:j
- * @parent visualsGroup
- * @type note
- * @text Main Scene Settings
- * @desc Settings, in [param name]:[value] format. You can change values after :
- * @default "\"appearWithAnimation\": true\n\"closeButtonPosition\": { \"x\": 772, \"y\": 3 }"
- * 
- * @param skilInfoWindowSettings:j
- * @parent visualsGroup
- * @type note
- * @text Info Window Settings
- * @desc Settings, in [param name]:[value] format. You can change values after :
- * @default "\"reqColorNotPass\": \"#f02b1d\"\n\"reqColorPass\": \"#25e84c\"\n\"previewImgPosition\": { \"x\": 406, \"y\": 402 }\n\"statusTextPosition\": { \"x\": 576, \"y\": 142 }"
- * 
- * @param skillsTreeGridSettings:j
- * @parent visualsGroup
- * @type note
- * @text Skills Tree Settings
- * @desc Settings, in [param name]:[value] format. You can change values after :
- * @default "\"startX\": 70\n\"startY\": 120\n\"spaceForCell\": 64\n\"rows\": 7\n\"cols\": 4"
+ * @param skillTypes:strA
+ * @type string[]
+ * @text Skill Visual Types
+ * @default ["A","B","C"]
+ * @desc Skills frame visual types. Read guide.
  * 
  * @param optionsGroup
  * @parent PKD_SimpleSkillsTree
@@ -138,6 +71,9 @@
  * @desc How many skills points character get per 1 level up? 0 - nothing
  * @default 1
  * 
+ * 
+ * 
+ * 
  * @param spacer|endHolder @text‏‏‎ ‎@desc ===============================================
  * 
  * @command EMPTY_HOLDER
@@ -146,69 +82,18 @@
  * @default
  */
 /*:ru
- * @plugindesc (v.1.0)[BASIC] Дерево навыков
+ * @plugindesc (v.2.0)[PRO] Дерево навыков
  * @author Pheonix KageDesu
  * @target MZ MV
  * @url https://kdworkshop.net/plugins/simple-skills-tree
  *
  * @help
  * ===========================================================================
- * !!! Начальная настройка:
- *
- *  Добавьте <pSkillPointsVarId:X> к заметке персонажа и установите
-    номер переменной в которой игра будет хранить очки навыков персонажа
-
-    По умолчанию очки навыков используются для открытия (выучивания) навыков
-    (но вы можете установить стоимость навыка в 0 очков навыков)
-
-    Рекомендуется удалить все навыки для класса в таблице Learnable Skills в Базе данных
- *
- * Пример: <pSkillPointsVarId:120>
- *
- * ---------------------------------------------------------------------------
- * Вызовы скриптов:
- *
- * OpenSkillTreeEditor(); - откройте редактор дерева навыков для редактирования деревьев навыков для классов
-
-    !ВНИМАНИЕ! Этот скрипт работает только в режиме тестирования и требует мыши
-    !Игроку (в режиме игры) нет доступа к редактору дерева навыков!
-
- * OpenSkillTreeForActor(actorId); - откройте дерево навыков для ID персонажа
-    Этот вызов скрипта для игрока (в режиме игры), для изучения навыков в игре
- *
- * ---------------------------------------------------------------------------
- * Как изменить внешний вид:
- *
- * 1 - Отредактировать параметры плагина
- * 2 - Отредактировать .json файлы в папке data\PKD_SimpleSkillsTree\ (НО НЕ В папаке Generated!)
- * 3 - Отредактировать изображения в папке img\pSimpleSkillsTree\
- *
- * ---------------------------------------------------------------------------
- * Дополнительная информация:
- *
- * Изображения для предпросмотра навыка поместите в папку img\pSimpleSkillsTree\preview\
- * Анимации (.webm) в папку movies\ folder (требуется плагин VPlayer)
- *
- * Как изменить название категории (ветки) в дереве навыков:
+ * ГАЙД:
+ * https://gist.github.com/KageDesu/14103a269f604649d304e41497b92873
  * 
- * Добавьте <pSTCatName_X:ИМЯ> в заметку для класса
- *
- * Где X - индекс, 0 - это индекс первой категории (по умолчанию она имеет имя класса)
- * Следующие индексы - это уже будут имена для добавленных категорий
- *
- * Пример: <pSTCatName_0:Ярость>
- * Пример: <pSTCatName_1:Навыки>
  * ---------------------------------------------------------------------------
-
- * Это [BASIC] (базовая) версия плагина и имеет некоторые ограничения:
- *    - Нет обновлений плагина с новым контентом и функциями
- *    - Макс. 2 категории навыков для каждого класса
- *    - Макс. 14 навыков для изучения в одной категории
- *    - Обфусцированный код
- *    - ЗАПРЕЩЕНО использовать плагин в коммерческих проектах
  * 
- *  [PRO] версия плагина не имеет данных ограничений!
- 
  * ---------------------------------------------------------------------------
  * Если Вам нравятся мои плагины, поддержите меня на Boosty!
  * 
@@ -221,36 +106,17 @@
  *
  *
 
- * Лицензия: Creative Commons 4.0 Attribution, Share Alike, Non-Commercial
+* Лицензия: Creative Commons 4.0 Attribution, Share Alike, Commercial
 
  *
  * 
  * @param PKD_SimpleSkillsTree
  * 
- * @param visualsGroup
- * @parent PKD_SimpleSkillsTree
- * @text Внешний вид
- * 
- * @param mainSceneSettings:j
- * @parent visualsGroup
- * @type note
- * @text Main Scene Settings
- * @desc Главное окно. Настройки в формате [имя параметра]:[значение]. Только значение после : можно менять
- * @default "\"appearWithAnimation\": true\n\"closeButtonPosition\": { \"x\": 772, \"y\": 3 }"
- * 
- * @param skilInfoWindowSettings:j
- * @parent visualsGroup
- * @type note
- * @text Info Window Settings
- * @desc Окно информации. Настройки в формате [имя параметра]:[значение]. Только значение после : можно менять
- * @default "\"reqColorNotPass\": \"#f02b1d\"\n\"reqColorPass\": \"#25e84c\"\n\"previewImgPosition\": { \"x\": 406, \"y\": 402 }\n\"statusTextPosition\": { \"x\": 576, \"y\": 142 }"
- * 
- * @param skillsTreeGridSettings:j
- * @parent visualsGroup
- * @type note
- * @text Skills Tree Settings
- * @desc Дерево навыков. Настройки в формате [имя параметра]:[значение]. Только значение после : можно менять
- * @default "\"startX\": 70\n\"startY\": 120\n\"spaceForCell\": 64\n\"rows\": 7\n\"cols\": 4"
+ * @param skillTypes:strA
+ * @type string[]
+ * @text Типы форм навыков
+ * @default ["A","B","C"]
+ * @desc Визуальные типы рамок навыков. Читайте гайд.
  * 
  * @param optionsGroup
  * @parent PKD_SimpleSkillsTree
@@ -290,7 +156,7 @@ var Imported = Imported || {};
 Imported.PKD_SimpleSkillsTree = true;
 
 var PKD_SimpleSkillsTree = {};
-PKD_SimpleSkillsTree.Version = 100;
+PKD_SimpleSkillsTree.Version = 200;
 
 //?VERSION
 PKD_SimpleSkillsTree.isPro = function() { return false; };
@@ -331,6 +197,17 @@ PKD_SimpleSkillsTree.LoadPluginSettings = () => {
 
 
 
+/*!
+ * pixi-filters - v4.2.0
+ * Compiled Fri, 05 Aug 2022 19:51:27 UTC
+ *
+ * pixi-filters is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+var __filters=function(e,n,t,r,o,i,l,a){"use strict";var s=function(e,n){return(s=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(e,n){e.__proto__=n}||function(e,n){for(var t in n)Object.prototype.hasOwnProperty.call(n,t)&&(e[t]=n[t])})(e,n)};function u(e,n){function t(){this.constructor=e}s(e,n),e.prototype=null===n?Object.create(n):(t.prototype=n.prototype,new t)}var f=function(){return(f=Object.assign||function(e){for(var n,t=arguments,r=1,o=arguments.length;r<o;r++)for(var i in n=t[r])Object.prototype.hasOwnProperty.call(n,i)&&(e[i]=n[i]);return e}).apply(this,arguments)};Object.create;Object.create;var c="attribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}",m=function(e){function n(n){var t=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform float gamma;\nuniform float contrast;\nuniform float saturation;\nuniform float brightness;\nuniform float red;\nuniform float green;\nuniform float blue;\nuniform float alpha;\n\nvoid main(void)\n{\n    vec4 c = texture2D(uSampler, vTextureCoord);\n\n    if (c.a > 0.0) {\n        c.rgb /= c.a;\n\n        vec3 rgb = pow(c.rgb, vec3(1. / gamma));\n        rgb = mix(vec3(.5), mix(vec3(dot(vec3(.2125, .7154, .0721), rgb)), rgb, saturation), contrast);\n        rgb.r *= red;\n        rgb.g *= green;\n        rgb.b *= blue;\n        c.rgb = rgb * brightness;\n\n        c.rgb *= c.a;\n    }\n\n    gl_FragColor = c * alpha;\n}\n")||this;return t.gamma=1,t.saturation=1,t.contrast=1,t.brightness=1,t.red=1,t.green=1,t.blue=1,t.alpha=1,Object.assign(t,n),t}return u(n,e),n.prototype.apply=function(e,n,t,r){this.uniforms.gamma=Math.max(this.gamma,1e-4),this.uniforms.saturation=this.saturation,this.uniforms.contrast=this.contrast,this.uniforms.brightness=this.brightness,this.uniforms.red=this.red,this.uniforms.green=this.green,this.uniforms.blue=this.blue,this.uniforms.alpha=this.alpha,e.applyFilter(this,n,t,r)},n}(n.Filter),p=function(e){function n(n){void 0===n&&(n=.5);var t=e.call(this,c,"\nuniform sampler2D uSampler;\nvarying vec2 vTextureCoord;\n\nuniform float threshold;\n\nvoid main() {\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    // A simple & fast algorithm for getting brightness.\n    // It's inaccuracy , but good enought for this feature.\n    float _max = max(max(color.r, color.g), color.b);\n    float _min = min(min(color.r, color.g), color.b);\n    float brightness = (_max + _min) * 0.5;\n\n    if(brightness > threshold) {\n        gl_FragColor = color;\n    } else {\n        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);\n    }\n}\n")||this;return t.threshold=n,t}return u(n,e),Object.defineProperty(n.prototype,"threshold",{get:function(){return this.uniforms.threshold},set:function(e){this.uniforms.threshold=e},enumerable:!1,configurable:!0}),n}(n.Filter),d=function(e){function n(n,r,o){void 0===n&&(n=4),void 0===r&&(r=3),void 0===o&&(o=!1);var i=e.call(this,c,o?"\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec2 uOffset;\nuniform vec4 filterClamp;\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n\n    // Sample top left pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y + uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Sample top right pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y + uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Sample bottom right pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y - uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Sample bottom left pixel\n    color += texture2D(uSampler, clamp(vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y - uOffset.y), filterClamp.xy, filterClamp.zw));\n\n    // Average\n    color *= 0.25;\n\n    gl_FragColor = color;\n}\n":"\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec2 uOffset;\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n\n    // Sample top left pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y + uOffset.y));\n\n    // Sample top right pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y + uOffset.y));\n\n    // Sample bottom right pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x + uOffset.x, vTextureCoord.y - uOffset.y));\n\n    // Sample bottom left pixel\n    color += texture2D(uSampler, vec2(vTextureCoord.x - uOffset.x, vTextureCoord.y - uOffset.y));\n\n    // Average\n    color *= 0.25;\n\n    gl_FragColor = color;\n}")||this;return i._kernels=[],i._blur=4,i._quality=3,i.uniforms.uOffset=new Float32Array(2),i._pixelSize=new t.Point,i.pixelSize=1,i._clamp=o,Array.isArray(n)?i.kernels=n:(i._blur=n,i.quality=r),i}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i=this._pixelSize.x/n._frame.width,l=this._pixelSize.y/n._frame.height;if(1===this._quality||0===this._blur)o=this._kernels[0]+.5,this.uniforms.uOffset[0]=o*i,this.uniforms.uOffset[1]=o*l,e.applyFilter(this,n,t,r);else{for(var a=e.getFilterTexture(),s=n,u=a,f=void 0,c=this._quality-1,m=0;m<c;m++)o=this._kernels[m]+.5,this.uniforms.uOffset[0]=o*i,this.uniforms.uOffset[1]=o*l,e.applyFilter(this,s,u,1),f=s,s=u,u=f;o=this._kernels[c]+.5,this.uniforms.uOffset[0]=o*i,this.uniforms.uOffset[1]=o*l,e.applyFilter(this,s,t,r),e.returnFilterTexture(a)}},n.prototype._updatePadding=function(){this.padding=Math.ceil(this._kernels.reduce((function(e,n){return e+n+.5}),0))},n.prototype._generateKernels=function(){var e=this._blur,n=this._quality,t=[e];if(e>0)for(var r=e,o=e/n,i=1;i<n;i++)r-=o,t.push(r);this._kernels=t,this._updatePadding()},Object.defineProperty(n.prototype,"kernels",{get:function(){return this._kernels},set:function(e){Array.isArray(e)&&e.length>0?(this._kernels=e,this._quality=e.length,this._blur=Math.max.apply(Math,e)):(this._kernels=[0],this._quality=1)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"clamp",{get:function(){return this._clamp},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"pixelSize",{get:function(){return this._pixelSize},set:function(e){"number"==typeof e?(this._pixelSize.x=e,this._pixelSize.y=e):Array.isArray(e)?(this._pixelSize.x=e[0],this._pixelSize.y=e[1]):e instanceof t.Point?(this._pixelSize.x=e.x,this._pixelSize.y=e.y):(this._pixelSize.x=1,this._pixelSize.y=1)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"quality",{get:function(){return this._quality},set:function(e){this._quality=Math.max(1,Math.round(e)),this._generateKernels()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blur",{get:function(){return this._blur},set:function(e){this._blur=e,this._generateKernels()},enumerable:!1,configurable:!0}),n}(n.Filter),h=function(e){function n(t){var o=e.call(this,c,"uniform sampler2D uSampler;\nvarying vec2 vTextureCoord;\n\nuniform sampler2D bloomTexture;\nuniform float bloomScale;\nuniform float brightness;\n\nvoid main() {\n    vec4 color = texture2D(uSampler, vTextureCoord);\n    color.rgb *= brightness;\n    vec4 bloomColor = vec4(texture2D(bloomTexture, vTextureCoord).rgb, 0.0);\n    bloomColor.rgb *= bloomScale;\n    gl_FragColor = color + bloomColor;\n}\n")||this;o.bloomScale=1,o.brightness=1,o._resolution=r.settings.FILTER_RESOLUTION,"number"==typeof t&&(t={threshold:t});var i=Object.assign(n.defaults,t);o.bloomScale=i.bloomScale,o.brightness=i.brightness;var l=i.kernels,a=i.blur,s=i.quality,u=i.pixelSize,f=i.resolution;return o._extractFilter=new p(i.threshold),o._extractFilter.resolution=f,o._blurFilter=l?new d(l):new d(a,s),o.pixelSize=u,o.resolution=f,o}return u(n,e),n.prototype.apply=function(e,n,t,r,o){var i=e.getFilterTexture();this._extractFilter.apply(e,n,i,1,o);var l=e.getFilterTexture();this._blurFilter.apply(e,i,l,1),this.uniforms.bloomScale=this.bloomScale,this.uniforms.brightness=this.brightness,this.uniforms.bloomTexture=l,e.applyFilter(this,n,t,r),e.returnFilterTexture(l),e.returnFilterTexture(i)},Object.defineProperty(n.prototype,"resolution",{get:function(){return this._resolution},set:function(e){this._resolution=e,this._extractFilter&&(this._extractFilter.resolution=e),this._blurFilter&&(this._blurFilter.resolution=e)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"threshold",{get:function(){return this._extractFilter.threshold},set:function(e){this._extractFilter.threshold=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"kernels",{get:function(){return this._blurFilter.kernels},set:function(e){this._blurFilter.kernels=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blur",{get:function(){return this._blurFilter.blur},set:function(e){this._blurFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"quality",{get:function(){return this._blurFilter.quality},set:function(e){this._blurFilter.quality=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"pixelSize",{get:function(){return this._blurFilter.pixelSize},set:function(e){this._blurFilter.pixelSize=e},enumerable:!1,configurable:!0}),n.defaults={threshold:.5,bloomScale:1,brightness:1,kernels:null,blur:8,quality:4,pixelSize:1,resolution:r.settings.FILTER_RESOLUTION},n}(n.Filter),g=function(e){function n(n){void 0===n&&(n=8);var t=e.call(this,c,"varying vec2 vTextureCoord;\n\nuniform vec4 filterArea;\nuniform float pixelSize;\nuniform sampler2D uSampler;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 pixelate(vec2 coord, vec2 size)\n{\n    return floor( coord / size ) * size;\n}\n\nvec2 getMod(vec2 coord, vec2 size)\n{\n    return mod( coord , size) / size;\n}\n\nfloat character(float n, vec2 p)\n{\n    p = floor(p*vec2(4.0, -4.0) + 2.5);\n\n    if (clamp(p.x, 0.0, 4.0) == p.x)\n    {\n        if (clamp(p.y, 0.0, 4.0) == p.y)\n        {\n            if (int(mod(n/exp2(p.x + 5.0*p.y), 2.0)) == 1) return 1.0;\n        }\n    }\n    return 0.0;\n}\n\nvoid main()\n{\n    vec2 coord = mapCoord(vTextureCoord);\n\n    // get the rounded color..\n    vec2 pixCoord = pixelate(coord, vec2(pixelSize));\n    pixCoord = unmapCoord(pixCoord);\n\n    vec4 color = texture2D(uSampler, pixCoord);\n\n    // determine the character to use\n    float gray = (color.r + color.g + color.b) / 3.0;\n\n    float n =  65536.0;             // .\n    if (gray > 0.2) n = 65600.0;    // :\n    if (gray > 0.3) n = 332772.0;   // *\n    if (gray > 0.4) n = 15255086.0; // o\n    if (gray > 0.5) n = 23385164.0; // &\n    if (gray > 0.6) n = 15252014.0; // 8\n    if (gray > 0.7) n = 13199452.0; // @\n    if (gray > 0.8) n = 11512810.0; // #\n\n    // get the mod..\n    vec2 modd = getMod(coord, vec2(pixelSize));\n\n    gl_FragColor = color * character( n, vec2(-1.0) + modd * 2.0);\n\n}\n")||this;return t.size=n,t}return u(n,e),Object.defineProperty(n.prototype,"size",{get:function(){return this.uniforms.pixelSize},set:function(e){this.uniforms.pixelSize=e},enumerable:!1,configurable:!0}),n}(n.Filter),v=function(e){function n(n){var t=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform float transformX;\nuniform float transformY;\nuniform vec3 lightColor;\nuniform float lightAlpha;\nuniform vec3 shadowColor;\nuniform float shadowAlpha;\n\nvoid main(void) {\n    vec2 transform = vec2(1.0 / filterArea) * vec2(transformX, transformY);\n    vec4 color = texture2D(uSampler, vTextureCoord);\n    float light = texture2D(uSampler, vTextureCoord - transform).a;\n    float shadow = texture2D(uSampler, vTextureCoord + transform).a;\n\n    color.rgb = mix(color.rgb, lightColor, clamp((color.a - light) * lightAlpha, 0.0, 1.0));\n    color.rgb = mix(color.rgb, shadowColor, clamp((color.a - shadow) * shadowAlpha, 0.0, 1.0));\n    gl_FragColor = vec4(color.rgb * color.a, color.a);\n}\n")||this;return t._thickness=2,t._angle=0,t.uniforms.lightColor=new Float32Array(3),t.uniforms.shadowColor=new Float32Array(3),Object.assign(t,{rotation:45,thickness:2,lightColor:16777215,lightAlpha:.7,shadowColor:0,shadowAlpha:.7},n),t.padding=1,t}return u(n,e),n.prototype._updateTransform=function(){this.uniforms.transformX=this._thickness*Math.cos(this._angle),this.uniforms.transformY=this._thickness*Math.sin(this._angle)},Object.defineProperty(n.prototype,"rotation",{get:function(){return this._angle/t.DEG_TO_RAD},set:function(e){this._angle=e*t.DEG_TO_RAD,this._updateTransform()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"thickness",{get:function(){return this._thickness},set:function(e){this._thickness=e,this._updateTransform()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lightColor",{get:function(){return o.rgb2hex(this.uniforms.lightColor)},set:function(e){o.hex2rgb(e,this.uniforms.lightColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lightAlpha",{get:function(){return this.uniforms.lightAlpha},set:function(e){this.uniforms.lightAlpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"shadowColor",{get:function(){return o.rgb2hex(this.uniforms.shadowColor)},set:function(e){o.hex2rgb(e,this.uniforms.shadowColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"shadowAlpha",{get:function(){return this.uniforms.shadowAlpha},set:function(e){this.uniforms.shadowAlpha=e},enumerable:!1,configurable:!0}),n}(n.Filter),y=function(e){function n(n,o,s,u){void 0===n&&(n=2),void 0===o&&(o=4),void 0===s&&(s=r.settings.FILTER_RESOLUTION),void 0===u&&(u=5);var f,c,m=e.call(this)||this;return"number"==typeof n?(f=n,c=n):n instanceof t.Point?(f=n.x,c=n.y):Array.isArray(n)&&(f=n[0],c=n[1]),m.blurXFilter=new a.BlurFilterPass(!0,f,o,s,u),m.blurYFilter=new a.BlurFilterPass(!1,c,o,s,u),m.blurYFilter.blendMode=i.BLEND_MODES.SCREEN,m.defaultFilter=new l.AlphaFilter,m}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=e.getFilterTexture();this.defaultFilter.apply(e,n,t,r),this.blurXFilter.apply(e,n,o,1),this.blurYFilter.apply(e,o,t,0),e.returnFilterTexture(o)},Object.defineProperty(n.prototype,"blur",{get:function(){return this.blurXFilter.blur},set:function(e){this.blurXFilter.blur=this.blurYFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blurX",{get:function(){return this.blurXFilter.blur},set:function(e){this.blurXFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blurY",{get:function(){return this.blurYFilter.blur},set:function(e){this.blurYFilter.blur=e},enumerable:!1,configurable:!0}),n}(n.Filter),b=function(e){function n(t){var r=e.call(this,c,"uniform float radius;\nuniform float strength;\nuniform vec2 center;\nuniform sampler2D uSampler;\nvarying vec2 vTextureCoord;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform vec2 dimensions;\n\nvoid main()\n{\n    vec2 coord = vTextureCoord * filterArea.xy;\n    coord -= center * dimensions.xy;\n    float distance = length(coord);\n    if (distance < radius) {\n        float percent = distance / radius;\n        if (strength > 0.0) {\n            coord *= mix(1.0, smoothstep(0.0, radius / distance, percent), strength * 0.75);\n        } else {\n            coord *= mix(1.0, pow(percent, 1.0 + strength * 0.75) * radius / distance, 1.0 - percent);\n        }\n    }\n    coord += center * dimensions.xy;\n    coord /= filterArea.xy;\n    vec2 clampedCoord = clamp(coord, filterClamp.xy, filterClamp.zw);\n    vec4 color = texture2D(uSampler, clampedCoord);\n    if (coord != clampedCoord) {\n        color *= max(0.0, 1.0 - length(coord - clampedCoord));\n    }\n\n    gl_FragColor = color;\n}\n")||this;return r.uniforms.dimensions=new Float32Array(2),Object.assign(r,n.defaults,t),r}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.radius},set:function(e){this.uniforms.radius=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"strength",{get:function(){return this.uniforms.strength},set:function(e){this.uniforms.strength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.center},set:function(e){this.uniforms.center=e},enumerable:!1,configurable:!0}),n.defaults={center:[.5,.5],radius:100,strength:1},n}(n.Filter),x=function(e){function t(n,t,r){void 0===t&&(t=!1),void 0===r&&(r=1);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform sampler2D colorMap;\nuniform float _mix;\nuniform float _size;\nuniform float _sliceSize;\nuniform float _slicePixelSize;\nuniform float _sliceInnerSize;\nvoid main() {\n    vec4 color = texture2D(uSampler, vTextureCoord.xy);\n\n    vec4 adjusted;\n    if (color.a > 0.0) {\n        color.rgb /= color.a;\n        float innerWidth = _size - 1.0;\n        float zSlice0 = min(floor(color.b * innerWidth), innerWidth);\n        float zSlice1 = min(zSlice0 + 1.0, innerWidth);\n        float xOffset = _slicePixelSize * 0.5 + color.r * _sliceInnerSize;\n        float s0 = xOffset + (zSlice0 * _sliceSize);\n        float s1 = xOffset + (zSlice1 * _sliceSize);\n        float yOffset = _sliceSize * 0.5 + color.g * (1.0 - _sliceSize);\n        vec4 slice0Color = texture2D(colorMap, vec2(s0,yOffset));\n        vec4 slice1Color = texture2D(colorMap, vec2(s1,yOffset));\n        float zOffset = fract(color.b * innerWidth);\n        adjusted = mix(slice0Color, slice1Color, zOffset);\n\n        color.rgb *= color.a;\n    }\n    gl_FragColor = vec4(mix(color, adjusted, _mix).rgb, color.a);\n\n}")||this;return o.mix=1,o._size=0,o._sliceSize=0,o._slicePixelSize=0,o._sliceInnerSize=0,o._nearest=!1,o._scaleMode=null,o._colorMap=null,o._scaleMode=null,o.nearest=t,o.mix=r,o.colorMap=n,o}return u(t,e),t.prototype.apply=function(e,n,t,r){this.uniforms._mix=this.mix,e.applyFilter(this,n,t,r)},Object.defineProperty(t.prototype,"colorSize",{get:function(){return this._size},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"colorMap",{get:function(){return this._colorMap},set:function(e){var t;e&&(e instanceof n.Texture||(e=n.Texture.from(e)),(null===(t=e)||void 0===t?void 0:t.baseTexture)&&(e.baseTexture.scaleMode=this._scaleMode,e.baseTexture.mipmap=i.MIPMAP_MODES.OFF,this._size=e.height,this._sliceSize=1/this._size,this._slicePixelSize=this._sliceSize/this._size,this._sliceInnerSize=this._slicePixelSize*(this._size-1),this.uniforms._size=this._size,this.uniforms._sliceSize=this._sliceSize,this.uniforms._slicePixelSize=this._slicePixelSize,this.uniforms._sliceInnerSize=this._sliceInnerSize,this.uniforms.colorMap=e),this._colorMap=e)},enumerable:!1,configurable:!0}),Object.defineProperty(t.prototype,"nearest",{get:function(){return this._nearest},set:function(e){this._nearest=e,this._scaleMode=e?i.SCALE_MODES.NEAREST:i.SCALE_MODES.LINEAR;var n=this._colorMap;n&&n.baseTexture&&(n.baseTexture._glTextures={},n.baseTexture.scaleMode=this._scaleMode,n.baseTexture.mipmap=i.MIPMAP_MODES.OFF,n._updateID++,n.baseTexture.emit("update",n.baseTexture))},enumerable:!1,configurable:!0}),t.prototype.updateColorMap=function(){var e=this._colorMap;e&&e.baseTexture&&(e._updateID++,e.baseTexture.emit("update",e.baseTexture),this.colorMap=e)},t.prototype.destroy=function(n){void 0===n&&(n=!1),this._colorMap&&this._colorMap.destroy(n),e.prototype.destroy.call(this)},t}(n.Filter),_=function(e){function n(n,t){void 0===n&&(n=0),void 0===t&&(t=1);var r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec3 color;\nuniform float alpha;\n\nvoid main(void) {\n    vec4 currentColor = texture2D(uSampler, vTextureCoord);\n    gl_FragColor = vec4(mix(currentColor.rgb, color.rgb, currentColor.a * alpha), currentColor.a);\n}\n")||this;return r._color=0,r._alpha=1,r.uniforms.color=new Float32Array(3),r.color=n,r.alpha=t,r}return u(n,e),Object.defineProperty(n.prototype,"color",{get:function(){return this._color},set:function(e){var n=this.uniforms.color;"number"==typeof e?(o.hex2rgb(e,n),this._color=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],this._color=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this._alpha},set:function(e){this.uniforms.alpha=e,this._alpha=e},enumerable:!1,configurable:!0}),n}(n.Filter),C=function(e){function n(n,t,r){void 0===n&&(n=16711680),void 0===t&&(t=0),void 0===r&&(r=.4);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec3 originalColor;\nuniform vec3 newColor;\nuniform float epsilon;\nvoid main(void) {\n    vec4 currentColor = texture2D(uSampler, vTextureCoord);\n    vec3 colorDiff = originalColor - (currentColor.rgb / max(currentColor.a, 0.0000000001));\n    float colorDistance = length(colorDiff);\n    float doReplace = step(colorDistance, epsilon);\n    gl_FragColor = vec4(mix(currentColor.rgb, (newColor + colorDiff) * currentColor.a, doReplace), currentColor.a);\n}\n")||this;return o._originalColor=16711680,o._newColor=0,o.uniforms.originalColor=new Float32Array(3),o.uniforms.newColor=new Float32Array(3),o.originalColor=n,o.newColor=t,o.epsilon=r,o}return u(n,e),Object.defineProperty(n.prototype,"originalColor",{get:function(){return this._originalColor},set:function(e){var n=this.uniforms.originalColor;"number"==typeof e?(o.hex2rgb(e,n),this._originalColor=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],this._originalColor=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"newColor",{get:function(){return this._newColor},set:function(e){var n=this.uniforms.newColor;"number"==typeof e?(o.hex2rgb(e,n),this._newColor=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],this._newColor=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"epsilon",{get:function(){return this.uniforms.epsilon},set:function(e){this.uniforms.epsilon=e},enumerable:!1,configurable:!0}),n}(n.Filter),S=function(e){function n(n,t,r){void 0===t&&(t=200),void 0===r&&(r=200);var o=e.call(this,c,"precision mediump float;\n\nvarying mediump vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec2 texelSize;\nuniform float matrix[9];\n\nvoid main(void)\n{\n   vec4 c11 = texture2D(uSampler, vTextureCoord - texelSize); // top left\n   vec4 c12 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y - texelSize.y)); // top center\n   vec4 c13 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y - texelSize.y)); // top right\n\n   vec4 c21 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y)); // mid left\n   vec4 c22 = texture2D(uSampler, vTextureCoord); // mid center\n   vec4 c23 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y)); // mid right\n\n   vec4 c31 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y + texelSize.y)); // bottom left\n   vec4 c32 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y + texelSize.y)); // bottom center\n   vec4 c33 = texture2D(uSampler, vTextureCoord + texelSize); // bottom right\n\n   gl_FragColor =\n       c11 * matrix[0] + c12 * matrix[1] + c13 * matrix[2] +\n       c21 * matrix[3] + c22 * matrix[4] + c23 * matrix[5] +\n       c31 * matrix[6] + c32 * matrix[7] + c33 * matrix[8];\n\n   gl_FragColor.a = c22.a;\n}\n")||this;return o.uniforms.texelSize=new Float32Array(2),o.uniforms.matrix=new Float32Array(9),void 0!==n&&(o.matrix=n),o.width=t,o.height=r,o}return u(n,e),Object.defineProperty(n.prototype,"matrix",{get:function(){return this.uniforms.matrix},set:function(e){var n=this;e.forEach((function(e,t){n.uniforms.matrix[t]=e}))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"width",{get:function(){return 1/this.uniforms.texelSize[0]},set:function(e){this.uniforms.texelSize[0]=1/e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"height",{get:function(){return 1/this.uniforms.texelSize[1]},set:function(e){this.uniforms.texelSize[1]=1/e},enumerable:!1,configurable:!0}),n}(n.Filter),F=function(e){function n(){return e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    float lum = length(texture2D(uSampler, vTextureCoord.xy).rgb);\n\n    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n\n    if (lum < 1.00)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.75)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.50)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.3)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n}\n")||this}return u(n,e),n}(n.Filter),z=function(e){function n(t){var r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\nuniform vec2 dimensions;\n\nconst float SQRT_2 = 1.414213;\n\nconst float light = 1.0;\n\nuniform float curvature;\nuniform float lineWidth;\nuniform float lineContrast;\nuniform bool verticalLine;\nuniform float noise;\nuniform float noiseSize;\n\nuniform float vignetting;\nuniform float vignettingAlpha;\nuniform float vignettingBlur;\n\nuniform float seed;\nuniform float time;\n\nfloat rand(vec2 co) {\n    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nvoid main(void)\n{\n    vec2 pixelCoord = vTextureCoord.xy * filterArea.xy;\n    vec2 dir = vec2(vTextureCoord.xy * filterArea.xy / dimensions - vec2(0.5, 0.5));\n    \n    gl_FragColor = texture2D(uSampler, vTextureCoord);\n    vec3 rgb = gl_FragColor.rgb;\n\n    if (noise > 0.0 && noiseSize > 0.0)\n    {\n        pixelCoord.x = floor(pixelCoord.x / noiseSize);\n        pixelCoord.y = floor(pixelCoord.y / noiseSize);\n        float _noise = rand(pixelCoord * noiseSize * seed) - 0.5;\n        rgb += _noise * noise;\n    }\n\n    if (lineWidth > 0.0)\n    {\n        float _c = curvature > 0. ? curvature : 1.;\n        float k = curvature > 0. ?(length(dir * dir) * 0.25 * _c * _c + 0.935 * _c) : 1.;\n        vec2 uv = dir * k;\n\n        float v = (verticalLine ? uv.x * dimensions.x : uv.y * dimensions.y) * min(1.0, 2.0 / lineWidth ) / _c;\n        float j = 1. + cos(v * 1.2 - time) * 0.5 * lineContrast;\n        rgb *= j;\n        float segment = verticalLine ? mod((dir.x + .5) * dimensions.x, 4.) : mod((dir.y + .5) * dimensions.y, 4.);\n        rgb *= 0.99 + ceil(segment) * 0.015;\n    }\n\n    if (vignetting > 0.0)\n    {\n        float outter = SQRT_2 - vignetting * SQRT_2;\n        float darker = clamp((outter - length(dir) * SQRT_2) / ( 0.00001 + vignettingBlur * SQRT_2), 0.0, 1.0);\n        rgb *= darker + (1.0 - darker) * (1.0 - vignettingAlpha);\n    }\n\n    gl_FragColor.rgb = rgb;\n}\n")||this;return r.time=0,r.seed=0,r.uniforms.dimensions=new Float32Array(2),Object.assign(r,n.defaults,t),r}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,this.uniforms.seed=this.seed,this.uniforms.time=this.time,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"curvature",{get:function(){return this.uniforms.curvature},set:function(e){this.uniforms.curvature=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lineWidth",{get:function(){return this.uniforms.lineWidth},set:function(e){this.uniforms.lineWidth=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lineContrast",{get:function(){return this.uniforms.lineContrast},set:function(e){this.uniforms.lineContrast=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"verticalLine",{get:function(){return this.uniforms.verticalLine},set:function(e){this.uniforms.verticalLine=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noise",{get:function(){return this.uniforms.noise},set:function(e){this.uniforms.noise=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noiseSize",{get:function(){return this.uniforms.noiseSize},set:function(e){this.uniforms.noiseSize=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignetting",{get:function(){return this.uniforms.vignetting},set:function(e){this.uniforms.vignetting=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingAlpha",{get:function(){return this.uniforms.vignettingAlpha},set:function(e){this.uniforms.vignettingAlpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingBlur",{get:function(){return this.uniforms.vignettingBlur},set:function(e){this.uniforms.vignettingBlur=e},enumerable:!1,configurable:!0}),n.defaults={curvature:1,lineWidth:1,lineContrast:.25,verticalLine:!1,noise:0,noiseSize:1,seed:0,vignetting:.3,vignettingAlpha:1,vignettingBlur:.3,time:0},n}(n.Filter),O=function(e){function n(n,t){void 0===n&&(n=1),void 0===t&&(t=5);var r=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform vec4 filterArea;\nuniform sampler2D uSampler;\n\nuniform float angle;\nuniform float scale;\n\nfloat pattern()\n{\n   float s = sin(angle), c = cos(angle);\n   vec2 tex = vTextureCoord * filterArea.xy;\n   vec2 point = vec2(\n       c * tex.x - s * tex.y,\n       s * tex.x + c * tex.y\n   ) * scale;\n   return (sin(point.x) * sin(point.y)) * 4.0;\n}\n\nvoid main()\n{\n   vec4 color = texture2D(uSampler, vTextureCoord);\n   float average = (color.r + color.g + color.b) / 3.0;\n   gl_FragColor = vec4(vec3(average * 10.0 - 5.0 + pattern()), color.a);\n}\n")||this;return r.scale=n,r.angle=t,r}return u(n,e),Object.defineProperty(n.prototype,"scale",{get:function(){return this.uniforms.scale},set:function(e){this.uniforms.scale=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"angle",{get:function(){return this.uniforms.angle},set:function(e){this.uniforms.angle=e},enumerable:!1,configurable:!0}),n}(n.Filter),P=function(e){function i(o){var l=e.call(this)||this;l.angle=45,l._distance=5,l._resolution=r.settings.FILTER_RESOLUTION;var a=o?f(f({},i.defaults),o):i.defaults,s=a.kernels,u=a.blur,m=a.quality,p=a.pixelSize,h=a.resolution;l._tintFilter=new n.Filter(c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform float alpha;\nuniform vec3 color;\n\nuniform vec2 shift;\nuniform vec4 inputSize;\n\nvoid main(void){\n    vec4 sample = texture2D(uSampler, vTextureCoord - shift * inputSize.zw);\n\n    // Premultiply alpha\n    sample.rgb = color.rgb * sample.a;\n\n    // alpha user alpha\n    sample *= alpha;\n\n    gl_FragColor = sample;\n}"),l._tintFilter.uniforms.color=new Float32Array(4),l._tintFilter.uniforms.shift=new t.Point,l._tintFilter.resolution=h,l._blurFilter=s?new d(s):new d(u,m),l.pixelSize=p,l.resolution=h;var g=a.shadowOnly,v=a.rotation,y=a.distance,b=a.alpha,x=a.color;return l.shadowOnly=g,l.rotation=v,l.distance=y,l.alpha=b,l.color=x,l._updatePadding(),l}return u(i,e),i.prototype.apply=function(e,n,t,r){var o=e.getFilterTexture();this._tintFilter.apply(e,n,o,1),this._blurFilter.apply(e,o,t,r),!0!==this.shadowOnly&&e.applyFilter(this,n,t,0),e.returnFilterTexture(o)},i.prototype._updatePadding=function(){this.padding=this.distance+2*this.blur},i.prototype._updateShift=function(){this._tintFilter.uniforms.shift.set(this.distance*Math.cos(this.angle),this.distance*Math.sin(this.angle))},Object.defineProperty(i.prototype,"resolution",{get:function(){return this._resolution},set:function(e){this._resolution=e,this._tintFilter&&(this._tintFilter.resolution=e),this._blurFilter&&(this._blurFilter.resolution=e)},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"distance",{get:function(){return this._distance},set:function(e){this._distance=e,this._updatePadding(),this._updateShift()},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"rotation",{get:function(){return this.angle/t.DEG_TO_RAD},set:function(e){this.angle=e*t.DEG_TO_RAD,this._updateShift()},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"alpha",{get:function(){return this._tintFilter.uniforms.alpha},set:function(e){this._tintFilter.uniforms.alpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"color",{get:function(){return o.rgb2hex(this._tintFilter.uniforms.color)},set:function(e){o.hex2rgb(e,this._tintFilter.uniforms.color)},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"kernels",{get:function(){return this._blurFilter.kernels},set:function(e){this._blurFilter.kernels=e},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"blur",{get:function(){return this._blurFilter.blur},set:function(e){this._blurFilter.blur=e,this._updatePadding()},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"quality",{get:function(){return this._blurFilter.quality},set:function(e){this._blurFilter.quality=e},enumerable:!1,configurable:!0}),Object.defineProperty(i.prototype,"pixelSize",{get:function(){return this._blurFilter.pixelSize},set:function(e){this._blurFilter.pixelSize=e},enumerable:!1,configurable:!0}),i.defaults={rotation:45,distance:5,color:0,alpha:.5,shadowOnly:!1,kernels:null,blur:2,quality:3,pixelSize:1,resolution:r.settings.FILTER_RESOLUTION},i}(n.Filter),A=function(e){function n(n){void 0===n&&(n=5);var t=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float strength;\nuniform vec4 filterArea;\n\n\nvoid main(void)\n{\n\tvec2 onePixel = vec2(1.0 / filterArea);\n\n\tvec4 color;\n\n\tcolor.rgb = vec3(0.5);\n\n\tcolor -= texture2D(uSampler, vTextureCoord - onePixel) * strength;\n\tcolor += texture2D(uSampler, vTextureCoord + onePixel) * strength;\n\n\tcolor.rgb = vec3((color.r + color.g + color.b) / 3.0);\n\n\tfloat alpha = texture2D(uSampler, vTextureCoord).a;\n\n\tgl_FragColor = vec4(color.rgb * alpha, alpha);\n}\n")||this;return t.strength=n,t}return u(n,e),Object.defineProperty(n.prototype,"strength",{get:function(){return this.uniforms.strength},set:function(e){this.uniforms.strength=e},enumerable:!1,configurable:!0}),n}(n.Filter),T=function(e){function r(t){var o=e.call(this,c,"// precision highp float;\n\nvarying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform vec2 dimensions;\nuniform float aspect;\n\nuniform sampler2D displacementMap;\nuniform float offset;\nuniform float sinDir;\nuniform float cosDir;\nuniform int fillMode;\n\nuniform float seed;\nuniform vec2 red;\nuniform vec2 green;\nuniform vec2 blue;\n\nconst int TRANSPARENT = 0;\nconst int ORIGINAL = 1;\nconst int LOOP = 2;\nconst int CLAMP = 3;\nconst int MIRROR = 4;\n\nvoid main(void)\n{\n    vec2 coord = (vTextureCoord * filterArea.xy) / dimensions;\n\n    if (coord.x > 1.0 || coord.y > 1.0) {\n        return;\n    }\n\n    float cx = coord.x - 0.5;\n    float cy = (coord.y - 0.5) * aspect;\n    float ny = (-sinDir * cx + cosDir * cy) / aspect + 0.5;\n\n    // displacementMap: repeat\n    // ny = ny > 1.0 ? ny - 1.0 : (ny < 0.0 ? 1.0 + ny : ny);\n\n    // displacementMap: mirror\n    ny = ny > 1.0 ? 2.0 - ny : (ny < 0.0 ? -ny : ny);\n\n    vec4 dc = texture2D(displacementMap, vec2(0.5, ny));\n\n    float displacement = (dc.r - dc.g) * (offset / filterArea.x);\n\n    coord = vTextureCoord + vec2(cosDir * displacement, sinDir * displacement * aspect);\n\n    if (fillMode == CLAMP) {\n        coord = clamp(coord, filterClamp.xy, filterClamp.zw);\n    } else {\n        if( coord.x > filterClamp.z ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.x -= filterClamp.z;\n            } else if (fillMode == MIRROR) {\n                coord.x = filterClamp.z * 2.0 - coord.x;\n            }\n        } else if( coord.x < filterClamp.x ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.x += filterClamp.z;\n            } else if (fillMode == MIRROR) {\n                coord.x *= -filterClamp.z;\n            }\n        }\n\n        if( coord.y > filterClamp.w ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.y -= filterClamp.w;\n            } else if (fillMode == MIRROR) {\n                coord.y = filterClamp.w * 2.0 - coord.y;\n            }\n        } else if( coord.y < filterClamp.y ) {\n            if (fillMode == TRANSPARENT) {\n                discard;\n            } else if (fillMode == LOOP) {\n                coord.y += filterClamp.w;\n            } else if (fillMode == MIRROR) {\n                coord.y *= -filterClamp.w;\n            }\n        }\n    }\n\n    gl_FragColor.r = texture2D(uSampler, coord + red * (1.0 - seed * 0.4) / filterArea.xy).r;\n    gl_FragColor.g = texture2D(uSampler, coord + green * (1.0 - seed * 0.3) / filterArea.xy).g;\n    gl_FragColor.b = texture2D(uSampler, coord + blue * (1.0 - seed * 0.2) / filterArea.xy).b;\n    gl_FragColor.a = texture2D(uSampler, coord).a;\n}\n")||this;return o.offset=100,o.fillMode=r.TRANSPARENT,o.average=!1,o.seed=0,o.minSize=8,o.sampleSize=512,o._slices=0,o._offsets=new Float32Array(1),o._sizes=new Float32Array(1),o._direction=-1,o.uniforms.dimensions=new Float32Array(2),o._canvas=document.createElement("canvas"),o._canvas.width=4,o._canvas.height=o.sampleSize,o.texture=n.Texture.from(o._canvas,{scaleMode:i.SCALE_MODES.NEAREST}),Object.assign(o,r.defaults,t),o}return u(r,e),r.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,this.uniforms.aspect=l/i,this.uniforms.seed=this.seed,this.uniforms.offset=this.offset,this.uniforms.fillMode=this.fillMode,e.applyFilter(this,n,t,r)},r.prototype._randomizeSizes=function(){var e=this._sizes,n=this._slices-1,t=this.sampleSize,r=Math.min(this.minSize/t,.9/this._slices);if(this.average){for(var o=this._slices,i=1,l=0;l<n;l++){var a=i/(o-l),s=Math.max(a*(1-.6*Math.random()),r);e[l]=s,i-=s}e[n]=i}else{i=1;var u=Math.sqrt(1/this._slices);for(l=0;l<n;l++){s=Math.max(u*i*Math.random(),r);e[l]=s,i-=s}e[n]=i}this.shuffle()},r.prototype.shuffle=function(){for(var e=this._sizes,n=this._slices-1;n>0;n--){var t=Math.random()*n>>0,r=e[n];e[n]=e[t],e[t]=r}},r.prototype._randomizeOffsets=function(){for(var e=0;e<this._slices;e++)this._offsets[e]=Math.random()*(Math.random()<.5?-1:1)},r.prototype.refresh=function(){this._randomizeSizes(),this._randomizeOffsets(),this.redraw()},r.prototype.redraw=function(){var e,n=this.sampleSize,t=this.texture,r=this._canvas.getContext("2d");r.clearRect(0,0,8,n);for(var o=0,i=0;i<this._slices;i++){e=Math.floor(256*this._offsets[i]);var l=this._sizes[i]*n,a=e>0?e:0,s=e<0?-e:0;r.fillStyle="rgba("+a+", "+s+", 0, 1)",r.fillRect(0,o>>0,n,l+1>>0),o+=l}t.baseTexture.update(),this.uniforms.displacementMap=t},Object.defineProperty(r.prototype,"sizes",{get:function(){return this._sizes},set:function(e){for(var n=Math.min(this._slices,e.length),t=0;t<n;t++)this._sizes[t]=e[t]},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"offsets",{get:function(){return this._offsets},set:function(e){for(var n=Math.min(this._slices,e.length),t=0;t<n;t++)this._offsets[t]=e[t]},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"slices",{get:function(){return this._slices},set:function(e){this._slices!==e&&(this._slices=e,this.uniforms.slices=e,this._sizes=this.uniforms.slicesWidth=new Float32Array(e),this._offsets=this.uniforms.slicesOffset=new Float32Array(e),this.refresh())},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"direction",{get:function(){return this._direction},set:function(e){if(this._direction!==e){this._direction=e;var n=e*t.DEG_TO_RAD;this.uniforms.sinDir=Math.sin(n),this.uniforms.cosDir=Math.cos(n)}},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"red",{get:function(){return this.uniforms.red},set:function(e){this.uniforms.red=e},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"green",{get:function(){return this.uniforms.green},set:function(e){this.uniforms.green=e},enumerable:!1,configurable:!0}),Object.defineProperty(r.prototype,"blue",{get:function(){return this.uniforms.blue},set:function(e){this.uniforms.blue=e},enumerable:!1,configurable:!0}),r.prototype.destroy=function(){var e;null===(e=this.texture)||void 0===e||e.destroy(!0),this.texture=this._canvas=this.red=this.green=this.blue=this._sizes=this._offsets=null},r.defaults={slices:5,offset:100,direction:0,fillMode:0,average:!1,seed:0,red:[0,0],green:[0,0],blue:[0,0],minSize:8,sampleSize:512},r.TRANSPARENT=0,r.ORIGINAL=1,r.LOOP=2,r.CLAMP=3,r.MIRROR=4,r}(n.Filter),w=function(e){function n(t){var r=this,o=Object.assign({},n.defaults,t),i=o.outerStrength,l=o.innerStrength,a=o.color,s=o.knockout,u=o.quality,f=Math.round(o.distance);return(r=e.call(this,c,"varying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform sampler2D uSampler;\n\nuniform float outerStrength;\nuniform float innerStrength;\n\nuniform vec4 glowColor;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform bool knockout;\n\nconst float PI = 3.14159265358979323846264;\n\nconst float DIST = __DIST__;\nconst float ANGLE_STEP_SIZE = min(__ANGLE_STEP_SIZE__, PI * 2.0);\nconst float ANGLE_STEP_NUM = ceil(PI * 2.0 / ANGLE_STEP_SIZE);\n\nconst float MAX_TOTAL_ALPHA = ANGLE_STEP_NUM * DIST * (DIST + 1.0) / 2.0;\n\nvoid main(void) {\n    vec2 px = vec2(1.0 / filterArea.x, 1.0 / filterArea.y);\n\n    float totalAlpha = 0.0;\n\n    vec2 direction;\n    vec2 displaced;\n    vec4 curColor;\n\n    for (float angle = 0.0; angle < PI * 2.0; angle += ANGLE_STEP_SIZE) {\n       direction = vec2(cos(angle), sin(angle)) * px;\n\n       for (float curDistance = 0.0; curDistance < DIST; curDistance++) {\n           displaced = clamp(vTextureCoord + direction * \n                   (curDistance + 1.0), filterClamp.xy, filterClamp.zw);\n\n           curColor = texture2D(uSampler, displaced);\n\n           totalAlpha += (DIST - curDistance) * curColor.a;\n       }\n    }\n    \n    curColor = texture2D(uSampler, vTextureCoord);\n\n    float alphaRatio = (totalAlpha / MAX_TOTAL_ALPHA);\n\n    float innerGlowAlpha = (1.0 - alphaRatio) * innerStrength * curColor.a;\n    float innerGlowStrength = min(1.0, innerGlowAlpha);\n    \n    vec4 innerColor = mix(curColor, glowColor, innerGlowStrength);\n\n    float outerGlowAlpha = alphaRatio * outerStrength * (1. - curColor.a);\n    float outerGlowStrength = min(1.0 - innerColor.a, outerGlowAlpha);\n\n    vec4 outerGlowColor = outerGlowStrength * glowColor.rgba;\n    \n    if (knockout) {\n      float resultAlpha = outerGlowAlpha + innerGlowAlpha;\n      gl_FragColor = vec4(glowColor.rgb * resultAlpha, resultAlpha);\n    }\n    else {\n      gl_FragColor = innerColor + outerGlowColor;\n    }\n}\n".replace(/__ANGLE_STEP_SIZE__/gi,""+(1/u/f).toFixed(7)).replace(/__DIST__/gi,f.toFixed(0)+".0"))||this).uniforms.glowColor=new Float32Array([0,0,0,1]),Object.assign(r,{color:a,outerStrength:i,innerStrength:l,padding:f,knockout:s}),r}return u(n,e),Object.defineProperty(n.prototype,"color",{get:function(){return o.rgb2hex(this.uniforms.glowColor)},set:function(e){o.hex2rgb(e,this.uniforms.glowColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"outerStrength",{get:function(){return this.uniforms.outerStrength},set:function(e){this.uniforms.outerStrength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"innerStrength",{get:function(){return this.uniforms.innerStrength},set:function(e){this.uniforms.innerStrength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"knockout",{get:function(){return this.uniforms.knockout},set:function(e){this.uniforms.knockout=e},enumerable:!1,configurable:!0}),n.defaults={distance:10,outerStrength:4,innerStrength:0,color:16777215,quality:.1,knockout:!1},n}(n.Filter),D=function(e){function n(r){var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec2 dimensions;\n\nuniform vec2 light;\nuniform bool parallel;\nuniform float aspect;\n\nuniform float gain;\nuniform float lacunarity;\nuniform float time;\nuniform float alpha;\n\n${perlin}\n\nvoid main(void) {\n    vec2 coord = vTextureCoord * filterArea.xy / dimensions.xy;\n\n    float d;\n\n    if (parallel) {\n        float _cos = light.x;\n        float _sin = light.y;\n        d = (_cos * coord.x) + (_sin * coord.y * aspect);\n    } else {\n        float dx = coord.x - light.x / dimensions.x;\n        float dy = (coord.y - light.y / dimensions.y) * aspect;\n        float dis = sqrt(dx * dx + dy * dy) + 0.00001;\n        d = dy / dis;\n    }\n\n    vec3 dir = vec3(d, d, 0.0);\n\n    float noise = turb(dir + vec3(time, 0.0, 62.1 + time) * 0.05, vec3(480.0, 320.0, 480.0), lacunarity, gain);\n    noise = mix(noise, 0.0, 0.3);\n    //fade vertically.\n    vec4 mist = vec4(noise, noise, noise, 1.0) * (1.0 - coord.y);\n    mist.a = 1.0;\n    // apply user alpha\n    mist *= alpha;\n\n    gl_FragColor = texture2D(uSampler, vTextureCoord) + mist;\n\n}\n".replace("${perlin}","vec3 mod289(vec3 x)\n{\n    return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\nvec4 mod289(vec4 x)\n{\n    return x - floor(x * (1.0 / 289.0)) * 289.0;\n}\nvec4 permute(vec4 x)\n{\n    return mod289(((x * 34.0) + 1.0) * x);\n}\nvec4 taylorInvSqrt(vec4 r)\n{\n    return 1.79284291400159 - 0.85373472095314 * r;\n}\nvec3 fade(vec3 t)\n{\n    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);\n}\n// Classic Perlin noise, periodic variant\nfloat pnoise(vec3 P, vec3 rep)\n{\n    vec3 Pi0 = mod(floor(P), rep); // Integer part, modulo period\n    vec3 Pi1 = mod(Pi0 + vec3(1.0), rep); // Integer part + 1, mod period\n    Pi0 = mod289(Pi0);\n    Pi1 = mod289(Pi1);\n    vec3 Pf0 = fract(P); // Fractional part for interpolation\n    vec3 Pf1 = Pf0 - vec3(1.0); // Fractional part - 1.0\n    vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);\n    vec4 iy = vec4(Pi0.yy, Pi1.yy);\n    vec4 iz0 = Pi0.zzzz;\n    vec4 iz1 = Pi1.zzzz;\n    vec4 ixy = permute(permute(ix) + iy);\n    vec4 ixy0 = permute(ixy + iz0);\n    vec4 ixy1 = permute(ixy + iz1);\n    vec4 gx0 = ixy0 * (1.0 / 7.0);\n    vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;\n    gx0 = fract(gx0);\n    vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);\n    vec4 sz0 = step(gz0, vec4(0.0));\n    gx0 -= sz0 * (step(0.0, gx0) - 0.5);\n    gy0 -= sz0 * (step(0.0, gy0) - 0.5);\n    vec4 gx1 = ixy1 * (1.0 / 7.0);\n    vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;\n    gx1 = fract(gx1);\n    vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);\n    vec4 sz1 = step(gz1, vec4(0.0));\n    gx1 -= sz1 * (step(0.0, gx1) - 0.5);\n    gy1 -= sz1 * (step(0.0, gy1) - 0.5);\n    vec3 g000 = vec3(gx0.x, gy0.x, gz0.x);\n    vec3 g100 = vec3(gx0.y, gy0.y, gz0.y);\n    vec3 g010 = vec3(gx0.z, gy0.z, gz0.z);\n    vec3 g110 = vec3(gx0.w, gy0.w, gz0.w);\n    vec3 g001 = vec3(gx1.x, gy1.x, gz1.x);\n    vec3 g101 = vec3(gx1.y, gy1.y, gz1.y);\n    vec3 g011 = vec3(gx1.z, gy1.z, gz1.z);\n    vec3 g111 = vec3(gx1.w, gy1.w, gz1.w);\n    vec4 norm0 = taylorInvSqrt(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));\n    g000 *= norm0.x;\n    g010 *= norm0.y;\n    g100 *= norm0.z;\n    g110 *= norm0.w;\n    vec4 norm1 = taylorInvSqrt(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));\n    g001 *= norm1.x;\n    g011 *= norm1.y;\n    g101 *= norm1.z;\n    g111 *= norm1.w;\n    float n000 = dot(g000, Pf0);\n    float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));\n    float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));\n    float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));\n    float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));\n    float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));\n    float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));\n    float n111 = dot(g111, Pf1);\n    vec3 fade_xyz = fade(Pf0);\n    vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);\n    vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);\n    float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);\n    return 2.2 * n_xyz;\n}\nfloat turb(vec3 P, vec3 rep, float lacunarity, float gain)\n{\n    float sum = 0.0;\n    float sc = 1.0;\n    float totalgain = 1.0;\n    for (float i = 0.0; i < 6.0; i++)\n    {\n        sum += totalgain * pnoise(P * sc, rep);\n        sc *= lacunarity;\n        totalgain *= gain;\n    }\n    return abs(sum);\n}\n"))||this;o.parallel=!0,o.time=0,o._angle=0,o.uniforms.dimensions=new Float32Array(2);var i=Object.assign(n.defaults,r);return o._angleLight=new t.Point,o.angle=i.angle,o.gain=i.gain,o.lacunarity=i.lacunarity,o.alpha=i.alpha,o.parallel=i.parallel,o.center=i.center,o.time=i.time,o}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=n.filterFrame,i=o.width,l=o.height;this.uniforms.light=this.parallel?this._angleLight:this.center,this.uniforms.parallel=this.parallel,this.uniforms.dimensions[0]=i,this.uniforms.dimensions[1]=l,this.uniforms.aspect=l/i,this.uniforms.time=this.time,this.uniforms.alpha=this.alpha,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"angle",{get:function(){return this._angle},set:function(e){this._angle=e;var n=e*t.DEG_TO_RAD;this._angleLight.x=Math.cos(n),this._angleLight.y=Math.sin(n)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"gain",{get:function(){return this.uniforms.gain},set:function(e){this.uniforms.gain=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"lacunarity",{get:function(){return this.uniforms.lacunarity},set:function(e){this.uniforms.lacunarity=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this.uniforms.alpha},set:function(e){this.uniforms.alpha=e},enumerable:!1,configurable:!0}),n.defaults={angle:30,gain:.5,lacunarity:2.5,time:0,parallel:!0,center:[0,0],alpha:1},n}(n.Filter),j=function(e){function n(n,r,o){void 0===n&&(n=[0,0]),void 0===r&&(r=5),void 0===o&&(o=0);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform vec2 uVelocity;\nuniform int uKernelSize;\nuniform float uOffset;\n\nconst int MAX_KERNEL_SIZE = 2048;\n\n// Notice:\n// the perfect way:\n//    int kernelSize = min(uKernelSize, MAX_KERNELSIZE);\n// BUT in real use-case , uKernelSize < MAX_KERNELSIZE almost always.\n// So use uKernelSize directly.\n\nvoid main(void)\n{\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    if (uKernelSize == 0)\n    {\n        gl_FragColor = color;\n        return;\n    }\n\n    vec2 velocity = uVelocity / filterArea.xy;\n    float offset = -uOffset / length(uVelocity) - 0.5;\n    int k = uKernelSize - 1;\n\n    for(int i = 0; i < MAX_KERNEL_SIZE - 1; i++) {\n        if (i == k) {\n            break;\n        }\n        vec2 bias = velocity * (float(i) / float(k) + offset);\n        color += texture2D(uSampler, vTextureCoord + bias);\n    }\n    gl_FragColor = color / float(uKernelSize);\n}\n")||this;return i.kernelSize=5,i.uniforms.uVelocity=new Float32Array(2),i._velocity=new t.ObservablePoint(i.velocityChanged,i),i.setVelocity(n),i.kernelSize=r,i.offset=o,i}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=this.velocity,i=o.x,l=o.y;this.uniforms.uKernelSize=0!==i||0!==l?this.kernelSize:0,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"velocity",{get:function(){return this._velocity},set:function(e){this.setVelocity(e)},enumerable:!1,configurable:!0}),n.prototype.setVelocity=function(e){if(Array.isArray(e)){var n=e[0],t=e[1];this._velocity.set(n,t)}else this._velocity.copyFrom(e)},n.prototype.velocityChanged=function(){this.uniforms.uVelocity[0]=this._velocity.x,this.uniforms.uVelocity[1]=this._velocity.y,this.padding=1+(Math.max(Math.abs(this._velocity.x),Math.abs(this._velocity.y))>>0)},Object.defineProperty(n.prototype,"offset",{get:function(){return this.uniforms.uOffset},set:function(e){this.uniforms.uOffset=e},enumerable:!1,configurable:!0}),n}(n.Filter),M=function(e){function n(n,t,r){void 0===t&&(t=.05),void 0===r&&(r=n.length);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform float epsilon;\n\nconst int MAX_COLORS = %maxColors%;\n\nuniform vec3 originalColors[MAX_COLORS];\nuniform vec3 targetColors[MAX_COLORS];\n\nvoid main(void)\n{\n    gl_FragColor = texture2D(uSampler, vTextureCoord);\n\n    float alpha = gl_FragColor.a;\n    if (alpha < 0.0001)\n    {\n      return;\n    }\n\n    vec3 color = gl_FragColor.rgb / alpha;\n\n    for(int i = 0; i < MAX_COLORS; i++)\n    {\n      vec3 origColor = originalColors[i];\n      if (origColor.r < 0.0)\n      {\n        break;\n      }\n      vec3 colorDiff = origColor - color;\n      if (length(colorDiff) < epsilon)\n      {\n        vec3 targetColor = targetColors[i];\n        gl_FragColor = vec4((targetColor + colorDiff) * alpha, alpha);\n        return;\n      }\n    }\n}\n".replace(/%maxColors%/g,r.toFixed(0)))||this;return o._replacements=[],o._maxColors=0,o.epsilon=t,o._maxColors=r,o.uniforms.originalColors=new Float32Array(3*r),o.uniforms.targetColors=new Float32Array(3*r),o.replacements=n,o}return u(n,e),Object.defineProperty(n.prototype,"replacements",{get:function(){return this._replacements},set:function(e){var n=this.uniforms.originalColors,t=this.uniforms.targetColors,r=e.length;if(r>this._maxColors)throw new Error("Length of replacements ("+r+") exceeds the maximum colors length ("+this._maxColors+")");n[3*r]=-1;for(var i=0;i<r;i++){var l=e[i],a=l[0];"number"==typeof a?a=o.hex2rgb(a):l[0]=o.rgb2hex(a),n[3*i]=a[0],n[3*i+1]=a[1],n[3*i+2]=a[2];var s=l[1];"number"==typeof s?s=o.hex2rgb(s):l[1]=o.rgb2hex(s),t[3*i]=s[0],t[3*i+1]=s[1],t[3*i+2]=s[2]}this._replacements=e},enumerable:!1,configurable:!0}),n.prototype.refresh=function(){this.replacements=this._replacements},Object.defineProperty(n.prototype,"maxColors",{get:function(){return this._maxColors},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"epsilon",{get:function(){return this.uniforms.epsilon},set:function(e){this.uniforms.epsilon=e},enumerable:!1,configurable:!0}),n}(n.Filter),R=function(e){function n(t,r){void 0===r&&(r=0);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec2 dimensions;\n\nuniform float sepia;\nuniform float noise;\nuniform float noiseSize;\nuniform float scratch;\nuniform float scratchDensity;\nuniform float scratchWidth;\nuniform float vignetting;\nuniform float vignettingAlpha;\nuniform float vignettingBlur;\nuniform float seed;\n\nconst float SQRT_2 = 1.414213;\nconst vec3 SEPIA_RGB = vec3(112.0 / 255.0, 66.0 / 255.0, 20.0 / 255.0);\n\nfloat rand(vec2 co) {\n    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nvec3 Overlay(vec3 src, vec3 dst)\n{\n    // if (dst <= 0.5) then: 2 * src * dst\n    // if (dst > 0.5) then: 1 - 2 * (1 - dst) * (1 - src)\n    return vec3((dst.x <= 0.5) ? (2.0 * src.x * dst.x) : (1.0 - 2.0 * (1.0 - dst.x) * (1.0 - src.x)),\n                (dst.y <= 0.5) ? (2.0 * src.y * dst.y) : (1.0 - 2.0 * (1.0 - dst.y) * (1.0 - src.y)),\n                (dst.z <= 0.5) ? (2.0 * src.z * dst.z) : (1.0 - 2.0 * (1.0 - dst.z) * (1.0 - src.z)));\n}\n\n\nvoid main()\n{\n    gl_FragColor = texture2D(uSampler, vTextureCoord);\n    vec3 color = gl_FragColor.rgb;\n\n    if (sepia > 0.0)\n    {\n        float gray = (color.x + color.y + color.z) / 3.0;\n        vec3 grayscale = vec3(gray);\n\n        color = Overlay(SEPIA_RGB, grayscale);\n\n        color = grayscale + sepia * (color - grayscale);\n    }\n\n    vec2 coord = vTextureCoord * filterArea.xy / dimensions.xy;\n\n    if (vignetting > 0.0)\n    {\n        float outter = SQRT_2 - vignetting * SQRT_2;\n        vec2 dir = vec2(vec2(0.5, 0.5) - coord);\n        dir.y *= dimensions.y / dimensions.x;\n        float darker = clamp((outter - length(dir) * SQRT_2) / ( 0.00001 + vignettingBlur * SQRT_2), 0.0, 1.0);\n        color.rgb *= darker + (1.0 - darker) * (1.0 - vignettingAlpha);\n    }\n\n    if (scratchDensity > seed && scratch != 0.0)\n    {\n        float phase = seed * 256.0;\n        float s = mod(floor(phase), 2.0);\n        float dist = 1.0 / scratchDensity;\n        float d = distance(coord, vec2(seed * dist, abs(s - seed * dist)));\n        if (d < seed * 0.6 + 0.4)\n        {\n            highp float period = scratchDensity * 10.0;\n\n            float xx = coord.x * period + phase;\n            float aa = abs(mod(xx, 0.5) * 4.0);\n            float bb = mod(floor(xx / 0.5), 2.0);\n            float yy = (1.0 - bb) * aa + bb * (2.0 - aa);\n\n            float kk = 2.0 * period;\n            float dw = scratchWidth / dimensions.x * (0.75 + seed);\n            float dh = dw * kk;\n\n            float tine = (yy - (2.0 - dh));\n\n            if (tine > 0.0) {\n                float _sign = sign(scratch);\n\n                tine = s * tine / period + scratch + 0.1;\n                tine = clamp(tine + 1.0, 0.5 + _sign * 0.5, 1.5 + _sign * 0.5);\n\n                color.rgb *= tine;\n            }\n        }\n    }\n\n    if (noise > 0.0 && noiseSize > 0.0)\n    {\n        vec2 pixelCoord = vTextureCoord.xy * filterArea.xy;\n        pixelCoord.x = floor(pixelCoord.x / noiseSize);\n        pixelCoord.y = floor(pixelCoord.y / noiseSize);\n        // vec2 d = pixelCoord * noiseSize * vec2(1024.0 + seed * 512.0, 1024.0 - seed * 512.0);\n        // float _noise = snoise(d) * 0.5;\n        float _noise = rand(pixelCoord * noiseSize * seed) - 0.5;\n        color += _noise * noise;\n    }\n\n    gl_FragColor.rgb = color;\n}\n")||this;return o.seed=0,o.uniforms.dimensions=new Float32Array(2),"number"==typeof t?(o.seed=t,t=void 0):o.seed=r,Object.assign(o,n.defaults,t),o}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i;this.uniforms.dimensions[0]=null===(o=n.filterFrame)||void 0===o?void 0:o.width,this.uniforms.dimensions[1]=null===(i=n.filterFrame)||void 0===i?void 0:i.height,this.uniforms.seed=this.seed,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"sepia",{get:function(){return this.uniforms.sepia},set:function(e){this.uniforms.sepia=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noise",{get:function(){return this.uniforms.noise},set:function(e){this.uniforms.noise=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"noiseSize",{get:function(){return this.uniforms.noiseSize},set:function(e){this.uniforms.noiseSize=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"scratch",{get:function(){return this.uniforms.scratch},set:function(e){this.uniforms.scratch=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"scratchDensity",{get:function(){return this.uniforms.scratchDensity},set:function(e){this.uniforms.scratchDensity=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"scratchWidth",{get:function(){return this.uniforms.scratchWidth},set:function(e){this.uniforms.scratchWidth=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignetting",{get:function(){return this.uniforms.vignetting},set:function(e){this.uniforms.vignetting=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingAlpha",{get:function(){return this.uniforms.vignettingAlpha},set:function(e){this.uniforms.vignettingAlpha=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"vignettingBlur",{get:function(){return this.uniforms.vignettingBlur},set:function(e){this.uniforms.vignettingBlur=e},enumerable:!1,configurable:!0}),n.defaults={sepia:.3,noise:.3,noiseSize:1,scratch:.5,scratchDensity:.3,scratchWidth:1,vignetting:.3,vignettingAlpha:1,vignettingBlur:.3},n}(n.Filter),E=function(e){function n(t,r,o){void 0===t&&(t=1),void 0===r&&(r=0),void 0===o&&(o=.1);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec2 thickness;\nuniform vec4 outlineColor;\nuniform vec4 filterClamp;\n\nconst float DOUBLE_PI = 3.14159265358979323846264 * 2.;\n\nvoid main(void) {\n    vec4 ownColor = texture2D(uSampler, vTextureCoord);\n    vec4 curColor;\n    float maxAlpha = 0.;\n    vec2 displaced;\n    for (float angle = 0.; angle <= DOUBLE_PI; angle += ${angleStep}) {\n        displaced.x = vTextureCoord.x + thickness.x * cos(angle);\n        displaced.y = vTextureCoord.y + thickness.y * sin(angle);\n        curColor = texture2D(uSampler, clamp(displaced, filterClamp.xy, filterClamp.zw));\n        maxAlpha = max(maxAlpha, curColor.a);\n    }\n    float resultAlpha = max(maxAlpha, ownColor.a);\n    gl_FragColor = vec4((ownColor.rgb + outlineColor.rgb * (1. - ownColor.a)) * resultAlpha, resultAlpha);\n}\n".replace(/\$\{angleStep\}/,n.getAngleStep(o)))||this;return i._thickness=1,i.uniforms.thickness=new Float32Array([0,0]),i.uniforms.outlineColor=new Float32Array([0,0,0,1]),Object.assign(i,{thickness:t,color:r,quality:o}),i}return u(n,e),n.getAngleStep=function(e){var t=Math.max(e*n.MAX_SAMPLES,n.MIN_SAMPLES);return(2*Math.PI/t).toFixed(7)},n.prototype.apply=function(e,n,t,r){this.uniforms.thickness[0]=this._thickness/n._frame.width,this.uniforms.thickness[1]=this._thickness/n._frame.height,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"color",{get:function(){return o.rgb2hex(this.uniforms.outlineColor)},set:function(e){o.hex2rgb(e,this.uniforms.outlineColor)},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"thickness",{get:function(){return this._thickness},set:function(e){this._thickness=e,this.padding=e},enumerable:!1,configurable:!0}),n.MIN_SAMPLES=1,n.MAX_SAMPLES=100,n}(n.Filter),I=function(e){function n(n){void 0===n&&(n=10);var t=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform vec2 size;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 pixelate(vec2 coord, vec2 size)\n{\n\treturn floor( coord / size ) * size;\n}\n\nvoid main(void)\n{\n    vec2 coord = mapCoord(vTextureCoord);\n\n    coord = pixelate(coord, size);\n\n    coord = unmapCoord(coord);\n\n    gl_FragColor = texture2D(uSampler, coord);\n}\n")||this;return t.size=n,t}return u(n,e),Object.defineProperty(n.prototype,"size",{get:function(){return this.uniforms.size},set:function(e){"number"==typeof e&&(e=[e,e]),this.uniforms.size=e},enumerable:!1,configurable:!0}),n}(n.Filter),k=function(e){function n(n,t,r,o){void 0===n&&(n=0),void 0===t&&(t=[0,0]),void 0===r&&(r=5),void 0===o&&(o=-1);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform float uRadian;\nuniform vec2 uCenter;\nuniform float uRadius;\nuniform int uKernelSize;\n\nconst int MAX_KERNEL_SIZE = 2048;\n\nvoid main(void)\n{\n    vec4 color = texture2D(uSampler, vTextureCoord);\n\n    if (uKernelSize == 0)\n    {\n        gl_FragColor = color;\n        return;\n    }\n\n    float aspect = filterArea.y / filterArea.x;\n    vec2 center = uCenter.xy / filterArea.xy;\n    float gradient = uRadius / filterArea.x * 0.3;\n    float radius = uRadius / filterArea.x - gradient * 0.5;\n    int k = uKernelSize - 1;\n\n    vec2 coord = vTextureCoord;\n    vec2 dir = vec2(center - coord);\n    float dist = length(vec2(dir.x, dir.y * aspect));\n\n    float radianStep = uRadian;\n    if (radius >= 0.0 && dist > radius) {\n        float delta = dist - radius;\n        float gap = gradient;\n        float scale = 1.0 - abs(delta / gap);\n        if (scale <= 0.0) {\n            gl_FragColor = color;\n            return;\n        }\n        radianStep *= scale;\n    }\n    radianStep /= float(k);\n\n    float s = sin(radianStep);\n    float c = cos(radianStep);\n    mat2 rotationMatrix = mat2(vec2(c, -s), vec2(s, c));\n\n    for(int i = 0; i < MAX_KERNEL_SIZE - 1; i++) {\n        if (i == k) {\n            break;\n        }\n\n        coord -= center;\n        coord.y *= aspect;\n        coord = rotationMatrix * coord;\n        coord.y /= aspect;\n        coord += center;\n\n        vec4 sample = texture2D(uSampler, coord);\n\n        // switch to pre-multiplied alpha to correctly blur transparent images\n        // sample.rgb *= sample.a;\n\n        color += sample;\n    }\n\n    gl_FragColor = color / float(uKernelSize);\n}\n")||this;return i._angle=0,i.angle=n,i.center=t,i.kernelSize=r,i.radius=o,i}return u(n,e),n.prototype.apply=function(e,n,t,r){this.uniforms.uKernelSize=0!==this._angle?this.kernelSize:0,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"angle",{get:function(){return this._angle},set:function(e){this._angle=e,this.uniforms.uRadian=e*Math.PI/180},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.uCenter},set:function(e){this.uniforms.uCenter=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.uRadius},set:function(e){(e<0||e===1/0)&&(e=-1),this.uniforms.uRadius=e},enumerable:!1,configurable:!0}),n}(n.Filter),L=function(e){function n(t){var r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\nuniform vec2 dimensions;\n\nuniform bool mirror;\nuniform float boundary;\nuniform vec2 amplitude;\nuniform vec2 waveLength;\nuniform vec2 alpha;\nuniform float time;\n\nfloat rand(vec2 co) {\n    return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);\n}\n\nvoid main(void)\n{\n    vec2 pixelCoord = vTextureCoord.xy * filterArea.xy;\n    vec2 coord = pixelCoord / dimensions;\n\n    if (coord.y < boundary) {\n        gl_FragColor = texture2D(uSampler, vTextureCoord);\n        return;\n    }\n\n    float k = (coord.y - boundary) / (1. - boundary + 0.0001);\n    float areaY = boundary * dimensions.y / filterArea.y;\n    float v = areaY + areaY - vTextureCoord.y;\n    float y = mirror ? v : vTextureCoord.y;\n\n    float _amplitude = ((amplitude.y - amplitude.x) * k + amplitude.x ) / filterArea.x;\n    float _waveLength = ((waveLength.y - waveLength.x) * k + waveLength.x) / filterArea.y;\n    float _alpha = (alpha.y - alpha.x) * k + alpha.x;\n\n    float x = vTextureCoord.x + cos(v * 6.28 / _waveLength - time) * _amplitude;\n    x = clamp(x, filterClamp.x, filterClamp.z);\n\n    vec4 color = texture2D(uSampler, vec2(x, y));\n\n    gl_FragColor = color * _alpha;\n}\n")||this;return r.time=0,r.uniforms.amplitude=new Float32Array(2),r.uniforms.waveLength=new Float32Array(2),r.uniforms.alpha=new Float32Array(2),r.uniforms.dimensions=new Float32Array(2),Object.assign(r,n.defaults,t),r}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i;this.uniforms.dimensions[0]=null===(o=n.filterFrame)||void 0===o?void 0:o.width,this.uniforms.dimensions[1]=null===(i=n.filterFrame)||void 0===i?void 0:i.height,this.uniforms.time=this.time,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"mirror",{get:function(){return this.uniforms.mirror},set:function(e){this.uniforms.mirror=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"boundary",{get:function(){return this.uniforms.boundary},set:function(e){this.uniforms.boundary=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"amplitude",{get:function(){return this.uniforms.amplitude},set:function(e){this.uniforms.amplitude[0]=e[0],this.uniforms.amplitude[1]=e[1]},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"waveLength",{get:function(){return this.uniforms.waveLength},set:function(e){this.uniforms.waveLength[0]=e[0],this.uniforms.waveLength[1]=e[1]},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this.uniforms.alpha},set:function(e){this.uniforms.alpha[0]=e[0],this.uniforms.alpha[1]=e[1]},enumerable:!1,configurable:!0}),n.defaults={mirror:!0,boundary:.5,amplitude:[0,20],waveLength:[30,100],alpha:[1,1],time:0},n}(n.Filter),N=function(e){function n(n,t,r){void 0===n&&(n=[-10,0]),void 0===t&&(t=[0,10]),void 0===r&&(r=[0,0]);var o=e.call(this,c,"precision mediump float;\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec2 red;\nuniform vec2 green;\nuniform vec2 blue;\n\nvoid main(void)\n{\n   gl_FragColor.r = texture2D(uSampler, vTextureCoord + red/filterArea.xy).r;\n   gl_FragColor.g = texture2D(uSampler, vTextureCoord + green/filterArea.xy).g;\n   gl_FragColor.b = texture2D(uSampler, vTextureCoord + blue/filterArea.xy).b;\n   gl_FragColor.a = texture2D(uSampler, vTextureCoord).a;\n}\n")||this;return o.red=n,o.green=t,o.blue=r,o}return u(n,e),Object.defineProperty(n.prototype,"red",{get:function(){return this.uniforms.red},set:function(e){this.uniforms.red=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"green",{get:function(){return this.uniforms.green},set:function(e){this.uniforms.green=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"blue",{get:function(){return this.uniforms.blue},set:function(e){this.uniforms.blue=e},enumerable:!1,configurable:!0}),n}(n.Filter),X=function(e){function n(t,r,o){void 0===t&&(t=[0,0]),void 0===o&&(o=0);var i=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec4 filterClamp;\n\nuniform vec2 center;\n\nuniform float amplitude;\nuniform float wavelength;\n// uniform float power;\nuniform float brightness;\nuniform float speed;\nuniform float radius;\n\nuniform float time;\n\nconst float PI = 3.14159;\n\nvoid main()\n{\n    float halfWavelength = wavelength * 0.5 / filterArea.x;\n    float maxRadius = radius / filterArea.x;\n    float currentRadius = time * speed / filterArea.x;\n\n    float fade = 1.0;\n\n    if (maxRadius > 0.0) {\n        if (currentRadius > maxRadius) {\n            gl_FragColor = texture2D(uSampler, vTextureCoord);\n            return;\n        }\n        fade = 1.0 - pow(currentRadius / maxRadius, 2.0);\n    }\n\n    vec2 dir = vec2(vTextureCoord - center / filterArea.xy);\n    dir.y *= filterArea.y / filterArea.x;\n    float dist = length(dir);\n\n    if (dist <= 0.0 || dist < currentRadius - halfWavelength || dist > currentRadius + halfWavelength) {\n        gl_FragColor = texture2D(uSampler, vTextureCoord);\n        return;\n    }\n\n    vec2 diffUV = normalize(dir);\n\n    float diff = (dist - currentRadius) / halfWavelength;\n\n    float p = 1.0 - pow(abs(diff), 2.0);\n\n    // float powDiff = diff * pow(p, 2.0) * ( amplitude * fade );\n    float powDiff = 1.25 * sin(diff * PI) * p * ( amplitude * fade );\n\n    vec2 offset = diffUV * powDiff / filterArea.xy;\n\n    // Do clamp :\n    vec2 coord = vTextureCoord + offset;\n    vec2 clampedCoord = clamp(coord, filterClamp.xy, filterClamp.zw);\n    vec4 color = texture2D(uSampler, clampedCoord);\n    if (coord != clampedCoord) {\n        color *= max(0.0, 1.0 - length(coord - clampedCoord));\n    }\n\n    // No clamp :\n    // gl_FragColor = texture2D(uSampler, vTextureCoord + offset);\n\n    color.rgb *= 1.0 + (brightness - 1.0) * p * fade;\n\n    gl_FragColor = color;\n}\n")||this;return i.center=t,Object.assign(i,n.defaults,r),i.time=o,i}return u(n,e),n.prototype.apply=function(e,n,t,r){this.uniforms.time=this.time,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.center},set:function(e){this.uniforms.center=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"amplitude",{get:function(){return this.uniforms.amplitude},set:function(e){this.uniforms.amplitude=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"wavelength",{get:function(){return this.uniforms.wavelength},set:function(e){this.uniforms.wavelength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"brightness",{get:function(){return this.uniforms.brightness},set:function(e){this.uniforms.brightness=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"speed",{get:function(){return this.uniforms.speed},set:function(e){this.uniforms.speed=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.radius},set:function(e){this.uniforms.radius=e},enumerable:!1,configurable:!0}),n.defaults={amplitude:30,wavelength:160,brightness:1,speed:500,radius:-1},n}(n.Filter),B=function(e){function n(n,t,r){void 0===t&&(t=0),void 0===r&&(r=1);var o=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform sampler2D uLightmap;\nuniform vec4 filterArea;\nuniform vec2 dimensions;\nuniform vec4 ambientColor;\nvoid main() {\n    vec4 diffuseColor = texture2D(uSampler, vTextureCoord);\n    vec2 lightCoord = (vTextureCoord * filterArea.xy) / dimensions;\n    vec4 light = texture2D(uLightmap, lightCoord);\n    vec3 ambient = ambientColor.rgb * ambientColor.a;\n    vec3 intensity = ambient + light.rgb;\n    vec3 finalColor = diffuseColor.rgb * intensity;\n    gl_FragColor = vec4(finalColor, diffuseColor.a);\n}\n")||this;return o._color=0,o.uniforms.dimensions=new Float32Array(2),o.uniforms.ambientColor=new Float32Array([0,0,0,r]),o.texture=n,o.color=t,o}return u(n,e),n.prototype.apply=function(e,n,t,r){var o,i;this.uniforms.dimensions[0]=null===(o=n.filterFrame)||void 0===o?void 0:o.width,this.uniforms.dimensions[1]=null===(i=n.filterFrame)||void 0===i?void 0:i.height,e.applyFilter(this,n,t,r)},Object.defineProperty(n.prototype,"texture",{get:function(){return this.uniforms.uLightmap},set:function(e){this.uniforms.uLightmap=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"color",{get:function(){return this._color},set:function(e){var n=this.uniforms.ambientColor;"number"==typeof e?(o.hex2rgb(e,n),this._color=e):(n[0]=e[0],n[1]=e[1],n[2]=e[2],n[3]=e[3],this._color=o.rgb2hex(n))},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"alpha",{get:function(){return this.uniforms.ambientColor[3]},set:function(e){this.uniforms.ambientColor[3]=e},enumerable:!1,configurable:!0}),n}(n.Filter),G=function(e){function n(n,r,o,i){void 0===n&&(n=100),void 0===r&&(r=600);var l=e.call(this,c,"varying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float blur;\nuniform float gradientBlur;\nuniform vec2 start;\nuniform vec2 end;\nuniform vec2 delta;\nuniform vec2 texSize;\n\nfloat random(vec3 scale, float seed)\n{\n    return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);\n}\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n    float total = 0.0;\n\n    float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);\n    vec2 normal = normalize(vec2(start.y - end.y, end.x - start.x));\n    float radius = smoothstep(0.0, 1.0, abs(dot(vTextureCoord * texSize - start, normal)) / gradientBlur) * blur;\n\n    for (float t = -30.0; t <= 30.0; t++)\n    {\n        float percent = (t + offset - 0.5) / 30.0;\n        float weight = 1.0 - abs(percent);\n        vec4 sample = texture2D(uSampler, vTextureCoord + delta / texSize * percent * radius);\n        sample.rgb *= sample.a;\n        color += sample * weight;\n        total += weight;\n    }\n\n    color /= total;\n    color.rgb /= color.a + 0.00001;\n\n    gl_FragColor = color;\n}\n")||this;return l.uniforms.blur=n,l.uniforms.gradientBlur=r,l.uniforms.start=o||new t.Point(0,window.innerHeight/2),l.uniforms.end=i||new t.Point(600,window.innerHeight/2),l.uniforms.delta=new t.Point(30,30),l.uniforms.texSize=new t.Point(window.innerWidth,window.innerHeight),l.updateDelta(),l}return u(n,e),n.prototype.updateDelta=function(){this.uniforms.delta.x=0,this.uniforms.delta.y=0},Object.defineProperty(n.prototype,"blur",{get:function(){return this.uniforms.blur},set:function(e){this.uniforms.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"gradientBlur",{get:function(){return this.uniforms.gradientBlur},set:function(e){this.uniforms.gradientBlur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"start",{get:function(){return this.uniforms.start},set:function(e){this.uniforms.start=e,this.updateDelta()},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"end",{get:function(){return this.uniforms.end},set:function(e){this.uniforms.end=e,this.updateDelta()},enumerable:!1,configurable:!0}),n}(n.Filter),K=function(e){function n(){return null!==e&&e.apply(this,arguments)||this}return u(n,e),n.prototype.updateDelta=function(){var e=this.uniforms.end.x-this.uniforms.start.x,n=this.uniforms.end.y-this.uniforms.start.y,t=Math.sqrt(e*e+n*n);this.uniforms.delta.x=e/t,this.uniforms.delta.y=n/t},n}(G),q=function(e){function n(){return null!==e&&e.apply(this,arguments)||this}return u(n,e),n.prototype.updateDelta=function(){var e=this.uniforms.end.x-this.uniforms.start.x,n=this.uniforms.end.y-this.uniforms.start.y,t=Math.sqrt(e*e+n*n);this.uniforms.delta.x=-n/t,this.uniforms.delta.y=e/t},n}(G),W=function(e){function n(n,t,r,o){void 0===n&&(n=100),void 0===t&&(t=600);var i=e.call(this)||this;return i.tiltShiftXFilter=new K(n,t,r,o),i.tiltShiftYFilter=new q(n,t,r,o),i}return u(n,e),n.prototype.apply=function(e,n,t,r){var o=e.getFilterTexture();this.tiltShiftXFilter.apply(e,n,o,1),this.tiltShiftYFilter.apply(e,o,t,r),e.returnFilterTexture(o)},Object.defineProperty(n.prototype,"blur",{get:function(){return this.tiltShiftXFilter.blur},set:function(e){this.tiltShiftXFilter.blur=this.tiltShiftYFilter.blur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"gradientBlur",{get:function(){return this.tiltShiftXFilter.gradientBlur},set:function(e){this.tiltShiftXFilter.gradientBlur=this.tiltShiftYFilter.gradientBlur=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"start",{get:function(){return this.tiltShiftXFilter.start},set:function(e){this.tiltShiftXFilter.start=this.tiltShiftYFilter.start=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"end",{get:function(){return this.tiltShiftXFilter.end},set:function(e){this.tiltShiftXFilter.end=this.tiltShiftYFilter.end=e},enumerable:!1,configurable:!0}),n}(n.Filter),Y=function(e){function n(t){var r=e.call(this,c,"varying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float radius;\nuniform float angle;\nuniform vec2 offset;\nuniform vec4 filterArea;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 twist(vec2 coord)\n{\n    coord -= offset;\n\n    float dist = length(coord);\n\n    if (dist < radius)\n    {\n        float ratioDist = (radius - dist) / radius;\n        float angleMod = ratioDist * ratioDist * angle;\n        float s = sin(angleMod);\n        float c = cos(angleMod);\n        coord = vec2(coord.x * c - coord.y * s, coord.x * s + coord.y * c);\n    }\n\n    coord += offset;\n\n    return coord;\n}\n\nvoid main(void)\n{\n\n    vec2 coord = mapCoord(vTextureCoord);\n\n    coord = twist(coord);\n\n    coord = unmapCoord(coord);\n\n    gl_FragColor = texture2D(uSampler, coord );\n\n}\n")||this;return Object.assign(r,n.defaults,t),r}return u(n,e),Object.defineProperty(n.prototype,"offset",{get:function(){return this.uniforms.offset},set:function(e){this.uniforms.offset=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.radius},set:function(e){this.uniforms.radius=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"angle",{get:function(){return this.uniforms.angle},set:function(e){this.uniforms.angle=e},enumerable:!1,configurable:!0}),n.defaults={radius:200,angle:4,padding:20,offset:new t.Point},n}(n.Filter),Z=function(e){function n(t){var r,o=Object.assign(n.defaults,t),i=o.maxKernelSize,l=function(e,n){var t={};for(var r in e)Object.prototype.hasOwnProperty.call(e,r)&&n.indexOf(r)<0&&(t[r]=e[r]);if(null!=e&&"function"==typeof Object.getOwnPropertySymbols){var o=0;for(r=Object.getOwnPropertySymbols(e);o<r.length;o++)n.indexOf(r[o])<0&&Object.prototype.propertyIsEnumerable.call(e,r[o])&&(t[r[o]]=e[r[o]])}return t}(o,["maxKernelSize"]);return r=e.call(this,c,"varying vec2 vTextureCoord;\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\n\nuniform vec2 uCenter;\nuniform float uStrength;\nuniform float uInnerRadius;\nuniform float uRadius;\n\nconst float MAX_KERNEL_SIZE = ${maxKernelSize};\n\n// author: http://byteblacksmith.com/improvements-to-the-canonical-one-liner-glsl-rand-for-opengl-es-2-0/\nhighp float rand(vec2 co, float seed) {\n    const highp float a = 12.9898, b = 78.233, c = 43758.5453;\n    highp float dt = dot(co + seed, vec2(a, b)), sn = mod(dt, 3.14159);\n    return fract(sin(sn) * c + seed);\n}\n\nvoid main() {\n\n    float minGradient = uInnerRadius * 0.3;\n    float innerRadius = (uInnerRadius + minGradient * 0.5) / filterArea.x;\n\n    float gradient = uRadius * 0.3;\n    float radius = (uRadius - gradient * 0.5) / filterArea.x;\n\n    float countLimit = MAX_KERNEL_SIZE;\n\n    vec2 dir = vec2(uCenter.xy / filterArea.xy - vTextureCoord);\n    float dist = length(vec2(dir.x, dir.y * filterArea.y / filterArea.x));\n\n    float strength = uStrength;\n\n    float delta = 0.0;\n    float gap;\n    if (dist < innerRadius) {\n        delta = innerRadius - dist;\n        gap = minGradient;\n    } else if (radius >= 0.0 && dist > radius) { // radius < 0 means it's infinity\n        delta = dist - radius;\n        gap = gradient;\n    }\n\n    if (delta > 0.0) {\n        float normalCount = gap / filterArea.x;\n        delta = (normalCount - delta) / normalCount;\n        countLimit *= delta;\n        strength *= delta;\n        if (countLimit < 1.0)\n        {\n            gl_FragColor = texture2D(uSampler, vTextureCoord);\n            return;\n        }\n    }\n\n    // randomize the lookup values to hide the fixed number of samples\n    float offset = rand(vTextureCoord, 0.0);\n\n    float total = 0.0;\n    vec4 color = vec4(0.0);\n\n    dir *= strength;\n\n    for (float t = 0.0; t < MAX_KERNEL_SIZE; t++) {\n        float percent = (t + offset) / MAX_KERNEL_SIZE;\n        float weight = 4.0 * (percent - percent * percent);\n        vec2 p = vTextureCoord + dir * percent;\n        vec4 sample = texture2D(uSampler, p);\n\n        // switch to pre-multiplied alpha to correctly blur transparent images\n        // sample.rgb *= sample.a;\n\n        color += sample * weight;\n        total += weight;\n\n        if (t > countLimit){\n            break;\n        }\n    }\n\n    color /= total;\n    // switch back from pre-multiplied alpha\n    // color.rgb /= color.a + 0.00001;\n\n    gl_FragColor = color;\n}\n".replace("${maxKernelSize}",i.toFixed(1)))||this,Object.assign(r,l),r}return u(n,e),Object.defineProperty(n.prototype,"center",{get:function(){return this.uniforms.uCenter},set:function(e){this.uniforms.uCenter=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"strength",{get:function(){return this.uniforms.uStrength},set:function(e){this.uniforms.uStrength=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"innerRadius",{get:function(){return this.uniforms.uInnerRadius},set:function(e){this.uniforms.uInnerRadius=e},enumerable:!1,configurable:!0}),Object.defineProperty(n.prototype,"radius",{get:function(){return this.uniforms.uRadius},set:function(e){(e<0||e===1/0)&&(e=-1),this.uniforms.uRadius=e},enumerable:!1,configurable:!0}),n.defaults={strength:.1,center:[0,0],innerRadius:0,radius:-1,maxKernelSize:32},n}(n.Filter);return e.AdjustmentFilter=m,e.AdvancedBloomFilter=h,e.AsciiFilter=g,e.BevelFilter=v,e.BloomFilter=y,e.BulgePinchFilter=b,e.CRTFilter=z,e.ColorMapFilter=x,e.ColorOverlayFilter=_,e.ColorReplaceFilter=C,e.ConvolutionFilter=S,e.CrossHatchFilter=F,e.DotFilter=O,e.DropShadowFilter=P,e.EmbossFilter=A,e.GlitchFilter=T,e.GlowFilter=w,e.GodrayFilter=D,e.KawaseBlurFilter=d,e.MotionBlurFilter=j,e.MultiColorReplaceFilter=M,e.OldFilmFilter=R,e.OutlineFilter=E,e.PixelateFilter=I,e.RGBSplitFilter=N,e.RadialBlurFilter=k,e.ReflectionFilter=L,e.ShockwaveFilter=X,e.SimpleLightmapFilter=B,e.TiltShiftAxisFilter=G,e.TiltShiftFilter=W,e.TiltShiftXFilter=K,e.TiltShiftYFilter=q,e.TwistFilter=Y,e.ZoomBlurFilter=Z,Object.defineProperty(e,"__esModule",{value:!0}),e}({},PIXI,PIXI,PIXI,PIXI.utils,PIXI,PIXI.filters,PIXI.filters);Object.assign(PIXI.filters,__filters);
+//# sourceMappingURL=pixi-filters.js.map
+
+
 // Generated by CoffeeScript 2.6.1
 // ==========================================================================
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -340,7 +217,7 @@ PKD_SimpleSkillsTree.LoadPluginSettings = () => {
 // * LIBRARY WITH MZ AND MZ SUPPORT
 //! {OUTER FILE}
 
-//?rev 03.06.23
+//?rev 24.07.24
 var KDCore;
 
 window.Imported = window.Imported || {};
@@ -351,7 +228,9 @@ KDCore = KDCore || {};
 
 // * Двузначные числа нельзя в версии, сравнение идёт по первой цифре поулчается (3.43 - нельзя, можно 3.4.3)
 //%[МЕНЯТЬ ПРИ ИЗМЕНЕНИИ]
-KDCore._fileVersion = '3.2.7';
+KDCore._fileVersion = '3.5.6';
+
+KDCore.nuiVersion = '1.2';
 
 // * Методы и библиотеки данной версии
 KDCore._loader = 'loader_' + KDCore._fileVersion;
@@ -492,7 +371,7 @@ KDCore.registerLibraryToLoad(function() {
     return Math.min(Math.max(this, min), max);
   };
   return Number.prototype.any = function(number) {
-    return (number != null) && number > 0;
+    return (number != null) && typeof number === 'number' && number > 0;
   };
 });
 
@@ -702,6 +581,45 @@ KDCore.registerLibraryToLoad(function() {
   return Bitmap.prototype.drawTextFull = function(text, position = 'center') {
     return this.drawText(text, 0, 0, this.width, this.height, position);
   };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  KDCore.EasingFuncs = KDCore.EasingFuncs || {};
+  return (function() {
+    var _;
+    _ = KDCore.EasingFuncs;
+    _.linear = function(t, b, c, d) {
+      return c * t / d + b;
+    };
+    _.easeInQuad = function(t, b, c, d) {
+      return c * (t /= d) * t + b;
+    };
+    _.easeOutQuad = function(t, b, c, d) {
+      return -c * (t /= d) * (t - 2) + b;
+    };
+    _.easeInOutQuad = function(t, b, c, d) {
+      if ((t /= d / 2) < 1) {
+        return c / 2 * t * t + b;
+      } else {
+        return -c / 2 * ((--t) * (t - 2) - 1) + b;
+      }
+    };
+    _.easeInCubic = function(t, b, c, d) {
+      return c * (t /= d) * t * t + b;
+    };
+    _.easeOutCubic = function(t, b, c, d) {
+      return c * ((t = t / d - 1) * t * t + 1) + b;
+    };
+    return _.easeInOutCubic = function(t, b, c, d) {
+      if ((t /= d / 2) < 1) {
+        return c / 2 * t * t * t + b;
+      } else {
+        return c / 2 * ((t -= 2) * t * t + 2) + b;
+      }
+    };
+  })();
 });
 
 
@@ -1430,6 +1348,129 @@ KDCore.registerLibraryToLoad(function() {
       }
       return false;
     };
+    //@[3.5] since
+    _.convertBindingValue = function(sourceObj, bindingValue, element = null) {
+      var e;
+      try {
+        return KDCore.UI.Builder._convertBindingValue(...arguments);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
+    };
+    //@[3.5] since
+    _.getRealSpriteSize = function(forField = 'x', sprite = null) {
+      var e, h, w;
+      try {
+        if (sprite == null) {
+          return 0;
+        }
+        if (forField === 'x' || forField === 'width') {
+          if (sprite.realWidth != null) {
+            w = sprite.realWidth();
+          } else {
+            w = sprite.width;
+          }
+          return w;
+        } else if (forField === 'y' || forField === 'height') {
+          if (sprite.realHeight != null) {
+            h = sprite.realHeight();
+          } else {
+            h = sprite.height;
+          }
+          return h;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return 0;
+    };
+    //@[3.5] since
+    _.string2hex = function(string) {
+      var e;
+      try {
+        if (typeof string === 'string' && string[0] === '#') {
+          string = string.substr(1);
+        }
+        return parseInt(string, 16);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return 0xffffff;
+    };
+    //@[3.5] since
+    _.convertDP = function(value = 0, isHalf = false) {
+      var d, e, mod, modX, modY;
+      try {
+        if (Graphics.width === 816 && Graphics.height === 624) {
+          return value;
+        }
+        modX = Graphics.width / 816;
+        modY = Graphics.height / 624;
+        // Aprox
+        mod = (modX + modY) / 2;
+        if (mod === 0) {
+          return 0;
+        }
+        if (isHalf === true) {
+          if (mod < 1) {
+            d = 1 - mod;
+            mod += d / 2;
+          } else if (mod > 1) {
+            d = mod - 1;
+            mod = 1 + (d / 2);
+          }
+        }
+        return Math.round(value * mod);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return 0;
+    };
+    //@[3.5.6] since
+    _.getValueWithDP = function(value) {
+      var dpValue, e, negative, r, result, resultValue;
+      try {
+        if (typeof value === "string") {
+          value = value.trim();
+          // * Replace all HDP and DP
+          if (value.contains("hdp") || value.contains("dp")) {
+            if (value[0] === '-') {
+              value = value.replace("-", "");
+              negative = true;
+            } else {
+              negative = false;
+            }
+            if (value.contains("hdp")) {
+              r = new RegExp("(\\d+)hdp", "g");
+              result = r.exec(value);
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, true);
+              value = value.replace(/(\d+)hdp/, resultValue);
+            } else if (value.contains("dp")) {
+              r = new RegExp("(\\d+)dp", "g");
+              result = r.exec(value);
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, false);
+              value = value.replace(/(\d+)dp/, resultValue);
+            }
+          }
+          value = parseInt(value);
+          if (negative) {
+            value = -value;
+          }
+        }
+        return value;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return 0;
+      }
+    };
     //@[2.9.7] since
     // * Shrink number 100000 to "100k" and ect, returns STRING
     _.formatNumberToK = function(num) {
@@ -1462,6 +1503,67 @@ KDCore.registerLibraryToLoad(function() {
     this.drawFace(faceName, faceIndex, x, y);
   };
 });
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ Window_Selectable.coffee
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    //---------------------------------------------------------------------------
+    var ALIAS__select, _;
+    //@[DEFINES]
+    _ = Window_Selectable.prototype;
+    //@[ALIAS]
+    ALIAS__select = _.select;
+    _.select = function(index) {
+      var e;
+      ALIAS__select.call(this, ...arguments);
+      try {
+        return this._pOnSelectionChanged(index);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._pOnSelectionChanged = function(newIndex) {
+      var e;
+      try {
+        if (this._pkdLastSelectedIndex == null) {
+          this._pkdLastSelectedIndex = newIndex;
+          return this.pOnSelectionChanged();
+        } else {
+          if (this._pkdLastSelectedIndex !== newIndex) {
+            this._pkdLastSelectedIndex = newIndex;
+            return this.pOnSelectionChanged();
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.safeSelect = function(index = 0) {
+      var e;
+      try {
+        if (this.maxItems() > index) {
+          return this.select(index);
+        } else {
+          return this.select(-1);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    
+    // * Called only when new (different) index is selected
+    _.pOnSelectionChanged = function() {};
+  })();
+});
+
+// ■ END Window_Selectable.coffee
+//---------------------------------------------------------------------------
 
 
 // Generated by CoffeeScript 2.6.1
@@ -1825,7 +1927,7 @@ KDCore.registerLibraryToLoad(function() {
 
     // * Меняем прозрачность 4 раза, туда-сюда, затем выводим done в консоль
 
-    //@changer = new AA.Changer(someSprite)
+    //@changer = new KDCore.Changer(someSprite)
   //@changer.change('opacity').from(255)
   //            .to(0).step(5).speed(1).delay(30).repeat(4).reverse()
   //            .start().done(() -> console.log('done'))
@@ -2137,6 +2239,7 @@ KDCore.registerLibraryToLoad(function() {
 KDCore.registerLibraryToLoad(function() {
   var Color;
   Color = (function() {
+    //rev 29.04.2024
     class Color {
       constructor(r1 = 255, g1 = 255, b1 = 255, a1 = 255) {
         this.r = r1;
@@ -2226,7 +2329,12 @@ KDCore.registerLibraryToLoad(function() {
       }
 
       static FromHex(hexString) {
-        var color, result;
+        var color, result, shorthandRegex;
+        //Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+        shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+        hexString = hexString.replace(shorthandRegex, function(m, r, g, b) {
+          return r + r + g + g + b + b;
+        });
         result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexString);
         color = null;
         if (result != null) {
@@ -2562,6 +2670,52 @@ KDCore.registerLibraryToLoad(function() {
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
   //@[AUTO EXTEND]
+  return KDCore.MapAnchorPoint = class MapAnchorPoint {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this._realX = this.x;
+      this._realY = this.y;
+    }
+
+    shiftY() {
+      return 0;
+    }
+
+    jumpHeight() {
+      return 0;
+    }
+
+    scrolledX() {
+      return Game_CharacterBase.prototype.scrolledX.call(this);
+    }
+
+    scrolledY() {
+      return Game_CharacterBase.prototype.scrolledY.call(this);
+    }
+
+    screenX() {
+      return Game_CharacterBase.prototype.screenX.call(this);
+    }
+
+    screenY() {
+      return Game_CharacterBase.prototype.screenY.call(this);
+    }
+
+    moveTo(x, y) {
+      this.x = x;
+      this.y = y;
+      this._realX = this.x;
+      this._realY = this.y;
+    }
+
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  //@[AUTO EXTEND]
   //?[DEPRECATED]
   return KDCore.ParametersManager = class ParametersManager {
     constructor(pluginName) {
@@ -2725,6 +2879,7 @@ KDCore.registerLibraryToLoad(function() {
       params = {};
       for (key in paramSet) {
         value = paramSet[key];
+        KDCore.__ppNameToParseNext = key;
         clearKey = this.parseKey(key);
         typeKey = this.parseKeyType(key);
         params[clearKey] = this.parseParamItem(typeKey, value);
@@ -2738,6 +2893,19 @@ KDCore.registerLibraryToLoad(function() {
 
     parseKeyType(keyRaw) {
       return keyRaw.split(":")[1];
+    }
+
+    writeDetailedError() {
+      var e;
+      try {
+        if (!String.any(KDCore.__ppNameToParseNext)) {
+          return;
+        }
+        return console.warn("Please, check Plugin Parameter " + KDCore.__ppNameToParseNext + " in plugin " + this.pluginName);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     }
 
     // * Проверка, загружены ли параметры плагина
@@ -2808,6 +2976,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
         return item;
       }
     }
@@ -2829,6 +2998,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return elements;
     }
@@ -2849,6 +3019,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return null;
     }
@@ -2865,11 +3036,13 @@ KDCore.registerLibraryToLoad(function() {
           } catch (error) {
             e = error;
             console.warn(e);
+            this.writeDetailedError();
           }
         }
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return elements;
     }
@@ -2884,6 +3057,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         console.warn(e);
+        this.writeDetailedError();
       }
       return item;
     }
@@ -2912,6 +3086,7 @@ KDCore.registerLibraryToLoad(function() {
       } catch (error) {
         e = error;
         KDCore.warning(e);
+        this.writeDetailedError();
         return null; // * Чтобы default value был возвращён
       }
     }
@@ -3058,10 +3233,422 @@ KDCore.registerLibraryToLoad(function() {
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
   return KDCore.Sprite = (function(superClass) {
-    //@[AUTO EXTEND]
+    //rev 07.05.22
+
+      //@[AUTO EXTEND]
     class Sprite extends superClass {
       constructor() {
         super(...arguments);
+        this.pHandledIndex = 0;
+        this._create2();
+        return;
+      }
+
+      _create2() {} // * FOR CHILDRENS
+
+      pIsSupportKeyboardHandle() {
+        return false;
+      }
+
+      pIsVerticalKeyboardNavigation() {
+        return true;
+      }
+
+      // * For Childrens
+      isLoaded() {
+        return true;
+      }
+
+      realWidth() {
+        var child;
+        if (this.width === 0) {
+          child = this.zeroChild();
+          if (child != null) {
+            if (child.realWidth != null) {
+              return child.realWidth();
+            } else {
+              return child.width;
+            }
+          }
+        }
+        return this.width;
+      }
+
+      realHeight() {
+        var child;
+        if (this.height === 0) {
+          child = this.zeroChild();
+          if (child != null) {
+            if (child.realHeight != null) {
+              return child.realHeight();
+            } else {
+              return child.height;
+            }
+          }
+        }
+        return this.height;
+      }
+
+      dataBindings() {
+        return {
+          x: function(v) {
+            if (v != null) {
+              return this.setPosition(v, this.y);
+            }
+          },
+          y: function(v) {
+            if (v != null) {
+              return this.setPosition(this.x, v);
+            }
+          },
+          position: function(v) {
+            if (v != null) {
+              return this.setPosition(v);
+            }
+          },
+          anchor: function(v) {
+            if (v != null) {
+              return this.setCommonAnchor(v);
+            }
+          },
+          animation: function(v) {
+            if (v != null) {
+              return this.addAnimationRule(v);
+            }
+          },
+          opacity: function(v) {
+            if (v != null) {
+              return this.opacity = v;
+            }
+          },
+          visible: function(v) {
+            if (v != null) {
+              return this.visible = v;
+            }
+          },
+          scale: function(v) {
+            if (v != null) {
+              return this.scale.set(v);
+            }
+          },
+          rotation: function(v) {
+            if (v != null) {
+              return this.rotation = v;
+            }
+          }
+        };
+      }
+
+      callBinding(binding, value) {
+        var e, func;
+        try {
+          func = this.dataBindings()[binding];
+          if (func != null) {
+            return func.call(this, value);
+          } else {
+            return console.warn("Binding " + binding + " not found!");
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      refreshBindings(dataObject = null, recursive = true) {
+        var child, e, j, len, ref, results;
+        try {
+          if (dataObject == null) {
+            dataObject = this;
+          }
+          KDCore.UI.Builder.RefreshBindings(this, dataObject);
+          if (recursive === true) {
+            ref = this.children;
+            results = [];
+            for (j = 0, len = ref.length; j < len; j++) {
+              child = ref[j];
+              try {
+                if (child.refreshBindings != null) {
+                  results.push(child.refreshBindings(dataObject, true));
+                } else {
+                  results.push(void 0);
+                }
+              } catch (error) {
+                e = error;
+                results.push(KDCore.warning(e));
+              }
+            }
+            return results;
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      uiConstant(name) {
+        var e;
+        try {
+          if (this.uiConstants != null) {
+            return this.uiConstants[name];
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return null;
+      }
+
+      addLoadListener(listener) {
+        var e;
+        try {
+          if (listener == null) {
+            return;
+          }
+          if (this.isLoaded()) {
+            try {
+              return listener();
+            } catch (error) {
+              e = error;
+              return KDCore.warning(e);
+            }
+          } else {
+            return this._addLoadListener(listener);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      setPosition(x = 0, y = null, bindedObj = null) {
+        var _x, _y, e;
+        try {
+          if (!this.isLoaded()) {
+            this._requireFunc('setPosition', arguments);
+            return;
+          }
+          // * Check first Argument as Object
+          if (typeof x === 'object') {
+            if (x.x != null) {
+              _x = x.x;
+              if (x.y != null) {
+                _y = x.y;
+              }
+              x = _x;
+              y = _y;
+            } else if (x.position != null) {
+              this.setPosition(x.position, null, bindedObj);
+              return;
+            } else if (x.margins != null) {
+              this.setPosition(x.margins, null, bindedObj);
+              return;
+            }
+          }
+          if (typeof x === 'string') {
+            this.x = this._getValueByStr(x, 'x', bindedObj);
+            if (y == null) {
+              y = x;
+            }
+          } else {
+            this.x = x; // * Number
+          }
+          if (typeof y === 'string') {
+            return this.y = this._getValueByStr(y, 'y', bindedObj);
+          } else {
+            if (y != null) {
+              return this.y = y;
+            }
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _getValueByStr(value = '0', forField = 'x', owner = null) {
+        var dpValue, e, exValue, parentRefSize, percentValue, r, result, resultValue, v;
+        try {
+          if (typeof value === 'number') {
+            return value;
+          }
+          if (isFinite(value)) {
+            return Number(value);
+          }
+          if (typeof value !== 'string') {
+            return 0;
+          }
+          // * NO REPLACEMENT
+          if (value[0] === '$' || value[0] === '@') {
+            v = KDCore.Utils.convertBindingValue(owner, value, this);
+            return this._getValueByStr(v, forField, owner);
+          }
+          if (value.contains("prevX")) {
+            value = value.replace("prevX", this._getPreviousChildData('x'));
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("prevY")) {
+            value = value.replace("prevY", this._getPreviousChildData('y'));
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("prevHeight")) {
+            value = value.replace("prevHeight", this._getPreviousChildData('height'));
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("prevWidth")) {
+            value = value.replace("prevWidth", this._getPreviousChildData('width'));
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("prevEndX")) {
+            value = value.replace("prevEndX", "prevX + prevWidth");
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("prevEndY")) {
+            value = value.replace("prevEndY", "prevY + prevHeight");
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("end")) {
+            value = value.replace("end", "100%");
+          }
+          if (value.contains("begin")) {
+            if (forField === 'y') {
+              value = value.replace("begin", "-height");
+            } else {
+              value = value.replace("begin", "-width");
+            }
+          }
+          if (value.contains("right")) {
+            value = value.replace("right", "100% - width");
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("left")) {
+            value = value.replace("left", "0");
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("top")) {
+            value = value.replace("top", "0");
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("bottom")) {
+            value = value.replace("bottom", "100% - height");
+            return this._getValueByStr(value, forField, owner);
+          }
+          // * Replace all X%
+          if (value.contains("%")) {
+            r = new RegExp("(\\d+)%", "g");
+            result = r.exec(value);
+            while ((result != null)) {
+              percentValue = Number(result[1]);
+              resultValue = 0;
+              if (this.parent != null) {
+                parentRefSize = KDCore.Utils.getRealSpriteSize(forField, this.parent);
+                resultValue = parentRefSize * (percentValue / 100.0);
+              }
+              value = value.replace(/(\d+)%/, resultValue);
+              result = r.exec(value);
+            }
+          }
+          // * Replace all HDP
+          if (value.contains("hdp")) {
+            r = new RegExp("(\\d+)hdp", "g");
+            result = r.exec(value);
+            while ((result != null)) {
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, true);
+              value = value.replace(/(\d+)hdp/, resultValue);
+              result = r.exec(value);
+            }
+          }
+          // * Replace all DP
+          if (value.contains("dp")) {
+            r = new RegExp("(\\d+)dp", "g");
+            result = r.exec(value);
+            while ((result != null)) {
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, false);
+              value = value.replace(/(\d+)dp/, resultValue);
+              result = r.exec(value);
+            }
+          }
+          if (value.contains('center')) {
+            v = this._getValueByStr('50%', forField, owner);
+            exValue = KDCore.Utils.getRealSpriteSize(forField, this);
+            exValue = v - (exValue / 2);
+            value = value.replace("center", exValue);
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("height")) {
+            exValue = KDCore.Utils.getRealSpriteSize("height", this);
+            value = value.replace("height", exValue);
+            return this._getValueByStr(value, forField, owner);
+          }
+          if (value.contains("width")) {
+            exValue = KDCore.Utils.getRealSpriteSize("width", this);
+            value = value.replace("width", exValue);
+            return this._getValueByStr(value, forField, owner);
+          }
+          v = eval(value);
+          return this._getValueByStr(v, forField, owner);
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return 0;
+      }
+
+      _getPreviousChildData(forField) {
+        var e, myIndex, prevChild;
+        try {
+          if (this.parent == null) {
+            return 0;
+          }
+          if (this.parent.children.length <= 1) {
+            return 0;
+          }
+          myIndex = this.parent.children.indexOf(this);
+          prevChild = this.parent.children[myIndex - 1];
+          if (prevChild == null) {
+            return 0;
+          }
+          if (forField === "x") {
+            return prevChild.x;
+          } else if (forField === "y") {
+            return prevChild.y;
+          } else {
+            return KDCore.Utils.getRealSpriteSize(forField, prevChild);
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return 0;
+      }
+
+      setCommonAnchor(x, y) {
+        var c, e, j, len, ref;
+        try {
+          if (y == null) {
+            y = x;
+          }
+          this.anchor.x = x;
+          this.anchor.y = y;
+          ref = this.children;
+          for (j = 0, len = ref.length; j < len; j++) {
+            c = ref[j];
+            if (c.setCommonAnchor != null) {
+              c.setCommonAnchor(x, y);
+            } else {
+              c.anchor.x = x;
+              c.anchor.y = y;
+            }
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+      }
+
+      zeroChild() {
+        return this.children[0];
       }
 
       appear(step, delay = 0) {
@@ -3093,6 +3680,20 @@ KDCore.registerLibraryToLoad(function() {
           var ref;
           return (ref = this._opChanger) != null ? ref.update() : void 0;
         };
+      }
+
+      moveWithAnimation(dx, dy, duration = 30, easingType = 2) {
+        var e;
+        try {
+          this._moveAnimationItem = new Game_Picture();
+          this._moveAnimationItem._x = this.x;
+          this._moveAnimationItem._y = this.y;
+          this._moveAnimationItem.move(0, this.x + dx, this.y + dy, 1, 1, 255, 0, duration, easingType);
+          this.updateMovingAnimation = this.updateMovingAnimationBody;
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
       }
 
       assignTooltip(content, params) {
@@ -3148,10 +3749,97 @@ KDCore.registerLibraryToLoad(function() {
         }
       }
 
+      //@[DYNAMIC]
+      updateMovingAnimation() {} // * EMPTY
+
+      updateMovingAnimationBody() {
+        var e;
+        try {
+          if (this._moveAnimationItem == null) {
+            return;
+          }
+          this._moveAnimationItem.update();
+          this.x = this._moveAnimationItem._x;
+          this.y = this._moveAnimationItem._y;
+          if (this._moveAnimationItem._duration <= 0) {
+            this._moveAnimationItem = null;
+            this.updateMovingAnimation = function() {};
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+          this.updateMovingAnimation = function() {};
+        }
+      }
+
+      addAnimationRule(rule) {
+        var e, r;
+        try {
+          if (rule == null) {
+            return;
+          }
+          if (this._animationRules == null) {
+            this._animationRules = [];
+          }
+          if (typeof rule === 'object' && (rule.animationConfig != null) && (rule.update != null)) {
+            r = rule;
+          } else {
+            r = new KDCore.AnimationRule(rule, this);
+          }
+          this._animationRules.push(r);
+          return r;
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return null;
+      }
+
+      setAnimationRule(rule) {
+        var e;
+        try {
+          this._animationRules = [];
+          return this.addAnimationRule(rule);
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return null;
+      }
+
       update() {
         super.update();
         this._updateOpChanger();
-        return this.updateTooltip();
+        this.updateTooltip();
+        if (this.updateMovingAnimation != null) {
+          this.updateMovingAnimation();
+        }
+        if (this.pIsHandlerActive()) {
+          this._pHandleKeyboardInputs();
+        }
+        if (this.devdrag === true) {
+          this._pUpdateDevDrag();
+        }
+        if (this._animationRules != null) {
+          this._pUpdateAnimationRules();
+        }
+      }
+
+      _pUpdateAnimationRules() {
+        var e, j, len, ref, results, rule;
+        try {
+          ref = this._animationRules;
+          results = [];
+          for (j = 0, len = ref.length; j < len; j++) {
+            rule = ref[j];
+            rule.update();
+            results.push(rule.applyAnimation(this));
+          }
+          return results;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
       }
 
       //@[DYNAMIC]
@@ -3165,8 +3853,8 @@ KDCore.registerLibraryToLoad(function() {
         return this.bitmap.clear();
       }
 
-      add(child) {
-        return this.addChild(child);
+      add() {
+        return this.addChild(...arguments);
       }
 
       bNew(w, h) {
@@ -3316,6 +4004,378 @@ KDCore.registerLibraryToLoad(function() {
         }
       }
 
+      activateHandlerManagment() {
+        var e;
+        try {
+          this.handleUpAction = this.selectPreviousHandlerItem;
+          this.handleDownAction = this.selectNextHandlerItem;
+          return this._handleManagerActive = true;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      deactivateHandlerManagment() {
+        var ref;
+        this._handleManagerActive = false;
+        this.handleUpAction = function() {}; // * EMPTY
+        this.handleDownAction = function() {}; // * EMPTY
+        if ((ref = $gameTemp.__pkdActiveKeyboardHandler) != null) {
+          ref.pDeactivateHandler();
+        }
+        $gameTemp.__pkdActiveKeyboardHandler = null;
+      }
+
+      addChild(item) {
+        var c, handlers;
+        c = super.addChild(...arguments);
+        if (item instanceof KDCore.Sprite && (item.pIsSupportKeyboardHandle != null) && item.pIsSupportKeyboardHandle()) {
+          handlers = this._pGetAllHandlers();
+          item.pHandledIndex = handlers.length - 1;
+        }
+        return c;
+      }
+
+      pIsAnyHandlerSelected() {
+        return $gameTemp.__pkdActiveKeyboardHandler != null;
+      }
+
+      selectPreviousHandlerItem() {
+        var e;
+        try {
+          if (!this.pIsAnyHandlerSelected()) {
+            return this._trySelectHandler(0);
+          } else {
+            return this._trySelectHandler(this._selectedHandlerIndex() - 1);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _selectedHandlerIndex() {
+        return $gameTemp.__pkdActiveKeyboardHandler.pHandledIndex;
+      }
+
+      _trySelectHandler(index) {
+        var e, handlerItemToSelect;
+        try {
+          handlerItemToSelect = this._pGetAllHandlers().find(function(i) {
+            return i.pHandledIndex === index;
+          });
+          if (handlerItemToSelect != null) {
+            handlerItemToSelect.pActivateHandler();
+          }
+          return this._pOnHandled();
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pGetAllHandlers() {
+        return this.children.filter(function(i) {
+          return i instanceof KDCore.Sprite && (i.pIsSupportKeyboardHandle != null) && i.pIsSupportKeyboardHandle();
+        });
+      }
+
+      selectNextHandlerItem() {
+        var e;
+        try {
+          if (!this.pIsAnyHandlerSelected()) {
+            return this._trySelectHandler(0);
+          } else {
+            return this._trySelectHandler(this._selectedHandlerIndex() + 1);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      activeItemFilterOptions() {
+        return {
+          distance: 15,
+          outerStrength: 4
+        };
+      }
+
+      pIsHandlerActive() {
+        return this._handleManagerActive === true || this._handlerActive === true;
+      }
+
+      destroy() {
+        if ($gameTemp.__pkdActiveKeyboardHandler === this) {
+          $gameTemp.__pkdActiveKeyboardHandler = null;
+        }
+        return super.destroy();
+      }
+
+      _pOnHandled() {
+        return Input.clear();
+      }
+
+      _pHandleKeyL(ignoreNavigation = false) {
+        var e;
+        try {
+          if (this.pIsVerticalKeyboardNavigation() || ignoreNavigation) {
+            if (this.handleLeftAction != null) {
+              this.handleLeftAction();
+              return this._pOnHandled();
+            }
+          } else {
+            return this._pHandleKeyU(true);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyR(ignoreNavigation = false) {
+        var e;
+        try {
+          if (this.pIsVerticalKeyboardNavigation() || ignoreNavigation) {
+            if (this.handleRightAction != null) {
+              this.handleRightAction();
+              return this._pOnHandled();
+            }
+          } else {
+            return this._pHandleKeyD(true);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyU(ignoreNavigation = false) {
+        var e;
+        try {
+          if (this.pIsVerticalKeyboardNavigation() || ignoreNavigation) {
+            if (this.handleUpAction != null) {
+              this.handleUpAction();
+              return this._pOnHandled();
+            }
+          } else {
+            return this._pHandleKeyL(true);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyD(ignoreNavigation = false) {
+        var e;
+        try {
+          if (this.pIsVerticalKeyboardNavigation() || ignoreNavigation) {
+            if (this.handleDownAction != null) {
+              this.handleDownAction();
+              return this._pOnHandled();
+            }
+          } else {
+            return this._pHandleKeyR(true);
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _pHandleKeyOK() {
+        var e;
+        try {
+          if (this.handleOKAction != null) {
+            this.handleOKAction();
+            return this._pOnHandled();
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      pActivateHandler() {
+        if (!this.pIsSupportKeyboardHandle()) {
+          return;
+        }
+        if (($gameTemp.__pkdActiveKeyboardHandler != null) && $gameTemp.__pkdActiveKeyboardHandler !== this) {
+          $gameTemp.__pkdActiveKeyboardHandler.pDeactivateHandler();
+        }
+        this._handlerActive = true;
+        this._activateHandlerVisually();
+        $gameTemp.__pkdActiveKeyboardHandler = this;
+      }
+
+      _activateHandlerVisually() {
+        var e;
+        try {
+          //@filters = [new PIXI.filters.OutlineFilter(0.8, 0x99ff99, 0.5)]
+          //@filters = [new PIXI.filters.GlowFilter(2, 0.8, 0, 0x09f9, 0.5)]
+          return this.filters = [new PIXI.filters.GlowFilter(this.activeItemFilterOptions())];
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      pDeactivateHandler() {
+        if ($gameTemp.__pkdActiveKeyboardHandler === this) {
+          $gameTemp.__pkdActiveKeyboardHandler = null;
+        }
+        this._handlerActive = false;
+        this.filters = [];
+      }
+
+      _pHandleKeyboardInputs() {
+        var e;
+        try {
+          if (Input.isTriggered('left')) {
+            return this._pHandleKeyL();
+          } else if (Input.isTriggered('right')) {
+            return this._pHandleKeyR();
+          } else if (Input.isTriggered('up')) {
+            return this._pHandleKeyU();
+          } else if (Input.isTriggered('down')) {
+            return this._pHandleKeyD();
+          } else if (Input.isTriggered('ok')) {
+            return this._pHandleKeyOK();
+          }
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _applyRequiredData() {
+        var _n, e, func, j, len, ref;
+        try {
+          if (this._requiredFuncs == null) {
+            return;
+          }
+          ref = this._requiredFuncs;
+          for (j = 0, len = ref.length; j < len; j++) {
+            func = ref[j];
+            try {
+              _n = func[0];
+              if ((_n != null) && (this[_n] != null)) {
+                this[_n](...func[1]);
+              }
+            } catch (error) {
+              e = error;
+              KDCore.warning(e);
+            }
+          }
+          return this._requiredFuncs = null;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _requireFunc(name, args) {
+        var e;
+        try {
+          if (this._requiredFuncs == null) {
+            this._requiredFuncs = [];
+          }
+          return this._requiredFuncs.push([name, args]);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _addLoadListener(listener) {
+        var e;
+        try {
+          if (this._loadListeners == null) {
+            this._loadListeners = [];
+          }
+          return this._loadListeners.push(listener);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      _executeLoadListeners() {
+        var e, j, l, len, ref;
+        try {
+          if (!this._loadListeners) {
+            return;
+          }
+          ref = this._loadListeners;
+          for (j = 0, len = ref.length; j < len; j++) {
+            l = ref[j];
+            try {
+              l();
+            } catch (error) {
+              e = error;
+              KDCore.warning(e);
+            }
+          }
+          return this._loadListeners = null;
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      // * DEVELOPER TOOL ====================================
+      _pUpdateDevDrag() {
+        if (TouchInput.isLongPressed()) {
+          if (this.__ddIn === true) {
+            return this._pDD_moving();
+          } else {
+            if (this.isUnderMouse()) {
+              return this._pDD_startMove();
+            }
+          }
+        } else {
+          if (this.__ddIn === true) {
+            return this._pDD_stopMove();
+          }
+        }
+      }
+
+      _pDD_moving() {
+        this.x = TouchInput.x - this._pDDTDelta.x;
+        return this.y = TouchInput.y - this._pDDTDelta.y;
+      }
+
+      _pDD_startMove() {
+        var x, y;
+        ({x, y} = TouchInput);
+        this._pDDTDelta = {x, y};
+        this.__ddIn = true;
+      }
+
+      _pDD_stopMove() {
+        this.__ddIn = false;
+        console.log("DD DRAG POS: ");
+        return console.log(this.x, this.y);
+      }
+
+      // * STATIC ==================================================
+      static WhiteRect(w, h) {
+        return KDCore.Sprite.ColorRect(w, h, '#FFF');
+      }
+
+      static BlackRect(w, h) {
+        return KDCore.Sprite.ColorRect(w, h, '#000');
+      }
+
+      static ColorRect(w, h, color) {
+        var s;
+        s = KDCore.Sprite.FromBitmap(w, h);
+        s.b().fillAll(color);
+        return s;
+      }
+
       static FromImg(filename, sourceFolder) {
         var s;
         s = new KDCore.Sprite();
@@ -3340,7 +4400,7 @@ KDCore.registerLibraryToLoad(function() {
 
       // * Загрузчик из параметров плагина (безопасный)
       static FromParams(pluginParams) {
-        var e, h, margins, s, size, w;
+        var e, h, height, margins, s, size, w, width;
         try {
           size = pluginParams.size;
           ({w, h} = size);
@@ -3363,6 +4423,33 @@ KDCore.registerLibraryToLoad(function() {
                 h = Number(h);
               } else {
                 h = eval(h);
+              }
+            }
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+            h = 100;
+          }
+          ({width, height} = size);
+          try {
+            if (String.any(width)) {
+              if (isFinite(width)) {
+                w = Number(width);
+              } else {
+                w = eval(width);
+              }
+            }
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+            w = 100;
+          }
+          try {
+            if (String.any(height)) {
+              if (isFinite(height)) {
+                h = Number(height);
+              } else {
+                h = eval(height);
               }
             }
           } catch (error) {
@@ -3453,6 +4540,339 @@ KDCore.registerLibraryToLoad(function() {
     call() {
       if (this.method != null) {
         return this.method();
+      }
+    }
+
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  //@[AUTO EXTEND]
+  return KDCore.AnimationKeyFrame = class AnimationKeyFrame {
+    constructor(startValue, endValue, duration = 1, func = 'linear') {
+      this.startValue = startValue;
+      this.endValue = endValue;
+      this.func = func;
+      this._t = 0; // * Timer
+      this._d = duration * 60; // * Convert to Frames
+      this._c = this.endValue - this.startValue; // * Change
+      if (this.func == null) {
+        this.func = 'linear';
+      }
+      return;
+    }
+
+    reset() {
+      return this._t = 0;
+    }
+
+    update() {
+      if (this._t < this._d) {
+        return this._t += 1;
+      }
+    }
+
+    isEnd() {
+      return this._t >= this._d || this._d <= 0;
+    }
+
+    getValue() {
+      if (this._d <= 0) {
+        return this.endValue;
+      } else {
+        return this.easingFunc()(this._t, this.startValue, this._c, this._d);
+      }
+    }
+
+    easingFunc() {
+      if ((this.func != null) && (KDCore.EasingFuncs[this.func] != null)) {
+        return KDCore.EasingFuncs[this.func];
+      } else {
+        console.warn("Easing func " + this.func + " not found!");
+        return this.linear;
+      }
+    }
+
+    // * Default one
+    linear(t, b, c, d) {
+      return c * t / d + b;
+    }
+
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  //@[AUTO EXTEND]
+  return KDCore.AnimationKeyLine = class AnimationKeyLine {
+    constructor(keyFramesList, totalDuration = 1, func = 'linear') {
+      this.totalDuration = totalDuration;
+      this.keyFrames = this._parseKeyFrames(keyFramesList, func);
+      this.repeatsLeftBase = 0;
+      this.repeatsLeft = 0;
+      this.keyIndex = 0;
+      this._relativeValue = 0;
+      this._isStarted = false;
+      return;
+    }
+
+    setRelativeValue(_relativeValue) {
+      this._relativeValue = _relativeValue;
+    }
+
+    setRepeatsCount(repeatsLeftBase) {
+      this.repeatsLeftBase = repeatsLeftBase;
+      return this.repeatsLeft = this.repeatsLeftBase;
+    }
+
+    setLoop() {
+      return this.setRepeatsCount(-1);
+    }
+
+    start(startDelay = 0) {
+      this.startDelay = startDelay;
+      if (this.startDelay === 0) {
+        return this._isStarted = true;
+      } else {
+        return this._startTimer = this.startDelay * 60;
+      }
+    }
+
+    pause() {
+      this._isStarted = false;
+      this._startTimer = null;
+    }
+
+    isStarted() {
+      return this._isStarted === true;
+    }
+
+    complete() {
+      this.keyIndex = this.keyFrames.length;
+      this.repeatsLeft = 0;
+    }
+
+    reset() {
+      this.repeatsLeft = this.repeatsLeftBase;
+      this._resetKeyframes();
+    }
+
+    update() {
+      if (this._startTimer != null) {
+        this._updateStartTimer();
+      }
+      if (!this.isStarted()) {
+        return;
+      }
+      if (this.isEnd()) {
+        if (this.repeatsLeft === 0) { // * No repeats at all
+          return;
+        } else if (this.repeatsLeft < 0) { // * Infinite Loop
+          this._resetKeyframes();
+        } else {
+          this.repeatsLeft -= 1;
+          this._resetKeyframes();
+        }
+      }
+      this.keyFrames[this.keyIndex].update();
+      if (this.keyFrames[this.keyIndex].isEnd()) {
+        //console.log("NEXT")
+        this.keyIndex++;
+      }
+    }
+
+    isEnd() {
+      return this.keyIndex > this.keyFrames.length - 1;
+    }
+
+    getValue() {
+      var value;
+      if (this.isEnd()) {
+        value = this.keyFrames.last().getValue();
+      } else {
+        value = this.keyFrames[this.keyIndex].getValue();
+      }
+      return value + this._relativeValue;
+    }
+
+    _parseKeyFrames(keyframes, func) {
+      var duration, e, endValue, endValues, index, key, keyframesOutput, keys, kf, prevKey, startValue, value;
+      try {
+        keyframesOutput = [];
+        endValues = [];
+        keys = [];
+        index = 0;
+        for (key in keyframes) {
+          value = keyframes[key];
+          if (endValues.length > 0) {
+            startValue = endValues[index - 1];
+          } else {
+            startValue = 0;
+          }
+          value = KDCore.Utils.getValueWithDP(value);
+          endValue = value;
+          if (key === "0") {
+            duration = 0;
+          } else {
+            prevKey = keys[index - 1];
+            duration = this._calculateDuration(prevKey, key);
+          }
+          kf = new KDCore.AnimationKeyFrame(startValue, endValue, duration, func);
+          keys[index] = key;
+          endValues[index] = value;
+          keyframesOutput.push(kf);
+          index++;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return keyframesOutput;
+    }
+
+    _calculateDuration(rateA, rateB) {
+      var d, e, timeA, timeB;
+      try {
+        rateA = Number(rateA) / 100.0;
+        rateB = Number(rateB) / 100.0;
+        timeA = this.totalDuration * rateA;
+        timeB = this.totalDuration * rateB;
+        d = timeB - timeA;
+        return d;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return 0;
+    }
+
+    _resetKeyframes() {
+      var e, f, i, len, ref, results;
+      try {
+        this.keyIndex = 0;
+        ref = this.keyFrames;
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          f = ref[i];
+          results.push(f.reset());
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _updateStartTimer() {
+      var e;
+      try {
+        if (this._startTimer == null) {
+          return;
+        }
+        this._startTimer -= 1;
+        if (this._startTimer <= 0) {
+          this._isStarted = true;
+          return this._startTimer = null;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  //@[AUTO EXTEND]
+  return KDCore.AnimationRule = class AnimationRule {
+    constructor(animationConfig, obj) {
+      var delay, duration, func, keyframes, repeats;
+      if (typeof animationConfig === "string") {
+        animationConfig = KDCore.UI.Builder.ConvertShortcut(animationConfig);
+      }
+      this.animationConfig = Object.assign(this.defaultConfig(), animationConfig);
+      ({keyframes, duration, func, repeats, delay} = this.animationConfig);
+      this.keyLine = new KDCore.AnimationKeyLine(keyframes, duration, func);
+      if (repeats == null) {
+        repeats = 0;
+      }
+      this.keyLine.setRepeatsCount(repeats);
+      if (this.animationConfig.relative === true && (obj != null)) {
+        this.keyLine.setRelativeValue(obj[this.animationConfig.field]);
+      }
+      this.keyLine.start(delay);
+      if ((obj != null) && delay <= 0) {
+        this.applyAnimation(obj);
+      }
+      return;
+    }
+
+    setEndCallback(onEndCallback) {
+      this.onEndCallback = onEndCallback;
+    }
+
+    isHaveEndCallback() {
+      var e;
+      try {
+        if (this.animationConfig.repeats !== 0) {
+          // * Callback works only for single-shot animations
+          return false;
+        }
+        return this.onEndCallback != null;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return false;
+    }
+
+    defaultConfig() {
+      return {
+        field: "opacity",
+        duration: 1,
+        func: "linear",
+        delay: 0,
+        repeats: 0,
+        relative: false,
+        keyframes: {
+          "0": 0,
+          "100": 255
+        }
+      };
+    }
+
+    update() {
+      var e;
+      this.keyLine.update();
+      if (this.isHaveEndCallback()) {
+        if (this.keyLine.isEnd()) {
+          try {
+            this.onEndCallback();
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+          }
+          this.onEndCallback = null;
+        }
+      }
+    }
+
+    applyAnimation(obj) {
+      var e;
+      try {
+        if (obj == null) {
+          return;
+        }
+        return obj[this.animationConfig.field] = this.keyLine.getValue();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
       }
     }
 
@@ -4003,6 +5423,740 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
+  var Sprite_BaseCircle;
+  //NUI 1.0
+  //rev 28.04.24
+
+    //"type": "circle"
+  Sprite_BaseCircle = class Sprite_BaseCircle extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._create();
+      this._applySettings();
+      this._onResize();
+      return;
+    }
+
+    defaultSettings() {
+      return {
+        width: 100,
+        height: 100,
+        fillGradient: null, // { gradient stops }
+        gradientStart: {
+          x: 0,
+          y: 100,
+          r: 30
+        },
+        gradientEnd: {
+          x: 100,
+          y: 100,
+          r: 70
+        },
+        fillColor: 0xffffff,
+        fillAlpha: 1,
+        strokeWidth: 4,
+        strokeColor: 0x000000,
+        strokeAlpha: 1
+      };
+    }
+
+    defaultGradientSettings() {
+      return {
+        "0": "#9ff",
+        "1": "#033"
+      };
+    }
+
+    isHaveGradient() {
+      return false; //@settings.fillGradient?
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        stroke: function(v) {
+          if (v != null) {
+            return this.setStroke(v.width, v.color, v.alpha);
+          }
+        },
+        fill: function(v) {
+          if (v != null) {
+            return this.setFill(v.color, v.alpha);
+          }
+        }
+      });
+    }
+
+    setFill(color = "#FFF", alpha = 1) {
+      var e;
+      try {
+        this.settings.fillColor = color;
+        this.settings.fillAlpha = alpha;
+        this.settings.fillGradient = null;
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setStroke(color = "#FFF", width = 0, alpha = 1) {
+      var e;
+      try {
+        this.settings.strokeColor = color;
+        this.settings.strokeAlpha = alpha;
+        this.settings.strokeWidth = width;
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setSize(width = 100, height = 100) {
+      var e, h, w;
+      try {
+        w = this._getValueByStr(width, 'width', this);
+        h = this._getValueByStr(height, 'height', this);
+        if (w != null) {
+          this.settings.width = w;
+        }
+        if (h != null) {
+          this.settings.height = h;
+        }
+        this._applySettings();
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _create() {
+      var e;
+      try {
+        this.graphics = new PIXI.Graphics();
+        return this.addChild(this.graphics);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applySettings() {
+      var e, gradientSettings;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        this.graphics.clear();
+        if (this.settings.fillGradient != null) {
+          gradientSettings = Object.assign(this.defaultGradientSettings(), this.settings.fillGradient);
+        }
+        this._applyGradientTexture(gradientSettings);
+        return this._drawBaseCircle();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applyGradientTexture(fillGradient) {
+      var e;
+      try {
+
+      } catch (error) {
+        /*{ width, height } = @settings
+        c = document.createElement("canvas")
+        ctx = c.getContext("2d")*/
+        /*grd = ctx.createRadialGradient(
+            @settings.gradientStart.x,
+            @settings.gradientStart.y,
+            @settings.gradientStart.r,
+            @settings.gradientEnd.x,
+            @settings.gradientEnd.y,
+            @settings.gradientEnd.r
+        )*/
+        //grd = ctx.createRadialGradient(110, 90, 30, 100, 100, 70)
+        /*for key, value of fillGradient
+        try
+            grd.addColorStop(Number(key), value)
+        catch e
+            KDCore.warning e*/
+        /*grd.addColorStop(0, "pink")
+        grd.addColorStop(0.9, "white")
+        grd.addColorStop(1, "green")
+
+        ctx.fillStyle = grd
+        ctx.fillRect(0, 0, 400, 400)
+        texture = new PIXI.Texture.from(c)
+        @graphics.beginTextureFill(texture)*/
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawBaseCircle() {
+      var colorData, d, e, fillAlpha, fillColor, height, strokeAlpha, strokeColor, strokeColorData, width;
+      try {
+        ({width, height} = this.settings);
+        ({fillColor, fillAlpha} = this.settings);
+        colorData = this._buildColorData(fillColor, fillAlpha);
+        if (this.settings.strokeWidth > 0) {
+          ({strokeColor, strokeAlpha} = this.settings);
+          strokeColorData = this._buildColorData(strokeColor, strokeAlpha);
+          d = this.settings.strokeWidth;
+          // * Base Fill
+          this._drawElipse(0, 0, width, height, colorData);
+          // * Stroke
+          return this._drawStroke(0, 0, width, height, d, strokeColorData);
+        } else {
+          // * Base Fill only
+          return this._drawElipse(0, 0, width, height, colorData);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _buildColorData(c = 0xfff, a = 1) {
+      var e;
+      try {
+        if (typeof c === 'string') {
+          c = KDCore.Utils.string2hex(c);
+        }
+        return [c, a];
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return [0xfff, 1];
+      }
+    }
+
+    _drawElipse(x, y, w, h, colorData) {
+      var e, g;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        g = this.graphics;
+        if (!this.isHaveGradient()) {
+          g.beginFill(...colorData);
+        }
+        g.drawEllipse(x, y, w / 2, h / 2);
+        if (!this.isHaveGradient()) {
+          return g.endFill();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawStroke(x, y, w, h, d, colorData) {
+      var e, g;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        g = this.graphics;
+        g.lineStyle(d, ...colorData);
+        return g.drawEllipse(x, y, w / 2, h / 2);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var e;
+      try {
+        this.width = this.settings.width;
+        this.height = this.settings.height;
+        // * Круг (элипс) рисуется от центра, что не удобно
+        // при расчёте координат, поэтому сдвигаем в левый вверхний угол
+        this.graphics.x = this.settings.width * 0.5;
+        return this.graphics.y = this.settings.height * 0.5;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_BaseCircle = Sprite_BaseCircle;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_BaseRect;
+  //NUI 1.0
+  //rev 28.04.24
+
+    //"type": "rect"
+  Sprite_BaseRect = class Sprite_BaseRect extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._create();
+      this._applySettings();
+      this._onResize();
+      return;
+    }
+
+    defaultSettings() {
+      return {
+        width: 100,
+        height: 100,
+        corners: 0, // {  topLeft, topRight, bottomRight, bottomLeft }
+        fillGradient: null, // { gradient stops }
+        gradientStart: {
+          x: 0,
+          y: 0
+        },
+        gradientEnd: {
+          x: 0,
+          y: 100
+        },
+        fillColor: 0xffffff,
+        fillAlpha: 1,
+        strokeWidth: 4,
+        strokeColor: 0x000000,
+        strokeAlpha: 1
+      };
+    }
+
+    defaultGradientSettings() {
+      return {
+        "0": "#9ff",
+        "1": "#033"
+      };
+    }
+
+    defaultCornersSettings() {
+      return {
+        topLeft: 0,
+        topRight: 0,
+        bottomRight: 0,
+        bottomLeft: 0
+      };
+    }
+
+    isHaveGradient() {
+      return this.settings.fillGradient != null;
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        stroke: function(v) {
+          if (v != null) {
+            return this.setStroke(v.width, v.color, v.alpha);
+          }
+        },
+        fill: function(v) {
+          if (v != null) {
+            return this.setFill(v.color, v.alpha);
+          }
+        },
+        gradientStart: function(v) {
+          if (v != null) {
+            return this.setGradientStartEnd(v, this.settings.gradientEnd);
+          }
+        },
+        gradientEnd: function(v) {
+          if (v != null) {
+            return this.setGradientStartEnd(this.settings.gradientStart, v);
+          }
+        }
+      });
+    }
+
+    setGradientStartEnd(start, end) {
+      var e;
+      try {
+        if (start != null) {
+          start.x = this._getValueByStr(start.x, 'width', this);
+          start.y = this._getValueByStr(start.y, 'height', this);
+        }
+        if (end != null) {
+          end.x = this._getValueByStr(end.x, 'width', this);
+          end.y = this._getValueByStr(end.y, 'height', this);
+        }
+        if (start != null) {
+          this.settings.gradientStart = start;
+        }
+        if (end != null) {
+          this.settings.gradientEnd = end;
+        }
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setFill(color = "#FFF", alpha = 1) {
+      var e;
+      try {
+        this.settings.fillColor = color;
+        this.settings.fillAlpha = alpha;
+        this.settings.fillGradient = null;
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setStroke(color = "#FFF", width = 0, alpha = 1) {
+      var e;
+      try {
+        this.settings.strokeColor = color;
+        this.settings.strokeAlpha = alpha;
+        this.settings.strokeWidth = width;
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setSize(width = 100, height = 100) {
+      var e, h, w;
+      try {
+        w = this._getValueByStr(width, 'width', this);
+        h = this._getValueByStr(height, 'height', this);
+        if (w != null) {
+          this.settings.width = w;
+        }
+        if (h != null) {
+          this.settings.height = h;
+        }
+        this._applySettings();
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _create() {
+      var e;
+      try {
+        this.graphics = new PIXI.Graphics();
+        return this.addChild(this.graphics);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applySettings() {
+      var cornersSettings, e, gradientSettings;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        this.graphics.clear();
+        if (this.settings.fillGradient != null) {
+          gradientSettings = Object.assign(this.defaultGradientSettings(), this.settings.fillGradient);
+        }
+        this._applyGradientTexture(gradientSettings);
+        if (typeof this.settings.corners === "number") {
+          return this._drawBaseRoundedRect();
+        } else if (this.settings.corners != null) {
+          cornersSettings = Object.assign(this.defaultCornersSettings(), this.settings.corners);
+          return this._drawComplexRoundedRect(cornersSettings);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applyGradientTexture(fillGradient) {
+      var c, convertedValue, ctx, e, grd, height, key, texture, value, width;
+      try {
+        if (KDCore.isMV()) {
+          return;
+        }
+        ({width, height} = this.settings);
+        c = document.createElement("canvas");
+        ctx = c.getContext("2d");
+        grd = ctx.createLinearGradient(this.settings.gradientStart.x, this.settings.gradientStart.y, this.settings.gradientEnd.x, this.settings.gradientEnd.y);
+        for (key in fillGradient) {
+          value = fillGradient[key];
+          try {
+            convertedValue = this._convertGradientStopColor(value);
+            grd.addColorStop(Number(key), convertedValue);
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+          }
+        }
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, width, height);
+        texture = new PIXI.Texture.from(c);
+        return this.graphics.beginTextureFill(texture);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _convertGradientStopColor(color) {
+      var alpha, c, e, parts;
+      try {
+        if (color == null) {
+          return "#FFF";
+        }
+        if (!String.any(color)) {
+          return "#FFF";
+        }
+        if (color.contains("%")) {
+          parts = color.split("%");
+          color = parts[0];
+          alpha = Number(parts[1]);
+          c = KDCore.Color.FromHex(color);
+          c = c.reAlpha(alpha * 255);
+          return c.CSS;
+        } else {
+          return color;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return "#FFF";
+      }
+    }
+
+    _drawBaseRoundedRect() {
+      var colorData, corners, d, e, fillAlpha, fillColor, height, strokeAlpha, strokeColor, strokeColorData, width;
+      try {
+        ({width, height, corners} = this.settings);
+        ({fillColor, fillAlpha} = this.settings);
+        colorData = this._buildColorData(fillColor, fillAlpha);
+        if (this.settings.strokeWidth > 0) {
+          ({strokeColor, strokeAlpha} = this.settings);
+          strokeColorData = this._buildColorData(strokeColor, strokeAlpha);
+          d = this.settings.strokeWidth;
+          // * Base Fill
+          this._drawRect(0, 0, width, height, corners, colorData);
+          // * Stroke
+          return this._drawStroke(-d / 2, -d / 2, width + d / 2, height + d / 2, corners, d, strokeColorData);
+        } else {
+          // * Base Fill only
+          return this._drawRect(0, 0, width, height, corners, colorData);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _buildColorData(c = 0xfff, a = 1) {
+      var e;
+      try {
+        if (typeof c === 'string') {
+          c = KDCore.Utils.string2hex(c);
+        }
+        return [c, a];
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return [0xfff, 1];
+      }
+    }
+
+    _drawRect(x, y, w, h, r, colorData) {
+      var e, g;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        g = this.graphics;
+        if (!this.isHaveGradient()) {
+          g.beginFill(...colorData);
+        }
+        if (r > 0) {
+          g.drawRoundedRect(x, y, w, h, r);
+        } else {
+          g.drawRect(x, y, w, h);
+        }
+        if (!this.isHaveGradient()) {
+          return g.endFill();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawStroke(x, y, w, h, r, d, colorData) {
+      var e, g;
+      try {
+        if (this.graphics == null) {
+          return;
+        }
+        g = this.graphics;
+        g.lineStyle(d, ...colorData);
+        if (r > 0) {
+          return g.drawRoundedRect(x, y, w, h, r);
+        } else {
+          return g.drawRect(x, y, w, h);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawComplexRoundedRect(cornersSettings) {
+      var bottomLeft, bottomRight, colorData, d, e, fillAlpha, fillColor, height, strokeAlpha, strokeColor, strokeColorData, topLeft, topRight, width;
+      try {
+        if (cornersSettings == null) {
+          return;
+        }
+        ({width, height} = this.settings);
+        ({fillColor, fillAlpha} = this.settings);
+        colorData = this._buildColorData(fillColor, fillAlpha);
+        ({topLeft, topRight, bottomRight, bottomLeft} = cornersSettings);
+        if (this.settings.strokeWidth > 0) {
+          ({strokeColor, strokeAlpha} = this.settings);
+          strokeColorData = this._buildColorData(strokeColor, strokeAlpha);
+          d = this.settings.strokeWidth;
+          this._drawComplexRect(0, 0, width, height, colorData, topLeft, topRight, bottomRight, bottomLeft);
+          return this._drawComplexStroke(-d / 2, -d / 2, width + (d / 2), height + (d / 2), strokeColorData, d, topLeft, topRight, bottomRight, bottomLeft);
+        } else {
+          return this._drawComplexRect(0, 0, width, height, colorData, topLeft, topRight, bottomRight, bottomLeft);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawComplexRect(x, y, width, height, colorData, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius) {
+      var e;
+      try {
+        if (!this.isHaveGradient()) {
+          this.graphics.beginFill(...colorData);
+        }
+        // Starting from the top left corner.
+        this.graphics.moveTo(x + topLeftRadius, y);
+        // Drawing the top line with top right corner.
+        this.graphics.lineTo(x + width - topRightRadius, y);
+        if (topRightRadius > 0) {
+          this.graphics.quadraticCurveTo(x + width, y, x + width, y + topRightRadius);
+        }
+        // Drawing the right line with bottom right corner.
+        this.graphics.lineTo(x + width, y + height - bottomRightRadius);
+        if (bottomRightRadius > 0) {
+          this.graphics.quadraticCurveTo(x + width, y + height, x + width - bottomRightRadius, y + height);
+        }
+        // Drawing the bottom line with bottom left corner.
+        this.graphics.lineTo(x + bottomLeftRadius, y + height);
+        if (bottomLeftRadius > 0) {
+          this.graphics.quadraticCurveTo(x, y + height, x, y + height - bottomLeftRadius);
+        }
+        // Drawing the left line with top left corner and closing the shape.
+        this.graphics.lineTo(x, y + topLeftRadius);
+        if (topLeftRadius > 0) {
+          this.graphics.quadraticCurveTo(x, y, x + topLeftRadius, y);
+        }
+        if (!this.isHaveGradient()) {
+          return this.graphics.endFill();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawComplexStroke(x, y, width, height, colorData, d, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius) {
+      var e, graphics;
+      try {
+        graphics = this.graphics;
+        graphics.lineStyle(d, ...colorData);
+        // Starting from the top left corner.
+        graphics.moveTo(x + topLeftRadius, y);
+        // Drawing the top line with top right corner.
+        graphics.lineTo(x + width - topRightRadius, y);
+        if (topRightRadius > 0) {
+          graphics.quadraticCurveTo(x + width, y, x + width, y + topRightRadius);
+        }
+        // Drawing the right line with bottom right corner.
+        graphics.lineTo(x + width, y + height - bottomRightRadius);
+        if (bottomRightRadius > 0) {
+          graphics.quadraticCurveTo(x + width, y + height, x + width - bottomRightRadius, y + height);
+        }
+        // Drawing the bottom line with bottom left corner.
+        graphics.lineTo(x + bottomLeftRadius, y + height);
+        if (bottomLeftRadius > 0) {
+          graphics.quadraticCurveTo(x, y + height, x, y + height - bottomLeftRadius);
+        }
+        // Drawing the left line with top left corner and closing the shape.
+        graphics.lineTo(x, y + topLeftRadius);
+        if (topLeftRadius > 0) {
+          graphics.quadraticCurveTo(x, y, x + topLeftRadius, y);
+        }
+        return graphics.closePath();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var e;
+      try {
+        this.width = this.settings.width;
+        return this.height = this.settings.height;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_BaseRect = Sprite_BaseRect;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
   var Sprite_ButtonsGroup;
   // * Класс для реализации набора кнопок переключателей (Tabs)
   // * Когда только одна кнопка может быть нажата (выбрана)
@@ -4151,6 +6305,2781 @@ KDCore.registerLibraryToLoad(function() {
   // ■ END PRIVATE
   //---------------------------------------------------------------------------
   return KDCore.Sprite_ButtonsGroupHandler = Sprite_ButtonsGroupHandler;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_Gauge;
+  //NUI 1.1
+  //rev 16.06.24
+
+    //"type": "gauge"
+  Sprite_Gauge = class Sprite_Gauge extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._loaded = false;
+      this._lastValue = 1;
+      this._gaugeBaseLayer = new KDCore.Sprite();
+      this.add(this._gaugeBaseLayer);
+      this._applySettings();
+      return;
+    }
+
+    defaultSettings() {
+      return {
+        fillMode: "color", //image, plane, color
+        fillColor: "#ffffff",
+        fillOpacity: 255,
+        imageName: "", // * for fill, if fillMode is image, for plane if fillMode is plane
+        folderName: "pictures",
+        margins: 2, // * For plane image
+        width: "auto",
+        height: "auto",
+        mask: "",
+        backColor: "#000000",
+        backImage: "",
+        backOpacity: 255,
+        vertical: false
+      };
+    }
+
+    isLoaded() {
+      var e;
+      try {
+        return this._loaded === true;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return false;
+    }
+
+    realWidth() {
+      var e;
+      try {
+        if (this.settings.width !== "auto") {
+          return this.settings.width;
+        } else if (this._gaugeSpr != null) {
+          return this._gaugeSpr.realWidth(); //TODO: Gauge Modes
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.width;
+    }
+
+    realHeight() {
+      var e;
+      try {
+        if (this.settings.height !== "auto") {
+          return this.settings.height;
+        } else if (this._gaugeSpr != null) {
+          return this._gaugeSpr.realHeight(); //TODO: Gauge Modes
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.height;
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        rate: function(v) {
+          if (v != null) {
+            return this.draw(v);
+          }
+        },
+        fillImage: function(v) {
+          if (v != null) {
+            return this.setFillImage(v);
+          }
+        },
+        fillColor: function(v) {
+          if (v != null) {
+            return this.setFillColor(v);
+          }
+        },
+        fillOpacity: function(v) {
+          if (v != null) {
+            return this.setFillOpacity(v);
+          }
+        }
+      });
+    }
+
+    //TODO:!
+    //backImage: (v) ->
+    //backColor: (v) ->
+    //backOpacity: (v) ->
+    draw(percent = 1) {
+      var e;
+      try {
+        if (!this.isLoaded()) {
+          this._requireFunc('draw', arguments);
+          return;
+        }
+        this._lastValue = percent;
+        return this._drawGauge(percent);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setFillOpacity(opacity) {
+      var e, ref;
+      try {
+        this.settings.fillOpacity = opacity;
+        return (ref = this.fillLayer) != null ? ref.opacity = opacity : void 0;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setFillColor(color) {
+      var e;
+      try {
+        this.settings.fillColor = color;
+        if (this.fillColorBitmap != null) {
+          this._createColorGaugeFillColorBitmap();
+          return this._drawGauge(this._lastValue);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setFillImage(imageName) {
+      var e;
+      try {
+
+      } catch (error) {
+        //TODO:
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setSize(width = "auto", height = "auto") {
+      var e;
+      try {
+        if (width !== "auto") {
+          width = this._getValueByStr(width, 'width', this);
+        }
+        if (height !== "auto") {
+          height = this._getValueByStr(height, 'height', this);
+        }
+        if (width != null) {
+          this.settings.width = width;
+        }
+        if (height != null) {
+          this.settings.height = height;
+        }
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applySettings() {
+      var e;
+      try {
+        this._loaded = false;
+        this._destroyExistGauge();
+        this._createGaugeFromSettings();
+        return this.draw(this._lastValue);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _destroyExistGauge() {
+      var e;
+      try {
+        if (this._gaugeSpr == null) {
+          return;
+        }
+        this._gaugeSpr.removeFromParent();
+        return this._gaugeSpr = null;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createGaugeFromSettings() {
+      var e;
+      try {
+        this._gaugeSpr = new KDCore.Sprite();
+        this._gaugeBaseLayer.add(this._gaugeSpr);
+        switch (this.settings.fillMode) {
+          case "image":
+            return this._createImageGauge();
+          case "plane":
+            return this._createPlaneGauge();
+          case "color":
+            return this._createColorGauge();
+          default:
+            return console.warn("Unknown Gauge fillMode: " + this.settings.fillMode);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createImageGauge() {
+      var e;
+      try {
+        this._gaugeSourceImage = new KDCore.Sprite_Image({
+          imageName: this.settings.imageName,
+          folderName: this.settings.folderName,
+          width: this.settings.width,
+          height: this.settings.height
+        });
+        return this._gaugeSourceImage.addLoadListener(this._onGaugeFillImageLoaded.bind(this));
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onGaugeFillImageLoaded() {
+      var e;
+      try {
+        this._addBackground(this._gaugeSourceImage.realWidth(), this._gaugeSourceImage.realHeight());
+        this.fillLayer = KDCore.Sprite.FromBitmap(this._gaugeSourceImage.realWidth(), this._gaugeSourceImage.realHeight());
+        this.fillLayer.opacity = this.settings.fillOpacity;
+        this._gaugeSpr.add(this.fillLayer);
+        this._addMask();
+        return this._onGaugeLoadedAndReady();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onGaugeLoadedAndReady() {
+      var e;
+      try {
+        this._loaded = true;
+        this.width = this.realWidth();
+        this.height = this.realHeight();
+        this._applyRequiredData();
+        return this._executeLoadListeners();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createPlaneGauge() {
+      var e;
+      try {
+        if (this.settings.width === "auto") {
+          // * Нельзя создать Plane Gauge с auto размером, поэтому задаём стандартные значения
+          this.settings.width = 80;
+        }
+        if (this.settings.height === "auto") {
+          this.settings.height = 20;
+        }
+        this._addBackground(this.settings.width, this.settings.height);
+        this.fillLayer = new KDCore.Sprite_Plane({
+          imageName: this.settings.imageName,
+          folderName: this.settings.folderName,
+          width: this.settings.width,
+          height: this.settings.height,
+          margins: this.settings.margins
+        });
+        this.fillLayer.opacity = this.settings.fillOpacity;
+        this._gaugeSpr.add(this.fillLayer);
+        this._addMask();
+        return this._onGaugeLoadedAndReady();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createColorGauge() {
+      var e;
+      try {
+        if (this.settings.width === "auto") {
+          // * Нельзя создать цветную Gauge с auto размером, поэтому задаём стандартные значения
+          this.settings.width = 80;
+        }
+        if (this.settings.height === "auto") {
+          this.settings.height = 20;
+        }
+        this._addBackground(this.settings.width, this.settings.height);
+        this.fillLayer = KDCore.Sprite.FromBitmap(this.settings.width, this.settings.height);
+        this.fillLayer.opacity = this.settings.fillOpacity;
+        this._createColorGaugeFillColorBitmap();
+        this._gaugeSpr.add(this.fillLayer);
+        this._addMask();
+        return this._onGaugeLoadedAndReady();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createColorGaugeFillColorBitmap() {
+      var e;
+      try {
+        this.fillColorBitmap = new Bitmap(this.settings.width, this.settings.height);
+        return this.fillColorBitmap.fillAll(this.settings.fillColor);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _addBackground(width, height) {
+      var background, e;
+      try {
+        if (this._gaugeSpr == null) {
+          return;
+        }
+        background = null;
+        if (String.any(this.settings.backImage)) {
+          background = this._createGaugeBackgroundImage();
+        } else if (String.any(this.settings.backColor)) {
+          background = this._createGaugeBackgroundColor(width, height, this.settings.backColor);
+        }
+        if (background != null) {
+          if (this.settings.backOpacity != null) {
+            background.opacity = this.settings.backOpacity;
+          }
+          return this._gaugeSpr.add(background);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _addMask() {
+      var e, gaugeMask;
+      try {
+        if (this._gaugeSpr == null) {
+          return;
+        }
+        if (String.isNullOrEmpty(this.settings.mask)) {
+          return;
+        }
+        gaugeMask = new KDCore.Sprite_Image({
+          imageName: this.settings.mask,
+          folderName: this.settings.folderName,
+          width: this.settings.width,
+          height: this.settings.height
+        });
+        this._gaugeSpr.mask = gaugeMask.image;
+        this._gaugeSpr.add(gaugeMask);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        this._gaugeSpr.mask = null;
+      }
+    }
+
+    _createGaugeBackgroundColor(width, height, color) {
+      var background, e;
+      try {
+        background = KDCore.Sprite.FromBitmap(width, height);
+        background.b().fillAll(color);
+        return background;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return new KDCore.Sprite();
+      }
+    }
+
+    _createGaugeBackgroundImage() {
+      var e;
+      try {
+        return new KDCore.Sprite_Image({
+          imageName: this.settings.backImage,
+          folderName: this.settings.folderName,
+          width: this.settings.width,
+          height: this.settings.height
+        });
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return new KDCore.Sprite();
+      }
+    }
+
+    _drawGauge(percent) {
+      var e;
+      try {
+        if (this.fillLayer == null) {
+          return;
+        }
+        // * See COE, Fill Indicator
+        //if @settings.vertical is true
+        //TODO: VERTICAL
+        //else
+        return this._drawHorizontal(percent);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawHorizontal(percent) {
+      var e;
+      try {
+        switch (this.settings.fillMode) {
+          case "image":
+            return this._drawImageGauge(percent);
+          case "plane":
+            return this._drawPlaneGauge(percent);
+          case "color":
+            return this._drawColorGauge(percent);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawImageGauge(percent) {
+      var e, fillBitmap;
+      try {
+        this.fillLayer.clear();
+        fillBitmap = this._gaugeSourceImage.image.bitmap;
+        return this._drawGaugeBitmapBased(percent, fillBitmap);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawGaugeBitmapBased(percent, fillBitmap) {
+      var e, h, w;
+      try {
+        w = this.realWidth() * percent;
+        h = this.realHeight();
+        return this.fillLayer.b().blt(fillBitmap, 0, 0, w, h, 0, 0);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawColorGauge(percent) {
+      var e, fillBitmap;
+      try {
+        this.fillLayer.clear();
+        fillBitmap = this.fillColorBitmap;
+        return this._drawGaugeBitmapBased(percent, fillBitmap);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawPlaneGauge(percent) {
+      var e, h, w;
+      try {
+        w = this.realWidth() * percent;
+        h = this.realHeight();
+        return this.fillLayer.setSize(w, h);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_Gauge = Sprite_Gauge;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_Group;
+  //NUI 1.0
+  //rev 30.04.24
+  Sprite_Group = class Sprite_Group extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      if (this.settings.horizontalNavigation === true) {
+        this.pIsVerticalKeyboardNavigation = function() {
+          return false;
+        };
+      }
+      this._applySettings();
+      this._onResize();
+      return;
+    }
+
+    update() {
+      var e;
+      super.update();
+      try {
+        if (this._isNeedWaitLoadingChild === true) {
+          //console.log("REFRESH BY LOAD")
+          return this.refreshBindings(this._dataObjectRef, true);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    refreshBindings(dataObject, recursive) {
+      var c, i, len, ref;
+      super.refreshBindings(...arguments);
+      ref = this.children;
+      for (i = 0, len = ref.length; i < len; i++) {
+        c = ref[i];
+        if ((c.isLoaded != null) && !c.isLoaded()) {
+          this._startWaitLoading(dataObject);
+          return;
+        }
+      }
+      this._isNeedWaitLoadingChild = false;
+    }
+
+    _startWaitLoading(_dataObjectRef) {
+      var e;
+      this._dataObjectRef = _dataObjectRef;
+      try {
+        return this._isNeedWaitLoadingChild = true;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    defaultSettings() {
+      return {
+        keyboardHandling: false,
+        horizontalNavigation: false,
+        width: "auto",
+        height: "auto"
+      };
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        }
+      });
+    }
+
+    setSize(width = "auto", height = "auto") {
+      var e;
+      try {
+        if (width !== "auto") {
+          width = this._getValueByStr(width, 'width', this);
+        }
+        if (height !== "auto") {
+          height = this._getValueByStr(height, 'height', this);
+        }
+        if (width != null) {
+          this.settings.width = width;
+        }
+        if (height != null) {
+          this.settings.height = height;
+        }
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    realWidth() {
+      var e;
+      try {
+        if (this.settings.width === "auto") {
+          return this._calculateMax("x", "width");
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.settings.width;
+    }
+
+    realHeight() {
+      var e;
+      try {
+        if (this.settings.height === "auto") {
+          return this._calculateMax("y", "height");
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.settings.height;
+    }
+
+    _calculateMax(a, b) {
+      var child, e, i, len, ref, size, value;
+      try {
+        value = 0;
+        ref = this.children;
+        for (i = 0, len = ref.length; i < len; i++) {
+          child = ref[i];
+          size = child[a] + KDCore.Utils.getRealSpriteSize(b, child);
+          if (size > value) {
+            value = size;
+          }
+        }
+        if (value < 0) {
+          value = 0;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return 0;
+      }
+      return value;
+    }
+
+    _applySettings() {
+      var e;
+      try {
+        if (this.settings.keyboardHandling === true) {
+          return this.activateHandlerManagment();
+        } else {
+          return this.deactivateHandlerManagment();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var e;
+      try {
+        this.width = this.realWidth();
+        return this.height = this.realHeight();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_Group = Sprite_Group;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_Image;
+  //NUI 1.0
+  //rev 29.04.24
+
+    //"type": "image"
+  Sprite_Image = class Sprite_Image extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._loaded = false;
+      this._create();
+      this._onResize();
+      this.draw(this.settings.imageName);
+      return;
+    }
+
+    isLoaded() {
+      var e;
+      try {
+        if (this.settings.width !== "auto" && this.settings.height !== "auto") {
+          return true;
+        } else {
+          return this._loaded === true;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return false;
+    }
+
+    defaultSettings() {
+      return {
+        imageName: "",
+        folderName: "pictures",
+        width: "auto",
+        height: "auto",
+        keepAspect: false
+      };
+    }
+
+    realWidth() {
+      var e;
+      try {
+        if (this.settings.width === "auto") {
+          if (this._srcBitmap != null) {
+            return this._srcBitmap.width;
+          } else {
+            if ((this.image.bitmap != null) && this.image.bitmap.isReady()) {
+              return this.image.bitmap.width;
+            }
+          }
+        } else {
+          return this.settings.width;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.width;
+    }
+
+    realHeight() {
+      var e;
+      try {
+        if (this.settings.height === "auto") {
+          if (this._srcBitmap != null) {
+            return this._srcBitmap.height;
+          } else {
+            if ((this.image.bitmap != null) && this.image.bitmap.isReady()) {
+              return this.image.bitmap.height;
+            }
+          }
+        } else {
+          return this.settings.height;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.height;
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        image: function(v) {
+          return this.draw(v);
+        },
+        icon: function(v) {
+          return this.drawIcon(v);
+        }
+      });
+    }
+
+    setSize(width = "auto", height = "auto") {
+      var e;
+      try {
+        if (width !== "auto") {
+          width = this._getValueByStr(width, 'width', this);
+        }
+        if (height !== "auto") {
+          height = this._getValueByStr(height, 'height', this);
+        }
+        if (width != null) {
+          this.settings.width = width;
+        }
+        if (height != null) {
+          this.settings.height = height;
+        }
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setImage(imageName, folderName = null) {
+      var e;
+      try {
+        if (String.any(folderName)) {
+          this.settings.folderName = folderName;
+        }
+        return this.draw(imageName);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    // * Если не иконка (число), то ничего не рисует (защита)
+    drawIcon(iconIndex) {
+      var e;
+      try {
+        if (isFinite(iconIndex)) {
+          return this.draw(iconIndex);
+        } else {
+          return this.draw("");
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    draw(imageName = "") {
+      var e;
+      try {
+        if (isFinite(imageName)) {
+          return this._drawIcon(imageName);
+        } else if (String.any(imageName)) {
+          return this._drawImage(imageName);
+        } else {
+          this._srcBitmap = null;
+          return this._onResize();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _create() {
+      var e;
+      try {
+        this.image = new KDCore.Sprite(new Bitmap(1, 1));
+        return this.addChild(this.image);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawIcon(iconIndex) {
+      var e, w;
+      try {
+        w = this.settings.width;
+        if (w === "auto") {
+          w = 32;
+        }
+        this.settings.height = w;
+        this._srcBitmap = new Bitmap(w, w);
+        this._srcBitmap.drawIcon(0, 0, iconIndex, w, true);
+        this._loaded = true;
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _drawImage(imageName) {
+      var e, folderName;
+      try {
+        ({folderName} = this.settings);
+        this._loaded = false;
+        this._srcBitmap = ImageManager.loadBitmap('img/' + folderName + "/", imageName);
+        return this._srcBitmap.addLoadListener(this._onBitmapLoaded.bind(this));
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onBitmapLoaded() {
+      var e;
+      try {
+        this._loaded = true;
+        this._onResize();
+        this._applyRequiredData();
+        return this._executeLoadListeners();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var b, e, fh, fw, height, width;
+      try {
+        this.image.bitmap = new Bitmap(this.realWidth(), this.realHeight());
+        if (this._srcBitmap == null) {
+          return;
+        }
+        b = this._srcBitmap;
+        if (this.settings.keepAspect === true) {
+          ({width, height} = this._calculateAspectRatio(this.image.bitmap.width, this.image.bitmap.height, this._srcBitmap.width, this._srcBitmap.height));
+          fw = width;
+          fh = height;
+        } else {
+          fw = this.realWidth();
+          fh = this.realHeight();
+        }
+        return this.image.bitmap.blt(b, 0, 0, b.width, b.height, 0, 0, fw, fh);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _calculateAspectRatio(containerWidth, containerHeight, width, height) {
+      var aspectRatio, containerAspectRatio, e;
+      try {
+        aspectRatio = width / height;
+        containerAspectRatio = containerWidth / containerHeight;
+        if (aspectRatio > containerAspectRatio) {
+          width = containerWidth;
+          height = width / aspectRatio;
+        } else {
+          height = containerHeight;
+          width = height * aspectRatio;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return {width, height};
+    }
+
+  };
+  return KDCore.Sprite_Image = Sprite_Image;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_ImgButton;
+  //NUI 1.0
+  //rev 24.07.24
+
+    //"type": "legacyButton"
+  Sprite_ImgButton = class Sprite_ImgButton extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._create();
+      return;
+    }
+
+    defaultSettings() {
+      return {
+        width: "auto",
+        height: "auto",
+        imageName: "",
+        isFull: false,
+        folderName: "pictures",
+        isCheckAlpha: false,
+        handler: null,
+        forceSize: false // * Force change button bitmaps size
+      };
+    }
+
+    isLoaded() {
+      var e;
+      try {
+        if (this.settings.width !== "auto" && this.settings.height !== "auto") {
+          return true;
+        } else {
+          return this._loaded === true;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    realWidth() {
+      var e;
+      try {
+        if (this.settings.width === "auto") {
+          return this.button.realWidth();
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.settings.width;
+    }
+
+    realHeight() {
+      var e;
+      try {
+        if (this.settings.height === "auto") {
+          return this.button.realHeight();
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return this.settings.height;
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        image: function(v) {
+          return this.setImage(v);
+        },
+        enable: function(v) {
+          if (v != null) {
+            return this.setEnabledState(v);
+          }
+        },
+        handler: function(v) {
+          return this.setClickHandler(v);
+        }
+      });
+    }
+
+    setSize(width = "auto", height = "auto") {
+      var e;
+      try {
+        if (width !== "auto") {
+          width = this._getValueByStr(width, 'width', this);
+        }
+        if (height !== "auto") {
+          height = this._getValueByStr(height, 'height', this);
+        }
+        if (width != null) {
+          this.settings.width = width;
+        }
+        if (height != null) {
+          this.settings.height = height;
+        }
+        if (this.settings.forceSize === true) {
+          this._create();
+        }
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setImage(imageName = "") {
+      var e;
+      try {
+        if (this.button != null) {
+          this._lastButtonState = this.button.isEnabled();
+          this._lastButtonHandler = this.button._handler;
+        }
+        this.settings.imageName = imageName;
+        this._create();
+        // * Может не быть кнопки, если imageName == ""
+        if (this.button == null) {
+          return;
+        }
+        if (this._lastButtonState != null) {
+          this.setEnabledState(this._lastButtonState);
+          this._lastButtonState = null;
+        }
+        if (this._lastButtonHandler != null) {
+          this.setClickHandler(this._lastButtonHandler);
+          return this._lastButtonHandler = null;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setEnabledState(state = true) {
+      var e;
+      try {
+        if (this.button == null) {
+          return;
+        }
+        if (state === true) {
+          return this.button.enable();
+        } else {
+          return this.button.disable();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    // * В отличии от AddClickHandler, удаляет все предидущие
+    setClickHandler(handler) {
+      var e;
+      try {
+        if (this.button == null) {
+          return;
+        }
+        this.button.clearClickHandler();
+        if ((handler != null) && typeof handler === "function") {
+          return this.button.addClickHandler(handler);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    // * EXPAND FIELDS
+    click() {
+      var ref;
+      return (ref = this.button) != null ? ref.click() : void 0;
+    }
+
+    setManualHover() {
+      var ref;
+      return (ref = this.button) != null ? ref.setManualHover() : void 0;
+    }
+
+    disableManualHover() {
+      var ref;
+      return (ref = this.button) != null ? ref.disableManualHover() : void 0;
+    }
+
+    setManualSelected() {
+      var ref;
+      return (ref = this.button) != null ? ref.setManualSelected(...arguments) : void 0;
+    }
+
+    enableClick() {
+      var ref;
+      return (ref = this.button) != null ? ref.enableClick() : void 0;
+    }
+
+    disableClick() {
+      var ref;
+      return (ref = this.button) != null ? ref.disableClick() : void 0;
+    }
+
+    desaturate() {
+      var ref;
+      return (ref = this.button) != null ? ref.desaturate() : void 0;
+    }
+
+    isMouseIn() {
+      return (this.button != null) && this.button.isMouseIn();
+    }
+
+    isActive() {
+      return (this.button != null) && this.button.isActive();
+    }
+
+    isDisabled() {
+      return this.isEnabled();
+    }
+
+    isEnabled() {
+      return (this.button != null) && this.button.isEnabled();
+    }
+
+    addClickHandler() {
+      return this.setClickHandler(...arguments);
+    }
+
+    clearClickHandler() {
+      var ref;
+      return (ref = this.button) != null ? ref.clearClickHandler() : void 0;
+    }
+
+    simulateClick() {
+      var ref;
+      return (ref = this.button) != null ? ref.simulateClick() : void 0;
+    }
+
+    refreshState() {
+      var ref;
+      return (ref = this.button) != null ? ref.refreshState(...arguments) : void 0;
+    }
+
+    disable() {
+      var ref;
+      return (ref = this.button) != null ? ref.disable() : void 0;
+    }
+
+    enable() {
+      var ref;
+      return (ref = this.button) != null ? ref.disable() : void 0;
+    }
+
+    // * ==============
+    _create() {
+      var e, size, sourceFolder;
+      try {
+        this._loaded = false;
+        if (this.button != null) {
+          this._destroyButton();
+        }
+        if (!String.any(this.settings.imageName)) {
+          return;
+        }
+        this.button = new KDCore.ButtonM(this.settings.imageName, this.settings.isFull, this.settings.folderName);
+        if (this.settings.forceSize === true && this.settings.width !== "auto" && this.settings.height !== "auto") {
+          sourceFolder = this.settings.folderName;
+          size = {
+            width: this.settings.width,
+            height: this.settings.height
+          };
+          this.button._getGetter = function() {
+            var getterFunc;
+            getterFunc = function(filename) {
+              var bitmap, outputBitmap;
+              outputBitmap = new Bitmap(size.width, size.height);
+              bitmap = ImageManager.loadBitmap('img/' + sourceFolder + '/', filename);
+              bitmap.addLoadListener(function() {
+                return outputBitmap.blt(bitmap, 0, 0, bitmap.width, bitmap.height, 0, 0, size.width, size.height);
+              });
+              return outputBitmap;
+            };
+            return getterFunc;
+          };
+          this.button._bitmaps = [];
+          this.button._loadBitmaps(this.settings.imageName, this.settings.isFull, this.settings.folderName);
+          this.button._setImageState(0);
+        }
+        if (this.settings.isCheckAlpha === true) {
+          this.button.isCheckAlpha = function() {
+            return true;
+          };
+        }
+        if (this.settings.handler != null) {
+          this.setClickHandler(this.settings.handler);
+        }
+        this.button.addLoadListener(this._onLoaded.bind(this));
+        return this.addChild(this.button);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onLoaded() {
+      var e;
+      try {
+        this._loaded = true;
+        this._onResize();
+        this._applyRequiredData();
+        return this._executeLoadListeners();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _destroyButton() {
+      var e;
+      try {
+        if (this.button == null) {
+          return;
+        }
+        this.button.removeFromParent();
+        this._loaded = false;
+        if ($gameTemp.kdButtonUnderMouse === this.button) {
+          return $gameTemp.kdButtonUnderMouse = null;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var e;
+      try {
+        this.width = this.realWidth();
+        return this.height = this.realHeight();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_ImgButton = Sprite_ImgButton;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_ItemsList;
+  // * Класс который позволяет сделать список (на основе Window_Selectable), но из Sprite элементов, а не Draw на Bitmap
+
+    //rev 02.05.24
+
+    //TODO: Dynamic items height, controls handlers support
+  Sprite_ItemsList = class Sprite_ItemsList extends Window_Selectable {
+    constructor(r, settings = {}) {
+      if (KDCore.isMV()) {
+        super(r.x, r.y, r.width, r.height);
+      } else {
+        super(r);
+      }
+      this.settings = Object.assign(this.defaultSetting(), settings);
+      this.padding = this.settings.itemsPadding;
+      this._prevSelectedIndex = -1;
+      this._createItemsContainer();
+      this._createWindowContentMask();
+      this._setupBackgroundType();
+      return;
+    }
+
+    defaultSetting() {
+      return {
+        maxCols: 1,
+        isHaveSelectionEffect: false,
+        selectionEffects: ["glow;distance:12;outerStrength:3"],
+        scaleItemsWidth: false,
+        scaleItemsHeight: false,
+        defautItemHeight: 36,
+        isDrawDefaultItemBack: false,
+        backgroundType: 2,
+        itemsPadding: 12,
+        isHaveInOutAnimation: false,
+        inAnimation: "field:x;duration:0.15;keyframes:0=0,100=4",
+        outAnimation: "field:x;duration:0.15;keyframes:0=4,100=0"
+      };
+    }
+
+    activate(index) {
+      var e;
+      try {
+        this.refresh();
+        if (index != null) {
+          this.safeSelect(index);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return super.activate();
+    }
+
+    maxItems() {
+      return this.getAllItems().length;
+    }
+
+    maxCols() {
+      if (this.settings != null) {
+        return this.settings.maxCols || 1;
+      } else {
+        return 1;
+      }
+    }
+
+    getAllItems() {
+      return this.itemsSet || [];
+    }
+
+    setItems(itemsSet, singleItemHeight = null) {
+      this.itemsSet = itemsSet;
+      this.singleItemHeight = singleItemHeight;
+      this._prevSelectedIndex = -1;
+      this.setTopRow(0);
+      this._clearPreviousItems();
+      if (this.singleItemHeight == null) {
+        this._adjustAutoItemsHeight(this.itemsSet[0]);
+      }
+      this.refresh();
+      this._drawNewItems();
+    }
+
+    selectedItem() {
+      return this.itemAt(this.index());
+    }
+
+    setOkHandler(handler) {
+      return this.setHandler('ok', handler);
+    }
+
+    setCancelHandler(handler) {
+      return this.setHandler('cancel', handler);
+    }
+
+    setSelectionHandler(handler) {
+      return this.pOnSelectionChanged = handler;
+    }
+
+    itemAt(index) {
+      return this.getAllItems()[index];
+    }
+
+    isNeedScaleItemsW() {
+      return this.settings.scaleItemsWidth === true;
+    }
+
+    isNeedScaleItemsH() {
+      return this.settings.scaleItemsHeight === true;
+    }
+
+    // * NOT WORKS!!!
+    isUseDynamicHeight() {
+      return false;
+    }
+
+    lineHeight(index) {
+      if (this.settings != null) {
+        return this.singleItemHeight || this.settings.defautItemHeight;
+      } else {
+        return this.singleItemHeight || 36;
+      }
+    }
+
+    isDrawWindowDefaultItemsBack() {
+      return this.settings.isDrawDefaultItemBack === true;
+    }
+
+    //$[OVER]
+    _updateCursor() {
+      if (KDCore.isMV()) {
+        return this.setCursorRect(0, 0, 0, 0);
+      } else {
+        return this._cursorSprite.visible = false;
+      }
+    }
+
+    update() {
+      super.update();
+      this._itemsContainer.y = -this._scrollY;
+      return this._updateItemsSelectionState();
+    }
+
+  };
+  (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ PRIVATE
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    //---------------------------------------------------------------------------
+    var _;
+    //@[DEFINES]
+    _ = Sprite_ItemsList.prototype;
+    _._createItemsContainer = function() {
+      var ref;
+      if (!this.isDrawWindowDefaultItemsBack()) {
+        if ((ref = this._contentsBackSprite) != null) {
+          ref.visible = false;
+        }
+      }
+      this._windowItemsContentLayer = new Sprite();
+      this._windowItemsContentLayer.move(this._padding, this._padding);
+      this.addChild(this._windowItemsContentLayer);
+      this._itemsContainer = new KDCore.Sprite();
+      this._windowItemsContentLayer.addChild(this._itemsContainer);
+      this.addChild(this._downArrowSprite);
+      return this.addChild(this._upArrowSprite);
+    };
+    _._setupBackgroundType = function() {
+      return this.setBackgroundType(this.settings.backgroundType);
+    };
+    _._createWindowContentMask = function() {
+      var e, m, maskBitmap;
+      try {
+        maskBitmap = new Bitmap(this.width - this._padding * 2, this.height - this._padding * 2);
+        maskBitmap.fillAll("#FFF");
+        m = new Sprite(maskBitmap);
+        this._windowItemsContentLayer.mask = m;
+        return this._windowItemsContentLayer.addChild(m);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._adjustAutoItemsHeight = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          this.singleItemHeight = 36;
+          return;
+        }
+        if (item.realHeight != null) {
+          this.singleItemHeight = item.realHeight();
+        } else {
+          if (item.height > 0) {
+            this.singleItemHeight = item.height;
+          }
+        }
+        if (this.singleItemHeight === 0 || !this.singleItemHeight) {
+          return this.singleItemHeight = 36;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._clearPreviousItems = function() {
+      var c, e, i, j, len, len1, ref, results, toRemove;
+      try {
+        toRemove = [];
+        ref = this._itemsContainer.children;
+        for (i = 0, len = ref.length; i < len; i++) {
+          c = ref[i];
+          toRemove.push(c);
+        }
+        results = [];
+        for (j = 0, len1 = toRemove.length; j < len1; j++) {
+          c = toRemove[j];
+          results.push(c.removeFromParent());
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._drawNewItems = function() {
+      var e, i, index, item, len, ref, results;
+      try {
+        ref = this.getAllItems();
+        results = [];
+        for (index = i = 0, len = ref.length; i < len; index = ++i) {
+          item = ref[index];
+          results.push(this._addNewItemToList(item, index));
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._addNewItemToList = function(item, index) {
+      var e, rect;
+      try {
+        if (item == null) {
+          return;
+        }
+        rect = this.itemRect(index);
+        item.x = rect.x;
+        item.y = rect.y;
+        this._adjustItemWidthAndHeight(item);
+        return this._itemsContainer.addChild(item);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._adjustItemWidthAndHeight = function(item) {
+      var e, scaleFactor;
+      try {
+        if (item == null) {
+          return;
+        }
+        if (this.isNeedScaleItemsW()) {
+          scaleFactor = this._defaultItemWidth() / this._getItemWidth(item);
+          item.scale.x = scaleFactor;
+        }
+        if (this.isNeedScaleItemsH()) {
+          scaleFactor = this.lineHeight() / this._getItemHeight(item);
+          return item.scale.y = scaleFactor;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._getItemWidth = function(item) {
+      var e, v;
+      v = this._defaultItemWidth();
+      try {
+        if (item == null) {
+          return v;
+        }
+        if (item.realWidth != null) {
+          v = item.realWidth();
+        } else {
+          if (item.width > 0) {
+            v = item.width;
+          }
+        }
+        if (v === 0 || !v) {
+          v = this._defaultItemWidth();
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return v;
+    };
+    _._defaultItemWidth = function() {
+      return this.width - this._padding * 2;
+    };
+    _._getItemHeight = function(item) {
+      var e, v;
+      v = 36;
+      try {
+        if (item == null) {
+          return v;
+        }
+        if (item.realHeight != null) {
+          v = item.realHeight();
+        } else {
+          if (item.height > 0) {
+            v = item.height;
+          }
+        }
+        if (v === 0 || !v) {
+          v = 36;
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return v;
+    };
+    _._updateItemsSelectionState = function() {
+      var e;
+      try {
+        if (KDCore.isMZ()) {
+          if (!this.active || this.index() < 0 || !this.cursorVisible) {
+            this._disableSelectionForAll();
+            return;
+          }
+        } else {
+          if (!this.active || this.index() < 0 || !this.isCursorVisible()) {
+            this._disableSelectionForAll();
+            return;
+          }
+        }
+        return this._selectItemAtIndex(this.index());
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._disableSelectionForAll = function() {
+      var e, i, item, len, ref, results;
+      try {
+        if (this._prevSelectedIndex === -2) {
+          return;
+        }
+        this._prevSelectedIndex = -2;
+        ref = this.getAllItems();
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          item = ref[i];
+          results.push(this._deselectItem(item));
+        }
+        return results;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._selectItem = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        if ((this._prevSelectedIndex != null) && this._prevSelectedIndex >= 0) {
+          this._deselectItem(this.itemAt(this._prevSelectedIndex));
+        }
+        this._playItemInAnimation(item);
+        if (item.activateInList != null) {
+          return item.activateInList();
+        } else {
+          return this._selectItemVisually(item);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._playItemInAnimation = function(item) {
+      var e;
+      try {
+        if (!this.settings.isHaveInOutAnimation) {
+          return;
+        }
+        if (this.settings.inAnimation == null) {
+          return;
+        }
+        if (item == null) {
+          return;
+        }
+        this._playItemAnimation(item, this.settings.inAnimation);
+        return this._isHaveInAnimation = true;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._selectItemVisually = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        if (!this.settings.isHaveSelectionEffect) {
+          return;
+        }
+        //item.filters = [new PIXI.filters.GlowFilter({ distance: 15, outerStrength: 4 })]
+        if (this.settings.selectionEffects == null) {
+          return;
+        }
+        if (this.settings.selectionEffects.length === 0) {
+          return;
+        }
+        KDCore.UI.Builder.ApplyEffects(item, this.settings.selectionEffects);
+        return this._isSelectionEffectBeenAdded = true;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._deselectItem = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        this._playItemOutAnimation(item);
+        if (item.deactivateInList != null) {
+          return item.deactivateInList();
+        } else {
+          return this._deselectItemVisually(item);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._playItemOutAnimation = function(item) {
+      var e;
+      try {
+        if (!this.settings.isHaveInOutAnimation) {
+          return;
+        }
+        if (!this._isHaveInAnimation) {
+          return;
+        }
+        if (this.settings.outAnimation == null) {
+          return;
+        }
+        if (item == null) {
+          return;
+        }
+        this._playItemAnimation(item, this.settings.outAnimation);
+        return this._isHaveInAnimation = false;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._playItemAnimation = function(item, animation) {
+      var e, root;
+      try {
+        if (item == null) {
+          return;
+        }
+        root = item.children[0];
+        if (root == null) {
+          return;
+        }
+        if (typeof animation === "string") {
+          animation = KDCore.UI.Builder.ConvertShortcut(animation);
+        }
+        return root.setAnimationRule(animation);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._deselectItemVisually = function(item) {
+      var e;
+      try {
+        if (item == null) {
+          return;
+        }
+        if (this._isSelectionEffectBeenAdded === true) {
+          item.filters = [];
+          return this._isSelectionEffectBeenAdded = false;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._selectItemAtIndex = function(index) {
+      var e, item;
+      try {
+        if (this._prevSelectedIndex !== index) {
+          item = this.itemAt(index);
+          if (item == null) {
+            return;
+          }
+          this._selectItem(item);
+          return this._prevSelectedIndex = index;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+  })();
+  // ■ END PRIVATE
+  //---------------------------------------------------------------------------
+  return KDCore.Sprite_ItemsList = Sprite_ItemsList;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_ItemsListN;
+  //NUI 1.0
+  //rev 03.05.24
+
+    //type: "list"
+  // * Этот класс служит только как Wrapper, чтобы можно было задавать настроки List через NUI схему
+  Sprite_ItemsListN = class Sprite_ItemsListN extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign(this.defaultSettings(), settings);
+      this._applySettings();
+      return;
+    }
+
+    defaultSettings() {
+      return Object.assign({
+        width: 240,
+        height: 420
+      }, KDCore.Sprite_ItemsList.prototype.defaultSetting());
+    }
+
+    /* (See parent class, this is just for reference)
+           defaultSetting: -> {
+               maxCols: 1,
+               isHaveSelectionEffect: false,
+               selectionEffects: ["glow;distance:12;outerStrength:3"],
+               scaleItemsWidth: false,
+               scaleItemsHeight: false,
+               defautItemHeight: 36,
+               isDrawDefaultItemBack: false,
+               backgroundType: 2,
+               itemsPadding: 12,
+               isHaveInOutAnimation: false,
+               inAnimation: "field:x;duration:0.15;keyframes:0=0,100=4",
+               outAnimation: "field:x;duration:0.15;keyframes:0=4,100=0"
+           }*/
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        maxCols: function(v) {
+          if (v != null) {
+            return this.setMaxCols(v);
+          }
+        }
+      });
+    }
+
+    realWidth() {
+      return this.settings.width;
+    }
+
+    realHeight() {
+      return this.settings.height;
+    }
+
+    setSize(width, height) {
+      var e;
+      try {
+        width = this._getValueByStr(width, 'width', this);
+        height = this._getValueByStr(height, 'height', this);
+        if (width != null) {
+          this.settings.width = width;
+        }
+        if (height != null) {
+          this.settings.height = height;
+        }
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setMaxCols(maxCols) {
+      var e;
+      try {
+        this.settings.maxCols = maxCols;
+        return this._applySettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    clear() {
+      var ref;
+      return (ref = this.list) != null ? ref.setItems([]) : void 0;
+    }
+
+    // * WRAPPED
+    setItems() {
+      var ref;
+      return (ref = this.list) != null ? ref.setItems(...arguments) : void 0;
+    }
+
+    activate() {
+      var ref;
+      return (ref = this.list) != null ? ref.activate(...arguments) : void 0;
+    }
+
+    deactivate() {
+      var ref;
+      return (ref = this.list) != null ? ref.deactivate(...arguments) : void 0;
+    }
+
+    setOkHandler() {
+      var ref;
+      return (ref = this.list) != null ? ref.setOkHandler(...arguments) : void 0;
+    }
+
+    setCancelHandler() {
+      var ref;
+      return (ref = this.list) != null ? ref.setCancelHandler(...arguments) : void 0;
+    }
+
+    setSelectionHandler() {
+      var ref;
+      return (ref = this.list) != null ? ref.setSelectionHandler(...arguments) : void 0;
+    }
+
+    refresh() {
+      var ref;
+      return (ref = this.list) != null ? ref.refresh(...arguments) : void 0;
+    }
+
+    selectedItem() {
+      var ref;
+      return (ref = this.list) != null ? ref.selectedItem() : void 0;
+    }
+
+    itemAt() {
+      var ref;
+      return (ref = this.list) != null ? ref.itemAt(...arguments) : void 0;
+    }
+
+    maxItems() {
+      var ref;
+      return (ref = this.list) != null ? ref.maxItems() : void 0;
+    }
+
+    getAllItems() {
+      var ref;
+      return (ref = this.list) != null ? ref.getAllItems() : void 0;
+    }
+
+    maxCols() {
+      var ref;
+      return (ref = this.list) != null ? ref.maxCols() : void 0;
+    }
+
+    // * END WRAPPED
+
+      // * Dev, (not use settings) , чтобы визуально видеть размеры окна при подгонке
+    setBackgroundType() {
+      var ref;
+      return (ref = this.list) != null ? ref.setBackgroundType(...arguments) : void 0;
+    }
+
+    // * Shortcut
+    showBack() {
+      return this.setBackgroundType(0);
+    }
+
+    _applySettings() {
+      var e;
+      try {
+        this._destroyList();
+        this._createListWithSettings(this.settings);
+        if (this._isHaveStoredData === true) {
+          return this._restoreData();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _destroyList() {
+      var e;
+      try {
+        if (this.list == null) {
+          return;
+        }
+        this._isHaveStoredData = true;
+        this._lastItems = this.list.getAllItems();
+        this._isBeenActive = this.list.active === true;
+        this._lastSelectedIndex = this.list.index();
+        this._lastHandlers = this.list._handlers;
+        this.removeChild(this.list);
+        return this.list = null;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _createListWithSettings(settings) {
+      var e;
+      try {
+        this.list = new KDCore.Sprite_ItemsList({
+          x: 0,
+          y: 0,
+          width: settings.width,
+          height: settings.height
+        }, settings);
+        return this.addChild(this.list);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _restoreData() {
+      var e;
+      try {
+        if (this.list == null) {
+          return;
+        }
+        if (this._lastHandlers != null) {
+          this.list._handlers = this._lastHandlers;
+        }
+        if (this._lastItems == null) {
+          return;
+        }
+        this.list.setItems(this._lastItems);
+        if (this._lastSelectedIndex != null) {
+          this.list.safeSelect(this._lastSelectedIndex);
+        }
+        if (this._isBeenActive === true) {
+          this.list.activate();
+        }
+        return this._isHaveStoredData = false;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_ItemsListN = Sprite_ItemsListN;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_NUI;
+  //NUI 1.0
+  //rev 06.05.24
+  Sprite_NUI = class Sprite_NUI extends KDCore.Sprite {
+    constructor(nuiScheme, owner = null) {
+      super();
+      this.nuiScheme = nuiScheme;
+      if (this.nuiScheme != null) {
+        this.loadNuiScheme(this.nuiScheme, owner);
+      }
+      return;
+    }
+
+    // * DIRECT nuiElement,без Sprite_NUI (надо присоединять к OWNER)
+    static FromScheme(scheme, owner) {
+      var e, spr;
+      try {
+        spr = new Sprite_NUI(scheme, owner);
+        if (owner != null) {
+          owner.addChild(spr.nuiElement);
+        }
+        return spr.nuiElement;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return new KDCore.Sprite_NUI();
+      }
+    }
+
+    _afterLoadNuiAutoRefreshTime() {
+      return 100;
+    }
+
+    loadNuiScheme(scheme, owner = null) {
+      var e;
+      try {
+        if (this.nuiElement != null) {
+          this.destroyNuiElement();
+        }
+        if (scheme == null) {
+          return;
+        }
+        if (owner == null) {
+          owner = this;
+        }
+        if (scheme["type"] != null) {
+          this.nuiElement = KDCore.UI.Builder.Make(scheme, owner, this);
+        } else {
+          this.nuiElement = KDCore.UI.Builder.Factory(scheme, owner, this._afterLoadNuiAutoRefreshTime())[0];
+        }
+        this.addChild(this.nuiElement);
+        return this.refreshBindings(owner, true);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    destroyNuiElement() {
+      var e;
+      try {
+        if (this.nuiElement == null) {
+          return;
+        }
+        this.nuiElement.removeFromParent();
+        return this.nuiElement = null;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_NUI = Sprite_NUI;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_Plane;
+  //NUI 1.0
+  //rev 25.04.24
+
+    //type: "plane"
+  Sprite_Plane = class Sprite_Plane extends KDCore.Sprite {
+    constructor(settings) {
+      var bottom, folderName, imageName, left, margins, right, textureSource, top;
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this.plane = null;
+      this.planeContainer = new KDCore.Sprite();
+      this.addChild(this.planeContainer);
+      ({imageName, margins, folderName} = this.settings);
+      if (isFinite(margins)) {
+        left = top = right = bottom = margins;
+      } else {
+        ({left, top, right, bottom} = margins);
+      }
+      textureSource = ImageManager.loadBitmap('img/' + folderName + '/', imageName);
+      textureSource.addLoadListener(() => {
+        var texture;
+        texture = new PIXI.Texture(textureSource._baseTexture);
+        if (KDCore.isMV()) {
+          this.plane = new PIXI.mesh.NineSlicePlane(texture, left, top, right, bottom);
+        } else {
+          this.plane = new PIXI.NineSlicePlane(texture, left, top, right, bottom);
+        }
+        this.planeContainer.addChild(this.plane);
+        return this._onResize();
+      });
+      this._onResize();
+      return;
+    }
+
+    realWidth() {
+      return this.settings.width;
+    }
+
+    realHeight() {
+      return this.settings.height;
+    }
+
+    defaultSettings() {
+      return {
+        imageName: "",
+        width: 100,
+        height: 100,
+        margins: 20,
+        folderName: "pictures"
+      };
+    }
+
+    setSize(w = 100, h = 100) {
+      var e;
+      try {
+        w = this._getValueByStr(w, 'width', this);
+        h = this._getValueByStr(h, 'height', this);
+        if (w != null) {
+          this.settings.width = w;
+        }
+        if (h != null) {
+          this.settings.height = h;
+        }
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.plane.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.plane.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        }
+      });
+    }
+
+    _onResize() {
+      var e;
+      try {
+        this.width = this.settings.width;
+        this.height = this.settings.height;
+        if (this.plane == null) {
+          return;
+        }
+        this.plane.width = this.settings.width;
+        return this.plane.height = this.settings.height;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_Plane = Sprite_Plane;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_SButton;
+  //NUI 1.0
+  //rev 23.07.24
+  //"type": "button"
+  Sprite_SButton = class Sprite_SButton extends KDCore.Sprite {
+    constructor(settings) {
+      super();
+      this.settings = Object.assign({}, this.defaultSettings(), settings);
+      this._isEnabled = true;
+      this._isUnderMouse = false;
+      this._isPressActive = false;
+      this._isMouseOver = false;
+      this._create();
+      this._refreshSettings();
+      return;
+    }
+
+    realWidth() {
+      return this.settings.width;
+    }
+
+    realHeight() {
+      return this.settings.height;
+    }
+
+    isDisabled() {
+      return !this.isEnabled();
+    }
+
+    isEnabled() {
+      return this._isEnabled === true;
+    }
+
+    _enable() {
+      var e;
+      try {
+        if (this._desaturated === true) {
+          this.filters = [];
+          this._desaturated = false;
+        }
+        if ((this.settings.disabledTint != null) && this._isEnabled === false) { // * Return to normal Tint
+          this.applyTint(this.settings.activeTint, this.settings.tintAlpha);
+        }
+        this._isEnabled = true;
+        return this._refreshTint();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _disable() {
+      var e;
+      try {
+        this._applyDisabledEffect();
+        return this._isEnabled = false;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _applyDisabledEffect() {
+      var e;
+      try {
+        if (this.settings.desaturateWhenDisabled === true) {
+          return this.desaturate();
+        } else if (this.settings.disabledTint != null) {
+          return this.applyTint(this.settings.disabledTint, this.settings.disabledTintAlpha);
+        } else {
+          return this.applyTint(this.settings.tint, this.settings.tintAlpha);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    isActive() {
+      return this._isEnabled === true && this.visible === true && this.opacity !== 0;
+    }
+
+    pIsSupportKeyboardHandle() {
+      return this.settings.keyboardHandled === true;
+    }
+
+    desaturate() {
+      this.filters = [new PIXI.filters.ColorMatrixFilter()];
+      this.filters[0].desaturate();
+      this._desaturated = true;
+    }
+
+    defaultSettings() {
+      return {
+        imageName: '',
+        folderName: 'pictures',
+        imageMargins: 20,
+        width: 160,
+        height: 60,
+        clickSe: "Cursor1",
+        desaturateWhenDisabled: false,
+        tint: "",
+        overTint: 0xFFFFDD,
+        activeTint: 0xAAAAAA,
+        tintAlpha: 0.5,
+        disabledTint: 0xAAAAAA,
+        disabledTintAlpha: 0.5,
+        keyboardKey: "",
+        keyboardHandled: true,
+        enabled: true
+      };
+    }
+
+    dataBindings() {
+      return Object.assign(super.dataBindings(), {
+        width: function(v) {
+          if (v != null) {
+            return this.setSize(v, this.settings.height);
+          }
+        },
+        height: function(v) {
+          if (v != null) {
+            return this.setSize(this.settings.width, v);
+          }
+        },
+        size: function(v) {
+          if (v != null) {
+            return this.setSize(v.width, v.height);
+          }
+        },
+        style: function(v) {
+          if (v != null) {
+            return this.updateStyle(v);
+          }
+        },
+        handler: function(v) {
+          return this.setClickHandler(v);
+        },
+        enable: function(v) {
+          if (v != null) {
+            return this.setEnabledState(v);
+          }
+        }
+      });
+    }
+
+    setEnabledState(state = true) {
+      var e;
+      try {
+        this.settings.enabled = state;
+        if (state === true) {
+          return this._enable();
+        } else {
+          return this._disable();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    enable() {
+      return this.setEnabledState(true);
+    }
+
+    disable() {
+      return this.setEnabledState(false);
+    }
+
+    updateStyle(style) {
+      var e;
+      try {
+        this.settings = Object.assign(this.settings, style);
+        return this._refreshSettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    addClickHandler() {
+      return this.setClickHandler(...arguments);
+    }
+
+    setClickHandler(handler = null) {
+      var e;
+      try {
+        this.settings.onClick = null;
+        if ((handler != null) && typeof handler === 'function') {
+          return this.settings.onClick = handler;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    setSize(width = 160, height = 60) {
+      var e, h, w;
+      try {
+        w = this._getValueByStr(width, 'width', this);
+        h = this._getValueByStr(height, 'height', this);
+        if (w != null) {
+          this.settings.width = w;
+        }
+        if (h != null) {
+          this.settings.height = h;
+        }
+        return this._refreshSettings();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    executeAction() {
+      var e;
+      try {
+        KDCore.Utils.playSE(this.settings.clickSe);
+        if (this.settings.onClick != null) {
+          return this.settings.onClick();
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onTap() {
+      var e;
+      try {
+        return this.executeAction();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    //console.log("TAP")
+    _onOver() {
+      this._isMouseOver = true;
+      return this._refreshSettings();
+    }
+
+    //console.log("OVER")
+    _onOut() {
+      this._isMouseOver = false;
+      return this._refreshSettings();
+    }
+
+    //console.log("OUT")
+    _onDown() {
+      this._isPressActive = true;
+      return this._refreshSettings();
+    }
+
+    //console.log("DOWN")
+    _onUp() {
+      this._isPressActive = false;
+      return this._refreshSettings();
+    }
+
+    //console.log("UP")
+    _create() {
+      var e, height, width;
+      try {
+        this.buttonPlane = new KDCore.Sprite_Plane({
+          imageName: this.settings.imageName,
+          margins: this.settings.imageMargins,
+          folderName: this.settings.folderName
+        });
+        ({width, height} = this.settings);
+        this.buttonPlane.setSize(width, height);
+        return this.addChild(this.buttonPlane);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _refreshSettings() {
+      var e;
+      try {
+        this._refreshTint();
+        if (this.settings.keyboardHandled === true) {
+          this.handleOKAction = this._onTap;
+        } else {
+          this.handleOKAction = null;
+        }
+        this.setEnabledState(this.settings.enabled);
+        return this._onResize();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _refreshTint() {
+      var e;
+      try {
+        if (this._isPressActive === true) {
+          return this.applyTint(this.settings.activeTint, this.settings.tintAlpha);
+        } else if (this._isMouseOver === true) {
+          return this.applyTint(this.settings.overTint, this.settings.tintAlpha);
+        } else {
+          return this.applyTint(this.settings.tint, this.settings.tintAlpha);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    applyTint(tintValue, tintAlpha = 0.5) {
+      var e;
+      try {
+        if (tintValue == null) {
+          this._resetTintFilter();
+          return;
+        }
+        if (typeof tintValue === "string") {
+          if (!String.any(tintValue)) {
+            this._resetTintFilter();
+            return;
+          }
+          tintValue = KDCore.Utils.string2hex(tintValue);
+        }
+        return this.buttonPlane.filters = [new PIXI.filters.ColorOverlayFilter(tintValue, tintAlpha)];
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _resetTintFilter() {
+      var e;
+      try {
+        return this.buttonPlane.filters = [];
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _activateHandlerVisually() {
+      var e;
+      try {
+        return this.applyTint(this.settings.overTint);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    pDeactivateHandler() {
+      super.pDeactivateHandler();
+      return this.applyTint(this.settings.tint);
+    }
+
+    update() {
+      super.update();
+      if (this.isActive()) {
+        this._updateKeyboardHandling();
+        this._updateMouseHandling();
+      } else {
+        if (this._isUnderMouse === true) {
+          this._onOut();
+        }
+        if ($gameTemp.kdButtonUnderMouse === this) {
+          $gameTemp.kdButtonUnderMouse = null;
+        }
+      }
+    }
+
+    _updateKeyboardHandling() {
+      var e;
+      try {
+        if (String.any(this.settings.keyboardKey)) {
+          if (Input.isTriggered(this.settings.keyboardKey)) {
+            Input.clear();
+            return this._onTap();
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _updateMouseHandling() {
+      var e;
+      try {
+        if (this.isUnderMouse()) {
+          if (!this._isUnderMouse) {
+            this._onOver();
+            $gameTemp.kdButtonUnderMouse = this;
+            try {
+              if ($gameTemp.__pkdActiveKeyboardHandler != null) {
+                $gameTemp.__pkdActiveKeyboardHandler.pDeactivateHandler();
+              }
+            } catch (error) {
+              e = error;
+              KDCore.warning(e);
+            }
+            this._isUnderMouse = true;
+          }
+        } else {
+          if (this._isUnderMouse === true) {
+            this._onOut();
+            if ($gameTemp.kdButtonUnderMouse === this) {
+              $gameTemp.kdButtonUnderMouse = null;
+            }
+            this._isUnderMouse = false;
+          }
+        }
+        if (TouchInput.isPressed()) {
+          if (this._isUnderMouse === true) {
+            if (!this._isMousePressed) {
+              this._onDown();
+              this._isMousePressed = true;
+            }
+          }
+        }
+        if (TouchInput.isReleased()) {
+          if (this._isMousePressed === true) {
+            this._onUp();
+            if (this._isUnderMouse === true) {
+              this._onTap();
+            }
+            return this._isMousePressed = false;
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    _onResize() {
+      var e, ref;
+      try {
+        this.width = this.settings.width;
+        this.height = this.settings.height;
+        return (ref = this.buttonPlane) != null ? ref.setSize(this.width, this.height) : void 0;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_SButton = Sprite_SButton;
 });
 
 
@@ -4415,6 +9344,14 @@ KDCore.registerLibraryToLoad(function() {
       this._createThread();
     }
 
+    realWidth() {
+      return this._bitmaps[0].width;
+    }
+
+    realHeight() {
+      return this._bitmaps[0].height;
+    }
+
     setManualHover() {
       return this._isManualHoverMode = true;
     }
@@ -4440,6 +9377,11 @@ KDCore.registerLibraryToLoad(function() {
       this.filters[0].desaturate();
     }
 
+    isLoaded() {
+      var ref;
+      return (ref = this._bitmaps[0]) != null ? ref.isReady() : void 0;
+    }
+
     isMouseIn() {
       if (this._isManualHoverMode === true) {
         return this._isManualSelected;
@@ -4448,15 +9390,38 @@ KDCore.registerLibraryToLoad(function() {
       }
     }
 
+    isAllParentsActive() {
+      var e, parent;
+      try {
+        parent = this.parent;
+        while (parent != null) {
+          if (parent.visible === false) {
+            return false;
+          }
+          if (parent.opacity === 0) {
+            return false;
+          }
+          parent = parent.parent;
+        }
+        return true;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return false;
+      }
+    }
+
     isActive() {
       if (this._isCanBeClicked === false) {
         return false;
       }
-      if (this.parent != null) {
-        return this.parent.visible === true && this.visible === true;
-      } else {
-        return this.visible === true;
+      if (this.visible === false) {
+        return false;
       }
+      if (this.opacity === 0) {
+        return false;
+      }
+      return this.isAllParentsActive();
     }
 
     isDisabled() {
@@ -4535,9 +9500,19 @@ KDCore.registerLibraryToLoad(function() {
       var getterFunc;
       getterFunc = this._getGetter(sourceFolder);
       this._bitmaps.push(getterFunc(filename + '_00'));
+      this._bitmaps[0].addLoadListener(this._onBitmapLoaded.bind(this));
       this._bitmaps.push(getterFunc(filename + '_01'));
       if (isFull) {
         this._bitmaps.push(getterFunc(filename + '_03'));
+      }
+    };
+    _._onBitmapLoaded = function() {
+      var e;
+      try {
+        return this._executeLoadListeners();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
       }
     };
     _._getGetter = function(sourceFolder = null) {
@@ -4578,6 +9553,7 @@ KDCore.registerLibraryToLoad(function() {
       return this._updateMouseClick();
     };
     _._updateHover = function() {
+      var e;
       if (!this.isActive()) {
         return;
       }
@@ -4591,6 +9567,14 @@ KDCore.registerLibraryToLoad(function() {
             this._setImageState(1);
           }
           $gameTemp.kdButtonUnderMouse = this;
+          try {
+            if ($gameTemp.__pkdActiveKeyboardHandler != null) {
+              $gameTemp.__pkdActiveKeyboardHandler.pDeactivateHandler();
+            }
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+          }
         }
       } else {
         if (this._lastState !== 0) {
@@ -4727,7 +9711,7 @@ KDCore.registerLibraryToLoad(function() {
   // * Пространство имён для всех UIElements
   KDCore.UI = KDCore.UI || {};
   (function() {    // * Общий класс для всех UI элементов
-    //?rev 13.10.20
+    //?rev 07.02.2024
     var Sprite_UIElement;
     Sprite_UIElement = (function() {
       // * ABSTRACT значит что класс сам по себе ничего не создаёт, не хранит данные
@@ -4775,6 +9759,10 @@ KDCore.registerLibraryToLoad(function() {
           this.filters[0].desaturate();
         }
 
+        clearFilters() {
+          return this.filters = [];
+        }
+
         // * Общий метод (можно ли редактировать визуально)
         isCanBeEdited() {
           return false;
@@ -4788,7 +9776,39 @@ KDCore.registerLibraryToLoad(function() {
         // * Общий метод (находится ли объект под мышкой)
         isUnderMouse() {
           var ref;
-          return (ref = this.zeroChild()) != null ? ref.isUnderMouse() : void 0;
+          return ((ref = this.zeroChild()) != null ? ref.isUnderMouse() : void 0) && this.isFullVisible();
+        }
+
+        // * Полностью ли виден объект? (включае всех его родителей)
+        isFullVisible() {
+          return this.visible === true && this.allParentsIsVisible();
+        }
+
+        // * Все ли родители объекта видимы
+        allParentsIsVisible() {
+          var e, p;
+          if (!this.visible) {
+            return false;
+          }
+          try {
+            if (this.parent != null) {
+              p = this.parent;
+              while (p != null) {
+                if (p.visible === true) {
+                  p = p.parent;
+                } else {
+                  return false;
+                }
+              }
+              return true;
+            } else {
+              return this.visible === true;
+            }
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+            return true;
+          }
         }
 
         // * Параметры первого элемента (если он есть)
@@ -4816,11 +9836,6 @@ KDCore.registerLibraryToLoad(function() {
             }
           }
           return 0;
-        }
-
-        // * Первый "физический" элемент (спрайт)
-        zeroChild() {
-          return this.children[0];
         }
 
         // * Метод восстановления значения на стандартные настройки
@@ -4874,10 +9889,11 @@ KDCore.registerLibraryToLoad(function() {
     
     // * Подготовка элемента (проверка параметров)
     _._prepare = function() {
-      if (this.params == null) {
-        this.params = this.defaultParams();
+      //@params = @defaultParams() unless @params?
+      this.params = Object.assign({}, this.defaultParams(), this.params);
+      if (this.params.visible != null) {
+        this.visible = this.params.visible;
       }
-      return this.visible = this.params.visible;
     };
     // * Наследники создают свои элементы в этом методе
     _._createContent = function() {}; // * EMPTY
@@ -4890,10 +9906,18 @@ KDCore.registerLibraryToLoad(function() {
       }
       try {
         ({x, y} = this.params.position);
+        if (isFinite(x) && isFinite(y)) {
+          x = Number(x);
+          y = Number(y);
+        } else {
+          x = Number(eval(x));
+          y = Number(eval(y));
+        }
         this.move(x, y);
       } catch (error) {
         e = error;
         KDCore.warning(e);
+        this.move(0, 0);
       }
     };
   })();
@@ -4901,6 +9925,123 @@ KDCore.registerLibraryToLoad(function() {
 
 // ■ END PRIVATE.coffee
 //---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_ItemsListNHor;
+  //TODO: NOT USED IN NUI 1.0
+  //NUI 1.X !#!
+  //rev 03.05.24
+
+    //"type": "horList"
+  Sprite_ItemsListNHor = class Sprite_ItemsListNHor extends KDCore.Sprite_ItemsListN {
+    constructor() {
+      super(...arguments);
+    }
+
+    //$[OVER]
+    defaultSettings() {
+      var settings;
+      settings = super.defaultSettings();
+      settings.width = 420;
+      settings.height = 120;
+      settings.maxCols = 4;
+      return settings;
+    }
+
+    //$[OVER]
+    setMaxCols(maxCols) {} // * AUTO
+
+    setItems(items) {
+      var e, l;
+      try {
+        if (items != null) {
+          l = this.maxItems();
+          if (l !== items.length) {
+            this.settings.maxCols = items.length;
+            this.clear();
+            this._applySettings();
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return super.setItems(items);
+    }
+
+  };
+  return KDCore.Sprite_ItemsListNHor = Sprite_ItemsListNHor;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  var Sprite_Screen;
+  //NUI 1.0
+  //rev 04.05.24
+
+    //"type": "screen"
+  Sprite_Screen = class Sprite_Screen extends KDCore.Sprite_Group {
+    constructor(settings) {
+      super(settings);
+      this._applyExtraSettings();
+    }
+
+    //TODO: В режиме linkToMap, должен иметь width и height карты (size * tileSize)
+    realWidth() {
+      return Graphics.width;
+    }
+
+    realHeight() {
+      return Graphics.height;
+    }
+
+    defaultSettings() {
+      var defaultSettings;
+      defaultSettings = super.defaultSettings();
+      return Object.assign(defaultSettings, {
+        width: Graphics.width,
+        height: Graphics.height,
+        linkToMap: false //TODO: NOT USED IN NUI 1.0
+      });
+    }
+
+    _applyExtraSettings() {
+      var e;
+      try {
+        if (this.settings.linkToMap === true) {
+          return this.anchorPoint = new KDCore.MapAnchorPoint(0, 0);
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+    update() {
+      super.update();
+      return this._refreshScreenPosition();
+    }
+
+    _refreshScreenPosition() {
+      var e;
+      try {
+        if (this.anchorPoint == null) {
+          return;
+        }
+        this.x = this.anchorPoint.screenX();
+        return this.y = this.anchorPoint.screenY();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    }
+
+  };
+  return KDCore.Sprite_Screen = Sprite_Screen;
+});
 
 
 // Generated by CoffeeScript 2.6.1
@@ -5117,7 +10258,7 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
-  (function() {    //TODO: ROOT IMAGE FOLDER AS PARAMETER!!!
+  (function() {
     var Sprite_UIGauge;
     Sprite_UIGauge = class Sprite_UIGauge extends KDCore.UI.Sprite_UIElement {
       constructor() {
@@ -5478,11 +10619,17 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
-  (function() {    //rev 17.11.22
+  (function() {    //NUI 1.0
+    //rev 11.05.22
+
+    //"type": "legacyText"
     var Sprite_UIText;
     Sprite_UIText = class Sprite_UIText extends KDCore.UI.Sprite_UIElement {
       constructor() {
         super(...arguments);
+        if (String.any(this.params.text)) {
+          this.drawText(this.params.text);
+        }
       }
 
       // * Стандартный набор настроек
@@ -5490,8 +10637,8 @@ KDCore.registerLibraryToLoad(function() {
         return {
           visible: true,
           size: {
-            w: 60,
-            h: 20
+            width: 60,
+            height: 20
           },
           alignment: "center",
           font: {
@@ -5507,23 +10654,150 @@ KDCore.registerLibraryToLoad(function() {
             color: null,
             width: 2
           },
-          textColor: "#FFFFFF".toCss(),
-          // ? can be Null or not exists
+          textColor: "#ffffff",
           shadow: {
             color: "#000",
-            opacity: 200,
+            opacity: 0,
             margins: {
               x: 1,
               y: 1
             }
-          }
+          },
+          text: ""
         };
+      }
+
+      // * For compatibility with old style configurations
+      sizeWidth() {
+        if (this.params.size.w != null) {
+          return this.params.size.w;
+        } else {
+          if (this.params.size.width != null) {
+            this.params.size.w = this.params.size.width;
+            return this.params.size.width;
+          }
+        }
+        return 0;
+      }
+
+      // * For compatibility with old style configurations
+      sizeHeight() {
+        if (this.params.size.h != null) {
+          return this.params.size.h;
+        } else {
+          if (this.params.size.height != null) {
+            this.params.size.h = this.params.size.height;
+            return this.params.size.height;
+          }
+        }
+        return 0;
+      }
+
+      realWidth() {
+        return this.sizeWidth();
+      }
+
+      realHeight() {
+        return this.sizeHeight();
+      }
+
+      dataBindings() {
+        return Object.assign(super.dataBindings(), {
+          text: function(v) {
+            return this.drawText(v);
+          },
+          style: function(v) {
+            return this.updateStyle(v);
+          },
+          width: function(v) {
+            if (v != null) {
+              return this.setSize(v, this.sizeHeight());
+            }
+          },
+          height: function(v) {
+            if (v != null) {
+              return this.setSize(this.sizeWidth(), v);
+            }
+          },
+          size: function(v) {
+            if (v != null) {
+              return this.setSize(v.width, v.height);
+            }
+          },
+          textColor: function(v) {
+            if (v != null) {
+              return this.updateStyle({
+                textColor: v
+              });
+            }
+          },
+          fontSize: function(v) {
+            if (v != null) {
+              return this.updateFontSize(v);
+            }
+          }
+        });
+      }
+
+      setSize(w = 60, h = 20) {
+        var e;
+        try {
+          w = this._getValueByStr(w, 'width', this);
+          h = this._getValueByStr(h, 'height', this);
+          return this.updateStyle({
+            size: {
+              w: w,
+              h: h,
+              width: w,
+              height: h
+            }
+          });
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      updateStyle(newStyle) {
+        var e;
+        try {
+          this.params = Object.assign({}, this.params, newStyle);
+          this._destroyOldContent();
+          this._createContent();
+          // * Redraw Text
+          return this.drawText(this._lastText || "");
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      updateFontSize(fontSize) {
+        var e, font;
+        try {
+          font = Object.assign({}, this.params.font);
+          if (typeof fontSize === "string") {
+            fontSize = this._getValueByStr(fontSize, 'height', this);
+          }
+          font.size = fontSize;
+          return this.updateStyle({font});
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
       }
 
       //?DYNAMIC
       // * Сперва рисуем по готовности, а как загрузился спрайт, меняем
       drawText(text) {
-        return this._drawTextWhenReady(text);
+        var e;
+        try {
+          this.params.text = text;
+          return this._drawTextWhenReady(text);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
       }
 
       // * Сборка текста с учётом формата
@@ -5554,6 +10828,18 @@ KDCore.registerLibraryToLoad(function() {
     var _;
     //@[DEFINES]
     _ = KDCore.UI.Sprite_UIText.prototype;
+    _._destroyOldContent = function() {
+      var e, ref, ref1;
+      try {
+        if ((ref = this._shadowSpr) != null) {
+          ref.removeFromParent();
+        }
+        return (ref1 = this._textSpr) != null ? ref1.removeFromParent() : void 0;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
     //$[OVER]
     _._createContent = function() {
       if (this.params.shadow != null) {
@@ -5578,6 +10864,7 @@ KDCore.registerLibraryToLoad(function() {
       this._drawOnReady = null;
     };
     _._drawText = function(text) {
+      this._lastText = text;
       if (this._textSpr == null) {
         return;
       }
@@ -5639,7 +10926,370 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
-  (function() {    //rev 30.12.21
+  (function() {    //NUI 1.0
+    //rev 11.05.22
+    var Sprite_UIText2;
+    
+      //"type": "text"
+    Sprite_UIText2 = class Sprite_UIText2 extends KDCore.UI.Sprite_UIElement {
+      constructor(params, userTextStyle) {
+        super(params);
+        this.userTextStyle = userTextStyle;
+        this._applyParameters(params);
+        this._createTextSprite();
+        if (String.any(this.params.text)) {
+          this.drawText(this.params.text);
+        }
+        return;
+      }
+
+      // * Стандартный набор настроек
+      defaultParams() {
+        return {
+          visible: true,
+          size: {
+            width: 60,
+            height: 20
+          },
+          alignment: "center",
+          font: {
+            face: null,
+            size: 18,
+            italic: false,
+            bold: false,
+            weight: 0 // * 0 - not used
+          },
+          margins: {
+            x: 0,
+            y: 0
+          },
+          outline: {
+            color: null,
+            width: 2
+          },
+          textColor: "#FFFFFF",
+          shadow: {
+            color: "#000",
+            opacity: 0,
+            margins: {
+              x: 1,
+              y: 1
+            }
+          },
+          text: "",
+          multiline: false,
+          verticalCentered: true
+        };
+      }
+
+      // * For compatibility with old style configurations
+      sizeWidth() {
+        if (this.params.size.w != null) {
+          return this.params.size.w;
+        } else {
+          if (this.params.size.width != null) {
+            this.params.size.w = this.params.size.width;
+            return this.params.size.width;
+          }
+        }
+        return 0;
+      }
+
+      // * For compatibility with old style configurations
+      sizeHeight() {
+        if (this.params.size.h != null) {
+          return this.params.size.h;
+        } else {
+          if (this.params.size.height != null) {
+            this.params.size.h = this.params.size.height;
+            return this.params.size.height;
+          }
+        }
+        return 0;
+      }
+
+      dataBindings() {
+        return Object.assign(super.dataBindings(), {
+          text: function(v) {
+            return this.drawText(v);
+          },
+          style: function(v) {
+            if (v != null) {
+              return this.updateStyle(v);
+            }
+          },
+          width: function(v) {
+            if (v != null) {
+              return this.setSize(v, this.sizeHeight());
+            }
+          },
+          height: function(v) {
+            if (v != null) {
+              return this.setSize(this.sizeWidth(), v);
+            }
+          },
+          size: function(v) {
+            if (v != null) {
+              return this.setSize(v.width, v.height);
+            }
+          },
+          textColor: function(v) {
+            if (v != null) {
+              return this.updateStyle({
+                textColor: v
+              });
+            }
+          },
+          fontSize: function(v) {
+            if (v != null) {
+              return this.updateFontSize(v);
+            }
+          }
+        });
+      }
+
+      realWidth() {
+        return this.sizeWidth();
+      }
+
+      realHeight() {
+        return this.sizeHeight();
+      }
+
+      setSize(w = 60, h = 20) {
+        var e;
+        try {
+          w = this._getValueByStr(w, 'width', this);
+          h = this._getValueByStr(h, 'height', this);
+          return this.updateStyle({
+            size: {
+              w: w,
+              h: h
+            }
+          });
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      defaultStyle() {
+        return {};
+      }
+
+      drawText(text) {
+        if (text == null) {
+          text = "";
+        }
+        this.params.text = text;
+        this._drawText(text);
+      }
+
+      // * Сборка текста с учётом формата
+      // * Заменить вхождения %1, %2 на значения параметров
+      drawTextWithFormat(/*format string, arguments parameters... */) {
+        var text;
+        text = this._convertFormatedString(...arguments);
+        this.drawText(text);
+      }
+
+      // * Пишет текст с определённым цветом (один раз)
+      drawTextColor(text, colorCss = "#FFF") {
+        if (this._textSpr == null) {
+          return;
+        }
+        this.updateStyle({
+          textColor: colorCss
+        });
+        this.drawText(text);
+      }
+
+      updateFontSize(fontSize) {
+        var e, font;
+        try {
+          font = Object.assign({}, this.params.font);
+          if (typeof fontSize === "string") {
+            fontSize = this._getValueByStr(fontSize, 'height', this);
+          }
+          font.size = fontSize;
+          return this.updateStyle({font});
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      updateStyle(newStyleInOldFormat = {}, newStyleInNewFormat = {}) {
+        var e;
+        try {
+          this.textStyle = this._convertOldStyle(newStyleInOldFormat, newStyleInNewFormat);
+          this._textSpr.style = this.textStyle;
+          // * Redraw Text
+          return this.drawText(this._textSpr.text);
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }
+
+      getMetrics() {
+        return PIXI.TextMetrics.measureText(this._textSpr.text, this._textSpr.style);
+      }
+
+    };
+    KDCore.UI.Sprite_UIText2 = Sprite_UIText2;
+  })();
+  return (function() {    //╒═════════════════════════════════════════════════════════════════════════╛
+    // ■ PRIVATE.coffee
+    //╒═════════════════════════════════════════════════════════════════════════╛
+    //---------------------------------------------------------------------------
+    var _;
+    //@[DEFINES]
+    _ = KDCore.UI.Sprite_UIText2.prototype;
+    _._applyParameters = function(params) {
+      var e;
+      try {
+        return this.textStyle = this._convertOldStyle(params, {});
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._convertOldStyle = function(params = {}, style = {}) {
+      var _textStyle, color, e, margins, opacity;
+      try {
+        this.params = Object.assign({}, this.params, params);
+        _textStyle = Object.assign({}, this.defaultStyle(), this.userTextStyle, style);
+        if (String.any(this.params.font.face)) {
+          _textStyle.fontFamily = this.params.font.face;
+        }
+        _textStyle.fontSize = this.params.font.size;
+        if (this.params.font.italic === true) {
+          _textStyle.fontStyle = 'italic';
+        }
+        if (this.params.font.bold === true) {
+          _textStyle.fontWeight = 'bold';
+        }
+        if ((this.params.font.weight != null) && this.params.font.weight > 0) {
+          _textStyle.fontWeight = this.params.font.weight;
+        }
+        if (String.any(this.params.outline.color) && this.params.outline.width > 0) {
+          _textStyle.stroke = this.params.outline.color;
+          _textStyle.strokeThickness = this.params.outline.width;
+        }
+        _textStyle.fill = this.params.textColor;
+        if ((this.params.shadow != null) && this.params.shadow.opacity > 0) {
+          ({color, opacity, margins} = this.params.shadow);
+          _textStyle.dropShadow = true;
+          _textStyle.dropShadowAngle = margins.y;
+          _textStyle.dropShadowColor = color;
+          _textStyle.dropShadowDistance = margins.x;
+          _textStyle.dropShadowAlpha = opacity / 255.0;
+        }
+        if (this.params.multiline === true) {
+          _textStyle.align = this.params.alignment || 'left';
+          _textStyle.wordWrap = true;
+          if (this.params.font.size != null) {
+            _textStyle.lineHeight = this.params.font.size + 2;
+          }
+          if (this.sizeWidth() > 0) {
+            _textStyle.wordWrapWidth = this.sizeWidth();
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return _textStyle;
+    };
+    _._createTextSprite = function() {
+      var style;
+      style = new PIXI.TextStyle(this.textStyle);
+      this._textSpr = new PIXI.Text('', style);
+      this.add(this._textSpr);
+      if (this._needToDrawText != null) {
+        this.draw(this._needToDrawText);
+        this._needToDrawText = null;
+      }
+    };
+    _._drawText = function(text) {
+      var e, h, height, maxLineWidth, textMetrics, w;
+      if (this._textSpr == null) {
+        this._needToDrawText = text;
+        return;
+      }
+      this._textSpr.text = text;
+      if (this.params.size.height != null) {
+        this.params.size.h = this.params.size.height;
+      }
+      if (this.params.size.width != null) {
+        this.params.size.w = this.params.size.width;
+      }
+      ({w, h} = this.params.size);
+      try {
+        if (typeof text !== "string") {
+          text = String(text);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        text = "[wrong text input]";
+      }
+      textMetrics = PIXI.TextMetrics.measureText(text, this._textSpr.style);
+      ({height, maxLineWidth} = textMetrics);
+      if (this.params.verticalCentered === true) {
+        this._textSpr.y = (h - height) / 2;
+      } else {
+        this._textSpr.y = 0;
+      }
+      if (this.params.alignment === 'center') {
+        this._textSpr.x = (w - maxLineWidth) / 2;
+      } else if (this.params.alignment === 'right') {
+        this._textSpr.x = w - maxLineWidth;
+      } else {
+        this._textSpr.x = 0;
+      }
+      this._textSpr.x += this.params.margins.x;
+      this._textSpr.y += this.params.margins.y;
+    };
+    // * Заменить вхождения %1, %2 на значения параметров
+    _._convertFormatedString = function(/*text, args...*/) {
+      var e, i, j, ref, text;
+      try {
+        text = arguments[0];
+        for (i = j = 1, ref = arguments.length; (1 <= ref ? j < ref : j > ref); i = 1 <= ref ? ++j : --j) {
+          try {
+            if (arguments[i] == null) {
+              continue;
+            }
+            text = text.replace("%" + i, arguments[i]);
+          } catch (error) {
+            e = error;
+            KDCore.warning(e);
+            text = "[wrong format text input]";
+          }
+        }
+        return text;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return "[wrong format text input]";
+      }
+    };
+  })();
+});
+
+// ■ END PRIVATE.coffee
+//---------------------------------------------------------------------------
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
+  (function() {    //TODO: NOT USED IN NUI 1.0
+    //NUI 1.X !#!
+    //rev 03.05.22
+
+    //"type": "textExt"
     var Sprite_UITextExt;
     Sprite_UITextExt = class Sprite_UITextExt extends KDCore.UI.Sprite_UIText {
       constructor() {
@@ -5651,8 +11301,8 @@ KDCore.registerLibraryToLoad(function() {
         return {
           visible: true,
           size: {
-            w: 200,
-            h: 60
+            width: 200,
+            height: 60
           },
           font: {
             face: null,
@@ -5687,20 +11337,42 @@ KDCore.registerLibraryToLoad(function() {
     //@[DEFINES]
     _ = KDCore.UI.Sprite_UITextExt.prototype;
     //$[OVER]
+    _._destroyOldContent = function() {
+      var e;
+      try {
+        if (this._textSpr == null) {
+          return;
+        }
+        return this.removeChild(this._textSpr);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    //$[OVER]
     _._createTextSprite = function() {
       var rect;
-      rect = new Rectangle(0, 0, this.params.size.w, this.params.size.h);
+      rect = new Rectangle(0, 0, this.sizeWidth(), this.sizeHeight());
       this._textSpr = new KDCore.Window_ExtTextLineBase(rect, this.params.font);
       this._textSpr.x = this.params.margins.x || 0;
       this._textSpr.y = this.params.margins.y || 0;
       this.add(this._textSpr);
       // * На следующий кадр, чтобы не было потери текста (опасно)
-      //setTimeout (=> @_onReady() ), 10
+      setTimeout((() => {
+        var e;
+        try {
+          return this._onReady();
+        } catch (error) {
+          e = error;
+          return KDCore.warning(e);
+        }
+      }), 10);
       this._onReady(); // * Сразу
     };
     
     //$[OVER]
     _._drawText = function(text) {
+      this._lastText = text;
       if (this._textSpr == null) {
         return;
       }
@@ -6731,6 +12403,163 @@ KDCore.registerLibraryToLoad(function() {
       this._parent.style.width = Graphics._canvas.style.width;
       this._parent.style.height = Graphics._canvas.style.height;
     };
+    _.initReactComponents = function(withBabel = true) {
+      var e;
+      try {
+        if (withBabel) {
+          this._loadBabel();
+        }
+        return this._loadReact();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._loadBabel = function() {
+      var e;
+      try {
+        return this._loadScript('https://unpkg.com/babel-standalone@6/babel.min.js');
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._loadReact = function() {
+      var e;
+      try {
+        this._loadScript('https://unpkg.com/react@18/umd/react.production.min.js');
+        return this._loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js');
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._loadScript = function(src, isReact = false) {
+      var e, script;
+      try {
+        script = document.createElement("script");
+        if (isReact === true) {
+          script.type = "text/babel";
+        } else {
+          script.type = "text/javascript";
+          script.crossorigin = true;
+        }
+        script.src = src;
+        script.async = false;
+        script.defer = true;
+        script.onerror = function(e) {
+          KDCore.warning('HUI: Failed to load script');
+          return KDCore.warning(e);
+        };
+        document.body.appendChild(script);
+        if (isReact === true) {
+          return window.dispatchEvent(new Event('DOMContentLoaded'));
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.loadReactComponent = function(componentName, folder = 'data/uiComponents') {
+      var e, src;
+      try {
+        src = folder + "/" + componentName + ".js";
+        return this._loadScript(src, true);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.addReactComponent = function(componentName, props, uniqueId = null) {
+      var e, element, reactElement, root;
+      try {
+        if (window[componentName] == null) {
+          KDCore.warning("Cant find " + componentName + ", make sure to load it first");
+          return null;
+        }
+        if (uniqueId == null) {
+          uniqueId = componentName;
+        }
+        // * Создаём отдельный DIV для каждого элемента (чтобы можно было удалять)
+        element = this._getElementForReactComponent(uniqueId);
+        root = ReactDOM.createRoot(element);
+        reactElement = React.createElement(window[componentName], props);
+        root.render(reactElement);
+        return KDCore.HUI.getElement(uniqueId);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+        return null;
+      }
+    };
+    // * Simple React Component (without JSX!)
+    _.loadReactComponentFromFile = function(filename, props, uniqueId, handler, folder = "data/uiComponents") {
+      var e, url, xhr;
+      try {
+        xhr = new XMLHttpRequest();
+        url = folder + "/" + filename + ".js";
+        xhr.open("GET", url);
+        xhr.overrideMimeType("plain/text");
+        xhr.onload = function() {
+          var e, element;
+          eval(xhr.responseText);
+          element = KDCore.HUI.addReactComponent(filename, props, uniqueId);
+          try {
+            if (handler != null) {
+              return handler(element, filename);
+            }
+          } catch (error) {
+            e = error;
+            return KDCore.warning(e);
+          }
+        };
+        return xhr.send();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._getElementForReactComponent = function(componentId) {
+      var e, element;
+      try {
+        this.removeElementById(componentId);
+        element = this.addElement(componentId, '', null);
+        return element;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
+    };
+    _.loadElementFromFile = function(filename, handler, folder = "data/uiComponents") {
+      var e, url, xhr;
+      try {
+        xhr = new XMLHttpRequest();
+        url = folder + "/" + filename + ".html";
+        xhr.open("GET", url);
+        xhr.overrideMimeType("plain/text");
+        xhr.onload = function() {
+          var e, element, htmlElementText;
+          // * Хотел отдельные данные передавать и заменять в HTML текст
+          // * Но если у нас есть React компоненты, то это не надо
+          //htmlElementText = @convertDataKeys(xhr.responseText, dataKeys)
+          htmlElementText = xhr.responseText;
+          element = KDCore.HUI.addElement(filename, htmlElementText, null);
+          try {
+            if (handler != null) {
+              return handler(element, filename);
+            }
+          } catch (error) {
+            e = error;
+            return KDCore.warning(e);
+          }
+        };
+        return xhr.send();
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
     _.addCSS = function(name, folder = "css") {
       var head;
       if (!this.isInited()) {
@@ -6757,6 +12586,15 @@ KDCore.registerLibraryToLoad(function() {
       }
       this._parent.appendChild(element);
       return element;
+    };
+    _.appendElement = function(element) {
+      var e;
+      try {
+        return this._parent.appendChild(element);
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
     };
     // * Может быть NULL
     _.getElement = function(id) {
@@ -7066,6 +12904,552 @@ KDCore.registerLibraryToLoad(function() {
 
 // Generated by CoffeeScript 2.6.1
 KDCore.registerLibraryToLoad(function() {
+  var Builder;
+  Builder = {};
+  (function() {    //NUI 1.0
+    //rev 30.04.24
+    var _;
+    //@[DEFINES]
+    _ = Builder;
+    _.Factory = function(jsonCollection, owner, exRefresh = 0) {
+      var e, item, items, j, key, len, value;
+      try {
+        if (jsonCollection == null) {
+          return;
+        }
+        items = [];
+        for (key in jsonCollection) {
+          value = jsonCollection[key];
+          item = KDCore.UI.Builder.Make(value, owner);
+          if (item != null) {
+            items.push(item); // * Skip not UI elements definitions
+          }
+        }
+//owner[key] = item if owner?
+        for (j = 0, len = items.length; j < len; j++) {
+          item = items[j];
+          item.refreshBindings(owner, true);
+        }
+        // * Обновить привязки через MS ещё раз
+        if (exRefresh > 0) {
+          setTimeout((function() {
+            var e, k, len1, results;
+            try {
+              results = [];
+              for (k = 0, len1 = items.length; k < len1; k++) {
+                item = items[k];
+                results.push(item.refreshBindings(owner, true));
+              }
+              return results;
+            } catch (error) {
+              e = error;
+              return KDCore.warning(e);
+            }
+          }), exRefresh);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return items;
+    };
+    _.Make = function(jsonStructure, owner = null, parent = null) {
+      var bindings, child, childrens, dataObject, e, item, j, len, parameters, shortcutData, subItem, type, value;
+      try {
+        if (jsonStructure == null) {
+          return null;
+        }
+        if (jsonStructure.type == null) {
+          return null;
+        }
+        if (jsonStructure.shortcut != null) {
+          shortcutData = KDCore.UI.Builder.ConvertShortcut(jsonStructure.shortcut);
+          ({type, parameters} = shortcutData);
+        } else {
+          ({type, parameters} = jsonStructure);
+        }
+        if (typeof parameters === "string") {
+          parameters = KDCore.UI.Builder.ConvertShortcut(parameters);
+        }
+        if (jsonStructure.createIf != null) {
+          value = this._convertBindingValue(owner, jsonStructure.createIf);
+          if (value !== true) {
+            return null;
+          }
+        }
+        item = KDCore.UI.Builder.CreateItemByType(type, parameters);
+        if (item == null) {
+          return null;
+        }
+        ({dataObject, bindings, childrens} = jsonStructure);
+        // * Parent нужен чтобы работали настройки положения (center, %) и т.д.
+        if (parent != null) {
+          parent.addChild(item);
+        } else {
+          // * Owner - это не только главный родитель, но и к кому мы
+          // * прописываем все поля по ID
+          if (owner != null) {
+            owner.addChild(item);
+          }
+        }
+        // * Сохраняем схему (но только этого элемента, без "детей")
+        item.uiJsonScheme = Object.assign({}, jsonStructure, {
+          childrens: []
+        });
+        // * Константы доступны не только у каждого элемента в схеме, но и у общего родителя
+        if ((jsonStructure.constants != null) && (owner != null)) {
+          if (owner.uiConstants == null) {
+            owner.uiConstants = {};
+          }
+          owner.uiConstants = Object.assign(owner.uiConstants, jsonStructure.constants);
+        }
+        if (bindings != null) {
+          if (dataObject == null) {
+            dataObject = owner;
+          }
+          KDCore.UI.Builder.ApplyBindings(item, bindings, dataObject);
+        }
+        try {
+          if (jsonStructure.effects != null) {
+            KDCore.UI.Builder.ApplyEffects(item, jsonStructure.effects);
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        if ((childrens != null) && childrens.length > 0) {
+          for (j = 0, len = childrens.length; j < len; j++) {
+            child = childrens[j];
+            // * Дети всегда имеют родителя - этот элемент (а не owner)
+            subItem = KDCore.UI.Builder.Make(child, owner, item);
+          }
+        }
+        if (jsonStructure.id != null) {
+          item.id = jsonStructure.id;
+          if (owner != null) {
+            owner[jsonStructure.id] = item;
+          }
+        }
+        if (jsonStructure.parent != null) {
+          parent = jsonStructure.parent;
+          if ((owner != null) && (owner[parent] != null)) {
+            owner[parent].addChild(item);
+          }
+        }
+        // * Update bindings for recalculate Positions and Sizes
+        if (bindings != null) {
+          KDCore.UI.Builder.RefreshBindings(item, dataObject);
+        }
+        if (jsonStructure.position != null) {
+          item.setPosition(jsonStructure.position);
+        }
+        try {
+          if (jsonStructure.animations != null) {
+            KDCore.UI.Builder.ApplyAnimations(item, jsonStructure.animations);
+          }
+        } catch (error) {
+          e = error;
+          KDCore.warning(e);
+        }
+        return item;
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
+    };
+    // * dataObject может быть Null, если нет binding c $
+    _.ApplyBindings = function(uiElement, bindings, dataObject) {
+      var dataBindings, e, field, value;
+      try {
+        if (uiElement == null) {
+          return;
+        }
+        if (bindings == null) {
+          return;
+        }
+        if (uiElement.dataBindings == null) {
+          return;
+        }
+        dataBindings = uiElement.dataBindings();
+        if (dataBindings == null) {
+          return;
+        }
+        for (field in dataBindings) {
+          if (bindings[field] != null) {
+            value = this.ConvertBindingValue(dataObject, bindings[field], uiElement);
+            dataBindings[field].call(uiElement, value);
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+    };
+    _.RefreshBindings = function(uiElement, dataObject) {
+      var bindings, e;
+      try {
+        if (uiElement == null) {
+          return;
+        }
+        if (uiElement.uiJsonScheme == null) {
+          return;
+        }
+        ({bindings} = uiElement.uiJsonScheme);
+        if (bindings == null) {
+          return;
+        }
+        KDCore.UI.Builder.ApplyBindings(uiElement, bindings, dataObject);
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+    };
+    _.ApplyEffects = function(uiElement, effects) {
+      var alpha, color, e, ef, efData, effectsArray, j, len, quality, thickness;
+      try {
+        if (uiElement == null) {
+          return;
+        }
+        if (effects == null) {
+          return;
+        }
+        //TODO: Преобразование цвета!
+        effectsArray = [];
+        for (j = 0, len = effects.length; j < len; j++) {
+          ef = effects[j];
+          if (ef == null) {
+            continue;
+          }
+          efData = KDCore.UI.Builder.ConvertShortcut(ef);
+          if ((efData.shadow != null) && KDCore.isMZ()) {
+            effectsArray.push(new PIXI.filters.DropShadowFilter(efData));
+          }
+          if ((efData.outline != null) && KDCore.isMZ()) {
+            ({thickness, color, quality} = efData);
+            if (thickness == null) {
+              thickness = 1;
+            }
+            if (color == null) {
+              color = 0xffffff;
+            }
+            effectsArray.push(new PIXI.filters.OutlineFilter(thickness, color, quality));
+          }
+          if (efData.glow != null) {
+            effectsArray.push(new PIXI.filters.GlowFilter(efData));
+          }
+          if (efData.tint != null) {
+            ({color, alpha} = efData);
+            if (alpha == null) {
+              alpha = 0.5;
+            }
+            effectsArray.push(new PIXI.filters.ColorOverlayFilter(color, alpha));
+          }
+        }
+        if (effectsArray.length > 0) {
+          return uiElement.filters = effectsArray;
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.ApplyAnimations = function(uiElement, animations) {
+      var a, e, j, len;
+      try {
+        if (uiElement == null) {
+          return;
+        }
+        if (animations == null) {
+          return;
+        }
+        if (uiElement.addAnimationRule == null) {
+          return;
+        }
+        if (animations.length === 0) {
+          return;
+        }
+        for (j = 0, len = animations.length; j < len; j++) {
+          a = animations[j];
+          if (typeof a === 'string') {
+            a = KDCore.UI.Builder.ConvertShortcut(a);
+          }
+          if (a != null) {
+            uiElement.addAnimationRule(a);
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+    };
+    _.ConvertBindingValue = function(sourceObj, bindingValue, element = null) {
+      var e, i, j, ref, text, value;
+      try {
+        if (bindingValue instanceof Array) {
+          text = bindingValue[0];
+          for (i = j = 1, ref = bindingValue.length; (1 <= ref ? j < ref : j > ref); i = 1 <= ref ? ++j : --j) {
+            if (bindingValue[i] == null) {
+              continue;
+            }
+            value = this.ConvertBindingValue(sourceObj, bindingValue[i], element);
+            if (value != null) {
+              text = text.replace("%" + i, value);
+            }
+          }
+          return text;
+        } else {
+          return this._convertBindingValue(sourceObj, bindingValue, element);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return bindingValue;
+    };
+    _.CreateItemByType = function(type, initialParameters = {}) {
+      var e;
+      try {
+        // * SHOULD HAVE: dataBingins(size), realWidth, realHeight
+        switch (type) {
+          case 'button':
+            return new KDCore.Sprite_SButton(initialParameters);
+          case 'text':
+            return new KDCore.UI.Sprite_UIText2(initialParameters);
+          case 'plane':
+            return new KDCore.Sprite_Plane(initialParameters);
+          case 'rect':
+            return new KDCore.Sprite_BaseRect(initialParameters);
+          case 'image':
+            return new KDCore.Sprite_Image(initialParameters);
+          case 'legacyText':
+            return new KDCore.UI.Sprite_UIText(initialParameters);
+          case 'textExt':
+            return new KDCore.UI.Sprite_UITextExt(initialParameters);
+          case 'group':
+            return new KDCore.Sprite_Group(initialParameters);
+          case 'legacyButton':
+            return new KDCore.Sprite_ImgButton(initialParameters);
+          case 'circle':
+            return new KDCore.Sprite_BaseCircle(initialParameters);
+          case 'gauge':
+            return new KDCore.Sprite_Gauge(initialParameters);
+          case 'list':
+            return new KDCore.Sprite_ItemsListN(initialParameters);
+          case 'horList':
+            return new KDCore.Sprite_ItemsListNHor(initialParameters);
+          case 'screen':
+            /*screenGroup = {
+                "type": "group",
+                "bindings": {
+                    "width": "@Graphics.width",
+                    "height": "@Graphics.height"
+                }
+            }
+            return KDCore.UI.Builder.Make(screenGroup)*/
+            return new KDCore.Sprite_Screen(initialParameters);
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return null;
+    };
+    _._convertValueDataFromShortcut = function(valueData) {
+      var data, e, item, j, len, n, outerItems, p, v;
+      try {
+        if (valueData.contains("|")) {
+          data = {};
+          outerItems = valueData.split("|");
+          for (j = 0, len = outerItems.length; j < len; j++) {
+            item = outerItems[j];
+            p = item.split("=");
+            n = p.shift();
+            v = p;
+            if (v.length === 0) {
+              v = true;
+            } else {
+              if (v.length === 1) {
+                v = v[0];
+                if (isFinite(v)) {
+                  v = Number(v);
+                }
+              } else {
+                v = KDCore.UI.Builder._convertValueDataFromShortcut(v.join("="));
+              }
+            }
+            data[n] = v;
+          }
+          return data;
+        }
+        data = KDCore.UI.Builder.ConvertShortcut(valueData, ",", "=");
+        return data;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _.ConvertShortcut = function(shortcut, outerSep = ";", innerSep = ":") {
+      var config, e, j, len, pair, value, valueData, valueName, values;
+      try {
+        config = {};
+        values = shortcut.split(outerSep);
+//console.log(values)
+        for (j = 0, len = values.length; j < len; j++) {
+          value = values[j];
+          if (!String.any(value)) {
+            continue;
+          }
+          pair = value.split(innerSep);
+          valueName = pair[0];
+          valueData = pair[1];
+          if (String.any(valueData) && valueData.contains("=")) {
+            valueData = KDCore.UI.Builder._convertValueDataFromShortcut(valueData);
+          } else {
+            if (valueData == null) {
+              valueData = true;
+            } else {
+              if (isFinite(valueData)) {
+                valueData = Number(valueData);
+              }
+            }
+          }
+          config[valueName] = valueData;
+        }
+        //console.log(valueName, valueData)
+        return config;
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+    _._convertBindingValue = function(sourceObj, bindingValue, element = null) {
+      var captured, dpValue, e, evalString, r, result, resultValue;
+      try {
+        if (typeof bindingValue === 'string') {
+          // * Replace all HDP
+          if (bindingValue.contains("hdp")) {
+            r = new RegExp("(\\d+)hdp", "g");
+            result = r.exec(bindingValue);
+            while ((result != null)) {
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, true);
+              bindingValue = bindingValue.replace(/(\d+)hdp/, resultValue);
+              result = r.exec(bindingValue);
+            }
+          }
+          // * Replace all DP
+          if (bindingValue.contains("dp")) {
+            r = new RegExp("(\\d+)dp", "g");
+            result = r.exec(bindingValue);
+            while ((result != null)) {
+              dpValue = Number(result[1]);
+              resultValue = KDCore.Utils.convertDP(dpValue, false);
+              bindingValue = bindingValue.replace(/(\d+)dp/, resultValue);
+              result = r.exec(bindingValue);
+            }
+          }
+          // * FORCE EVAL
+          if (bindingValue.contains("@") && bindingValue[0] === "@") {
+            evalString = bindingValue.replace("@", "");
+            return eval(evalString);
+          }
+          // * EXTRA $ calculations
+          if (bindingValue.contains("~") && bindingValue[0] === "~") { // * POST EVAL
+            if (bindingValue.contains("$")) {
+              r = new RegExp("(\\$[\\w+.]*)", "g");
+              result = r.exec(bindingValue);
+              if (result != null) {
+                //console.log(result)
+                captured = result[1];
+                if (String.any(captured)) {
+                  resultValue = this._convertSingleBindingValue$(sourceObj, captured, element);
+                  if (resultValue == null) {
+                    return null;
+                  }
+                  if (typeof resultValue === 'function') {
+                    return resultValue;
+                  } else {
+                    if (String.any(resultValue)) {
+                      bindingValue = bindingValue.replace(captured, resultValue);
+                      return this._convertBindingValue(sourceObj, bindingValue, element);
+                    } else {
+                      return null;
+                    }
+                  }
+                }
+              }
+            } else {
+              evalString = bindingValue.replace("~", "");
+              return eval(evalString);
+            }
+          }
+          
+          // * Default old style simple $
+          if (bindingValue.contains("$")) {
+            return this._convertSingleBindingValue$(...arguments);
+          }
+        }
+      } catch (error) {
+        e = error;
+        KDCore.warning(e);
+      }
+      return bindingValue;
+    };
+    _._convertSingleBindingValue$ = function(sourceObj, bindingValue, element) {
+      var e, field, parts, subData, subField;
+      try {
+        field = bindingValue.replace("$", "");
+        if (field.contains(".")) { //$parent.width
+          parts = field.split(".");
+          // * Только одно вхождение
+          field = parts[0];
+          subField = parts[1];
+          if (!String.any(field) && String.any(subField)) {
+            if (element != null) {
+              return this._convertSingleBindingValue$(element, "$" + subField, element);
+            } else {
+              return null;
+            }
+          }
+          if (String.any(field) && !String.any(subField)) {
+            return this._convertSingleBindingValue$(sourceObj, "$" + field, element);
+          }
+          if (sourceObj != null) {
+            if (typeof sourceObj[field] === 'function') {
+              subData = sourceObj[field]();
+            } else {
+              subData = sourceObj[field];
+            }
+            return this._convertSingleBindingValue$(subData, "$" + subField, element);
+          } else {
+            return null;
+          }
+        } else {
+          if ((sourceObj != null) && (sourceObj[field] != null)) {
+            if (typeof sourceObj[field] === 'function') {
+              return sourceObj[field]();
+            } else {
+              return sourceObj[field];
+            }
+          } else {
+            return null; // * We can't find value
+          }
+        }
+      } catch (error) {
+        e = error;
+        return KDCore.warning(e);
+      }
+    };
+  })();
+  //@[EXTEND]
+  KDCore.UI = KDCore.UI || {};
+  return KDCore.UI.Builder = Builder;
+});
+
+
+// Generated by CoffeeScript 2.6.1
+KDCore.registerLibraryToLoad(function() {
   var alias_WBDTEX_KDCore29122021;
   // * <center>, для RPG Maker MZ и если нету Visu Message Core
   if (KDCore.isMZ()) {
@@ -7172,7 +13556,7 @@ if (KDCore._requireLoadLibrary === true) {
     lib();
   }
   KDCore[KDCore._loader] = [];
-  text = "%c  KDCore is loaded " + KDCore.Version;
+  text = "%c  KDCore is loaded " + KDCore.Version + " + NUI " + KDCore.nuiVersion;
   console.log(text, 'background: #222; color: #82b2ff');
 }
 
@@ -7185,316 +13569,90 @@ if (KDCore._requireLoadLibrary === true) {
 // ==========================================================================
 // ==========================================================================
 
-//Plugin KDCore builded by PKD PluginBuilder 2.2 - 03.06.2023
+//Plugin KDCore builded by PKD PluginBuilder 2.2.1 - 25.07.2024
 
-var _0x545be5 = _0x1cbb;
-(function (_0x4ee0ea, _0x53ae30) {
-    var _0x57edba = _0x1cbb, _0x5c7765 = _0x4ee0ea();
-    while (!![]) {
-        try {
-            var _0x568081 = -parseInt(_0x57edba(0x1ad)) / 0x1 + parseInt(_0x57edba(0x199)) / 0x2 + -parseInt(_0x57edba(0x1c6)) / 0x3 + parseInt(_0x57edba(0x1b0)) / 0x4 * (parseInt(_0x57edba(0x1a7)) / 0x5) + parseInt(_0x57edba(0x192)) / 0x6 + parseInt(_0x57edba(0x17f)) / 0x7 * (-parseInt(_0x57edba(0x184)) / 0x8) + -parseInt(_0x57edba(0x1cd)) / 0x9;
-            if (_0x568081 === _0x53ae30)
-                break;
-            else
-                _0x5c7765['push'](_0x5c7765['shift']());
-        } catch (_0x202115) {
-            _0x5c7765['push'](_0x5c7765['shift']());
-        }
-    }
-}(_0x5455, 0x308b0));
-function _0x1cbb(_0xe893a0, _0x123af1) {
-    var _0x5455c3 = _0x5455();
-    return _0x1cbb = function (_0x1cbbea, _0x1c97eb) {
-        _0x1cbbea = _0x1cbbea - 0x17c;
-        var _0x5dcdd8 = _0x5455c3[_0x1cbbea];
-        return _0x5dcdd8;
-    }, _0x1cbb(_0xe893a0, _0x123af1);
-}
+// Generated by CoffeeScript 2.6.1
+//$[ENCODE]
+//$[NUI BASED]
 var PKD_SST_SkillsTreeBase;
-function _0x5455() {
-    var _0x3dc642 = [
-        '\x6c\x6f\x61\x64\x50\x69\x63\x74\x75\x72\x65\x46\x6f\x72\x53\x69\x6d\x70\x6c\x65\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65',
-        '\x63\x68\x61\x6e\x67\x65',
-        '\x61\x64\x64\x4c\x6f\x61\x64\x4c\x69\x73\x74\x65\x6e\x65\x72',
-        '\x63\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e\x49\x6d\x61\x67\x65',
-        '\x32\x33\x30\x37\x30\x36\x78\x45\x65\x59\x73\x72',
-        '\x5a\x71\x6f\x4a\x56',
-        '\x5f\x63\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e',
-        '\x42\x4e\x75\x63\x4f',
-        '\x64\x69\x73\x61\x62\x6c\x65\x4d\x6f\x64\x61\x6c\x4d\x6f\x64\x65',
-        '\x37\x32\x65\x5a\x50\x43\x79\x4a',
-        '\x55\x74\x69\x6c\x73',
-        '\x70\x53\x69\x6d\x70\x6c\x65\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65',
-        '\x6d\x61\x69\x6e\x46\x72\x61\x6d\x65',
-        '\x5f\x61\x63\x74\x69\x76\x61\x74\x65\x4d\x6f\x64\x61\x6c\x57\x69\x6e\x64\x6f\x77',
-        '\x6f\x70\x61\x63\x69\x74\x79',
-        '\x69\x73\x43\x61\x6e\x43\x6c\x6f\x73\x65\x53\x63\x65\x6e\x65',
-        '\x5f\x63\x72\x65\x61\x74\x65\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x73\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x4d\x61\x73\x6b\x5f\x43',
-        '\x62\x69\x6e\x64',
-        '\x69\x73\x53\x68\x6f\x77\x53\x6c\x6f\x77\x6c\x79',
-        '\x5f\x63\x72\x65\x61\x74\x65\x46\x72\x61\x6d\x65\x49\x6d\x61\x67\x65',
-        '\x5f\x61\x66\x74\x65\x72\x41\x6e\x69\x6d\x61\x74\x69\x6f\x6e\x44\x6f\x6e\x65',
-        '\x6c\x6a\x70\x5a\x7a',
-        '\x31\x34\x38\x32\x30\x31\x32\x65\x4e\x52\x45\x50\x6e',
-        '\x64\x65\x66\x61\x75\x6c\x74\x42\x61\x63\x6b\x67\x72\x6f\x75\x6e\x64\x46\x6f\x72\x45\x6d\x70\x74\x79\x53\x63\x65\x6e\x65',
-        '\x6b\x46\x61\x45\x53',
-        '\x69\x73\x52\x65\x61\x64\x79',
-        '\x5f\x63\x72\x65\x61\x74\x65\x4d\x6f\x64\x61\x6c\x43\x68\x6f\x69\x63\x65\x57\x69\x6e\x64\x6f\x77',
-        '\x63\x72\x65\x61\x74\x65',
-        '\x5f\x72\x65\x66\x72\x65\x73\x68\x53\x63\x65\x6e\x65\x41\x75\x74\x6f\x50\x6f\x73\x69\x74\x69\x6f\x6e\x69\x6e\x67',
-        '\x37\x33\x39\x35\x37\x34\x63\x6c\x78\x6b\x76\x64',
-        '\x73\x68\x6f\x77',
-        '\x42\x52\x66\x61\x6d',
-        '\x5f\x5f\x70\x53\x53\x54\x4d\x6f\x64\x61\x6c\x4d\x6f\x64\x65',
-        '\x7a\x73\x55\x75\x69',
-        '\x65\x6e\x61\x62\x6c\x65\x4d\x6f\x64\x61\x6c\x4d\x6f\x64\x65',
-        '\x63\x6c\x6f\x73\x65\x53\x63\x65\x6e\x65\x50\x72\x6f\x63\x65\x73\x73',
-        '\x5f\x6d\x6f\x76\x65\x43\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e\x54\x6f\x50\x6f\x73\x69\x74\x69\x6f\x6e',
-        '\x5f\x70\x72\x65\x6c\x6f\x61\x64\x49\x6d\x61\x67\x65\x73',
-        '\x70\x6c\x61\x79\x43\x61\x6e\x63\x65\x6c',
-        '\x68\x65\x69\x67\x68\x74',
-        '\x43\x68\x61\x6e\x67\x65\x72',
-        '\x53\x70\x72\x69\x74\x65',
-        '\x42\x75\x74\x74\x6f\x6e\x4d',
-        '\x39\x32\x32\x30\x56\x64\x6b\x6c\x73\x77',
-        '\x4c\x6f\x61\x64\x42\x69\x74\x6d\x61\x70',
-        '\x69\x73\x4e\x65\x65\x64\x43\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e',
-        '\x42\x4d\x6e\x72\x61',
-        '\x63\x6c\x65\x61\x72',
-        '\x73\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x4d\x61\x73\x6b\x5f\x42',
-        '\x31\x32\x31\x35\x35\x38\x6b\x47\x72\x59\x46\x4e',
-        '\x5f\x61\x63\x74\x69\x76\x61\x74\x65\x43\x68\x69\x6c\x64\x72\x65\x6e\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x73\x65\x74\x42\x61\x63\x6b\x67\x72\x6f\x75\x6e\x64\x49\x6d\x61\x67\x65',
-        '\x33\x39\x32\x4f\x63\x4f\x66\x6b\x43',
-        '\x5f\x63\x72\x65\x61\x74\x65\x42\x61\x63\x6b\x67\x72\x6f\x75\x6e\x64\x49\x6d\x61\x67\x65',
-        '\x5f\x63\x72\x65\x61\x74\x65\x43\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e',
-        '\x69\x73\x4d\x6f\x64\x61\x6c\x4d\x6f\x64\x65',
-        '\x65\x6e\x61\x62\x6c\x65\x4d\x6f\x64\x61\x6c\x43\x68\x6f\x69\x63\x65',
-        '\x5f\x6d\x6f\x64\x61\x6c\x57\x69\x6e\x64\x6f\x77',
-        '\x73\x74\x65\x70',
-        '\x5f\x73\x68\x6f\x77\x53\x63\x65\x6e\x65\x43\x6f\x6e\x74\x65\x6e\x74\x53\x6c\x6f\x77\x6c\x79',
-        '\x63\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e\x50\x6f\x73\x69\x74\x69\x6f\x6e',
-        '\x5f\x75\x70\x64\x61\x74\x65\x4b\x65\x79\x62\x6f\x61\x72\x64\x43\x6c\x6f\x73\x65',
-        '\x5f\x6d\x6f\x64\x61\x6c\x43\x68\x6f\x69\x63\x65\x57\x69\x6e\x64\x6f\x77',
-        '\x5f\x61\x63\x74\x69\x76\x65\x4d\x6f\x64\x61\x6c\x57\x69\x6e\x64\x6f\x77',
-        '\x63\x6c\x6f\x73\x65',
-        '\x77\x69\x64\x74\x68',
-        '\x63\x6f\x6e\x74\x65\x6e\x74',
-        '\x66\x47\x68\x71\x6b',
-        '\x5f\x63\x68\x61\x6e\x67\x65\x72\x41',
-        '\x77\x61\x72\x6e\x69\x6e\x67',
-        '\x61\x64\x64\x43\x68\x69\x6c\x64',
-        '\x46\x47\x4c\x72\x4e',
-        '\x5f\x70\x42\x61\x63\x6b\x67\x72\x6f\x75\x6e\x64\x49\x6d\x61\x67\x65',
-        '\x77\x69\x6e\x64\x6f\x77\x43\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e',
-        '\x33\x31\x39\x38\x37\x32\x75\x68\x75\x61\x73\x6c',
-        '\x5f\x73\x68\x6f\x77\x53\x63\x65\x6e\x65\x43\x6f\x6e\x74\x65\x6e\x74\x49\x6e\x73\x74\x61\x6e\x74\x6c\x79',
-        '\x64\x6f\x6e\x65',
-        '\x5f\x63\x72\x65\x61\x74\x65\x4d\x6f\x64\x61\x6c\x57\x69\x6e\x64\x6f\x77',
-        '\x67\x65\x74\x4d\x61\x69\x6e\x53\x63\x65\x6e\x65\x53\x65\x74\x74\x69\x6e\x67\x73',
-        '\x62\x69\x74\x6d\x61\x70',
-        '\x6e\x65\x65\x64\x73\x43\x61\x6e\x63\x65\x6c\x42\x75\x74\x74\x6f\x6e',
-        '\x36\x36\x34\x37\x38\x35\x77\x65\x69\x55\x6f\x6f',
-        '\x66\x72\x6f\x6d',
-        '\x6a\x44\x77\x59\x74',
-        '\x5f\x70\x46\x72\x61\x6d\x65\x49\x6d\x61\x67\x65',
-        '\x5f\x75\x70\x64\x61\x74\x65\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x5f\x63\x72\x65\x61\x74\x65\x43\x68\x69\x6c\x64\x72\x65\x6e\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x75\x70\x64\x61\x74\x65',
-        '\x69\x73\x43\x61\x6e\x63\x65\x6c',
-        '\x5f\x63\x68\x61\x6e\x67\x65\x72\x42',
-        '\x73\x74\x61\x72\x74',
-        '\x73\x65\x74\x75\x70',
-        '\x6f\x6e\x43\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b'
-    ];
-    _0x5455 = function () {
-        return _0x3dc642;
-    };
-    return _0x5455();
-}
+
 PKD_SST_SkillsTreeBase = class PKD_SST_SkillsTreeBase extends Scene_MenuBase {
-    constructor() {
-        super(...arguments);
+  constructor() {
+    super(...arguments);
+  }
+
+  isNeedCloseButton() {
+    return true;
+  }
+
+  isCanCloseScene() {
+    return !this.isModalMode();
+  }
+
+  isModalMode() {
+    return PKD_SimpleSkillsTree.Utils.IsGlobalModalState();
+  }
+
+  create() {
+    super.create();
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_CommonElements.sceneBackground, this);
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_CommonElements.sceneFrame, this);
+    this._createChildrenContent();
+    if (this.isNeedCloseButton()) {
+      this._createCloseButton();
     }
-    ['\x73\x65\x74\x74\x69\x6e\x67\x73']() {
-        var _0x2877e3 = _0x1cbb;
-        return PKD_SimpleSkillsTree['\x50\x50'][_0x2877e3(0x1ca)]();
+  }
+
+  _createChildrenContent() {} // * FOR CHILD
+
+  onCloseButtonClick() {
+    if (!this.isCanCloseScene()) {
+      return;
     }
-    [_0x545be5(0x1cc)]() {
-        return ![];
+    this.closeSceneProcess();
+  }
+
+  closeSceneProcess() {
+    return this.popScene();
+  }
+
+  _createCloseButton() {
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_CommonElements.closeSceneButton, this);
+    if (this.closeSceneButton != null) {
+      this.closeSceneButton.addClickHandler(this.onCloseButtonClick.bind(this));
     }
-    ['\x69\x73\x43\x61\x6e\x43\x6c\x6f\x73\x65\x42\x79\x4b\x65\x79\x62\x6f\x61\x72\x64']() {
-        return !![];
+  }
+
+  // * Установить модальный режим
+  enableModalMode(titleText, okHandler) {
+    this._modalWindow = new PKD_SST_ModalWindowSprite(titleText, okHandler);
+    this._activateModalWindow(this._modalWindow);
+  }
+
+  _activateModalWindow(modalWindow) {
+    this._activeModalWindow = modalWindow;
+    this.addChild(this._activeModalWindow); // * Always on Top
+    $gameTemp.__pSSTModalMode = true;
+  }
+
+  enableModalChoice(data, selectHandler) {
+    this._modalChoiceWindow = new PKD_SST_ModalChoiceList(data, selectHandler);
+    this._activateModalWindow(this._modalChoiceWindow);
+  }
+
+  // * Отключить модальный режим
+  disableModalMode() {
+    $gameTemp.__pSSTModalMode = null;
+    if (this._activeModalWindow == null) {
+      return;
     }
-    [_0x545be5(0x18e)]() {
-        return ![];
-    }
-    [_0x545be5(0x1a9)]() {
-        return !![];
-    }
-    [_0x545be5(0x18a)]() {
-        var _0x443215 = _0x545be5;
-        return !this[_0x443215(0x1b3)]();
-    }
-    [_0x545be5(0x1b3)]() {
-        var _0x115a03 = _0x545be5;
-        return PKD_SimpleSkillsTree[_0x115a03(0x185)]['\x49\x73\x47\x6c\x6f\x62\x61\x6c\x4d\x6f\x64\x61\x6c\x53\x74\x61\x74\x65']();
-    }
-    ['\x63\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e\x49\x6d\x61\x67\x65']() {
-        var _0x264edb = _0x545be5;
-        return _0x264edb(0x1c5);
-    }
-    ['\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74'](_0x5e3dc7) {
-        var _0x439c5d = _0x545be5;
-        return this[_0x439c5d(0x1be)][_0x439c5d(0x1c2)](_0x5e3dc7);
-    }
-    [_0x545be5(0x1af)](_0x52f2a3) {
-        var _0x1c5b58 = _0x545be5;
-        return this[_0x1c5b58(0x1c4)]['\x62\x69\x74\x6d\x61\x70'] = ImageManager[_0x1c5b58(0x1d9)](_0x52f2a3);
-    }
-    [_0x545be5(0x197)]() {
-        var _0x59880b = _0x545be5;
-        super[_0x59880b(0x197)](), this[_0x59880b(0x18b)](), this[_0x59880b(0x1b1)](), this[_0x59880b(0x18f)](), this[_0x59880b(0x1d2)](), this['\x69\x73\x4e\x65\x65\x64\x43\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e']() && this['\x5f\x63\x72\x65\x61\x74\x65\x43\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e'](), this[_0x59880b(0x1c9)](), this[_0x59880b(0x196)]();
-    }
-    [_0x545be5(0x1b1)]() {
-        var _0x578335 = _0x545be5;
-        this[_0x578335(0x1c4)] = new Sprite(), this[_0x578335(0x1af)](_0x578335(0x193)), this[_0x578335(0x1c4)][_0x578335(0x1cb)][_0x578335(0x195)]() ? this[_0x578335(0x198)]() : this[_0x578335(0x1c4)]['\x62\x69\x74\x6d\x61\x70'][_0x578335(0x17d)](() => {
-            var _0x434692 = _0x578335;
-            return _0x434692(0x194) === _0x434692(0x1aa) ? this[_0x434692(0x1c4)][_0x434692(0x1cb)] = _0x577d24['\x6c\x6f\x61\x64\x50\x69\x63\x74\x75\x72\x65\x46\x6f\x72\x53\x69\x6d\x70\x6c\x65\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65'](_0x3dbeee) : this[_0x434692(0x198)]();
-        }), this[_0x578335(0x1be)][_0x578335(0x1c2)](this[_0x578335(0x1c4)]);
-    }
-    [_0x545be5(0x198)]() {
-        var _0x47c711 = _0x545be5;
-        if (this[_0x47c711(0x1c4)][_0x47c711(0x1bd)] !== Graphics[_0x47c711(0x1bd)] || this[_0x47c711(0x1c4)][_0x47c711(0x1a3)] !== Graphics['\x68\x65\x69\x67\x68\x74'])
-            return this[_0x47c711(0x1be)]['\x78'] = Graphics['\x77\x69\x64\x74\x68'] / 0x2 - this[_0x47c711(0x1c4)]['\x77\x69\x64\x74\x68'] / 0x2, this['\x63\x6f\x6e\x74\x65\x6e\x74']['\x79'] = Graphics[_0x47c711(0x1a3)] / 0x2 - this['\x5f\x70\x42\x61\x63\x6b\x67\x72\x6f\x75\x6e\x64\x49\x6d\x61\x67\x65'][_0x47c711(0x1a3)] / 0x2;
-    }
-    [_0x545be5(0x18f)]() {
-        var _0x384a0c = _0x545be5;
-        this[_0x384a0c(0x1d0)] = new Sprite(), this[_0x384a0c(0x1d0)][_0x384a0c(0x1cb)] = ImageManager[_0x384a0c(0x1d9)](_0x384a0c(0x187)), this[_0x384a0c(0x1be)][_0x384a0c(0x1c2)](this[_0x384a0c(0x1d0)]);
-    }
-    [_0x545be5(0x1c9)]() {
-        var _0x108626 = _0x545be5;
-        this[_0x108626(0x1bb)] = null, this[_0x108626(0x1b5)] = new PKD_SST_ModalWindowSprite();
-    }
-    [_0x545be5(0x196)]() {
-        return this['\x5f\x6d\x6f\x64\x61\x6c\x43\x68\x6f\x69\x63\x65\x57\x69\x6e\x64\x6f\x77'] = new PKD_SST_ModalChoiceList();
-    }
-    [_0x545be5(0x1d6)]() {
-        var _0x238368 = _0x545be5;
-        super[_0x238368(0x1d6)](), PKD_SimpleSkillsTree[_0x238368(0x185)][_0x238368(0x1a8)]('\x73\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x4d\x61\x73\x6b\x5f\x41'), PKD_SimpleSkillsTree[_0x238368(0x185)][_0x238368(0x1a8)](_0x238368(0x1ac)), PKD_SimpleSkillsTree[_0x238368(0x185)]['\x4c\x6f\x61\x64\x42\x69\x74\x6d\x61\x70'](_0x238368(0x18c)), this[_0x238368(0x1a1)](), this['\x69\x73\x53\x68\x6f\x77\x53\x6c\x6f\x77\x6c\x79']() ? this[_0x238368(0x1b7)]() : _0x238368(0x180) === _0x238368(0x180) ? this[_0x238368(0x1c7)]() : this[_0x238368(0x1c4)]['\x62\x69\x74\x6d\x61\x70'][_0x238368(0x17d)](() => {
-            return this['\x5f\x72\x65\x66\x72\x65\x73\x68\x53\x63\x65\x6e\x65\x41\x75\x74\x6f\x50\x6f\x73\x69\x74\x69\x6f\x6e\x69\x6e\x67']();
-        });
-    }
-    [_0x545be5(0x1d3)]() {
-        var _0x282046 = _0x545be5, _0x4ac71f, _0x328dcb;
-        super['\x75\x70\x64\x61\x74\x65'](), (_0x4ac71f = this[_0x282046(0x1c0)]) != null && _0x4ac71f[_0x282046(0x1d3)](), (_0x328dcb = this[_0x282046(0x1d5)]) != null && _0x328dcb['\x75\x70\x64\x61\x74\x65'](), this[_0x282046(0x1d1)](), this[_0x282046(0x1b9)]();
-    }
-    [_0x545be5(0x1d1)]() {
-    }
-    ['\x5f\x70\x72\x65\x6c\x6f\x61\x64\x49\x6d\x61\x67\x65\x73']() {
-    }
-    [_0x545be5(0x1d2)]() {
-    }
-    ['\x6f\x6e\x43\x6c\x6f\x73\x65\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b']() {
-        var _0x473119 = _0x545be5;
-        if (!this[_0x473119(0x18a)]()) {
-            if (_0x473119(0x1c3) === '\x46\x47\x4c\x72\x4e')
-                return;
-            else
-                return;
-        }
-        this['\x63\x6c\x6f\x73\x65\x53\x63\x65\x6e\x65\x50\x72\x6f\x63\x65\x73\x73']();
-    }
-    [_0x545be5(0x19f)]() {
-        var _0x2e466d = _0x545be5;
-        return SoundManager[_0x2e466d(0x1a2)](), this['\x70\x6f\x70\x53\x63\x65\x6e\x65']();
-    }
-    [_0x545be5(0x1b7)]() {
-        var _0x219711 = _0x545be5;
-        if (this[_0x219711(0x1c0)] != null)
-            return;
-        this[_0x219711(0x1c0)] = new KDCore[(_0x219711(0x1a4))](this[_0x219711(0x1be)]), this[_0x219711(0x1c0)][_0x219711(0x17c)](_0x219711(0x189))[_0x219711(0x1ce)](0x0)['\x74\x6f'](0xff)[_0x219711(0x1b6)](0x2d), this['\x5f\x63\x68\x61\x6e\x67\x65\x72\x41'][_0x219711(0x1d6)](), this[_0x219711(0x1d5)] = new KDCore[(_0x219711(0x1a4))](this[_0x219711(0x1be)]), this['\x5f\x63\x68\x61\x6e\x67\x65\x72\x42'][_0x219711(0x17c)]('\x79')['\x66\x72\x6f\x6d'](this[_0x219711(0x1be)]['\x79'])['\x74\x6f'](0x0)[_0x219711(0x1b6)](0x7)[_0x219711(0x1c8)](this[_0x219711(0x1c7)]['\x62\x69\x6e\x64'](this)), this[_0x219711(0x1d5)]['\x73\x74\x61\x72\x74']();
-    }
-    ['\x5f\x73\x68\x6f\x77\x53\x63\x65\x6e\x65\x43\x6f\x6e\x74\x65\x6e\x74\x49\x6e\x73\x74\x61\x6e\x74\x6c\x79']() {
-        var _0x10b701 = _0x545be5;
-        this[_0x10b701(0x1be)]['\x79'] = 0x0, this[_0x10b701(0x1c0)] = null, this[_0x10b701(0x1d5)] = null, this['\x63\x6f\x6e\x74\x65\x6e\x74']['\x6f\x70\x61\x63\x69\x74\x79'] = 0xff, this[_0x10b701(0x190)]();
-    }
-    [_0x545be5(0x190)]() {
-        var _0x179c78 = _0x545be5;
-        return this[_0x179c78(0x1ae)]();
-    }
-    [_0x545be5(0x1ae)]() {
-    }
-    [_0x545be5(0x18b)]() {
-        var _0x49f5d6 = _0x545be5;
-        return this['\x63\x6f\x6e\x74\x65\x6e\x74'] = new KDCore[(_0x49f5d6(0x1a5))](), this[_0x49f5d6(0x1be)][_0x49f5d6(0x189)] = 0x0, this['\x63\x6f\x6e\x74\x65\x6e\x74']['\x79'] = 0x28, this['\x61\x64\x64\x43\x68\x69\x6c\x64'](this[_0x49f5d6(0x1be)]);
-    }
-    [_0x545be5(0x1b2)]() {
-        var _0x3efc08 = _0x545be5;
-        this[_0x3efc08(0x181)] = new KDCore[(_0x3efc08(0x1a6))](this[_0x3efc08(0x17e)](), ![], _0x3efc08(0x186)), this[_0x3efc08(0x1be)][_0x3efc08(0x1c2)](this[_0x3efc08(0x181)]), this[_0x3efc08(0x1a0)](), this[_0x3efc08(0x181)]['\x61\x64\x64\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72'](this[_0x3efc08(0x1d8)][_0x3efc08(0x18d)](this));
-    }
-    [_0x545be5(0x1a0)]() {
-        var _0x4d1fa3 = _0x545be5, _0x10929f, _0x4bc1c2, _0x414820;
-        try {
-            if (_0x4d1fa3(0x191) !== _0x4d1fa3(0x19b))
-                return {
-                    x: _0x4bc1c2,
-                    y: _0x414820
-                } = this['\x73\x65\x74\x74\x69\x6e\x67\x73']()[_0x4d1fa3(0x1b8)], this[_0x4d1fa3(0x181)]['\x6d\x6f\x76\x65'](_0x4bc1c2, _0x414820);
-            else
-                this[_0x4d1fa3(0x1b2)]();
-        } catch (_0x1f0872) {
-            return _0x10929f = _0x1f0872, KDCore[_0x4d1fa3(0x1c1)](_0x10929f);
-        }
-    }
-    [_0x545be5(0x19e)](_0x5776e2, _0xa22f39) {
-        var _0x5dd2e4 = _0x545be5;
-        if (this[_0x5dd2e4(0x1b5)] == null)
-            return;
-        this[_0x5dd2e4(0x1b5)][_0x5dd2e4(0x1d7)](_0x5776e2, _0xa22f39), this['\x5f\x61\x63\x74\x69\x76\x61\x74\x65\x4d\x6f\x64\x61\x6c\x57\x69\x6e\x64\x6f\x77'](this[_0x5dd2e4(0x1b5)]);
-    }
-    [_0x545be5(0x188)](_0x515f04) {
-        var _0x84cd49 = _0x545be5;
-        this['\x5f\x61\x63\x74\x69\x76\x65\x4d\x6f\x64\x61\x6c\x57\x69\x6e\x64\x6f\x77'] = _0x515f04, this[_0x84cd49(0x1bb)][_0x84cd49(0x19a)](), this['\x61\x64\x64\x43\x68\x69\x6c\x64'](this[_0x84cd49(0x1bb)]), $gameTemp[_0x84cd49(0x19c)] = !![];
-    }
-    [_0x545be5(0x1b4)](_0x55c269, _0x5aaf49) {
-        var _0xf6424c = _0x545be5;
-        if (this[_0xf6424c(0x1ba)] == null) {
-            if (_0xf6424c(0x1bf) === _0xf6424c(0x1cf))
-                return !this[_0xf6424c(0x1b3)]();
-            else
-                return;
-        }
-        this[_0xf6424c(0x1ba)]['\x73\x65\x74\x75\x70'](_0x55c269, _0x5aaf49), this[_0xf6424c(0x188)](this[_0xf6424c(0x1ba)]);
-    }
-    [_0x545be5(0x183)]() {
-        var _0xb4e839 = _0x545be5;
-        $gameTemp[_0xb4e839(0x19c)] = null;
-        if (this[_0xb4e839(0x1bb)] == null) {
-            if ('\x70\x42\x61\x4b\x52' !== _0xb4e839(0x182))
-                return;
-            else
-                this[_0xb4e839(0x1bb)] = _0x367bb8, this[_0xb4e839(0x1bb)][_0xb4e839(0x19a)](), this['\x61\x64\x64\x43\x68\x69\x6c\x64'](this[_0xb4e839(0x1bb)]), _0x22d8d4[_0xb4e839(0x19c)] = !![];
-        }
-        this[_0xb4e839(0x1bb)][_0xb4e839(0x1bc)](), this[_0xb4e839(0x1bb)]['\x72\x65\x6d\x6f\x76\x65\x46\x72\x6f\x6d\x50\x61\x72\x65\x6e\x74'](), this[_0xb4e839(0x1bb)] = null;
-    }
-    ['\x5f\x75\x70\x64\x61\x74\x65\x4b\x65\x79\x62\x6f\x61\x72\x64\x43\x6c\x6f\x73\x65']() {
-        var _0x561d76 = _0x545be5;
-        if (!this['\x69\x73\x43\x61\x6e\x43\x6c\x6f\x73\x65\x42\x79\x4b\x65\x79\x62\x6f\x61\x72\x64']())
-            return;
-        if (!this['\x69\x73\x43\x61\x6e\x43\x6c\x6f\x73\x65\x53\x63\x65\x6e\x65']())
-            return;
-        if (Input[_0x561d76(0x1d4)]()) {
-            if (_0x561d76(0x19d) !== _0x561d76(0x19d)) {
-                if (!this[_0x561d76(0x18a)]())
-                    return;
-                this[_0x561d76(0x19f)]();
-            } else
-                Input[_0x561d76(0x1ab)](), TouchInput[_0x561d76(0x1ab)](), this[_0x561d76(0x1d8)]();
-        }
-    }
+    this._activeModalWindow.visible = false;
+    this._activeModalWindow.removeFromParent();
+    this._activeModalWindow = null;
+  }
+
 };
+
 
 // Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -7519,7 +13677,7 @@ PKD_SST_SkillsTreeBase = class PKD_SST_SkillsTreeBase extends Scene_MenuBase {
   };
   
   // * Тут именно Actor, т.к. в игре мы с Actor работаем, чтобы навыки изучать и забывать
-  window.OpenSkillTreeForActor = function(actorId) {
+  window.OpenSkillTreeForActor = function(actorId, categoryIndex = 0) {
     var actor, classId, e;
     try {
       actor = $gameActors.actor(actorId);
@@ -7527,11 +13685,47 @@ PKD_SST_SkillsTreeBase = class PKD_SST_SkillsTreeBase extends Scene_MenuBase {
       $gameTemp.__pSSTModeEditor = 0;
       $gameTemp.__pSSTSelectedSkillTreeActorId = actorId;
       $gameTemp.__pSSTEditorSelectedClassId = classId;
-      $gameTemp.__pSSTSelectedSkillTreeCategoryIndex = 0;
+      $gameTemp.__pSSTSelectedSkillTreeCategoryIndex = categoryIndex;
       SceneManager.push(PKD_SST_SkillsTreeView);
     } catch (error) {
       e = error;
       KDCore.warning(e);
+    }
+  };
+  window.RemoveAllSkillTrees = function() {
+    var e, isSure;
+    try {
+      if (!Utils.isNwjs()) {
+        window.alert("RemoveAllSkillTrees not works in Browser");
+        return;
+      }
+      isSure = window.confirm("Are you sure you want to remove all skill trees?");
+      if (isSure) {
+        return PKD_SimpleSkillsTree.Utils.RemoveAllSkillTrees();
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  window.ModifySkillPointsForActor = function(actorId, value) {
+    var actor, e;
+    try {
+      actor = $gameActors.actor(actorId);
+      return actor.pAddSkillPoints(value);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  window.ClearSkillPointsForActor = function(actorId) {
+    var actor, e;
+    try {
+      actor = $gameActors.actor(actorId);
+      return actor.pClearBaseSkillPoints();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
     }
   };
 })();
@@ -7563,48 +13757,20 @@ PKD_SST_SkillsTreeBase = class PKD_SST_SkillsTreeBase extends Scene_MenuBase {
   _.getSkillPointsPerLevelUpCount = function() {
     return this.getLoaderParam('skillPointsPerLevelUpGain', 1);
   };
+  _.getSkillTypes = function() {
+    return this.getLoaderParam('skillTypes', ['A', 'B', 'C']);
+  };
   _.isShowCommandInMM = function() {
     return this.getLoaderParam('isShowCmdInMainMenu', true);
   };
   _.getCommandTitle = function() {
     return this.getLoaderParam('cmdTitle', "Skills Tree");
   };
-  _.getMainSceneSettings = function() {
-    return this.getLoaderParam('mainSceneSettings', {
-      appearWithAnimation: true,
-      closeButtonPosition: {
-        x: 772,
-        y: 3
-      }
-    });
-  };
-  _.getSkillInfoSettings = function() {
-    return this.getLoaderParam('skilInfoWindowSettings', {
-      reqColorNotPass: "#f02b1d",
-      reqColorPass: "#25e84c",
-      previewImgPosition: {
-        x: 406,
-        y: 402
-      },
-      statusTextPosition: {
-        x: 576,
-        y: 142
-      }
-    });
-  };
-  _.getGridSettings = function() {
-    return this.getLoaderParam('skillsTreeGridSettings', {
-      startX: 70,
-      startY: 120,
-      spaceForCell: 64,
-      rows: 7,
-      cols: 4
-    });
-  };
 })();
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_EmptySkillCell;
 
 PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
@@ -7667,13 +13833,20 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
   _createSkillGraphics() {} // * EMPTY
 
   _createButton() {
-    this._cellBtn = PKD_SimpleSkillsTree.Utils.NewButton(this._cellImage(), this._onSlotClick.bind(this));
-    this._cellBtn.setManualHover();
-    return this.addChild(this._cellBtn);
+    var ref, ref1;
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_SkillsGridElements[this._schemeElement()], this);
+    if ((ref = this._cellBtn) != null) {
+      ref.setClickHandler(this._onSlotClick.bind(this));
+    }
+    return (ref1 = this._cellBtn) != null ? ref1.setManualHover() : void 0;
   }
 
-  _cellImage() {
-    return "emptySkillSlot";
+  _schemeElement() {
+    return 'skillTreeCell';
+  }
+
+  cellImageByType() {
+    return 'emptySkillSlot';
   }
 
   _onSlotClick() {
@@ -7693,20 +13866,6 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
   var _;
   //@[DEFINES]
   _ = PKD_SimpleSkillsTree.Utils;
-  _.LoadBitmap = function(imageName) {
-    return ImageManager.loadPictureForSimpleSkillsTree(imageName);
-  };
-  _.NewSprite = function(imageName) {
-    return new KDCore.Sprite(this.LoadBitmap(imageName));
-  };
-  _.NewButton = function(imageName, handler = null, isFull = false) {
-    var btn;
-    btn = new KDCore.ButtonM(imageName, isFull, "pSimpleSkillsTree");
-    if (handler != null) {
-      btn.addClickHandler(handler);
-    }
-    return btn;
-  };
   _.IsGlobalModalState = function() {
     return $gameTemp.__pSSTModalMode === true;
   };
@@ -8061,6 +14220,31 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
       return KDCore.warning(e);
     }
   };
+  _.RemoveAllSkillTrees = function() {
+    var classDataId, e, filePath, fs, j, len, ref;
+    try {
+      ref = $sktJson_STClasses.classesIDsWithSkillsTrees;
+      for (j = 0, len = ref.length; j < len; j++) {
+        classDataId = ref[j];
+        if (classDataId == null) {
+          continue;
+        }
+        filePath = './data/PKD_SimpleSkillsTree/Generated/skillTree_' + classDataId + '.json';
+        fs = require('fs');
+        fs.unlinkSync(filePath, function(err) {
+          return console.log(err);
+        });
+      }
+      $sktJson_STClasses.classesIDsWithSkillsTrees = [];
+      fs = require('fs');
+      filePath = './data/PKD_SimpleSkillsTree/Generated/SkillsTreesClassesIds.json';
+      fs.writeFileSync(filePath, JSON.stringify($sktJson_STClasses));
+      return console.log("All skill trees removed!");
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
   _.GetChoiceDataset = function(type) {
     var data, e, ev, existingData, gif, image, index, isExists, j, k, l, len, len1, len2, len3, len4, m, n, ref, ref1, ref2, skill, sw;
     try {
@@ -8320,12 +14504,12 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
   _.NewSkillDataItemContent = function() {
     return {
       skillId: 1,
-      type: 'A',
+      type: PKD_SimpleSkillsTree.PP.getSkillTypes()[0],
       links: [],
       extraDescription: null,
       reqLevel: 1,
       reqSP: 1,
-      specialConditionText: "None",
+      specialConditionText: "",
       specialConditionSwitchId: 0,
       previewImage: "",
       previewGif: "",
@@ -8358,6 +14542,12 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
 
 
 // Generated by CoffeeScript 2.6.1
+PKD_SimpleSkillsTree.isPro = function() {
+  return true;
+};
+
+
+// Generated by CoffeeScript 2.6.1
 //╒═════════════════════════════════════════════════════════════════════════╛
 // ■ DataManager.coffee
 //╒═════════════════════════════════════════════════════════════════════════╛
@@ -8367,26 +14557,39 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
   //@[DEFINES]
   _ = DataManager;
   DataManager._databaseFiles.push({
-    name: "$sktJson_ReqLvlText",
-    src: "PKD_SimpleSkillsTree/RequirementsLevelText.json"
-  }, {
-    name: "$sktJson_ReqSpText",
-    src: "PKD_SimpleSkillsTree/RequirementsSkillPointsText.json"
-  }, {
-    name: "$sktJson_ReqScText",
-    src: "PKD_SimpleSkillsTree/RequirementsSpecialCondText.json"
-  }, {
-    name: "$sktJson_SkillDescText",
-    src: "PKD_SimpleSkillsTree/SkillDescriptionText.json"
-  }, {
-    name: "$sktJson_SkillNameText",
-    src: "PKD_SimpleSkillsTree/SkillNameText.json"
-  }, {
-    name: "$sktJson_AvailScText",
-    src: "PKD_SimpleSkillsTree/AvailableSkillPointsText.json"
-  }, {
     name: "$sktJson_STClasses",
     src: "PKD_SimpleSkillsTree/Generated/SkillsTreesClassesIds.json"
+  });
+  DataManager._databaseFiles.push({
+    name: "$SST_NUI_EditorClassSelectScene",
+    src: "PKD_SimpleSkillsTree/NUI_EditorClassSelectScene.json"
+  }, {
+    name: "$SST_NUI_CommonElements",
+    src: "PKD_SimpleSkillsTree/NUI_CommonElements.json"
+  }, {
+    name: "$SST_NUI_ClassCategoriesNavigator",
+    src: "PKD_SimpleSkillsTree/NUI_ClassCategoriesNavigator.json"
+  }, {
+    name: "$SST_NUI_AddRemoveCategoryToolBar",
+    src: "PKD_SimpleSkillsTree/NUI_AddRemoveCategoryToolBar.json"
+  }, {
+    name: "$SST_NUI_SkillsGridElements",
+    src: "PKD_SimpleSkillsTree/NUI_SkillsGridElements.json"
+  }, {
+    name: "$SST_NUI_SkillInfoWindow",
+    src: "PKD_SimpleSkillsTree/NUI_SkillInfoWindow.json"
+  }, {
+    name: "$SST_NUI_SkillConfigurationElements",
+    src: "PKD_SimpleSkillsTree/NUI_SkillConfigurationElements.json"
+  }, {
+    name: "$SST_NUI_ModalWindow",
+    src: "PKD_SimpleSkillsTree/NUI_ModalWindow.json"
+  }, {
+    name: "$SST_NUI_ModalList",
+    src: "PKD_SimpleSkillsTree/NUI_ModalList.json"
+  }, {
+    name: "$SST_NUI_ModalListItem",
+    src: "PKD_SimpleSkillsTree/NUI_ModalListItem.json"
   });
   //@[ALIAS]
   ALIAS__loadDataFile = _.loadDataFile;
@@ -8438,6 +14641,40 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
   var _;
   //@[DEFINES]
   _ = Game_Actor.prototype;
+  _.pGetBaseSkillPoints = function() {
+    if (this._pkdSST_skillPoints == null) {
+      this._pkdSST_skillPoints = 0;
+    }
+    return this._pkdSST_skillPoints;
+  };
+  _.pModifyBaseSkillPoints = function(value) {
+    var e;
+    try {
+      this.pGetBaseSkillPoints(); // * Init
+      this._pkdSST_skillPoints += value;
+      if (this._pkdSST_skillPoints < 0) {
+        return this._pkdSST_skillPoints = 0;
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _.pClearBaseSkillPoints = function() {
+    var e;
+    try {
+      if (this.pIsUsedVariableAsSkillPointsStore()) {
+        KDCore.Utils.setVar(this.pSkillPointsVarId, 0);
+      }
+      return this._pkdSST_skillPoints = 0;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  };
+  _.pIsUsedVariableAsSkillPointsStore = function() {
+    return (this.pSkillPointsVarId != null) && this.pSkillPointsVarId > 0;
+  };
   _.pInitSkillPoints = function() {
     var e, varId;
     try {
@@ -8447,6 +14684,7 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
           this.pSkillPointsVarId = Number(varId);
         }
       }
+      this.pGetBaseSkillPoints();
     } catch (error) {
       e = error;
       this.pSkillPointsVarId = null;
@@ -8456,11 +14694,11 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
   _.pGetFreeSkillPoints = function() {
     var e;
     try {
-      if (this.pSkillPointsVarId == null) {
-        this.pInitSkillPoints();
-      }
-      if (this.pSkillPointsVarId > 0) {
+      this.pInitSkillPoints();
+      if (this.pIsUsedVariableAsSkillPointsStore()) {
         return KDCore.Utils.getVar(this.pSkillPointsVarId);
+      } else {
+        return this.pGetBaseSkillPoints();
       }
     } catch (error) {
       e = error;
@@ -8472,8 +14710,10 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
     var e;
     try {
       this.pInitSkillPoints();
-      if (this.pSkillPointsVarId > 0) {
+      if (this.pIsUsedVariableAsSkillPointsStore()) {
         return KDCore.Utils.addToVar(this.pSkillPointsVarId, value);
+      } else {
+        return this.pModifyBaseSkillPoints(value);
       }
     } catch (error) {
       e = error;
@@ -8483,13 +14723,15 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
   _.pPaySkillPoints = function(value) {
     var current, e, newValue;
     try {
-      current = this.pGetFreeSkillPoints();
-      newValue = current - value;
-      if (newValue < 0) {
-        newValue = 0;
-      }
-      if (this.pSkillPointsVarId > 0) {
+      if (this.pIsUsedVariableAsSkillPointsStore()) {
+        current = this.pGetFreeSkillPoints();
+        newValue = current - value;
+        if (newValue < 0) {
+          newValue = 0;
+        }
         return KDCore.Utils.setVar(this.pSkillPointsVarId, newValue);
+      } else {
+        return this.pModifyBaseSkillPoints(-value);
       }
     } catch (error) {
       e = error;
@@ -8521,6 +14763,7 @@ PKD_SST_EmptySkillCell = class PKD_SST_EmptySkillCell extends KDCore.Sprite {
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_EditorSkillCell;
 
 PKD_SST_EditorSkillCell = class PKD_SST_EditorSkillCell extends PKD_SST_EmptySkillCell {
@@ -8528,7 +14771,7 @@ PKD_SST_EditorSkillCell = class PKD_SST_EditorSkillCell extends PKD_SST_EmptySki
     super(...arguments);
   }
 
-  _cellImage() {
+  cellImageByType() {
     var imageName, type;
     ({type} = this.skillData);
     imageName = "skillCell_" + type + "_editor";
@@ -8548,6 +14791,7 @@ PKD_SST_EditorSkillCell = class PKD_SST_EditorSkillCell extends PKD_SST_EmptySki
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_GameSkillCell;
 
 PKD_SST_GameSkillCell = class PKD_SST_GameSkillCell extends PKD_SST_EditorSkillCell {
@@ -8568,8 +14812,7 @@ PKD_SST_GameSkillCell = class PKD_SST_GameSkillCell extends PKD_SST_EditorSkillC
     return PKD_SimpleSkillsTree.Utils.IsSkillIsLearned(this.skillData);
   }
 
-  //$[OVER]
-  _cellImage() {
+  cellImageByType() {
     var imageName, type;
     ({type} = this.skillData);
     if (this.isLearned()) {
@@ -8598,6 +14841,7 @@ PKD_SST_GameSkillCell = class PKD_SST_GameSkillCell extends PKD_SST_EditorSkillC
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_GridLinks;
 
 PKD_SST_GridLinks = class PKD_SST_GridLinks extends KDCore.Sprite {
@@ -8605,9 +14849,14 @@ PKD_SST_GridLinks = class PKD_SST_GridLinks extends KDCore.Sprite {
     var s;
     super();
     this.grid = grid;
-    s = this.grid.settings();
-    this.move(s.startX, s.startY);
-    this.colCount = s.cols;
+    this.colCount = $SST_NUI_SkillsGridElements.skillTreeGrid.constants.cols;
+    s = $SST_NUI_SkillsGridElements.skillGridLinks.constants;
+    this.linkLength = KDCore.Utils.getValueWithDP(s.linkLength) / 2;
+    this.lineWidth = KDCore.Utils.getValueWithDP(s.lineWidth);
+    this.lineEndPointRadius = KDCore.Utils.getValueWithDP(s.lineEndPointRadius);
+    this.learnedColor = KDCore.Utils.string2hex(s.learnedColor);
+    this.notLearnedColor = KDCore.Utils.string2hex(s.notLearnedColor);
+    this.editorLinkColor = KDCore.Utils.string2hex(s.editorLinkColor);
     this._drawLinks();
     return;
   }
@@ -8670,29 +14919,29 @@ PKD_SST_GridLinks = class PKD_SST_GridLinks extends KDCore.Sprite {
       } = cellB);
       position = this._compareIndexes(this.colCount, startIndex, endIndex);
       // * Starts From Center Always
-      x1 += 24;
-      y1 += 24;
+      x1 += this.linkLength;
+      y1 += this.linkLength;
       switch (position) {
         case -1:
-          x2 += 48;
+          x2 += this.linkLength * 2;
           break;
         case 0:
-          x2 += 24;
+          x2 += this.linkLength;
       }
       try {
         if (this.grid.isInGameMode()) {
           if (PKD_SimpleSkillsTree.Utils.IsSkillIsLearned(cellA.skillData)) {
-            color = 0xcfa425;
+            color = this.learnedColor;
           } else {
-            color = 0xa7a8a8;
+            color = this.notLearnedColor;
           }
         } else {
-          color = 0xcfa425;
+          color = this.editorLinkColor;
         }
       } catch (error) {
         e = error;
         KDCore.warning(e);
-        color = 0xcfa425;
+        color = 0xffffff;
       }
       lineGraphics = this._createLine(x1, y1, x2, y2, color);
       circleHead = this._createKnob(x2, y2, color);
@@ -8707,7 +14956,7 @@ PKD_SST_GridLinks = class PKD_SST_GridLinks extends KDCore.Sprite {
   _createLine(x1, y1, x2, y2, color) {
     var lineGraphics;
     lineGraphics = new PIXI.Graphics();
-    lineGraphics.lineStyle(4, color);
+    lineGraphics.lineStyle(this.lineWidth, color);
     lineGraphics.moveTo(x1, y1);
     lineGraphics.lineTo(x2, y2);
     return lineGraphics;
@@ -8717,7 +14966,7 @@ PKD_SST_GridLinks = class PKD_SST_GridLinks extends KDCore.Sprite {
     var circleHead;
     circleHead = new PIXI.Graphics();
     circleHead.beginFill(color);
-    circleHead.drawCircle(0, 0, 6);
+    circleHead.drawCircle(0, 0, this.lineEndPointRadius);
     circleHead.endFill();
     circleHead.position.set(x, y);
     return circleHead;
@@ -8971,6 +15220,7 @@ PKD_SST_LazySmartGridSelector = class PKD_SST_LazySmartGridSelector {
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_LinkEditorSkillCell;
 
 PKD_SST_LinkEditorSkillCell = class PKD_SST_LinkEditorSkillCell extends PKD_SST_EditorSkillCell {
@@ -8989,13 +15239,13 @@ PKD_SST_LinkEditorSkillCell = class PKD_SST_LinkEditorSkillCell extends PKD_SST_
 
   myRow() {
     var i;
-    [i] = KDCore.Utils.getIJByIndexIn2DArray(this.myIndex(), PKD_SimpleSkillsTree.PP.getGridSettings().cols);
+    [i] = KDCore.Utils.getIJByIndexIn2DArray(this.myIndex(), $SST_NUI_SkillsGridElements.skillTreeGrid.constants.rows);
     return i;
   }
 
   editableRow() {
     var i;
-    [i] = KDCore.Utils.getIJByIndexIn2DArray(this.editableIndex(), PKD_SimpleSkillsTree.PP.getGridSettings().cols);
+    [i] = KDCore.Utils.getIJByIndexIn2DArray(this.editableIndex(), $SST_NUI_SkillsGridElements.skillTreeGrid.constants.cols);
     return i;
   }
 
@@ -9014,8 +15264,7 @@ PKD_SST_LinkEditorSkillCell = class PKD_SST_LinkEditorSkillCell extends PKD_SST_
     return myRow >= eRow;
   }
 
-  //$[OVER]
-  _cellImage() {
+  cellImageByType() {
     var imageName, type;
     ({type} = this.skillData);
     if (this.isEditable()) {
@@ -9046,35 +15295,30 @@ PKD_SST_LinkEditorSkillCell = class PKD_SST_LinkEditorSkillCell extends PKD_SST_
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_ModalChoiceList;
 
 PKD_SST_ModalChoiceList = class PKD_SST_ModalChoiceList extends KDCore.Sprite {
-  constructor() {
+  constructor(data, selectHandler) {
     super();
+    this.data = data;
+    this.selectHandler = selectHandler;
     this._create();
-    this.close();
+    this._setup();
+    return;
   }
 
   itemsPerPage() {
-    return 30;
-  }
-
-  isAcitve() {
-    return this.visible === true;
+    return this.uiConstant('itemsPerPage');
   }
 
   update() {
     super.update();
-    if (this.isAcitve()) {
-      this._updateKeyboardGamepadControls();
-      this._updateMouseScrollControls();
-    }
+    this._updateMouseScrollControls();
   }
 
   // [] of { image: "", text: "", value: "" }
-  setup(data, selectHandler) {
-    this.data = data;
-    this.selectHandler = selectHandler;
+  _setup() {
     if (this.data.length <= this.itemsPerPage()) {
       this._maxPages = 1;
     } else {
@@ -9091,97 +15335,44 @@ PKD_SST_ModalChoiceList = class PKD_SST_ModalChoiceList extends KDCore.Sprite {
     return this.data.slice(startIndex, endIndex);
   }
 
-  show() {
-    this.opacity = 0;
-    this.visible = true;
-    this.appear(40);
-  }
-
   maxPages() {
     return this._maxPages;
   }
 
-  refreshPagesText() {
-    var t;
-    t = "Page " + (this._currentPage + 1);
-    t += " / " + this._maxPages;
-    this.titleTextSpr.draw(t);
+  currentPage() {
+    return this._currentPage + 1;
   }
 
-  close() {
-    return this.visible = false;
+  isMoreThenOnePage() {
+    return this.maxPages() > 1;
   }
 
   _goToThePage(pageIndex) {
     this._currentPage = pageIndex;
-    this._createListWindow();
-    this.refreshPagesText();
+    this._setupItemsInList();
+    this.refreshBindings(this);
   }
 
   _create() {
-    this._createMain();
-    this._createPages();
-  }
-
-  _createMain() {
-    return this.addChild(PKD_SimpleSkillsTree.Utils.NewSprite('modalEditorChoiceList'));
-  }
-
-  _createPages() {
-    this._createPageTitleText();
-    return this._createArrowButtons();
-  }
-
-  _createPageTitleText() {
-    var t;
-    t = new KDCore.UI.Sprite_UIText({
-      visible: true,
-      size: {
-        w: 260,
-        h: 34
-      },
-      alignment: "center",
-      font: {
-        face: null,
-        size: 16,
-        italic: false
-      },
-      margins: {
-        x: 0,
-        y: 0
-      },
-      outline: {
-        color: null,
-        width: 2
-      },
-      textColor: "#e7c788"
-    });
-    t.x = 280;
-    t.y = 46;
-    this.addChild(t);
-    this.titleTextSpr = t;
-  }
-
-  _createArrowButtons() {
-    this._buttons = new Sprite();
-    this.btnR = PKD_SimpleSkillsTree.Utils.NewButton("ra2");
-    this.btnR.addClickHandler(this.nextPageClick.bind(this));
-    this._buttons.addChild(this.btnR);
-    this.btnR.scale.set(0.8);
-    this.btnR.move(570, 52);
-    this.btnL = PKD_SimpleSkillsTree.Utils.NewButton("la2");
-    this.btnL.addClickHandler(this.prevPageClick.bind(this));
-    this._buttons.addChild(this.btnL);
-    this.btnL.move(220, 52);
-    this.btnL.scale.set(0.8);
-    this.addChild(this._buttons);
+    var ref, ref1;
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_ModalList, this);
+    if ((ref = this.prevPageButton) != null) {
+      ref.addClickHandler(this.prevPageClick.bind(this));
+    }
+    if ((ref1 = this.nextPageButton) != null) {
+      ref1.addClickHandler(this.nextPageClick.bind(this));
+    }
+    if (this.itemsList == null) {
+      return;
+    }
+    this.itemsList.setOkHandler(this._onSelect.bind(this));
+    this.itemsList.setCancelHandler(this._onCancelClick.bind(this));
   }
 
   nextPageClick() {
-    if (!this.isAcitve()) {
+    if (!this.isMoreThenOnePage()) {
       return;
     }
-    SoundManager.playCursor();
     if (this._currentPage < (this.maxPages() - 1)) {
       return this._goToThePage(this._currentPage + 1);
     } else {
@@ -9193,10 +15384,9 @@ PKD_SST_ModalChoiceList = class PKD_SST_ModalChoiceList extends KDCore.Sprite {
 
   prevPageClick() {
     var max;
-    if (!this.isAcitve()) {
+    if (!this.isMoreThenOnePage()) {
       return;
     }
-    SoundManager.playCursor();
     if (this._currentPage > 0) {
       this._goToThePage(this._currentPage - 1);
     } else {
@@ -9207,53 +15397,25 @@ PKD_SST_ModalChoiceList = class PKD_SST_ModalChoiceList extends KDCore.Sprite {
     }
   }
 
-  _destroyListWindow() {
-    this.removeChild(this._listWindow);
-    this._listWindow.hide();
-    return this._listWindow = null;
-  }
-
-  _choiceListWindowRect() {
-    return {
-      x: 20,
-      y: 76,
-      width: 770,
-      height: 464
-    };
-  }
-
-  _createListWindow() {
-    var rect;
-    if (this._listWindow != null) {
-      this._destroyListWindow();
-    }
-    rect = this._choiceListWindowRect();
-    if (KDCore.isMV()) {
-      this._listWindow = new PKD_SST_UniversalChoiceListWindow(rect.x, rect.y, rect.width, rect.height);
-    } else {
-      this._listWindow = new PKD_SST_UniversalChoiceListWindow(rect);
-    }
-    this._listWindow.setHandler("ok", this._onSelect.bind(this));
-    this._listWindow.setHandler("cancel", this._onCancelClick.bind(this));
-    this._listWindow.setData(this.dataForListWindow());
-    this._listWindow.select(0);
-    //@_listWindow.show()
-    //@_listWindow.open()
-    this._listWindow.activate();
-    this.addChild(this._listWindow);
+  _setupItemsInList() {
+    var items;
+    items = this.dataForListWindow().map(function(i) {
+      return new PKD_SST_ModalChoiceListItem(i);
+    });
+    this.itemsList.setItems(items);
+    this.itemsList.activate(0);
   }
 
   _onSelect() {
     var e, item;
-    if (!this.isAcitve()) {
-      return;
-    }
     try {
       SoundManager.playCursor();
       try {
-        item = this._listWindow.item();
-        if (this.selectHandler != null) {
-          this.selectHandler(item.value);
+        item = this.itemsList.selectedItem();
+        if (item != null) {
+          if (this.selectHandler != null) {
+            this.selectHandler(item.itemValue());
+          }
         }
       } catch (error) {
         e = error;
@@ -9268,9 +15430,6 @@ PKD_SST_ModalChoiceList = class PKD_SST_ModalChoiceList extends KDCore.Sprite {
 
   _onCancelClick() {
     var e;
-    if (!this.isAcitve()) {
-      return;
-    }
     try {
       SoundManager.playCancel();
       return SceneManager._scene.disableModalMode();
@@ -9280,21 +15439,13 @@ PKD_SST_ModalChoiceList = class PKD_SST_ModalChoiceList extends KDCore.Sprite {
     }
   }
 
-  _updateKeyboardGamepadControls() {
-    if (Input.isTriggered('pageup')) {
-      this.nextPageClick();
-      return Input.clear();
-    } else if (Input.isTriggered('pagedown')) {
-      this.prevPageClick();
-      return Input.clear();
-    }
-  }
-
   _updateMouseScrollControls() {
     if (TouchInput.wheelY >= 20) {
+      SoundManager.playCursor();
       this.nextPageClick();
     }
     if (TouchInput.wheelY <= -20) {
+      SoundManager.playCursor();
       this.prevPageClick();
     }
   }
@@ -9303,89 +15454,88 @@ PKD_SST_ModalChoiceList = class PKD_SST_ModalChoiceList extends KDCore.Sprite {
 
 
 // Generated by CoffeeScript 2.6.1
-var PKD_SST_ModalWindowSprite;
+//$[NUI BASED]
+var PKD_SST_ModalChoiceListItem;
 
-PKD_SST_ModalWindowSprite = class PKD_SST_ModalWindowSprite extends KDCore.Sprite {
-  constructor() {
+PKD_SST_ModalChoiceListItem = class PKD_SST_ModalChoiceListItem extends KDCore.Sprite {
+  constructor(_data) {
     super();
+    this._data = _data;
     this._create();
-    this.close();
+    this.refreshBindings(this);
+    return;
   }
 
-  isAcitve() {
-    return this.visible === true;
-  }
-
-  update() {
-    super.update();
-    if (!this.isAcitve()) {
-      return;
+  itemImageOrIconIndex() {
+    if (this._data != null) {
+      if (String.any(this._data.image)) {
+        return this._data.image;
+      }
+      if (this._data.iconIndex != null) {
+        return this._data.iconIndex;
+      }
     }
-    this._updateEscKeyboardKey();
-    this._updateEnterKeyboardKey();
+    return "";
+  }
+
+  isHaveImageOrIcon() {
+    return String.any(this.itemImageOrIconIndex());
+  }
+
+  itemValue() {
+    var ref;
+    return (ref = this._data) != null ? ref.value : void 0;
+  }
+
+  itemText() {
+    var ref;
+    return (ref = this._data) != null ? ref.text : void 0;
   }
 
   _create() {
-    this._createMain();
-    this._createTextSpr();
-    return this._createButtons();
+    var e;
+    try {
+      return KDCore.Sprite_NUI.FromScheme($SST_NUI_ModalListItem, this);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
   }
 
-  _createMain() {
-    return this.addChild(PKD_SimpleSkillsTree.Utils.NewSprite('modalWindowMain'));
+};
+
+
+// Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
+var PKD_SST_ModalWindowSprite;
+
+PKD_SST_ModalWindowSprite = class PKD_SST_ModalWindowSprite extends KDCore.Sprite {
+  constructor(qText, okHandler) {
+    super();
+    this.qText = qText;
+    this.okHandler = okHandler;
+    this._create();
+    this.refreshBindings(this);
   }
 
-  _createTextSpr() {
-    var t;
-    t = new KDCore.UI.Sprite_UIText({
-      visible: true,
-      size: {
-        w: 360,
-        h: 40
-      },
-      alignment: "center",
-      font: {
-        face: null,
-        size: 22,
-        italic: false
-      },
-      margins: {
-        x: 0,
-        y: 0
-      },
-      outline: {
-        color: null,
-        width: 2
-      },
-      textColor: "#ccc",
-      shadow: null
-    });
-    t.x = 214;
-    t.y = 270;
-    this.addChild(t);
-    this.titleTextSpr = t;
+  questionText() {
+    return this.qText;
   }
 
-  _createButtons() {
-    this._buttons = new Sprite();
-    this.btnR = PKD_SimpleSkillsTree.Utils.NewButton("btnNO");
-    this.btnR.addClickHandler(this._onCancelClick.bind(this));
-    this._buttons.addChild(this.btnR);
-    this.btnR.move(396, 336);
-    this.btnL = PKD_SimpleSkillsTree.Utils.NewButton("btnOK");
-    this.btnL.addClickHandler(this._onOkClick.bind(this));
-    this._buttons.addChild(this.btnL);
-    this.btnL.move(200, 336);
-    this.addChild(this._buttons);
+  _create() {
+    var ref, ref1;
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_ModalWindow, this);
+    if ((ref = this.yesButton) != null) {
+      ref.addClickHandler(this._onOkClick.bind(this));
+    }
+    if ((ref1 = this.noButton) != null) {
+      ref1.addClickHandler(this._onCancelClick.bind(this));
+    }
   }
 
   _onOkClick() {
     var e;
-    if (!this.isAcitve()) {
-      return;
-    }
     try {
-      SoundManager.playCursor();
       if (this.okHandler != null) {
         this.okHandler();
       }
@@ -9398,11 +15548,7 @@ PKD_SST_ModalWindowSprite = class PKD_SST_ModalWindowSprite extends KDCore.Sprit
 
   _onCancelClick() {
     var e;
-    if (!this.isAcitve()) {
-      return;
-    }
     try {
-      SoundManager.playCancel();
       return SceneManager._scene.disableModalMode();
     } catch (error) {
       e = error;
@@ -9410,246 +15556,153 @@ PKD_SST_ModalWindowSprite = class PKD_SST_ModalWindowSprite extends KDCore.Sprit
     }
   }
 
-  setup(text, okHandler) {
-    this.okHandler = okHandler;
-    return this.titleTextSpr.draw(text);
-  }
-
-  show() {
-    this.opacity = 0;
-    this.visible = true;
-    this.appear(40);
-  }
-
-  close() {
-    return this.visible = false;
-  }
-
-  _updateEscKeyboardKey() {
-    if (Input.isTriggered('cancel')) {
-      this._onCancelClick();
-      Input.clear();
-    }
-  }
-
-  _updateEnterKeyboardKey() {
-    if (Input.isTriggered('ok')) {
-      this._onOkClick();
-      Input.clear();
-    }
-  }
-
 };
 
-
-var _0x37360d = _0x3298;
-(function (_0x2b9b51, _0x1cead8) {
-    var _0x412dea = _0x3298, _0x1d1daa = _0x2b9b51();
-    while (!![]) {
-        try {
-            var _0x328062 = -parseInt(_0x412dea(0x180)) / 0x1 + -parseInt(_0x412dea(0x173)) / 0x2 * (parseInt(_0x412dea(0x15c)) / 0x3) + parseInt(_0x412dea(0x155)) / 0x4 + parseInt(_0x412dea(0x157)) / 0x5 + -parseInt(_0x412dea(0x168)) / 0x6 * (parseInt(_0x412dea(0x177)) / 0x7) + -parseInt(_0x412dea(0x158)) / 0x8 + -parseInt(_0x412dea(0x17e)) / 0x9 * (-parseInt(_0x412dea(0x15d)) / 0xa);
-            if (_0x328062 === _0x1cead8)
-                break;
-            else
-                _0x1d1daa['push'](_0x1d1daa['shift']());
-        } catch (_0x54ebe7) {
-            _0x1d1daa['push'](_0x1d1daa['shift']());
-        }
-    }
-}(_0x505f, 0x6e324));
-function _0x505f() {
-    var _0x1cc87d = [
-        '\x5f\x63\x6c\x61\x73\x73\x49\x6e\x64\x65\x78',
-        '\x65\x64\x69\x74\x6f\x72\x43\x6c\x61\x73\x73\x53\x65\x6c\x65\x63\x74',
-        '\x31\x32\x33\x30\x33\x34\x30\x73\x56\x6d\x73\x64\x56',
-        '\x70\x72\x65\x76\x43\x6c\x61\x73\x73\x43\x6c\x69\x63\x6b',
-        '\x31\x37\x31\x35\x30\x33\x35\x68\x6f\x75\x6e\x63\x4a',
-        '\x35\x30\x35\x37\x39\x38\x34\x4a\x4a\x56\x76\x5a\x6f',
-        '\x77\x69\x64\x74\x68',
-        '\x62\x74\x6e\x4c',
-        '\x64\x72\x61\x77',
-        '\x33\x34\x35\x39\x35\x37\x42\x67\x42\x6e\x50\x72',
-        '\x32\x32\x37\x33\x30\x4b\x57\x45\x70\x62\x63',
-        '\x62\x74\x6e\x4f\x4b',
-        '\x4e\x65\x77\x42\x75\x74\x74\x6f\x6e',
-        '\x5f\x63\x6f\x6c\x6c\x65\x63\x74\x43\x6c\x61\x73\x73\x65\x73',
-        '\x5f\x61\x63\x74\x69\x76\x61\x74\x65\x43\x68\x69\x6c\x64\x72\x65\x6e\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x63\x75\x72\x72\x65\x6e\x74\x43\x6c\x61\x73\x73',
-        '\x5f\x5f\x70\x53\x53\x54\x45\x64\x69\x74\x6f\x72\x53\x65\x6c\x65\x63\x74\x65\x64\x43\x6c\x61\x73\x73\x49\x64',
-        '\x5f\x64\x61\x74\x61',
-        '\x5b\x4e\x6f\x74\x20\x66\x6f\x75\x6e\x64\x5d',
-        '\x55\x76\x64\x54\x50',
-        '\x5f\x6f\x6b\x42\x75\x74\x74\x6f\x6e',
-        '\x36\x75\x51\x7a\x76\x6e\x4c',
-        '\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x6e\x61\x6d\x65',
-        '\x5f\x63\x72\x65\x61\x74\x65\x43\x6c\x61\x73\x73\x65\x73\x4c\x69\x73\x74\x54\x65\x78\x74',
-        '\x55\x74\x69\x6c\x73',
-        '\x6f\x6e\x4f\x6b\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b',
-        '\x46\x7a\x47\x4d\x51',
-        '\x6d\x6f\x76\x65',
-        '\x42\x49\x72\x48\x48',
-        '\x62\x74\x6e\x52',
-        '\x6c\x65\x6e\x67\x74\x68',
-        '\x31\x34\x74\x79\x56\x6e\x74\x6f',
-        '\x52\x66\x6d\x54\x47',
-        '\x63\x58\x7a\x63\x43',
-        '\x61\x64\x64\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72',
-        '\x33\x30\x39\x32\x38\x39\x34\x58\x58\x6c\x59\x75\x73',
-        '\x23\x30\x30\x30',
-        '\x64\x69\x73\x61\x62\x6c\x65',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x65\x6c\x65\x63\x74\x6f\x72\x73',
-        '\x62\x69\x6e\x64',
-        '\x69\x77\x70\x6d\x7a',
-        '\x20\x28\x69\x64\x3a',
-        '\x38\x30\x35\x35\x44\x58\x5a\x50\x79\x45',
-        '\x5f\x63\x72\x65\x61\x74\x65\x4f\x6b\x42\x75\x74\x74\x6f\x6e',
-        '\x33\x35\x32\x32\x34\x30\x6d\x6e\x71\x41\x7a\x56',
-        '\x5f\x72\x65\x66\x72\x65\x73\x68\x43\x75\x72\x72\x65\x6e\x74\x53\x65\x6c\x65\x63\x74\x65\x64\x43\x6c\x61\x73\x73',
-        '\x5f\x63\x72\x65\x61\x74\x65\x43\x6c\x61\x73\x73\x53\x65\x6c\x65\x63\x74\x6f\x72\x42\x61\x63\x6b\x67\x72\x6f\x75\x6e\x64\x49\x6d\x61\x67\x65',
-        '\x70\x75\x73\x68',
-        '\x4e\x54\x70\x43\x49',
-        '\x76\x66\x67\x6d\x41',
-        '\x79\x48\x6b\x52\x57',
-        '\x6e\x65\x78\x74\x43\x6c\x61\x73\x73\x43\x6c\x69\x63\x6b'
-    ];
-    _0x505f = function () {
-        return _0x1cc87d;
-    };
-    return _0x505f();
-}
-var PKD_SST_SillsTreeEditorClassSelect;
-function _0x3298(_0x4a41bf, _0x462f4a) {
-    var _0x505ffc = _0x505f();
-    return _0x3298 = function (_0x3298f7, _0x32b5ba) {
-        _0x3298f7 = _0x3298f7 - 0x152;
-        var _0x412e4f = _0x505ffc[_0x3298f7];
-        return _0x412e4f;
-    }, _0x3298(_0x4a41bf, _0x462f4a);
-}
-PKD_SST_SillsTreeEditorClassSelect = class PKD_SST_SillsTreeEditorClassSelect extends PKD_SST_SkillsTreeBase {
-    constructor() {
-        super(...arguments);
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x43\x68\x69\x6c\x64\x72\x65\x6e\x43\x6f\x6e\x74\x65\x6e\x74']() {
-        var _0x5e2f84 = _0x3298;
-        this[_0x5e2f84(0x164)] = [], this['\x5f\x63\x6c\x61\x73\x73\x49\x6e\x64\x65\x78'] = 0x0, this[_0x5e2f84(0x160)](), this[_0x5e2f84(0x182)](), this[_0x5e2f84(0x16b)](), this[_0x5e2f84(0x17a)](), this[_0x5e2f84(0x17f)]();
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x43\x6c\x61\x73\x73\x53\x65\x6c\x65\x63\x74\x6f\x72\x42\x61\x63\x6b\x67\x72\x6f\x75\x6e\x64\x49\x6d\x61\x67\x65']() {
-        var _0x7eb71e = _0x3298;
-        return this[_0x7eb71e(0x169)](PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73']['\x4e\x65\x77\x53\x70\x72\x69\x74\x65'](_0x7eb71e(0x154)));
-    }
-    ['\x5f\x63\x6f\x6c\x6c\x65\x63\x74\x43\x6c\x61\x73\x73\x65\x73']() {
-        var _0x55e9ac = _0x3298, _0x310486, _0x5ceb57, _0x3e38f2;
-        for (_0x5ceb57 = 0x0, _0x3e38f2 = $dataClasses['\x6c\x65\x6e\x67\x74\x68']; _0x5ceb57 < _0x3e38f2; _0x5ceb57++) {
-            _0x55e9ac(0x16e) !== _0x55e9ac(0x174) ? (_0x310486 = $dataClasses[_0x5ceb57], _0x310486 != null && this[_0x55e9ac(0x164)][_0x55e9ac(0x183)]({
-                '\x6e\x61\x6d\x65': _0x310486[_0x55e9ac(0x16a)],
-                '\x69\x64': _0x310486['\x69\x64']
-            })) : this[_0x55e9ac(0x164)] = null;
-        }
-        if (this[_0x55e9ac(0x164)][_0x55e9ac(0x172)] === 0x0) {
-            if (_0x55e9ac(0x170) !== _0x55e9ac(0x186))
-                this[_0x55e9ac(0x164)] = null;
-            else {
-                if (this[_0x55e9ac(0x164)] == null)
-                    return;
-                if (this[_0x55e9ac(0x153)] > 0x0)
-                    return this[_0x55e9ac(0x153)]--, this[_0x55e9ac(0x181)]();
-            }
-        }
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x43\x6c\x61\x73\x73\x65\x73\x4c\x69\x73\x74\x54\x65\x78\x74']() {
-        var _0x3ab21a = _0x3298, _0x4c7e7d;
-        _0x4c7e7d = new KDCore['\x55\x49']['\x53\x70\x72\x69\x74\x65\x5f\x55\x49\x54\x65\x78\x74']({
-            '\x76\x69\x73\x69\x62\x6c\x65': !![],
-            '\x73\x69\x7a\x65': {
-                '\x77': 0x154,
-                '\x68': 0x2a
-            },
-            '\x61\x6c\x69\x67\x6e\x6d\x65\x6e\x74': '\x63\x65\x6e\x74\x65\x72',
-            '\x66\x6f\x6e\x74': {
-                '\x66\x61\x63\x65': null,
-                '\x73\x69\x7a\x65': 0x1a,
-                '\x69\x74\x61\x6c\x69\x63': ![]
-            },
-            '\x6d\x61\x72\x67\x69\x6e\x73': {
-                '\x78': 0x0,
-                '\x79': 0x0
-            },
-            '\x6f\x75\x74\x6c\x69\x6e\x65': {
-                '\x63\x6f\x6c\x6f\x72': null,
-                '\x77\x69\x64\x74\x68': 0x2
-            },
-            '\x74\x65\x78\x74\x43\x6f\x6c\x6f\x72': '\x23\x43\x43\x43',
-            '\x73\x68\x61\x64\x6f\x77': {
-                '\x63\x6f\x6c\x6f\x72': _0x3ab21a(0x178),
-                '\x6f\x70\x61\x63\x69\x74\x79': 0xc8,
-                '\x6d\x61\x72\x67\x69\x6e\x73': {
-                    '\x78': 0x1,
-                    '\x79': 0x1
-                }
-            }
-        }), _0x4c7e7d['\x78'] = 0xec, _0x4c7e7d['\x79'] = 0x122, this['\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74'](_0x4c7e7d), this[_0x3ab21a(0x162)] = _0x4c7e7d;
-    }
-    [_0x37360d(0x17a)]() {
-        var _0x102221 = _0x37360d;
-        this[_0x102221(0x171)] = PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73'][_0x102221(0x15f)]('\x72\x61'), this[_0x102221(0x171)][_0x102221(0x176)](this['\x6e\x65\x78\x74\x43\x6c\x61\x73\x73\x43\x6c\x69\x63\x6b']['\x62\x69\x6e\x64'](this)), this['\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74'](this['\x62\x74\x6e\x52']), this[_0x102221(0x171)][_0x102221(0x16f)](0x258, 0x11e), this['\x62\x74\x6e\x4c'] = PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73'][_0x102221(0x15f)]('\x6c\x61'), this[_0x102221(0x15a)]['\x61\x64\x64\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72'](this['\x70\x72\x65\x76\x43\x6c\x61\x73\x73\x43\x6c\x69\x63\x6b'][_0x102221(0x17b)](this)), this[_0x102221(0x169)](this[_0x102221(0x15a)]), this[_0x102221(0x15a)]['\x6d\x6f\x76\x65'](0xb4, 0x11e);
-    }
-    [_0x37360d(0x152)]() {
-        var _0x8bb2bd = _0x37360d;
-        if (this[_0x8bb2bd(0x164)] == null) {
-            if (_0x8bb2bd(0x185) !== _0x8bb2bd(0x185))
-                return this['\x5f\x72\x65\x66\x72\x65\x73\x68\x43\x75\x72\x72\x65\x6e\x74\x53\x65\x6c\x65\x63\x74\x65\x64\x43\x6c\x61\x73\x73']();
-            else
-                return;
-        }
-        if (this[_0x8bb2bd(0x153)] < this[_0x8bb2bd(0x164)]['\x6c\x65\x6e\x67\x74\x68'] - 0x1)
-            return this['\x5f\x63\x6c\x61\x73\x73\x49\x6e\x64\x65\x78']++, this[_0x8bb2bd(0x181)]();
-    }
-    ['\x70\x72\x65\x76\x43\x6c\x61\x73\x73\x43\x6c\x69\x63\x6b']() {
-        var _0x27abd2 = _0x37360d;
-        if (this[_0x27abd2(0x164)] == null)
-            return;
-        if (this[_0x27abd2(0x153)] > 0x0) {
-            if ('\x70\x72\x41\x49\x59' !== _0x27abd2(0x184))
-                return this[_0x27abd2(0x153)]--, this[_0x27abd2(0x181)]();
-            else
-                this[_0x27abd2(0x171)] = _0x30c3dc[_0x27abd2(0x16c)][_0x27abd2(0x15f)]('\x72\x61'), this[_0x27abd2(0x171)][_0x27abd2(0x176)](this['\x6e\x65\x78\x74\x43\x6c\x61\x73\x73\x43\x6c\x69\x63\x6b']['\x62\x69\x6e\x64'](this)), this[_0x27abd2(0x169)](this[_0x27abd2(0x171)]), this['\x62\x74\x6e\x52'][_0x27abd2(0x16f)](0x258, 0x11e), this[_0x27abd2(0x15a)] = _0x1571ed['\x55\x74\x69\x6c\x73'][_0x27abd2(0x15f)]('\x6c\x61'), this[_0x27abd2(0x15a)]['\x61\x64\x64\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72'](this[_0x27abd2(0x156)][_0x27abd2(0x17b)](this)), this['\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74'](this[_0x27abd2(0x15a)]), this[_0x27abd2(0x15a)]['\x6d\x6f\x76\x65'](0xb4, 0x11e);
-        }
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x4f\x6b\x42\x75\x74\x74\x6f\x6e']() {
-        var _0x364bee = _0x37360d;
-        this[_0x364bee(0x167)] = PKD_SimpleSkillsTree[_0x364bee(0x16c)][_0x364bee(0x15f)](_0x364bee(0x15e)), this[_0x364bee(0x169)](this['\x5f\x6f\x6b\x42\x75\x74\x74\x6f\x6e']), this[_0x364bee(0x167)][_0x364bee(0x16f)](Graphics[_0x364bee(0x159)] / 0x2 - 0x67, 0x190), this[_0x364bee(0x167)][_0x364bee(0x176)](this[_0x364bee(0x16d)]['\x62\x69\x6e\x64'](this));
-    }
-    [_0x37360d(0x16d)]() {
-        var _0x2a4ab6 = _0x37360d;
-        $gameTemp[_0x2a4ab6(0x163)] = this[_0x2a4ab6(0x164)][this[_0x2a4ab6(0x153)]]['\x69\x64'], SceneManager['\x67\x6f\x74\x6f'](PKD_SST_SkillsTreeEditor);
-    }
-    ['\x5f\x72\x65\x66\x72\x65\x73\x68\x43\x75\x72\x72\x65\x6e\x74\x53\x65\x6c\x65\x63\x74\x65\x64\x43\x6c\x61\x73\x73']() {
-        var _0x4538d6 = _0x37360d, _0x397a61;
-        if (this[_0x4538d6(0x164)] == null) {
-            if ('\x55\x76\x64\x54\x50' === _0x4538d6(0x166))
-                this[_0x4538d6(0x162)]['\x64\x72\x61\x77'](_0x4538d6(0x165)), this[_0x4538d6(0x167)][_0x4538d6(0x179)]();
-            else {
-                var _0x38332f, _0x51abdd, _0x5f4304;
-                for (_0x51abdd = 0x0, _0x5f4304 = _0x15a5fc[_0x4538d6(0x172)]; _0x51abdd < _0x5f4304; _0x51abdd++) {
-                    _0x38332f = _0xae0db[_0x51abdd], _0x38332f != null && this[_0x4538d6(0x164)][_0x4538d6(0x183)]({
-                        '\x6e\x61\x6d\x65': _0x38332f[_0x4538d6(0x16a)],
-                        '\x69\x64': _0x38332f['\x69\x64']
-                    });
-                }
-                this[_0x4538d6(0x164)][_0x4538d6(0x172)] === 0x0 && (this['\x5f\x64\x61\x74\x61'] = null);
-            }
-        } else
-            _0x4538d6(0x17c) !== _0x4538d6(0x175) ? (_0x397a61 = this[_0x4538d6(0x164)][this[_0x4538d6(0x153)]], this[_0x4538d6(0x162)][_0x4538d6(0x15b)](_0x397a61['\x6e\x61\x6d\x65'] + _0x4538d6(0x17d) + _0x397a61['\x69\x64'] + '\x29')) : (this['\x63\x75\x72\x72\x65\x6e\x74\x43\x6c\x61\x73\x73']['\x64\x72\x61\x77']('\x5b\x4e\x6f\x74\x20\x66\x6f\x75\x6e\x64\x5d'), this[_0x4538d6(0x167)]['\x64\x69\x73\x61\x62\x6c\x65']());
-    }
-    [_0x37360d(0x161)]() {
-        var _0x490664 = _0x37360d;
-        return this[_0x490664(0x181)]();
-    }
-};
 
 // Generated by CoffeeScript 2.6.1
+//$[ENCODE]
+//$[NUI BASED]
+var PKD_SST_SillsTreeEditorClassSelect;
+
+PKD_SST_SillsTreeEditorClassSelect = class PKD_SST_SillsTreeEditorClassSelect extends PKD_SST_SkillsTreeBase {
+  constructor() {
+    super(...arguments);
+  }
+
+  _createChildrenContent() {
+    super._createChildrenContent();
+    this._prepareData();
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_EditorClassSelectScene, this);
+    this._setupHandlers();
+    this._refreshCurrentSelectedClass();
+  }
+
+  selectedClassName() {
+    return this.currentClassName;
+  }
+
+  _prepareData() {
+    var e;
+    try {
+      this.currentClassName = "";
+      this._data = [];
+      this._classIndex = 0;
+      return this._collectClasses();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _setupHandlers() {
+    var e;
+    try {
+      if (this.selectNextClassButton != null) {
+        this.selectNextClassButton.addClickHandler(this.nextClassClick.bind(this));
+      }
+      if (this.selectPrevClassButton != null) {
+        this.selectPrevClassButton.addClickHandler(this.prevClassClick.bind(this));
+      }
+      if (this.selectClassToEditButton != null) {
+        return this.selectClassToEditButton.addClickHandler(this.onOkButtonClick.bind(this));
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _collectClasses() {
+    var cl, e, i, len;
+    try {
+      for (i = 0, len = $dataClasses.length; i < len; i++) {
+        cl = $dataClasses[i];
+        if (cl != null) {
+          this._data.push({
+            name: cl.name,
+            id: cl.id
+          });
+        }
+      }
+      if (this._data.length === 0) {
+        this._data = null;
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+      this._data = null;
+    }
+  }
+
+  nextClassClick() {
+    var e;
+    if (this._data == null) {
+      return;
+    }
+    try {
+      if (this._classIndex < this._data.length - 1) {
+        this._classIndex++;
+        return this._refreshCurrentSelectedClass();
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  prevClassClick() {
+    var e;
+    if (this._data == null) {
+      return;
+    }
+    try {
+      if (this._classIndex > 0) {
+        this._classIndex--;
+        return this._refreshCurrentSelectedClass();
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  onOkButtonClick() {
+    var e;
+    try {
+      $gameTemp.__pSSTEditorSelectedClassId = this._data[this._classIndex].id;
+      SceneManager.goto(PKD_SST_SkillsTreeEditor);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+  }
+
+  _refreshCurrentSelectedClass() {
+    var e, item, ref, ref1;
+    try {
+      if (this._data == null) {
+        this.currentClassName = "[Not found]";
+        if ((ref = this.selectClassToEditButton) != null) {
+          ref.disable();
+        }
+      } else {
+        item = this._data[this._classIndex];
+        this.currentClassName = item.name + " (id:" + item.id + ")";
+      }
+      if ((ref1 = this.selectedClassNameText) != null) {
+        ref1.refreshBindings(this);
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_SkillCellGraphics;
 
 PKD_SST_SkillCellGraphics = class PKD_SST_SkillCellGraphics extends KDCore.Sprite {
@@ -9667,11 +15720,19 @@ PKD_SST_SkillCellGraphics = class PKD_SST_SkillCellGraphics extends KDCore.Sprit
   }
 
   getTypeMask() {
-    return this._maskSpr;
+    return this._maskSpr.image;
   }
 
   getTypeLetter() {
     return this.type;
+  }
+
+  skillIconIndex() {
+    return this.icon;
+  }
+
+  skillIconMask() {
+    return "skillCellMask_" + this.type;
   }
 
   desaturate() {
@@ -9684,232 +15745,168 @@ PKD_SST_SkillCellGraphics = class PKD_SST_SkillCellGraphics extends KDCore.Sprit
   }
 
   _create() {
-    this._createIcon();
-    return this._createMask();
-  }
-
-  _createIcon() {
-    this.iconSpr = new KDCore.UI.Sprite_UIIcon({
-      visible: true,
-      index: 0,
-      size: 48,
-      rootImageFolder: "pSimpleSkillsTree"
-    });
-    this.iconSpr.draw(this.icon);
-    return this.addChild(this.iconSpr);
-  }
-
-  _createHover() {
-    this._hover = PKD_SimpleSkillsTree.Utils.NewSprite("skillCell_hovered");
-    this._hover.opacity = 0;
-    return this.addChild(this._hover);
-  }
-
-  _createMask() {
-    var imageName;
-    imageName = "skillCellMask_" + this.type;
-    this._maskSpr = PKD_SimpleSkillsTree.Utils.NewSprite(imageName);
-    this.addChild(this._maskSpr);
-    this.mask = this._maskSpr;
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_SkillsGridElements.skillTreeCellIcon, this);
+    this.mask = this._maskSpr.image;
   }
 
 };
 
-
-var _0x397790 = _0x43bc;
-(function (_0x1e0498, _0x526d69) {
-    var _0x10807b = _0x43bc, _0x231f15 = _0x1e0498();
-    while (!![]) {
-        try {
-            var _0x2bacca = -parseInt(_0x10807b(0x224)) / 0x1 + -parseInt(_0x10807b(0x219)) / 0x2 + parseInt(_0x10807b(0x228)) / 0x3 + parseInt(_0x10807b(0x211)) / 0x4 + parseInt(_0x10807b(0x217)) / 0x5 + parseInt(_0x10807b(0x1f5)) / 0x6 * (parseInt(_0x10807b(0x216)) / 0x7) + -parseInt(_0x10807b(0x21b)) / 0x8 * (parseInt(_0x10807b(0x207)) / 0x9);
-            if (_0x2bacca === _0x526d69)
-                break;
-            else
-                _0x231f15['push'](_0x231f15['shift']());
-        } catch (_0x10eada) {
-            _0x231f15['push'](_0x231f15['shift']());
-        }
-    }
-}(_0x1a02, 0x33866));
-var PKD_SST_SkillConfiguration;
-PKD_SST_SkillConfiguration = class PKD_SST_SkillConfiguration extends PKD_SST_SkillsTreeBase {
-    constructor() {
-        super(...arguments);
-    }
-    [_0x397790(0x225)]() {
-        return $gameTemp['\x5f\x5f\x70\x53\x53\x54\x45\x64\x69\x74\x61\x62\x6c\x65\x53\x6b\x69\x6c\x6c\x44\x61\x74\x61'][0x2];
-    }
-    ['\x73\x6b\x69\x6c\x6c\x49\x6e\x64\x65\x78\x49\x6e\x54\x72\x65\x65']() {
-        var _0x4bf4d5 = _0x397790;
-        return $gameTemp[_0x4bf4d5(0x20a)][0x0];
-    }
-    ['\x73\x6b\x69\x6c\x6c\x54\x72\x65\x65\x43\x61\x74\x49\x6e\x64\x65\x78']() {
-        return $gameTemp['\x5f\x5f\x70\x53\x53\x54\x45\x64\x69\x74\x61\x62\x6c\x65\x53\x6b\x69\x6c\x6c\x44\x61\x74\x61'][0x1];
-    }
-    ['\x73\x74\x6f\x70']() {
-        var _0x372df8 = _0x397790, _0x202340;
-        super[_0x372df8(0x1fc)]();
-        try {
-            if (this['\x5f\x61\x66\x74\x65\x72\x44\x65\x6c\x65\x74\x65\x46\x6c\x61\x67'] !== !![])
-                return _0x372df8(0x1fd) === _0x372df8(0x1f8) ? (_0x42e91b = _0x2ee218, _0x5cba9a['\x77\x61\x72\x6e\x69\x6e\x67'](_0x2d8ee7)) : this['\x5f\x73\x61\x76\x65\x44\x61\x74\x61']();
-        } catch (_0x22da0b) {
-            return _0x372df8(0x20d) === _0x372df8(0x210) ? _0x443417[_0x372df8(0x20a)][0x2] : (_0x202340 = _0x22da0b, KDCore[_0x372df8(0x1f4)](_0x202340));
-        }
-    }
-    [_0x397790(0x223)]() {
-        var _0x576cdb = _0x397790;
-        this[_0x576cdb(0x221)] = ![], this['\x5f\x70\x72\x65\x70\x61\x72\x65\x44\x61\x74\x61'](), console['\x6c\x6f\x67']('\x53\x54\x41\x52\x54\x20\x45\x44\x49\x54\x3a\x20'), console[_0x576cdb(0x209)](this[_0x576cdb(0x225)]()), this[_0x576cdb(0x226)](), this['\x5f\x63\x72\x65\x61\x74\x65\x44\x65\x6c\x65\x74\x65\x42\x75\x74\x74\x6f\x6e'](), setTimeout(() => {
-            var _0x7b00f0 = _0x576cdb;
-            if (this[_0x7b00f0(0x225)]()[_0x7b00f0(0x1ef)] <= 0x1)
-                return this['\x5f\x73\x6b\x69\x6c\x6c\x54\x6f\x6f\x6c'][_0x7b00f0(0x201)]();
-        }, 0xa);
-    }
-    [_0x397790(0x208)]() {
-        var _0x305994 = _0x397790;
-        $gameTemp['\x5f\x5f\x70\x53\x53\x54\x53\x61\x76\x65'] = this[_0x305994(0x21c)][_0x305994(0x21e)](this);
-    }
-    [_0x397790(0x226)]() {
-        var _0x423cf1 = _0x397790;
-        this[_0x423cf1(0x218)](), this[_0x423cf1(0x1ff)](), this[_0x423cf1(0x21a)](), this['\x5f\x63\x72\x65\x61\x74\x65\x52\x65\x71\x75\x69\x72\x65\x6d\x65\x6e\x74\x73\x45\x64\x69\x74\x54\x6f\x6f\x6c'](), this['\x5f\x63\x72\x65\x61\x74\x65\x50\x72\x65\x76\x69\x65\x77\x45\x64\x69\x74\x54\x6f\x6f\x6c'](), this[_0x423cf1(0x20c)]();
-    }
-    [_0x397790(0x218)]() {
-        var _0x4f705b = _0x397790;
-        return this['\x5f\x73\x6b\x69\x6c\x6c\x54\x6f\x6f\x6c'] = new PKD_SST_ToolSkillChoice(this[_0x4f705b(0x225)]()), this['\x5f\x73\x6b\x69\x6c\x6c\x54\x6f\x6f\x6c']['\x6d\x6f\x76\x65'](0x1e, 0x22), this[_0x4f705b(0x1f9)](this[_0x4f705b(0x222)]);
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x4c\x69\x6e\x6b\x73\x54\x6f\x6f\x6c']() {
-        var _0x2159ac = _0x397790;
-        return this['\x5f\x73\x6b\x69\x6c\x6c\x4c\x69\x6e\x6b\x73\x54\x6f\x6f\x6c'] = new PKD_SST_ToolSkillLinks(this[_0x2159ac(0x225)]()), this['\x5f\x73\x6b\x69\x6c\x6c\x4c\x69\x6e\x6b\x73\x54\x6f\x6f\x6c'][_0x2159ac(0x1fb)](0x1e, 0xc8), this[_0x2159ac(0x1f9)](this[_0x2159ac(0x20f)]);
-    }
-    [_0x397790(0x21a)]() {
-        var _0x13dd98 = _0x397790;
-        this[_0x13dd98(0x215)] = new PKD_SST_ToolSkillDescription(this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61']()), this[_0x13dd98(0x215)]['\x6d\x6f\x76\x65'](0x1e, 0x190), this[_0x13dd98(0x1f9)](this[_0x13dd98(0x215)]), this[_0x13dd98(0x222)][_0x13dd98(0x20e)](this[_0x13dd98(0x215)]);
-    }
-    [_0x397790(0x1f7)]() {
-        var _0x248705 = _0x397790;
-        this[_0x248705(0x1f6)] = new PKD_SST_ToolSkillRequirements(this[_0x248705(0x225)]()), this['\x5f\x73\x6b\x69\x6c\x6c\x52\x65\x71\x54\x6f\x6f\x6c']['\x6d\x6f\x76\x65'](0x12c, 0x22), this['\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74'](this['\x5f\x73\x6b\x69\x6c\x6c\x52\x65\x71\x54\x6f\x6f\x6c']);
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x50\x72\x65\x76\x69\x65\x77\x45\x64\x69\x74\x54\x6f\x6f\x6c']() {
-        var _0x4a7fae = _0x397790;
-        this['\x5f\x73\x6b\x69\x6c\x6c\x50\x72\x65\x76\x69\x65\x77\x54\x6f\x6f\x6c'] = new PKD_SST_ToolSkillImagePreview(this[_0x4a7fae(0x225)](), {
-            '\x78': 0x1a6,
-            '\x79': 0x168
-        }), this[_0x4a7fae(0x220)][_0x4a7fae(0x1fb)](0x1a4, 0x12c), this[_0x4a7fae(0x1f9)](this[_0x4a7fae(0x220)]);
-    }
-    [_0x397790(0x20c)]() {
-        var _0x2bce20 = _0x397790;
-        this['\x5f\x73\x6b\x69\x6c\x6c\x41\x63\x74\x69\x6f\x6e\x54\x6f\x6f\x6c'] = new PKD_SST_ToolSkillAction(this[_0x2bce20(0x225)]()), this[_0x2bce20(0x206)][_0x2bce20(0x1fb)](0x244, 0x22), this[_0x2bce20(0x1f9)](this[_0x2bce20(0x206)]);
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x44\x65\x6c\x65\x74\x65\x42\x75\x74\x74\x6f\x6e']() {
-        var _0x597156 = _0x397790;
-        this[_0x597156(0x1f1)] = PKD_SimpleSkillsTree[_0x597156(0x214)]['\x4e\x65\x77\x42\x75\x74\x74\x6f\x6e']('\x62\x74\x6e\x44\x65\x6c\x65\x74\x65'), this[_0x597156(0x1f1)]['\x61\x64\x64\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72'](this[_0x597156(0x1ee)][_0x597156(0x21e)](this)), this[_0x597156(0x1f1)]['\x6d\x6f\x76\x65'](Graphics[_0x597156(0x1f2)] - 0xc8, Graphics[_0x597156(0x20b)] - 0x38), this[_0x597156(0x1f9)](this['\x62\x74\x6e\x44\x65\x6c\x65\x74\x65']);
-    }
-    [_0x397790(0x1ee)]() {
-        var _0x215ac6 = _0x397790;
-        if (this[_0x215ac6(0x200)]())
-            return;
-        this[_0x215ac6(0x225)]()[_0x215ac6(0x1ef)] >= 0x2 ? PKD_SimpleSkillsTree[_0x215ac6(0x214)]['\x52\x65\x71\x75\x65\x73\x74\x4d\x6f\x64\x61\x6c'](_0x215ac6(0x227), this[_0x215ac6(0x21f)][_0x215ac6(0x21e)](this)) : this[_0x215ac6(0x21f)]();
-    }
-    [_0x397790(0x21f)]() {
-        var _0x121425 = _0x397790, _0x30dbd3, _0xb4699c, _0x49e3ff;
-        try {
-            if (_0x121425(0x1fe) === _0x121425(0x1fe))
-                return SoundManager[_0x121425(0x202)](), this[_0x121425(0x20f)][_0x121425(0x204)](), _0xb4699c = PKD_SimpleSkillsTree[_0x121425(0x214)][_0x121425(0x213)](), _0x30dbd3 = _0xb4699c[this[_0x121425(0x212)]()], _0x30dbd3[this['\x73\x6b\x69\x6c\x6c\x49\x6e\x64\x65\x78\x49\x6e\x54\x72\x65\x65']()] = null, PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73'][_0x121425(0x1f0)]($gameTemp[_0x121425(0x203)], _0xb4699c), this[_0x121425(0x221)] = !![], this[_0x121425(0x229)]();
-            else
-                _0x4835d0[_0x121425(0x214)][_0x121425(0x205)](_0x121425(0x227), this[_0x121425(0x21f)][_0x121425(0x21e)](this));
-        } catch (_0x59828e) {
-            if (_0x121425(0x1f3) === _0x121425(0x1f3))
-                return _0x49e3ff = _0x59828e, KDCore[_0x121425(0x1f4)](_0x49e3ff);
-            else
-                this['\x5f\x73\x6b\x69\x6c\x6c\x41\x63\x74\x69\x6f\x6e\x54\x6f\x6f\x6c'] = new _0x915ae0(this[_0x121425(0x225)]()), this[_0x121425(0x206)][_0x121425(0x1fb)](0x244, 0x22), this[_0x121425(0x1f9)](this[_0x121425(0x206)]);
-        }
-    }
-    [_0x397790(0x21c)]() {
-        var _0x243bab = _0x397790, _0x190f3a, _0x69b9fd, _0x2c4dbc;
-        try {
-            return _0x243bab(0x21d) === _0x243bab(0x21d) ? (_0x69b9fd = PKD_SimpleSkillsTree[_0x243bab(0x214)][_0x243bab(0x213)](), _0x190f3a = _0x69b9fd[this[_0x243bab(0x212)]()], _0x190f3a[this[_0x243bab(0x1fa)]()] = this[_0x243bab(0x225)](), PKD_SimpleSkillsTree[_0x243bab(0x214)][_0x243bab(0x1f0)]($gameTemp[_0x243bab(0x203)], _0x69b9fd)) : this['\x5f\x73\x61\x76\x65\x44\x61\x74\x61']();
-        } catch (_0x11b945) {
-            return _0x2c4dbc = _0x11b945, KDCore['\x77\x61\x72\x6e\x69\x6e\x67'](_0x2c4dbc);
-        }
-    }
-};
-function _0x43bc(_0x211042, _0x14843a) {
-    var _0x1a02e5 = _0x1a02();
-    return _0x43bc = function (_0x43bcca, _0x3c6944) {
-        _0x43bcca = _0x43bcca - 0x1ee;
-        var _0xeff4ff = _0x1a02e5[_0x43bcca];
-        return _0xeff4ff;
-    }, _0x43bc(_0x211042, _0x14843a);
-}
-function _0x1a02() {
-    var _0x30c8cf = [
-        '\x73\x74\x6f\x70',
-        '\x51\x52\x4c\x55\x63',
-        '\x4b\x78\x62\x7a\x74',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x4c\x69\x6e\x6b\x73\x54\x6f\x6f\x6c',
-        '\x69\x73\x4d\x6f\x64\x61\x6c\x4d\x6f\x64\x65',
-        '\x61\x63\x74\x69\x76\x61\x74\x65',
-        '\x70\x6c\x61\x79\x4f\x6b',
-        '\x5f\x5f\x70\x53\x53\x54\x45\x64\x69\x74\x6f\x72\x53\x65\x6c\x65\x63\x74\x65\x64\x43\x6c\x61\x73\x73\x49\x64',
-        '\x72\x65\x6d\x6f\x76\x65\x41\x6c\x6c\x4c\x69\x6e\x6b\x73',
-        '\x52\x65\x71\x75\x65\x73\x74\x4d\x6f\x64\x61\x6c',
-        '\x5f\x73\x6b\x69\x6c\x6c\x41\x63\x74\x69\x6f\x6e\x54\x6f\x6f\x6c',
-        '\x31\x36\x32\x39\x48\x4b\x69\x54\x4a\x50',
-        '\x5f\x70\x72\x65\x70\x61\x72\x65\x44\x61\x74\x61',
-        '\x6c\x6f\x67',
-        '\x5f\x5f\x70\x53\x53\x54\x45\x64\x69\x74\x61\x62\x6c\x65\x53\x6b\x69\x6c\x6c\x44\x61\x74\x61',
-        '\x68\x65\x69\x67\x68\x74',
-        '\x5f\x63\x72\x65\x61\x74\x65\x41\x63\x74\x69\x6f\x6e\x54\x6f\x6f\x6c',
-        '\x63\x62\x6d\x53\x50',
-        '\x73\x65\x74\x44\x65\x73\x63\x72\x69\x70\x74\x69\x6f\x6e\x54\x6f\x6f\x6c',
-        '\x5f\x73\x6b\x69\x6c\x6c\x4c\x69\x6e\x6b\x73\x54\x6f\x6f\x6c',
-        '\x52\x43\x7a\x63\x69',
-        '\x31\x35\x34\x34\x36\x38\x38\x69\x4e\x68\x64\x64\x47',
-        '\x73\x6b\x69\x6c\x6c\x54\x72\x65\x65\x43\x61\x74\x49\x6e\x64\x65\x78',
-        '\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x44\x61\x74\x61',
-        '\x55\x74\x69\x6c\x73',
-        '\x5f\x73\x6b\x69\x6c\x6c\x44\x65\x73\x63\x54\x6f\x6f\x6c',
-        '\x31\x33\x31\x31\x35\x34\x38\x74\x71\x6f\x5a\x4a\x6d',
-        '\x36\x35\x37\x34\x33\x35\x50\x58\x55\x70\x45\x4c',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x43\x68\x6f\x69\x63\x65\x54\x6f\x6f\x6c',
-        '\x37\x35\x35\x30\x35\x36\x72\x5a\x6f\x6e\x79\x77',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x44\x65\x73\x63\x45\x64\x69\x74\x54\x6f\x6f\x6c',
-        '\x31\x32\x34\x34\x30\x64\x56\x69\x5a\x6c\x77',
-        '\x5f\x73\x61\x76\x65\x44\x61\x74\x61',
-        '\x50\x69\x52\x79\x6c',
-        '\x62\x69\x6e\x64',
-        '\x5f\x64\x65\x6c\x65\x74\x65\x44\x61\x74\x61',
-        '\x5f\x73\x6b\x69\x6c\x6c\x50\x72\x65\x76\x69\x65\x77\x54\x6f\x6f\x6c',
-        '\x5f\x61\x66\x74\x65\x72\x44\x65\x6c\x65\x74\x65\x46\x6c\x61\x67',
-        '\x5f\x73\x6b\x69\x6c\x6c\x54\x6f\x6f\x6c',
-        '\x5f\x63\x72\x65\x61\x74\x65\x43\x68\x69\x6c\x64\x72\x65\x6e\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x31\x35\x31\x38\x39\x30\x6d\x47\x74\x59\x56\x76',
-        '\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61',
-        '\x5f\x63\x72\x65\x61\x74\x65\x43\x6f\x6e\x66\x69\x67\x75\x72\x61\x74\x69\x6f\x6e\x49\x74\x65\x6d\x73',
-        '\x44\x65\x6c\x65\x74\x65\x20\x73\x6b\x69\x6c\x6c\x20\x66\x72\x6f\x6d\x20\x74\x72\x65\x65\x3f',
-        '\x39\x35\x30\x36\x38\x38\x55\x77\x47\x71\x44\x58',
-        '\x63\x6c\x6f\x73\x65\x53\x63\x65\x6e\x65\x50\x72\x6f\x63\x65\x73\x73',
-        '\x5f\x6f\x6e\x44\x65\x6c\x65\x74\x65\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b',
-        '\x73\x6b\x69\x6c\x6c\x49\x64',
-        '\x53\x61\x76\x65\x44\x61\x74\x61\x46\x69\x6c\x65\x46\x6f\x72\x43\x6c\x61\x73\x73',
-        '\x62\x74\x6e\x44\x65\x6c\x65\x74\x65',
-        '\x77\x69\x64\x74\x68',
-        '\x75\x4a\x64\x58\x65',
-        '\x77\x61\x72\x6e\x69\x6e\x67',
-        '\x36\x46\x71\x65\x43\x5a\x7a',
-        '\x5f\x73\x6b\x69\x6c\x6c\x52\x65\x71\x54\x6f\x6f\x6c',
-        '\x5f\x63\x72\x65\x61\x74\x65\x52\x65\x71\x75\x69\x72\x65\x6d\x65\x6e\x74\x73\x45\x64\x69\x74\x54\x6f\x6f\x6c',
-        '\x73\x4d\x72\x6f\x41',
-        '\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x73\x6b\x69\x6c\x6c\x49\x6e\x64\x65\x78\x49\x6e\x54\x72\x65\x65',
-        '\x6d\x6f\x76\x65'
-    ];
-    _0x1a02 = function () {
-        return _0x30c8cf;
-    };
-    return _0x1a02();
-}
 
 // Generated by CoffeeScript 2.6.1
+//$[ENCODE]
+//$[NUI BASED]
+var PKD_SST_SkillConfiguration;
+
+PKD_SST_SkillConfiguration = class PKD_SST_SkillConfiguration extends PKD_SST_SkillsTreeBase {
+  constructor() {
+    super(...arguments);
+  }
+
+  skillData() {
+    return $gameTemp.__pSSTEditableSkillData[2];
+  }
+
+  skillIndexInTree() {
+    return $gameTemp.__pSSTEditableSkillData[0];
+  }
+
+  skillTreeCatIndex() {
+    return $gameTemp.__pSSTEditableSkillData[1];
+  }
+
+  stop() {
+    var e;
+    super.stop();
+    try {
+      if (this._afterDeleteFlag !== true) {
+        return this._saveData();
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _createChildrenContent() {
+    var src;
+    super._createChildrenContent();
+    this._afterDeleteFlag = false;
+    console.log("START EDIT: ");
+    console.log(this.skillData());
+    $gameTemp.__pSSTSave = this._saveData.bind(this);
+    src = $SST_NUI_SkillConfigurationElements;
+    KDCore.Sprite_NUI.FromScheme(src.skillConfiturationScene, this);
+    this._createConfigurationItems();
+    this._setupHandlers();
+    this._autoSelectSkillStart();
+  }
+
+  _setupHandlers() {
+    if (this.skillDeleteButton != null) {
+      return this.skillDeleteButton.addClickHandler(this._onDeleteButtonClick.bind(this));
+    }
+  }
+
+  _autoSelectSkillStart() {
+    setTimeout((() => {
+      if (this.skillData().skillId <= 1) {
+        return this._skillTool.activate();
+      }
+    }), 10);
+  }
+
+  _createConfigurationItems() {
+    this._createSkillChoiceTool();
+    this._createSkillLinksTool();
+    this._createSkillDescEditTool();
+    this._createRequirementsEditTool();
+    this._createPreviewEditTool();
+    this._createActionTool();
+  }
+
+  _createSkillChoiceTool() {
+    this._skillTool = new PKD_SST_ToolSkillChoice(this.skillData());
+    return this.addChild(this._skillTool);
+  }
+
+  _createSkillLinksTool() {
+    this._skillLinksTool = new PKD_SST_ToolSkillLinks(this.skillData());
+    return this.addChild(this._skillLinksTool);
+  }
+
+  _createSkillDescEditTool() {
+    this._skillDescTool = new PKD_SST_ToolSkillDescription(this.skillData());
+    this.addChild(this._skillDescTool);
+    // * Описание меняется (базовое от навыка)
+    this._skillTool.setDescriptionTool(this._skillDescTool);
+  }
+
+  _createRequirementsEditTool() {
+    this._skillReqTool = new PKD_SST_ToolSkillRequirements(this.skillData());
+    this.addChild(this._skillReqTool);
+  }
+
+  _createPreviewEditTool() {
+    this._skillPreviewTool = new PKD_SST_ToolSkillImagePreview(this.skillData());
+    this.addChild(this._skillPreviewTool);
+  }
+
+  _createActionTool() {
+    this._skillActionTool = new PKD_SST_ToolSkillAction(this.skillData());
+    this.addChild(this._skillActionTool);
+  }
+
+  _onDeleteButtonClick() {
+    var helpText;
+    if (PKD_SimpleSkillsTree.Utils.IsGlobalModalState()) {
+      return;
+    }
+    if (this.skillData().skillId >= 2) {
+      helpText = this.uiConstants['deleteSkillHelpText'];
+      //console.log "HELP TEXT: " + helpText
+      PKD_SimpleSkillsTree.Utils.RequestModal(helpText, this._deleteData.bind(this));
+    } else {
+      this._deleteData();
+    }
+  }
+
+  _deleteData() {
+    var categoryItems, data, e;
+    try {
+      SoundManager.playOk();
+      this._skillLinksTool.removeAllLinks();
+      data = PKD_SimpleSkillsTree.Utils.GetCurrentData();
+      categoryItems = data[this.skillTreeCatIndex()];
+      categoryItems[this.skillIndexInTree()] = null;
+      PKD_SimpleSkillsTree.Utils.SaveDataFileForClass($gameTemp.__pSSTEditorSelectedClassId, data);
+      this._afterDeleteFlag = true;
+      return setTimeout((() => {
+        return this.onCloseButtonClick();
+      }), 100);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _saveData() {
+    var categoryItems, data, e;
+    try {
+      data = PKD_SimpleSkillsTree.Utils.GetCurrentData();
+      categoryItems = data[this.skillTreeCatIndex()];
+      categoryItems[this.skillIndexInTree()] = this.skillData();
+      return PKD_SimpleSkillsTree.Utils.SaveDataFileForClass($gameTemp.__pSSTEditorSelectedClassId, data);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_SkillInfoWindow;
 
 PKD_SST_SkillInfoWindow = class PKD_SST_SkillInfoWindow extends KDCore.Sprite {
@@ -9921,8 +15918,123 @@ PKD_SST_SkillInfoWindow = class PKD_SST_SkillInfoWindow extends KDCore.Sprite {
     this.refresh();
   }
 
-  settings() {
-    return PKD_SimpleSkillsTree.PP.getSkillInfoSettings();
+  skillName() {
+    if (this.skillData != null) {
+      return this.skillObj().name;
+    } else {
+      return "";
+    }
+  }
+
+  skillDescriptionText() {
+    if (this.skillData != null) {
+      if (String.any(this.skillData.extraDescription)) {
+        return this.skillData.extraDescription;
+      } else {
+        return this.skillObj().description;
+      }
+    } else {
+      return "";
+    }
+  }
+
+  skillStatusText() {
+    return this.getStatusData(this.getSkillStatus()).text;
+  }
+
+  skillStatusTextColor() {
+    return this.getStatusData(this.getSkillStatus()).textColor;
+  }
+
+  getStatusData(id) {
+    var object;
+    object = this.uiConstant('skillStatusesText').getById(id);
+    return object;
+  }
+
+  getSkillStatus() {
+    var e;
+    try {
+      if (this.skillData == null) {
+        return "editor";
+      }
+      if (this.mode !== "game") {
+        return "editor";
+      } else {
+        if (PKD_SimpleSkillsTree.Utils.IsSkillIsLearned(this.skillData)) {
+          return "learned";
+        } else if (PKD_SimpleSkillsTree.Utils.IsSkillIsOpenForLearn(this.skillData)) {
+          return "opened";
+        } else {
+          return "closed";
+        }
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+    return "editor";
+  }
+
+  skillLevelRequirementText() {
+    if (this.skillData != null) {
+      return this.skillData.reqLevel;
+    } else {
+      return "1";
+    }
+  }
+
+  skillPointsRequirementText() {
+    if (this.skillData != null) {
+      return this.skillData.reqSP;
+    } else {
+      return "0";
+    }
+  }
+
+  skillSpecialCondRequirementText() {
+    if ((this.skillData != null) && String.any(this.skillData.specialConditionText)) {
+      return this.skillData.specialConditionText;
+    } else {
+      return this.uiConstant('defaultTextWhenNotHaveSpecialCondition');
+    }
+  }
+
+  skillLevelRequirementTextColor() {
+    return this.skillAnyRequirementTextColor(PKD_SimpleSkillsTree.Utils.IsSkilPassLevelReqr.bind(PKD_SimpleSkillsTree.Utils));
+  }
+
+  skillAnyRequirementTextColor(predicateFunc) {
+    var color;
+    if ((this.skillData != null) && this.mode === 'game') {
+      if (PKD_SimpleSkillsTree.Utils.IsSkillIsLearned(this.skillData)) {
+        return this.uiConstant('skillRequirementDefaultTextColor');
+      } else {
+        if (predicateFunc(this.skillData) === true) {
+          color = this.uiConstant('skillRequirementPassedTextColor');
+        } else {
+          color = this.uiConstant('skillRequirementNotPassedTextColor');
+        }
+        return color;
+      }
+    }
+    return "#FFFFFF";
+  }
+
+  skillPointsRequirementTextColor() {
+    return this.skillAnyRequirementTextColor(PKD_SimpleSkillsTree.Utils.IsSkilPassSPReqr.bind(PKD_SimpleSkillsTree.Utils));
+  }
+
+  skillSpecialCondRequirementTextColor() {
+    return this.skillAnyRequirementTextColor(PKD_SimpleSkillsTree.Utils.IsSkilPassSpecialReqr.bind(PKD_SimpleSkillsTree.Utils));
+  }
+
+  skillPreviewImage() {
+    if (this.skillData != null) {
+      return this.skillData.previewImage;
+    } else {
+      return "";
+    }
   }
 
   update() {
@@ -9958,259 +16070,30 @@ PKD_SST_SkillInfoWindow = class PKD_SST_SkillInfoWindow extends KDCore.Sprite {
   }
 
   refresh() {
-    var description, e, name, ref, ref1, ref2;
+    var e;
     //console.log("REFRESH INFO")
     if (this.skillData == null) {
       return;
     }
     try {
-      ({name, description} = this.skillObj());
-      if ((ref = this.titleTextSpr) != null) {
-        ref.draw(name);
-      }
-      if (String.any(this.skillData.extraDescription)) {
-        if ((ref1 = this.descriptionTextSpr) != null) {
-          ref1.draw(this.skillData.extraDescription);
-        }
-      } else {
-        if ((ref2 = this.descriptionTextSpr) != null) {
-          ref2.draw(description);
-        }
-      }
-      try {
-        this._refreshRequirements();
-      } catch (error) {
-        e = error;
-        KDCore.warning(e);
-      }
-      this._refreshStatus();
+      this.refreshBindings(this);
     } catch (error) {
       e = error;
       KDCore.warning(e);
-    }
-  }
-
-  _refreshRequirements() {
-    var color, notPassColor, passColor, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, ref8;
-    if (this.mode !== 'game') {
-      if ((ref = this.reqLevelTextSpr) != null) {
-        ref.drawText(this.skillData.reqLevel);
-      }
-      if ((ref1 = this.reqSPTextSpr) != null) {
-        ref1.drawText(this.skillData.reqSP);
-      }
-      if ((ref2 = this.reqSCTextSpr) != null) {
-        ref2.drawText(this.skillData.specialConditionText);
-      }
-    } else {
-      if (PKD_SimpleSkillsTree.Utils.IsSkillIsLearned(this.skillData)) {
-        if ((ref3 = this.reqLevelTextSpr) != null) {
-          ref3.drawText(this.skillData.reqLevel);
-        }
-        if ((ref4 = this.reqSPTextSpr) != null) {
-          ref4.drawText(this.skillData.reqSP);
-        }
-        if ((ref5 = this.reqSCTextSpr) != null) {
-          ref5.drawText(this.skillData.specialConditionText);
-        }
-      } else {
-        notPassColor = this.settings().reqColorNotPass;
-        passColor = this.settings().reqColorPass;
-        if (PKD_SimpleSkillsTree.Utils.IsSkilPassLevelReqr(this.skillData)) {
-          color = passColor;
-        } else {
-          color = notPassColor;
-        }
-        if ((ref6 = this.reqLevelTextSpr) != null) {
-          ref6.drawTextColor(this.skillData.reqLevel, color);
-        }
-        if (PKD_SimpleSkillsTree.Utils.IsSkilPassSPReqr(this.skillData)) {
-          color = passColor;
-        } else {
-          color = notPassColor;
-        }
-        if ((ref7 = this.reqSPTextSpr) != null) {
-          ref7.drawTextColor(this.skillData.reqSP, color);
-        }
-        if (PKD_SimpleSkillsTree.Utils.IsSkilPassSpecialReqr(this.skillData)) {
-          color = passColor;
-        } else {
-          color = notPassColor;
-        }
-        if ((ref8 = this.reqSCTextSpr) != null) {
-          ref8.drawTextColor(this.skillData.specialConditionText, color);
-        }
-      }
-    }
-  }
-
-  _refreshStatus() {
-    var e, status;
-    try {
-      if (this._statusSpr == null) {
-        return;
-      }
-      if (this.mode !== "game") {
-        status = 3;
-      } else {
-        if (PKD_SimpleSkillsTree.Utils.IsSkillIsLearned(this.skillData)) {
-          status = 1;
-        } else if (PKD_SimpleSkillsTree.Utils.IsSkillIsOpenForLearn(this.skillData)) {
-          status = 0;
-        } else {
-          status = 2;
-        }
-      }
-      return this._statusSpr.bitmap = this._statuses[status];
-    } catch (error) {
-      e = error;
-      return KDCore.warning(e);
     }
   }
 
   _create() {
-    return this._createMain();
-  }
-
-  _createMain() {
-    this._createBackgroundMain();
-    this._createTopHelpContent();
-    return this._createBottomHelpContent();
-  }
-
-  _createBackgroundMain() {
-    this.addChild(PKD_SimpleSkillsTree.Utils.NewSprite('skillInfoBackground'));
-  }
-
-  _createTopHelpContent() {
-    this._createStatus();
-    if (this.skillData == null) {
-      return;
-    }
-    this._createNameText();
-    this._createDescriptionText();
-    this._createRequirements();
-  }
-
-  _createNameText() {
-    var e, t;
-    try {
-      t = new KDCore.UI.Sprite_UIText($sktJson_SkillNameText.text);
-      t.move($sktJson_SkillNameText.position);
-      this.addChild(t);
-      this.titleTextSpr = t;
-    } catch (error) {
-      e = error;
-      return KDCore.warning(e);
-    }
-  }
-
-  _createStatus() {
-    var e, p;
-    try {
-      this._statuses = [PKD_SimpleSkillsTree.Utils.LoadBitmap('skillStatus_opened'), PKD_SimpleSkillsTree.Utils.LoadBitmap('skillStatus_learned'), PKD_SimpleSkillsTree.Utils.LoadBitmap('skillStatus_closed'), PKD_SimpleSkillsTree.Utils.LoadBitmap('skillStatus_editor')];
-      this._statusSpr = new KDCore.Sprite();
-      this._statusSpr.anchor.x = 0.5;
-      p = this.settings().statusTextPosition;
-      this._statusSpr.x = p.x;
-      this._statusSpr.y = p.y;
-      this.addChild(this._statusSpr);
-      if (this.mode === "editor") {
-        return this._statusSpr.bitmap = this._statuses[3];
-      }
-    } catch (error) {
-      e = error;
-      return KDCore.warning(e);
-    }
-  }
-
-  _createDescriptionText() {
-    var e, t;
-    try {
-      t = new KDCore.UI.Sprite_UITextExt($sktJson_SkillDescText.text);
-      t.move($sktJson_SkillDescText.position);
-      t.opacity = $sktJson_SkillDescText.opacity;
-      this.addChild(t);
-      this.descriptionTextSpr = t;
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
-    }
-  }
-
-  _createRequirements() {
-    var e;
-    try {
-      this._createReqLevelText();
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
-    }
-    try {
-      this._createReqSPText();
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
-    }
-    try {
-      this._createReqSCText();
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
-    }
-  }
-
-  _createReqLevelText() {
-    var t;
-    t = new KDCore.UI.Sprite_UIText($sktJson_ReqLvlText.text);
-    t.move($sktJson_ReqLvlText.position);
-    this.addChild(t);
-    this.reqLevelTextSpr = t;
-  }
-
-  _createReqSPText() {
-    var t;
-    t = new KDCore.UI.Sprite_UIText($sktJson_ReqSpText.text);
-    t.move($sktJson_ReqSpText.position);
-    this.addChild(t);
-    this.reqSPTextSpr = t;
-  }
-
-  _createReqSCText() {
-    var t;
-    t = new KDCore.UI.Sprite_UIText($sktJson_ReqScText.text);
-    t.move($sktJson_ReqScText.position);
-    this.addChild(t);
-    this.reqSCTextSpr = t;
-  }
-
-  _createBottomHelpContent() {
-    this._gifCreated = null;
-    if (this.skillData == null) {
-      return;
-    }
-    this._drawSkillImage();
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_SkillInfoWindow, this);
     if (this.isSupportGIF()) {
-      this._drawSkillGIF();
-    }
-  }
-
-  _drawSkillImage() {
-    var e;
-    if (!String.any(this.skillData.previewImage)) {
-      return;
-    }
-    try {
-      this._skillImg = PKD_SimpleSkillsTree.Utils.NewSprite("preview/" + this.skillData.previewImage);
-      this.addChild(this._skillImg);
-      return this._skillImg.move(this.settings().previewImgPosition);
-    } catch (error) {
-      e = error;
-      return KDCore.warning(e);
+      return this._drawSkillGIF();
     }
   }
 
   _drawSkillGIF() {
+    if (this.skillData == null) {
+      return;
+    }
     if (!String.any(this.skillData.previewGif)) {
       return;
     }
@@ -10225,8 +16108,12 @@ PKD_SST_SkillInfoWindow = class PKD_SST_SkillInfoWindow extends KDCore.Sprite {
     var e, gifAnimId, previewGif, skillId, x, y;
     this._drawSkillGIFThread = null;
     try {
+      if (this.skillGifPreviewImage == null) {
+        return;
+      }
       ({skillId, previewGif} = this.skillData);
-      ({x, y} = this.settings().previewImgPosition);
+      x = KDCore.SDK.toGlobalCoord(this.skillGifPreviewImage, 'x');
+      y = KDCore.SDK.toGlobalCoord(this.skillGifPreviewImage, 'y');
       gifAnimId = "skill_" + skillId;
       window.ShowVAnim(gifAnimId, previewGif, x, y, true);
       this._gifCreated = gifAnimId;
@@ -10239,959 +16126,633 @@ PKD_SST_SkillInfoWindow = class PKD_SST_SkillInfoWindow extends KDCore.Sprite {
 };
 
 
-function _0x4f90(_0x11d847, _0xe87ab5) {
-    var _0x55439c = _0x5543();
-    return _0x4f90 = function (_0x4f9093, _0x205879) {
-        _0x4f9093 = _0x4f9093 - 0x141;
-        var _0x139b59 = _0x55439c[_0x4f9093];
-        return _0x139b59;
-    }, _0x4f90(_0x11d847, _0xe87ab5);
-}
-function _0x5543() {
-    var _0x3eda8d = [
-        '\x5f\x63\x72\x65\x61\x74\x65\x47\x72\x69\x64',
-        '\x63\x72\x65\x61\x74\x65\x47\x72\x69\x64',
-        '\x5f\x64\x65\x73\x74\x72\x6f\x79\x47\x72\x69\x64',
-        '\x6c\x69\x6e\x6b',
-        '\x6f\x4e\x45\x68\x62',
-        '\x69\x73\x49\x6e\x47\x61\x6d\x65\x4d\x6f\x64\x65',
-        '\x73\x65\x74\x45\x64\x69\x74\x6f\x72\x4d\x6f\x64\x65',
-        '\x38\x31\x33\x33\x30\x33\x39\x63\x78\x55\x64\x65\x6e',
-        '\x31\x35\x32\x36\x30\x31\x5a\x6e\x54\x54\x62\x51',
-        '\x75\x70\x64\x61\x74\x65',
-        '\x5f\x68\x6f\x76\x65\x72\x48\x61\x6e\x64\x6c\x65\x72',
-        '\x6d\x6f\x76\x65',
-        '\x61\x70\x70\x65\x61\x72',
-        '\x6a\x43\x65\x6e\x48',
-        '\x73\x65\x74\x49\x6e\x47\x61\x6d\x65\x4d\x6f\x64\x65',
-        '\x6c\x69\x6e\x6b\x73\x47\x72\x69\x64',
-        '\x5f\x6d\x6f\x64\x65\x54\x79\x70\x65',
-        '\x73\x65\x74\x74\x69\x6e\x67\x73',
-        '\x53\x70\x72\x69\x74\x65',
-        '\x5f\x63\x72\x65\x61\x74\x65\x4c\x69\x6e\x6b\x73',
-        '\x76\x69\x73\x69\x62\x6c\x65',
-        '\x37\x36\x35\x34\x36\x38\x38\x42\x7a\x76\x6a\x58\x51',
-        '\x55\x74\x69\x6c\x73',
-        '\x5f\x63\x72\x65\x61\x74\x65\x47\x72\x69\x64\x43\x65\x6c\x6c',
-        '\x72\x65\x6d\x6f\x76\x65\x46\x72\x6f\x6d\x50\x61\x72\x65\x6e\x74',
-        '\x63\x68\x69\x6c\x64\x72\x65\x6e',
-        '\x36\x31\x39\x34\x39\x30\x71\x76\x6a\x47\x41\x69',
-        '\x66\x69\x6e\x64',
-        '\x67\x61\x6d\x65',
-        '\x5a\x63\x75\x51\x6a',
-        '\x67\x65\x74\x49\x6e\x64\x65\x78\x49\x6e\x32\x44\x41\x72\x72\x61\x79\x42\x79\x49\x4a',
-        '\x67\x65\x74\x49\x6e\x64\x65\x78',
-        '\x5f\x64\x65\x73\x74\x72\x6f\x79\x4c\x69\x6e\x6b\x73',
-        '\x69\x73\x41\x63\x74\x69\x76\x65',
-        '\x67\x72\x69\x64',
-        '\x5f\x63\x6f\x6e\x74\x72\x6f\x6c\x73',
-        '\x5f\x63\x72\x65\x61\x74\x65\x47\x61\x6d\x65\x43\x65\x6c\x6c',
-        '\x5a\x76\x68\x55\x62',
-        '\x45\x6c\x45\x4f\x42',
-        '\x61\x64\x64\x43\x68\x69\x6c\x64',
-        '\x31\x31\x33\x30\x36\x33\x37\x30\x70\x74\x62\x6b\x72\x6f',
-        '\x5f\x63\x72\x65\x61\x74\x65\x4c\x69\x6e\x6b\x43\x65\x6c\x6c',
-        '\x5f\x73\x6b\x69\x6c\x6c\x73\x53\x65\x74',
-        '\x32\x30\x59\x42\x4b\x6b\x7a\x5a',
-        '\x32\x39\x39\x37\x32\x34\x66\x70\x72\x59\x62\x4f',
-        '\x73\x65\x74\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72',
-        '\x67\x65\x74\x43\x65\x6c\x6c\x57\x69\x74\x68\x49\x6e\x64\x65\x78',
-        '\x33\x37\x30\x38\x30\x38\x39\x4d\x47\x76\x62\x50\x48',
-        '\x67\x65\x74\x47\x72\x69\x64\x53\x65\x74\x74\x69\x6e\x67\x73',
-        '\x35\x32\x50\x51\x63\x68\x70\x73',
-        '\x77\x73\x43\x55\x6e',
-        '\x6e\x4e\x54\x6d\x55',
-        '\x73\x74\x61\x72\x74\x58',
-        '\x5f\x68\x61\x6e\x64\x6c\x65\x72',
-        '\x73\x74\x61\x72\x74\x59',
-        '\x31\x32\x4e\x49\x44\x45\x78\x52',
-        '\x5f\x64\x72\x61\x77\x4c\x69\x6e\x6b\x73'
-    ];
-    _0x5543 = function () {
-        return _0x3eda8d;
-    };
-    return _0x5543();
-}
-var _0x20a5a4 = _0x4f90;
-(function (_0x4decbf, _0x57c993) {
-    var _0x33056a = _0x4f90, _0x1e7e92 = _0x4decbf();
-    while (!![]) {
-        try {
-            var _0x52189b = -parseInt(_0x33056a(0x171)) / 0x1 + parseInt(_0x33056a(0x176)) / 0x2 * (parseInt(_0x33056a(0x14d)) / 0x3) + -parseInt(_0x33056a(0x170)) / 0x4 * (parseInt(_0x33056a(0x15f)) / 0x5) + parseInt(_0x33056a(0x143)) / 0x6 * (parseInt(_0x33056a(0x174)) / 0x7) + -parseInt(_0x33056a(0x15a)) / 0x8 + -parseInt(_0x33056a(0x14c)) / 0x9 + parseInt(_0x33056a(0x16d)) / 0xa;
-            if (_0x52189b === _0x57c993)
-                break;
-            else
-                _0x1e7e92['push'](_0x1e7e92['shift']());
-        } catch (_0xf020f6) {
-            _0x1e7e92['push'](_0x1e7e92['shift']());
-        }
-    }
-}(_0x5543, 0xb2ef0));
+// Generated by CoffeeScript 2.6.1
+//$[ENCODE]
+//$[NUI BASED]
 var PKD_SST_SkillsGrid;
-PKD_SST_SkillsGrid = class PKD_SST_SkillsGrid extends KDCore['\x53\x70\x72\x69\x74\x65'] {
-    constructor() {
-        var _0x154b8c = _0x4f90, _0x2c8a20, _0x4c2c5d;
-        super(), {
-            rows: _0x4c2c5d,
-            cols: _0x2c8a20
-        } = this['\x73\x65\x74\x74\x69\x6e\x67\x73'](), this[_0x154b8c(0x168)] = new PKD_SST_LazySmartGridSelector(_0x2c8a20, _0x4c2c5d);
+
+PKD_SST_SkillsGrid = class PKD_SST_SkillsGrid extends KDCore.Sprite {
+  constructor() {
+    var cols, rows;
+    super();
+    ({rows, cols} = $SST_NUI_SkillsGridElements.skillTreeGrid.constants);
+    this._controls = new PKD_SST_LazySmartGridSelector(cols, rows);
+  }
+
+  // 1 режим - в игре
+  // 2 режим - в редакторе
+  // 3 режим - создание зависимостей
+  update() {
+    super.update();
+    this._controls.update();
+    if (this.linksGrid == null) {
+      return;
     }
-    ['\x75\x70\x64\x61\x74\x65']() {
-        var _0x4a15e8 = _0x4f90;
-        return super[_0x4a15e8(0x14e)](), this[_0x4a15e8(0x168)][_0x4a15e8(0x14e)]();
+    this.linksGrid.opacity = this.grid.opacity;
+    this.linksGrid.move(this.grid.x, this.grid.y);
+  }
+
+  isActive() {
+    return this.grid != null;
+  }
+
+  isInGameMode() {
+    return this._modeType === 'game';
+  }
+
+  createGrid(_modeType, _skillsSet) {
+    this._modeType = _modeType;
+    this._skillsSet = _skillsSet;
+    this._destroyGrid();
+    this._destroyLinks();
+    if (this._skillsSet == null) {
+      return;
     }
-    [_0x20a5a4(0x166)]() {
-        var _0x5f2361 = _0x20a5a4;
-        return this[_0x5f2361(0x167)] != null;
+    this._createLinks();
+    this._createGrid();
+    this._drawLinks();
+  }
+
+  setClickHandler(_handler) {
+    this._handler = _handler;
+  }
+
+  setHoverHandler(_hoverHandler) {
+    this._hoverHandler = _hoverHandler;
+  }
+
+  getCellWithIndex(index) {
+    return this.grid.children.find(function(c) {
+      return c.getIndex() === index;
+    });
+  }
+
+  _destroyGrid() {
+    if (this.grid == null) {
+      return;
     }
-    [_0x20a5a4(0x14a)]() {
-        var _0x5d22f0 = _0x20a5a4;
-        return this['\x5f\x6d\x6f\x64\x65\x54\x79\x70\x65'] === _0x5d22f0(0x161);
+    this.grid.visible = false;
+    this.grid.removeFromParent();
+    this.grid = null;
+  }
+
+  _destroyLinks() {
+    if (this.linksGrid == null) {
+      return;
     }
-    [_0x20a5a4(0x146)](_0x5d7995, _0x428603) {
-        var _0x504581 = _0x20a5a4;
-        this[_0x504581(0x155)] = _0x5d7995, this[_0x504581(0x16f)] = _0x428603, this[_0x504581(0x147)](), this['\x5f\x64\x65\x73\x74\x72\x6f\x79\x4c\x69\x6e\x6b\x73']();
-        if (this[_0x504581(0x16f)] == null)
-            return;
-        this[_0x504581(0x158)](), this[_0x504581(0x145)](), this[_0x504581(0x144)]();
-    }
-    [_0x20a5a4(0x172)](_0x57d2bd) {
-        var _0x3dd255 = _0x20a5a4;
-        this[_0x3dd255(0x141)] = _0x57d2bd;
-    }
-    ['\x73\x65\x74\x48\x6f\x76\x65\x72\x48\x61\x6e\x64\x6c\x65\x72'](_0x4afd9f) {
-        this['\x5f\x68\x6f\x76\x65\x72\x48\x61\x6e\x64\x6c\x65\x72'] = _0x4afd9f;
-    }
-    [_0x20a5a4(0x173)](_0x2a5ee4) {
-        var _0x5ca0d7 = _0x20a5a4;
-        return this['\x67\x72\x69\x64'][_0x5ca0d7(0x15e)][_0x5ca0d7(0x160)](function (_0xb534cc) {
-            var _0x139ec1 = _0x5ca0d7;
-            return _0xb534cc[_0x139ec1(0x164)]() === _0x2a5ee4;
-        });
-    }
-    [_0x20a5a4(0x156)]() {
-        var _0x3f940c = _0x20a5a4;
-        return PKD_SimpleSkillsTree['\x50\x50'][_0x3f940c(0x175)]();
-    }
-    [_0x20a5a4(0x147)]() {
-        var _0x10922f = _0x20a5a4;
-        if (this['\x67\x72\x69\x64'] == null) {
-            if (_0x10922f(0x177) !== _0x10922f(0x16b))
-                return;
-            else {
-                var _0x465912, _0x59020d;
-                return _0x59020d = this[_0x10922f(0x16f)][_0x4c100d], _0x59020d != null ? _0x465912 = new _0x40939d(_0x59020d) : (_0x465912 = new _0x112d55(), _0x465912[_0x10922f(0x14b)]()), _0x465912;
-            }
+    this.linksGrid.visible = false;
+    this.linksGrid.removeFromParent();
+    this.linksGrid = null;
+  }
+
+  _createLinks() {
+    this.linksGrid = new KDCore.Sprite();
+    this.linksGrid.opacity = 0;
+    return this.addChild(this.linksGrid);
+  }
+
+  _createGrid() {
+    var cell, cellSpacing, cols, i, index, j, k, l, ref, ref1, rows;
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_SkillsGridElements.skillTreeGrid, this);
+    rows = this.uiConstant('rows');
+    cols = this.uiConstant('cols');
+    cellSpacing = KDCore.Utils.getValueWithDP(this.uiConstant('cellSpacing'));
+    for (i = k = 0, ref = rows; (0 <= ref ? k < ref : k > ref); i = 0 <= ref ? ++k : --k) {
+      for (j = l = 0, ref1 = cols; (0 <= ref1 ? l < ref1 : l > ref1); j = 0 <= ref1 ? ++l : --l) {
+        index = KDCore.Utils.getIndexIn2DArrayByIJ(i, j, cols);
+        cell = this._createGridCell(index);
+        if (cell == null) {
+          continue;
         }
-        this[_0x10922f(0x167)][_0x10922f(0x159)] = ![], this[_0x10922f(0x167)][_0x10922f(0x15d)](), this[_0x10922f(0x167)] = null;
+        cell.setIndex(index);
+        cell.setClickHandler(this._handler);
+        cell.setHoverHandler(this._hoverHandler);
+        cell.move(cellSpacing * j, cellSpacing * i);
+        this.grid.addChild(cell);
+      }
     }
-    [_0x20a5a4(0x165)]() {
-        var _0x293340 = _0x20a5a4;
-        if (this[_0x293340(0x154)] == null)
-            return;
-        this['\x6c\x69\x6e\x6b\x73\x47\x72\x69\x64'][_0x293340(0x159)] = ![], this[_0x293340(0x154)][_0x293340(0x15d)](), this[_0x293340(0x154)] = null;
+    this._controls.setupItems(this.grid.children);
+  }
+
+  _createGridCell(index) {
+    switch (this._modeType) {
+      case 'editor':
+        return this._createEditorCell(index);
+      case 'game':
+        return this._createGameCell(index);
+      case 'link':
+        return this._createLinkCell(index);
     }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x4c\x69\x6e\x6b\x73']() {
-        var _0x181ae5 = _0x20a5a4;
-        return this[_0x181ae5(0x154)] = new KDCore[(_0x181ae5(0x157))](), this[_0x181ae5(0x154)][_0x181ae5(0x151)](0x19), this[_0x181ae5(0x16c)](this[_0x181ae5(0x154)]);
+    return null;
+  }
+
+  _createEditorCell(index) {
+    var cell, d;
+    d = this._skillsSet[index];
+    if (d != null) {
+      cell = new PKD_SST_EditorSkillCell(d);
+    } else {
+      cell = new PKD_SST_EmptySkillCell();
+      cell.setEditorMode();
     }
-    [_0x20a5a4(0x145)]() {
-        var _0x53fed4 = _0x20a5a4, _0x31cd4c, _0x2feae5, _0x261028, _0x5cef5f, _0x1c483c, _0x839498, _0x5cbb85, _0x2980a7, _0x182d8d, _0x284ea3, _0xa612bd, _0x19ca60;
-        _0xa612bd = this[_0x53fed4(0x156)](), this[_0x53fed4(0x167)] = new KDCore[(_0x53fed4(0x157))](), this[_0x53fed4(0x167)][_0x53fed4(0x150)](_0xa612bd[_0x53fed4(0x179)], _0xa612bd[_0x53fed4(0x142)]), this['\x67\x72\x69\x64'][_0x53fed4(0x151)](0x32), this[_0x53fed4(0x16c)](this['\x67\x72\x69\x64']), {
-            rows: _0x284ea3,
-            cols: _0x2feae5,
-            spaceForCell: _0x19ca60
-        } = _0xa612bd;
-        for (_0x261028 = _0x839498 = 0x0, _0x2980a7 = _0x284ea3; 0x0 <= _0x2980a7 ? _0x839498 < _0x2980a7 : _0x839498 > _0x2980a7; _0x261028 = 0x0 <= _0x2980a7 ? ++_0x839498 : --_0x839498) {
-            if (_0x53fed4(0x152) !== _0x53fed4(0x178))
-                for (_0x1c483c = _0x5cbb85 = 0x0, _0x182d8d = _0x2feae5; 0x0 <= _0x182d8d ? _0x5cbb85 < _0x182d8d : _0x5cbb85 > _0x182d8d; _0x1c483c = 0x0 <= _0x182d8d ? ++_0x5cbb85 : --_0x5cbb85) {
-                    _0x5cef5f = KDCore[_0x53fed4(0x15b)][_0x53fed4(0x163)](_0x261028, _0x1c483c, _0x2feae5), _0x31cd4c = this[_0x53fed4(0x15c)](_0x5cef5f);
-                    if (_0x31cd4c == null) {
-                        if ('\x45\x71\x45\x52\x4d' !== '\x45\x71\x45\x52\x4d')
-                            this[_0x53fed4(0x14f)] = _0xcb9410;
-                        else
-                            continue;
-                    }
-                    _0x31cd4c['\x73\x65\x74\x49\x6e\x64\x65\x78'](_0x5cef5f), _0x31cd4c['\x73\x65\x74\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72'](this[_0x53fed4(0x141)]), _0x31cd4c['\x73\x65\x74\x48\x6f\x76\x65\x72\x48\x61\x6e\x64\x6c\x65\x72'](this['\x5f\x68\x6f\x76\x65\x72\x48\x61\x6e\x64\x6c\x65\x72']), _0x31cd4c[_0x53fed4(0x150)](_0x19ca60 * _0x1c483c, _0x19ca60 * _0x261028), this[_0x53fed4(0x167)][_0x53fed4(0x16c)](_0x31cd4c);
-                }
-            else
-                _0x493697 = new _0x5cf266(_0x100317);
-        }
-        this['\x5f\x63\x6f\x6e\x74\x72\x6f\x6c\x73']['\x73\x65\x74\x75\x70\x49\x74\x65\x6d\x73'](this[_0x53fed4(0x167)][_0x53fed4(0x15e)]);
+    return cell;
+  }
+
+  _createGameCell(index) {
+    var cell, d;
+    d = this._skillsSet[index];
+    if (d != null) {
+      cell = new PKD_SST_GameSkillCell(d);
+    } else {
+      cell = new PKD_SST_EmptySkillCell();
+      cell.setInGameMode();
     }
-    [_0x20a5a4(0x15c)](_0x50385a) {
-        var _0x5db886 = _0x20a5a4;
-        switch (this[_0x5db886(0x155)]) {
-        case '\x65\x64\x69\x74\x6f\x72':
-            return this['\x5f\x63\x72\x65\x61\x74\x65\x45\x64\x69\x74\x6f\x72\x43\x65\x6c\x6c'](_0x50385a);
-        case _0x5db886(0x161):
-            return this[_0x5db886(0x169)](_0x50385a);
-        case _0x5db886(0x148):
-            return this[_0x5db886(0x16e)](_0x50385a);
-        }
-        return null;
+    return cell;
+  }
+
+  _createLinkCell(index) {
+    var cell, d;
+    d = this._skillsSet[index];
+    if (d != null) {
+      cell = new PKD_SST_LinkEditorSkillCell(d);
+    } else {
+      cell = new PKD_SST_EmptySkillCell();
+      cell.setInGameMode();
     }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x45\x64\x69\x74\x6f\x72\x43\x65\x6c\x6c'](_0x18ae07) {
-        var _0x2efe00 = _0x20a5a4, _0x4f1f7a, _0x4930f7;
-        _0x4930f7 = this[_0x2efe00(0x16f)][_0x18ae07];
-        if (_0x4930f7 != null)
-            _0x4f1f7a = new PKD_SST_EditorSkillCell(_0x4930f7);
-        else {
-            if ('\x72\x74\x5a\x44\x68' !== _0x2efe00(0x16a))
-                _0x4f1f7a = new PKD_SST_EmptySkillCell(), _0x4f1f7a['\x73\x65\x74\x45\x64\x69\x74\x6f\x72\x4d\x6f\x64\x65']();
-            else {
-                var _0x449cf3, _0x5d043a;
-                return _0x5d043a = this['\x5f\x73\x6b\x69\x6c\x6c\x73\x53\x65\x74'][_0x1f00ae], _0x5d043a != null ? _0x449cf3 = new _0x1a1676(_0x5d043a) : (_0x449cf3 = new _0x33f6c8(), _0x449cf3['\x73\x65\x74\x49\x6e\x47\x61\x6d\x65\x4d\x6f\x64\x65']()), _0x449cf3;
-            }
-        }
-        return _0x4f1f7a;
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x47\x61\x6d\x65\x43\x65\x6c\x6c'](_0xe2a5cc) {
-        var _0x11684f, _0x40b69c;
-        return _0x40b69c = this['\x5f\x73\x6b\x69\x6c\x6c\x73\x53\x65\x74'][_0xe2a5cc], _0x40b69c != null ? _0x11684f = new PKD_SST_GameSkillCell(_0x40b69c) : (_0x11684f = new PKD_SST_EmptySkillCell(), _0x11684f['\x73\x65\x74\x49\x6e\x47\x61\x6d\x65\x4d\x6f\x64\x65']()), _0x11684f;
-    }
-    [_0x20a5a4(0x16e)](_0xf9a274) {
-        var _0x175d19 = _0x20a5a4, _0x524708, _0x4c6aa0;
-        _0x4c6aa0 = this['\x5f\x73\x6b\x69\x6c\x6c\x73\x53\x65\x74'][_0xf9a274];
-        if (_0x4c6aa0 != null)
-            _0x524708 = new PKD_SST_LinkEditorSkillCell(_0x4c6aa0);
-        else {
-            if (_0x175d19(0x162) !== _0x175d19(0x149))
-                _0x524708 = new PKD_SST_EmptySkillCell(), _0x524708[_0x175d19(0x153)]();
-            else
-                return _0x3bcf2['\x50\x50'][_0x175d19(0x175)]();
-        }
-        return _0x524708;
-    }
-    [_0x20a5a4(0x144)]() {
-        return this['\x6c\x69\x6e\x6b\x73\x47\x72\x69\x64']['\x61\x64\x64\x43\x68\x69\x6c\x64'](new PKD_SST_GridLinks(this));
-    }
+    return cell;
+  }
+
+  _drawLinks() {
+    return this.linksGrid.addChild(new PKD_SST_GridLinks(this));
+  }
+
 };
 
-var _0x20a3b2 = _0x1190;
-function _0x1190(_0x27e368, _0x47cb24) {
-    var _0x4821cd = _0x4821();
-    return _0x1190 = function (_0x119008, _0x29c9b0) {
-        _0x119008 = _0x119008 - 0xbe;
-        var _0x3d8145 = _0x4821cd[_0x119008];
-        return _0x3d8145;
-    }, _0x1190(_0x27e368, _0x47cb24);
-}
-(function (_0x1d56fc, _0x4f6c1e) {
-    var _0xf9fb32 = _0x1190, _0x5e1386 = _0x1d56fc();
-    while (!![]) {
-        try {
-            var _0x698041 = parseInt(_0xf9fb32(0xc0)) / 0x1 + parseInt(_0xf9fb32(0xf0)) / 0x2 * (-parseInt(_0xf9fb32(0xef)) / 0x3) + parseInt(_0xf9fb32(0xe9)) / 0x4 + parseInt(_0xf9fb32(0xed)) / 0x5 * (-parseInt(_0xf9fb32(0xdb)) / 0x6) + parseInt(_0xf9fb32(0xd4)) / 0x7 + -parseInt(_0xf9fb32(0xcc)) / 0x8 + parseInt(_0xf9fb32(0xc6)) / 0x9;
-            if (_0x698041 === _0x4f6c1e)
-                break;
-            else
-                _0x5e1386['push'](_0x5e1386['shift']());
-        } catch (_0x3ca499) {
-            _0x5e1386['push'](_0x5e1386['shift']());
-        }
-    }
-}(_0x4821, 0x9da35));
-var PKD_SST_SkillsTreeEditor;
-function _0x4821() {
-    var _0x30215e = [
-        '\x5f\x5f\x70\x53\x53\x54\x45\x64\x69\x74\x61\x62\x6c\x65\x53\x6b\x69\x6c\x6c\x44\x61\x74\x61',
-        '\x62\x69\x6e\x64',
-        '\x66\x69\x6c\x74\x65\x72',
-        '\x70\x6c\x61\x79\x42\x75\x7a\x7a\x65\x72',
-        '\x6c\x65\x6e\x67\x74\x68',
-        '\x77\x61\x72\x6e\x69\x6e\x67',
-        '\x35\x39\x37\x39\x34\x32\x31\x68\x4c\x46\x76\x52\x74',
-        '\x5f\x5f\x70\x53\x53\x54\x53\x65\x6c\x65\x63\x74\x65\x64\x53\x6b\x69\x6c\x6c\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x79\x49\x6e\x64\x65\x78',
-        '\x53\x74\x61\x72\x74\x20\x65\x64\x69\x74\x20\x53\x6b\x69\x6c\x6c\x73\x20\x54\x72\x65\x65\x73\x20\x66\x6f\x72\x20',
-        '\x46\x59\x62\x52\x4a',
-        '\x79\x6c\x75\x66\x56',
-        '\x65\x65\x77\x70\x76',
-        '\x6c\x6f\x67',
-        '\x33\x35\x32\x30\x33\x30\x32\x6c\x53\x72\x43\x78\x46',
-        '\x6d\x6b\x79\x6e\x4d',
-        '\x73\x65\x74\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72',
-        '\x5f\x63\x72\x65\x61\x74\x65\x43\x68\x69\x6c\x64\x72\x65\x6e\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x5f\x73\x74\x61\x72\x74\x45\x64\x69\x74\x53\x6b\x69\x6c\x6c',
-        '\x57\x42\x50\x67\x70',
-        '\x72\x65\x66\x72\x65\x73\x68',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x49\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77',
-        '\x4f\x5a\x4b\x57\x6c',
-        '\x73\x65\x6c\x65\x63\x74\x43\x61\x74\x65\x67\x6f\x72\x79',
-        '\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61',
-        '\x67\x65\x74\x49\x6e\x64\x65\x78',
-        '\x5f\x72\x65\x66\x72\x65\x73\x68\x53\x6b\x69\x6c\x6c\x73\x49\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77',
-        '\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x43\x6c\x69\x63\x6b',
-        '\x32\x30\x37\x31\x39\x36\x34\x62\x62\x6c\x47\x64\x6b',
-        '\x65\x64\x69\x74\x6f\x72',
-        '\x73\x65\x74\x48\x6f\x76\x65\x72\x48\x61\x6e\x64\x6c\x65\x72',
-        '\x6a\x41\x47\x70\x66',
-        '\x35\x71\x43\x48\x70\x46\x52',
-        '\x63\x72\x65\x61\x74\x65\x47\x72\x69\x64',
-        '\x36\x32\x36\x35\x34\x31\x44\x55\x53\x6b\x64\x77',
-        '\x36\x68\x58\x4d\x4c\x6b\x64',
-        '\x4c\x6f\x61\x64\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x73',
-        '\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73',
-        '\x6e\x61\x6d\x65',
-        '\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x79\x43\x68\x61\x6e\x67\x65\x64',
-        '\x69\x73\x43\x72\x65\x61\x74\x65\x64\x46\x6f\x72\x44\x61\x74\x61',
-        '\x64\x65\x73\x74\x72\x6f\x79\x49\x6e\x66\x6f',
-        '\x61\x79\x48\x53\x45',
-        '\x6a\x67\x53\x45\x65',
-        '\x70\x6c\x61\x79\x43\x75\x72\x73\x6f\x72',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x47\x72\x69\x64',
-        '\x76\x69\x73\x69\x62\x6c\x65',
-        '\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x44\x61\x74\x61',
-        '\x69\x73\x50\x72\x6f',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x4d\x61\x6e\x61\x67\x65\x54\x6f\x6f\x6c\x73',
-        '\x73\x65\x74\x75\x70\x43\x61\x6c\x6c\x62\x61\x63\x6b',
-        '\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x43\x6c\x61\x73\x73',
-        '\x37\x38\x32\x36\x30\x39\x7a\x76\x75\x63\x7a\x50',
-        '\x58\x4d\x6a\x57\x62',
-        '\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x47\x72\x69\x64',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73',
-        '\x73\x74\x6f\x70',
-        '\x61\x6c\x65\x72\x74',
-        '\x32\x39\x38\x37\x37\x30\x33\x74\x66\x57\x75\x67\x6e',
-        '\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x44\x61\x74\x61',
-        '\x73\x65\x74\x75\x70\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73\x43\x6f\x75\x6e\x74',
-        '\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77',
-        '\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x48\x6f\x76\x65\x72\x65\x64',
-        '\x55\x74\x69\x6c\x73',
-        '\x35\x30\x32\x32\x36\x31\x36\x41\x50\x6b\x61\x70\x7a',
-        '\x69\x77\x79\x56\x6a'
-    ];
-    _0x4821 = function () {
-        return _0x30215e;
-    };
-    return _0x4821();
-}
-PKD_SST_SkillsTreeEditor = class PKD_SST_SkillsTreeEditor extends PKD_SST_SkillsTreeBase {
-    constructor() {
-        super();
-    }
-    [_0x20a3b2(0xc4)]() {
-        var _0x566e22 = _0x20a3b2, _0xcc884b;
-        super[_0x566e22(0xc4)]();
-        try {
-            return PKD_SimpleSkillsTree[_0x566e22(0xcb)][_0x566e22(0xf1)]();
-        } catch (_0x4e7046) {
-            return _0xcc884b = _0x4e7046, KDCore[_0x566e22(0xd3)](_0xcc884b);
-        }
-    }
-    [_0x20a3b2(0xde)]() {
-        var _0x5e1e10 = _0x20a3b2, _0x2e48ca;
-        _0x2e48ca = $gameTemp[_0x5e1e10(0xd5)], this['\x5f\x70\x72\x65\x70\x61\x72\x65\x43\x6c\x61\x73\x73\x44\x61\x74\x61'](), this[_0x5e1e10(0xfa)](), this['\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73'](), this[_0x5e1e10(0xfe)](), setTimeout(() => {
-            var _0x4dfe7c = _0x5e1e10;
-            if ('\x65\x65\x77\x70\x76' === _0x4dfe7c(0xd9)) {
-                if (_0x2e48ca !== $gameTemp[_0x4dfe7c(0xd5)])
-                    return this[_0x4dfe7c(0xf2)][_0x4dfe7c(0xe4)](_0x2e48ca);
-            } else
-                return this['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73'][_0x4dfe7c(0xe4)](_0x4712fa);
-        }, 0xa);
-    }
-    ['\x63\x6c\x61\x73\x73\x4f\x62\x6a\x65\x63\x74']() {
-        var _0x2decd1 = _0x20a3b2;
-        return PKD_SimpleSkillsTree[_0x2decd1(0xcb)][_0x2decd1(0xbf)]();
-    }
-    ['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x44\x61\x74\x61']() {
-        var _0x5cb2ce = _0x20a3b2;
-        return PKD_SimpleSkillsTree[_0x5cb2ce(0xcb)]['\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x44\x61\x74\x61']();
-    }
-    ['\x5f\x70\x72\x65\x70\x61\x72\x65\x43\x6c\x61\x73\x73\x44\x61\x74\x61']() {
-        var _0x23ca28 = _0x20a3b2;
-        PKD_SimpleSkillsTree[_0x23ca28(0xcb)]['\x50\x72\x65\x70\x61\x72\x65\x44\x61\x74\x61\x46\x6f\x72\x57\x6f\x72\x6b'](), console[_0x23ca28(0xda)](_0x23ca28(0xd6) + this['\x63\x6c\x61\x73\x73\x4f\x62\x6a\x65\x63\x74']()[_0x23ca28(0xf3)]);
-    }
-    [_0x20a3b2(0xf4)](_0x143e0c) {
-        var _0x284dfd = _0x20a3b2;
-        $gameTemp[_0x284dfd(0xd5)] = _0x143e0c, this[_0x284dfd(0xc2)][_0x284dfd(0xee)]('\x65\x64\x69\x74\x6f\x72', this[_0x284dfd(0xc7)]()[_0x143e0c]);
-    }
-    [_0x20a3b2(0xc3)]() {
-        var _0x2d119a = _0x20a3b2;
-        return this[_0x2d119a(0xf2)] = new PKD_SST_TreesCategories(), this[_0x2d119a(0xf2)][_0x2d119a(0xff)](this[_0x2d119a(0xf4)]['\x62\x69\x6e\x64'](this)), this['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73'][_0x2d119a(0xc8)](this[_0x2d119a(0xc7)]()[_0x2d119a(0xd2)]), this[_0x2d119a(0xbe)](this['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73']);
-    }
-    [_0x20a3b2(0xfe)]() {
-        return this['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73\x54\x6f\x6f\x6c'] = new PKD_SST_ToolTCManager(), this['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73\x54\x6f\x6f\x6c']['\x6c\x69\x6e\x6b\x54\x6f\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73'](this['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73']), this['\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74'](this['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73\x54\x6f\x6f\x6c']);
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x47\x72\x69\x64']() {
-        var _0x54ed7f = _0x20a3b2;
-        return this[_0x54ed7f(0xc2)] = new PKD_SST_SkillsGrid(), this[_0x54ed7f(0xc2)][_0x54ed7f(0xdd)](this['\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x43\x6c\x69\x63\x6b'][_0x54ed7f(0xcf)](this)), this[_0x54ed7f(0xc2)][_0x54ed7f(0xeb)](this['\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x48\x6f\x76\x65\x72\x65\x64'][_0x54ed7f(0xcf)](this)), this[_0x54ed7f(0xbe)](this[_0x54ed7f(0xc2)]);
-    }
-    [_0x20a3b2(0xe8)](_0x187e94) {
-        var _0x53a7fa = _0x20a3b2, _0x58530c, _0x58a81e, _0x1cf6f4, _0x5dc8e9;
-        if (_0x187e94 == null)
-            return;
-        try {
-            _0x58530c = _0x187e94[_0x53a7fa(0xe6)]();
-            if (!PKD_SimpleSkillsTree[_0x53a7fa(0xfd)]()) {
-                _0x58a81e = PKD_SimpleSkillsTree[_0x53a7fa(0xcb)]['\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x43\x61\x74\x65\x67\x6f\x72\x79\x44\x61\x74\x61'](), _0x5dc8e9 = _0x58a81e[_0x53a7fa(0xd0)](function (_0x38dfd9) {
-                    var _0x1c194d = _0x53a7fa;
-                    return _0x1c194d(0xd8) === _0x1c194d(0xcd) ? _0x1d453a[_0x1c194d(0xcb)][_0x1c194d(0xf1)]() : _0x38dfd9 != null;
-                }), _0x58530c = _0x187e94['\x67\x65\x74\x49\x6e\x64\x65\x78']();
-                if (_0x5dc8e9[_0x53a7fa(0xd2)] >= 0xe && !(_0x58a81e[_0x58530c] != null)) {
-                    SoundManager[_0x53a7fa(0xd1)](), window[_0x53a7fa(0xc5)]('\x42\x41\x53\x49\x43\x20\x76\x65\x72\x73\x69\x6f\x6e\x20\x73\x75\x70\x70\x6f\x72\x74\x73\x20\x6f\x6e\x6c\x79\x20\x6d\x61\x78\x20\x31\x34\x20\x73\x6b\x69\x6c\x6c\x73\x20\x69\x6e\x20\x74\x72\x65\x65\x21');
-                    return;
-                }
-            }
-            SoundManager[_0x53a7fa(0xf9)](), this[_0x53a7fa(0xdf)](_0x187e94[_0x53a7fa(0xe6)]());
-        } catch (_0x4b7cd7) {
-            _0x1cf6f4 = _0x4b7cd7, KDCore[_0x53a7fa(0xd3)](_0x1cf6f4);
-        }
-    }
-    [_0x20a3b2(0xdf)](_0x5a8fe2) {
-        var _0x434695 = _0x20a3b2, _0x227652, _0x539aac, _0x2c78ff, _0x2c72a8;
-        try {
-            if ($gameTemp[_0x434695(0xd5)] == null) {
-                if ('\x41\x48\x63\x56\x55' === '\x48\x4b\x78\x59\x79')
-                    return _0xcefa8e[_0x434695(0xcb)][_0x434695(0xbf)]();
-                else
-                    $gameTemp[_0x434695(0xd5)] = 0x0;
-            }
-            _0x227652 = $gameTemp['\x5f\x5f\x70\x53\x53\x54\x53\x65\x6c\x65\x63\x74\x65\x64\x53\x6b\x69\x6c\x6c\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x79\x49\x6e\x64\x65\x78'], _0x539aac = this[_0x434695(0xc7)]()[_0x227652];
-            if (_0x539aac == null)
-                return;
-            _0x2c72a8 = _0x539aac[_0x5a8fe2];
-            if (_0x2c72a8 == null) {
-                if (_0x434695(0xd7) === _0x434695(0xdc)) {
-                    if (this[_0x434695(0xc9)][_0x434695(0xf5)](_0xb7b626)) {
-                        this[_0x434695(0xc9)][_0x434695(0xe1)]();
-                        return;
-                    }
-                } else
-                    _0x2c72a8 = PKD_SimpleSkillsTree[_0x434695(0xcb)]['\x4e\x65\x77\x53\x6b\x69\x6c\x6c\x44\x61\x74\x61\x49\x74\x65\x6d\x43\x6f\x6e\x74\x65\x6e\x74']();
-            }
-            return $gameTemp[_0x434695(0xce)] = [
-                _0x5a8fe2,
-                _0x227652,
-                _0x2c72a8
-            ], SceneManager['\x70\x75\x73\x68'](PKD_SST_SkillConfiguration);
-        } catch (_0x473afd) {
-            return _0x434695(0xc1) !== _0x434695(0xe0) ? (_0x2c78ff = _0x473afd, KDCore[_0x434695(0xd3)](_0x2c78ff)) : _0x316c55['\x55\x74\x69\x6c\x73'][_0x434695(0xfc)]();
-        }
-    }
-    [_0x20a3b2(0xca)](_0x555027) {
-        var _0x4c81a4 = _0x20a3b2;
-        return this[_0x4c81a4(0xe7)](_0x555027[_0x4c81a4(0xe5)]);
-    }
-    ['\x5f\x72\x65\x66\x72\x65\x73\x68\x53\x6b\x69\x6c\x6c\x73\x49\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'](_0x5a7b49) {
-        var _0xa91bc7 = _0x20a3b2, _0x25b485;
-        try {
-            if (_0xa91bc7(0xf8) !== _0xa91bc7(0xf7)) {
-                if (this[_0xa91bc7(0xc9)] != null) {
-                    if (this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'][_0xa91bc7(0xf5)](_0x5a7b49)) {
-                        if ('\x72\x47\x51\x6a\x68' === _0xa91bc7(0xe3))
-                            return _0x10ced1 = _0x421e9f, _0x3616e2['\x77\x61\x72\x6e\x69\x6e\x67'](_0x2f8cac);
-                        else {
-                            this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'][_0xa91bc7(0xe1)]();
-                            return;
-                        }
-                    }
-                }
-                return this[_0xa91bc7(0xe2)](_0x5a7b49);
-            } else
-                return _0x351f57 = _0x44c00a, _0x1c03b6[_0xa91bc7(0xd3)](_0x1261df);
-        } catch (_0xada8f0) {
-            return _0x25b485 = _0xada8f0, KDCore[_0xa91bc7(0xd3)](_0x25b485);
-        }
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x49\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'](_0x3064a3) {
-        var _0x2bb7ca = _0x20a3b2, _0x1d5439;
-        try {
-            this[_0x2bb7ca(0xc9)] != null && (this[_0x2bb7ca(0xc9)][_0x2bb7ca(0xfb)] = ![], this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'][_0x2bb7ca(0xf6)](), this[_0x2bb7ca(0xc9)]['\x72\x65\x6d\x6f\x76\x65\x46\x72\x6f\x6d\x50\x61\x72\x65\x6e\x74']()), this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'] = new PKD_SST_SkillInfoWindow(_0x3064a3, _0x2bb7ca(0xea)), this[_0x2bb7ca(0xbe)](this[_0x2bb7ca(0xc9)]);
-        } catch (_0x237fc3) {
-            if (_0x2bb7ca(0xec) === _0x2bb7ca(0xec))
-                _0x1d5439 = _0x237fc3, KDCore[_0x2bb7ca(0xd3)](_0x1d5439);
-            else
-                return _0x274000 != null;
-        }
-    }
-};
-
-var _0x4f07c7 = _0x512d;
-function _0x2c72() {
-    var _0x2482b1 = [
-        '\x73\x65\x74\x75\x70\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73\x43\x6f\x75\x6e\x74',
-        '\x72\x65\x66\x72\x65\x73\x68',
-        '\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x41\x63\x74\x6f\x72',
-        '\x5f\x5f\x70\x53\x53\x54\x53\x65\x6c\x65\x63\x74\x65\x64\x53\x6b\x69\x6c\x6c\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x79\x49\x6e\x64\x65\x78',
-        '\x31\x39\x31\x32\x36\x36\x31\x30\x66\x59\x65\x4f\x52\x74',
-        '\x31\x34\x34\x39\x31\x35\x35\x5a\x6b\x59\x70\x6a\x46',
-        '\x53\x75\x67\x66\x7a',
-        '\x73\x65\x74\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72',
-        '\x75\x70\x64\x61\x74\x65',
-        '\x55\x74\x69\x6c\x73',
-        '\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73',
-        '\x32\x37\x37\x37\x34\x62\x64\x6b\x41\x61\x77',
-        '\x72\x65\x6d\x6f\x76\x65\x46\x72\x6f\x6d\x50\x61\x72\x65\x6e\x74',
-        '\x5f\x63\x72\x65\x61\x74\x65\x43\x68\x69\x6c\x64\x72\x65\x6e\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x67\x61\x6d\x65',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x49\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77',
-        '\x6c\x69\x73\x74',
-        '\x36\x39\x36\x33\x39\x32\x6d\x54\x54\x71\x6e\x56',
-        '\x39\x39\x36\x36\x37\x38\x32\x6b\x7a\x75\x75\x63\x77',
-        '\x6f\x50\x78\x6a\x53',
-        '\x41\x59\x51\x4d\x70',
-        '\x31\x33\x32\x39\x32\x39\x35\x65\x59\x75\x5a\x62\x70',
-        '\x4b\x72\x6b\x6f\x71',
-        '\x6c\x6e\x4b\x4c\x44',
-        '\x5f\x61\x63\x74\x69\x76\x61\x74\x65\x53\x6b\x69\x6c\x6c',
-        '\x34\x39\x32\x72\x75\x4c\x57\x74\x65',
-        '\x69\x73\x56\x61\x6c\x69\x64\x46\x6f\x72\x41\x63\x74\x69\x6f\x6e',
-        '\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x48\x6f\x76\x65\x72\x65\x64',
-        '\x4e\x48\x73\x78\x5a',
-        '\x63\x72\x65\x61\x74\x65\x47\x72\x69\x64',
-        '\x73\x65\x74\x48\x6f\x76\x65\x72\x48\x61\x6e\x64\x6c\x65\x72',
-        '\x6d\x6f\x76\x65',
-        '\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x44\x61\x74\x61',
-        '\x4a\x4b\x58\x69\x4e',
-        '\x74\x65\x78\x74',
-        '\x53\x70\x72\x69\x74\x65\x5f\x55\x49\x54\x65\x78\x74',
-        '\x70\x50\x61\x79\x53\x6b\x69\x6c\x6c\x50\x6f\x69\x6e\x74\x73',
-        '\x77\x61\x72\x6e\x69\x6e\x67',
-        '\x6c\x65\x6e\x67\x74\x68',
-        '\x5f\x72\x65\x66\x72\x65\x73\x68\x53\x6b\x69\x6c\x6c\x73\x49\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77',
-        '\x67\x65\x74\x49\x6e\x64\x65\x78',
-        '\x5f\x69\x6e\x74\x65\x72\x70\x72\x65\x74\x65\x72',
-        '\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x43\x6c\x69\x63\x6b',
-        '\x4e\x65\x77\x53\x70\x72\x69\x74\x65',
-        '\x64\x43\x79\x64\x6e',
-        '\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x47\x72\x69\x64',
-        '\x5f\x73\x74\x61\x72\x74\x49\x6e\x74\x65\x72\x70\x72\x65\x74\x65\x72',
-        '\x5f\x73\x74\x61\x72\x74\x49\x6e\x6e\x65\x72\x43\x65',
-        '\x56\x64\x53\x64\x47',
-        '\x73\x65\x74\x75\x70',
-        '\x37\x32\x70\x79\x67\x4d\x77\x78',
-        '\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x43\x6c\x61\x73\x73',
-        '\x70\x6c\x61\x79\x4f\x6b',
-        '\x35\x35\x33\x38\x33\x30\x6a\x55\x44\x72\x6f\x56',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x47\x72\x69\x64',
-        '\x70\x6f\x73\x69\x74\x69\x6f\x6e',
-        '\x73\x65\x74\x75\x70\x43\x61\x6c\x6c\x62\x61\x63\x6b',
-        '\x5f\x63\x72\x65\x61\x74\x65\x41\x76\x61\x69\x6c\x61\x62\x6c\x65\x53\x6b\x69\x6c\x6c\x50\x6f\x69\x6e\x74\x73\x54\x65\x78\x74',
-        '\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x67\x65\x74\x4d\x61\x69\x6e\x53\x63\x65\x6e\x65\x53\x65\x74\x74\x69\x6e\x67\x73',
-        '\x49\x51\x42\x44\x44',
-        '\x64\x65\x73\x74\x72\x6f\x79\x49\x6e\x66\x6f',
-        '\x69\x73\x43\x72\x65\x61\x74\x65\x64\x46\x6f\x72\x44\x61\x74\x61',
-        '\x63\x6c\x61\x73\x73\x4f\x62\x6a\x65\x63\x74',
-        '\x70\x47\x65\x74\x46\x72\x65\x65\x53\x6b\x69\x6c\x6c\x50\x6f\x69\x6e\x74\x73',
-        '\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x44\x61\x74\x61',
-        '\x64\x72\x61\x77',
-        '\x61\x76\x61\x69\x6c\x61\x62\x6c\x65\x53\x6b\x69\x6c\x6c\x50\x6f\x69\x6e\x74\x73\x54\x69\x74\x6c\x65',
-        '\x61\x63\x74\x6f\x72',
-        '\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77',
-        '\x32\x34\x53\x49\x63\x70\x43\x54',
-        '\x70\x6c\x61\x79\x42\x75\x7a\x7a\x65\x72',
-        '\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61',
-        '\x62\x69\x6e\x64',
-        '\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x79\x43\x68\x61\x6e\x67\x65\x64',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73',
-        '\x76\x45\x44\x6f\x5a',
-        '\x76\x69\x73\x69\x62\x6c\x65'
-    ];
-    _0x2c72 = function () {
-        return _0x2482b1;
-    };
-    return _0x2c72();
-}
-function _0x512d(_0x319a0c, _0x38ac9d) {
-    var _0x2c72a6 = _0x2c72();
-    return _0x512d = function (_0x512d13, _0x4dc432) {
-        _0x512d13 = _0x512d13 - 0x69;
-        var _0x3bc944 = _0x2c72a6[_0x512d13];
-        return _0x3bc944;
-    }, _0x512d(_0x319a0c, _0x38ac9d);
-}
-(function (_0x421944, _0x46e64b) {
-    var _0x4b67e0 = _0x512d, _0x52680d = _0x421944();
-    while (!![]) {
-        try {
-            var _0x14c86e = parseInt(_0x4b67e0(0x81)) / 0x1 + -parseInt(_0x4b67e0(0xb1)) / 0x2 + parseInt(_0x4b67e0(0x87)) / 0x3 * (parseInt(_0x4b67e0(0x95)) / 0x4) + parseInt(_0x4b67e0(0x91)) / 0x5 * (parseInt(_0x4b67e0(0x74)) / 0x6) + -parseInt(_0x4b67e0(0x8e)) / 0x7 + -parseInt(_0x4b67e0(0x8d)) / 0x8 * (-parseInt(_0x4b67e0(0xae)) / 0x9) + -parseInt(_0x4b67e0(0x80)) / 0xa;
-            if (_0x14c86e === _0x46e64b)
-                break;
-            else
-                _0x52680d['push'](_0x52680d['shift']());
-        } catch (_0x56f528) {
-            _0x52680d['push'](_0x52680d['shift']());
-        }
-    }
-}(_0x2c72, 0xb346b));
-var PKD_SST_SkillsTreeView;
-PKD_SST_SkillsTreeView = class PKD_SST_SkillsTreeView extends PKD_SST_SkillsTreeBase {
-    constructor() {
-        super();
-    }
-    ['\x69\x73\x53\x68\x6f\x77\x53\x6c\x6f\x77\x6c\x79']() {
-        var _0xf68cc3 = _0x512d, _0x5f3533, _0x4dd15b;
-        try {
-            return _0x4dd15b = PKD_SimpleSkillsTree['\x50\x50'][_0xf68cc3(0x69)]()['\x61\x70\x70\x65\x61\x72\x57\x69\x74\x68\x41\x6e\x69\x6d\x61\x74\x69\x6f\x6e'] === !![], _0x4dd15b;
-        } catch (_0x27a2ac) {
-            if (_0xf68cc3(0xa8) === _0xf68cc3(0xa8))
-                return _0x5f3533 = _0x27a2ac, KDCore[_0xf68cc3(0xa1)](_0x5f3533), ![];
-            else
-                _0x3eaeca[_0xf68cc3(0x96)]() ? (_0x2b511f[_0xf68cc3(0xb0)](), this[_0xf68cc3(0x94)](_0x1a3c8a[_0xf68cc3(0xa4)](), _0x3a43aa[_0xf68cc3(0x76)])) : _0x3d7db4[_0xf68cc3(0x75)]();
-        }
-    }
-    [_0x4f07c7(0x89)]() {
-        var _0x414b9d = _0x4f07c7;
-        this[_0x414b9d(0xaa)](), PKD_SimpleSkillsTree[_0x414b9d(0x85)]['\x50\x72\x65\x70\x61\x72\x65\x44\x61\x74\x61\x46\x6f\x72\x52\x65\x61\x64\x4f\x6e\x6c\x79'](), this['\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x47\x72\x69\x64'](), this[_0x414b9d(0x79)](), this['\x5f\x63\x72\x65\x61\x74\x65\x41\x76\x61\x69\x6c\x61\x62\x6c\x65\x53\x6b\x69\x6c\x6c\x50\x6f\x69\x6e\x74\x73\x54\x65\x78\x74']();
-    }
-    [_0x4f07c7(0x6d)]() {
-        var _0x51a835 = _0x4f07c7;
-        return PKD_SimpleSkillsTree[_0x51a835(0x85)][_0x51a835(0xaf)]();
-    }
-    [_0x4f07c7(0x9c)]() {
-        var _0x302c31 = _0x4f07c7;
-        return PKD_SimpleSkillsTree[_0x302c31(0x85)][_0x302c31(0x6f)]();
-    }
-    [_0x4f07c7(0x72)]() {
-        var _0x5d5f0d = _0x4f07c7;
-        return PKD_SimpleSkillsTree[_0x5d5f0d(0x85)][_0x5d5f0d(0x7e)]();
-    }
-    [_0x4f07c7(0x7d)]() {
-        var _0x67847f = _0x4f07c7, _0x404891, _0x4d5b21;
-        try {
-            return _0x67847f(0x82) === '\x53\x75\x67\x66\x7a' ? (this[_0x67847f(0x78)]($gameTemp[_0x67847f(0x7f)]), (_0x4d5b21 = this['\x61\x76\x61\x69\x6c\x61\x62\x6c\x65\x53\x6b\x69\x6c\x6c\x50\x6f\x69\x6e\x74\x73\x54\x65\x78\x74\x53\x70\x72']) != null ? _0x4d5b21[_0x67847f(0x70)](this[_0x67847f(0x72)]()[_0x67847f(0x6e)]()) : void 0x0) : _0x479c85[_0x67847f(0x85)][_0x67847f(0x7e)]();
-        } catch (_0x47a2ee) {
-            return _0x404891 = _0x47a2ee, KDCore['\x77\x61\x72\x6e\x69\x6e\x67'](_0x404891);
-        }
-    }
-    [_0x4f07c7(0x78)](_0x125f85) {
-        var _0x14b256 = _0x4f07c7;
-        $gameTemp[_0x14b256(0x7f)] = _0x125f85, this[_0x14b256(0xa9)][_0x14b256(0x99)](_0x14b256(0x8a), this[_0x14b256(0x9c)]()[_0x125f85]);
-    }
-    [_0x4f07c7(0x79)]() {
-        var _0x5bf3aa = _0x4f07c7;
-        return this[_0x5bf3aa(0x86)] = new PKD_SST_TreesCategories(), this[_0x5bf3aa(0x86)][_0x5bf3aa(0xb4)](this[_0x5bf3aa(0x78)][_0x5bf3aa(0x77)](this)), this[_0x5bf3aa(0x86)][_0x5bf3aa(0x7c)](this[_0x5bf3aa(0x9c)]()[_0x5bf3aa(0xa2)]), this[_0x5bf3aa(0xb6)](this['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73']);
-    }
-    [_0x4f07c7(0xb2)]() {
-        var _0x5d13e6 = _0x4f07c7;
-        return this[_0x5d13e6(0xa9)] = new PKD_SST_SkillsGrid(), this[_0x5d13e6(0xa9)][_0x5d13e6(0x83)](this[_0x5d13e6(0xa6)][_0x5d13e6(0x77)](this)), this[_0x5d13e6(0xa9)][_0x5d13e6(0x9a)](this[_0x5d13e6(0x97)]['\x62\x69\x6e\x64'](this)), this[_0x5d13e6(0xb6)](this[_0x5d13e6(0xa9)]);
-    }
-    ['\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x43\x6c\x69\x63\x6b'](_0x21bbd2) {
-        var _0x5131f5 = _0x4f07c7, _0xd2f833;
-        if (_0x21bbd2 == null) {
-            if (_0x5131f5(0x98) === _0x5131f5(0x98))
-                return;
-            else
-                this[_0x5131f5(0x73)] != null && (this[_0x5131f5(0x73)][_0x5131f5(0x7b)] = ![], this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'][_0x5131f5(0x6b)](), this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77']['\x72\x65\x6d\x6f\x76\x65\x46\x72\x6f\x6d\x50\x61\x72\x65\x6e\x74']()), this[_0x5131f5(0x73)] = new _0x22f102(_0x167911, '\x67\x61\x6d\x65'), this[_0x5131f5(0xb6)](this[_0x5131f5(0x73)]);
-        }
-        try {
-            _0x21bbd2[_0x5131f5(0x96)]() ? (SoundManager[_0x5131f5(0xb0)](), this[_0x5131f5(0x94)](_0x21bbd2[_0x5131f5(0xa4)](), _0x21bbd2[_0x5131f5(0x76)])) : SoundManager[_0x5131f5(0x75)]();
-        } catch (_0x2b3f65) {
-            _0xd2f833 = _0x2b3f65, KDCore[_0x5131f5(0xa1)](_0xd2f833);
-        }
-    }
-    [_0x4f07c7(0x94)](_0xc027ea, _0x5b85db) {
-        var _0x9be5c3 = _0x4f07c7, _0x29c136, _0x56e6cc, _0x94d289, _0x35036b, _0x2d1cf8, _0x9e9eae, _0x241bb5;
-        try {
-            if (_0x5b85db == null)
-                return;
-            _0x29c136 = this[_0x9be5c3(0x72)]();
-            if (_0x29c136 == null)
-                return;
-            return {
-                onClickActionMode: _0x35036b,
-                reqSP: _0x9e9eae,
-                skillId: _0x241bb5
-            } = _0x5b85db, _0x29c136[_0x9be5c3(0xa0)](_0x9e9eae), _0x35036b !== 0x1 && _0x29c136['\x6c\x65\x61\x72\x6e\x53\x6b\x69\x6c\x6c'](_0x241bb5), _0x35036b !== 0x0 && ({onLerningCE: _0x2d1cf8} = _0x5b85db, _0x94d289 = $dataCommonEvents[_0x2d1cf8], _0x94d289 != null && this[_0x9be5c3(0xab)](_0x94d289[_0x9be5c3(0x8c)])), this[_0x9be5c3(0x7d)]();
-        } catch (_0x357e4c) {
-            return _0x56e6cc = _0x357e4c, KDCore[_0x9be5c3(0xa1)](_0x56e6cc);
-        }
-    }
-    [_0x4f07c7(0x97)](_0x1ac3c6) {
-        var _0x35d38a = _0x4f07c7;
-        return this[_0x35d38a(0xa3)](_0x1ac3c6[_0x35d38a(0x76)]);
-    }
-    [_0x4f07c7(0xa3)](_0x192acf) {
-        var _0x549f5a = _0x4f07c7, _0x4a1d2f;
-        try {
-            if (this[_0x549f5a(0x73)] != null) {
-                if (_0x549f5a(0xac) !== _0x549f5a(0x8f)) {
-                    if (this[_0x549f5a(0x73)][_0x549f5a(0x6c)](_0x192acf)) {
-                        this[_0x549f5a(0x73)][_0x549f5a(0x7d)]();
-                        return;
-                    }
-                } else
-                    _0x1e002e[_0x549f5a(0x7f)] = _0x4cecdf, this['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x47\x72\x69\x64'][_0x549f5a(0x99)](_0x549f5a(0x8a), this[_0x549f5a(0x9c)]()[_0x23a387]);
-            }
-            return this[_0x549f5a(0x8b)](_0x192acf);
-        } catch (_0x2ec358) {
-            return _0x4a1d2f = _0x2ec358, KDCore['\x77\x61\x72\x6e\x69\x6e\x67'](_0x4a1d2f);
-        }
-    }
-    [_0x4f07c7(0x8b)](_0x537eae) {
-        var _0x4963d2 = _0x4f07c7, _0xd6a0ea;
-        try {
-            this[_0x4963d2(0x73)] != null && (_0x4963d2(0x6a) !== _0x4963d2(0x92) ? (this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'][_0x4963d2(0x7b)] = ![], this[_0x4963d2(0x73)][_0x4963d2(0x6b)](), this[_0x4963d2(0x73)][_0x4963d2(0x88)]()) : (_0xe835fb[_0x4963d2(0xb0)](), this[_0x4963d2(0x94)](_0x9f49d2[_0x4963d2(0xa4)](), _0x400d2f[_0x4963d2(0x76)]))), this[_0x4963d2(0x73)] = new PKD_SST_SkillInfoWindow(_0x537eae, '\x67\x61\x6d\x65'), this[_0x4963d2(0xb6)](this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77']);
-        } catch (_0x496765) {
-            if (_0x4963d2(0x7a) !== _0x4963d2(0x93))
-                _0xd6a0ea = _0x496765, KDCore[_0x4963d2(0xa1)](_0xd6a0ea);
-            else {
-                this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'][_0x4963d2(0x7d)]();
-                return;
-            }
-        }
-    }
-    [_0x4f07c7(0xb5)]() {
-        var _0x19486b = _0x4f07c7, _0x25b93e, _0x27f05b;
-        this[_0x19486b(0xb6)](PKD_SimpleSkillsTree[_0x19486b(0x85)][_0x19486b(0xa7)](_0x19486b(0x71))), _0x27f05b = new KDCore['\x55\x49'][(_0x19486b(0x9f))]($sktJson_AvailScText[_0x19486b(0x9e)]), _0x27f05b[_0x19486b(0x9b)]($sktJson_AvailScText[_0x19486b(0xb3)]), this[_0x19486b(0xb6)](_0x27f05b), this['\x61\x76\x61\x69\x6c\x61\x62\x6c\x65\x53\x6b\x69\x6c\x6c\x50\x6f\x69\x6e\x74\x73\x54\x65\x78\x74\x53\x70\x72'] = _0x27f05b;
-        try {
-            if (_0x19486b(0x90) === '\x6f\x6e\x71\x70\x68')
-                return _0x330b1b[_0x19486b(0x85)][_0x19486b(0x6f)]();
-            else
-                _0x27f05b[_0x19486b(0x70)](this[_0x19486b(0x72)]()[_0x19486b(0x6e)]());
-        } catch (_0x59a1fe) {
-            _0x25b93e = _0x59a1fe, KDCore[_0x19486b(0xa1)](_0x25b93e);
-        }
-    }
-    ['\x5f\x75\x70\x64\x61\x74\x65\x43\x6f\x6e\x74\x65\x6e\x74']() {
-        return this['\x5f\x75\x70\x64\x61\x74\x65\x49\x6e\x74\x65\x72\x70\x72\x65\x74\x65\x72']();
-    }
-    ['\x5f\x73\x74\x61\x72\x74\x49\x6e\x74\x65\x72\x70\x72\x65\x74\x65\x72']() {
-        var _0x1a62f6 = _0x4f07c7;
-        this[_0x1a62f6(0xa5)] = new Game_Interpreter();
-    }
-    ['\x5f\x75\x70\x64\x61\x74\x65\x49\x6e\x74\x65\x72\x70\x72\x65\x74\x65\x72']() {
-        var _0x373ae1 = _0x4f07c7;
-        this[_0x373ae1(0xa5)][_0x373ae1(0x84)]();
-    }
-    [_0x4f07c7(0xab)](_0x4f3443) {
-        var _0x484889 = _0x4f07c7, _0x2061ee;
-        try {
-            if ('\x4a\x4b\x58\x69\x4e' === _0x484889(0x9d))
-                return this[_0x484889(0xa5)][_0x484889(0xad)](_0x4f3443), this['\x5f\x69\x6e\x74\x65\x72\x70\x72\x65\x74\x65\x72'][_0x484889(0x84)]();
-            else
-                _0x576d3c['\x70\x6c\x61\x79\x42\x75\x7a\x7a\x65\x72']();
-        } catch (_0x140cfc) {
-            return _0x2061ee = _0x140cfc, KDCore[_0x484889(0xa1)](_0x2061ee);
-        }
-    }
-};
-
-var _0x16e281 = _0x2934;
-(function (_0x18b6a8, _0x8abc9c) {
-    var _0x2eec65 = _0x2934, _0x22fe8f = _0x18b6a8();
-    while (!![]) {
-        try {
-            var _0x4103e2 = -parseInt(_0x2eec65(0x16b)) / 0x1 + parseInt(_0x2eec65(0x164)) / 0x2 * (-parseInt(_0x2eec65(0x174)) / 0x3) + parseInt(_0x2eec65(0x152)) / 0x4 + parseInt(_0x2eec65(0x16f)) / 0x5 * (-parseInt(_0x2eec65(0x16c)) / 0x6) + parseInt(_0x2eec65(0x16a)) / 0x7 * (parseInt(_0x2eec65(0x155)) / 0x8) + -parseInt(_0x2eec65(0x15d)) / 0x9 * (-parseInt(_0x2eec65(0x144)) / 0xa) + -parseInt(_0x2eec65(0x14d)) / 0xb * (-parseInt(_0x2eec65(0x163)) / 0xc);
-            if (_0x4103e2 === _0x8abc9c)
-                break;
-            else
-                _0x22fe8f['push'](_0x22fe8f['shift']());
-        } catch (_0x23b5f6) {
-            _0x22fe8f['push'](_0x22fe8f['shift']());
-        }
-    }
-}(_0x3658, 0x4f49f));
-function _0x2934(_0x44aba4, _0x335f6f) {
-    var _0x365825 = _0x3658();
-    return _0x2934 = function (_0x29343e, _0x96dac4) {
-        _0x29343e = _0x29343e - 0x137;
-        var _0xf2c905 = _0x365825[_0x29343e];
-        return _0xf2c905;
-    }, _0x2934(_0x44aba4, _0x335f6f);
-}
-var PKD_SST_SkillTreeLinkEditor;
-function _0x3658() {
-    var _0x2e8de9 = [
-        '\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x43\x6c\x69\x63\x6b',
-        '\x6d\x79\x49\x6e\x64\x65\x78',
-        '\x5f\x61\x64\x64\x4e\x65\x77\x4c\x69\x6e\x6b',
-        '\x31\x39\x35\x38\x37\x4e\x66\x51\x54\x79\x5a',
-        '\x49\x73\x47\x6c\x6f\x62\x61\x6c\x4d\x6f\x64\x61\x6c\x53\x74\x61\x74\x65',
-        '\x5f\x72\x65\x66\x72\x65\x73\x68\x53\x6b\x69\x6c\x6c\x73\x49\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77',
-        '\x72\x65\x6d\x6f\x76\x65\x46\x72\x6f\x6d\x50\x61\x72\x65\x6e\x74',
-        '\x70\x73\x7a\x4c\x59',
-        '\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x43\x61\x74\x65\x67\x6f\x72\x79\x44\x61\x74\x61',
-        '\x64\x65\x73\x74\x72\x6f\x79\x49\x6e\x66\x6f',
-        '\x76\x69\x73\x69\x62\x6c\x65',
-        '\x62\x69\x6e\x64',
-        '\x78\x4b\x72\x43\x4c',
-        '\x73\x65\x74\x48\x6f\x76\x65\x72\x48\x61\x6e\x64\x6c\x65\x72',
-        '\x63\x6c\x6f\x73\x65\x53\x63\x65\x6e\x65\x50\x72\x6f\x63\x65\x73\x73',
-        '\x65\x64\x69\x74\x6f\x72',
-        '\x66\x77\x44\x64\x6e',
-        '\x5f\x63\x72\x65\x61\x74\x65\x48\x69\x6e\x74\x49\x6d\x61\x67\x65',
-        '\x31\x34\x33\x30\x75\x4b\x55\x51\x57\x72',
-        '\x6f\x70\x48\x62\x75',
-        '\x69\x73\x56\x61\x6c\x69\x64\x46\x6f\x72\x41\x63\x74\x69\x6f\x6e',
-        '\x53\x51\x6a\x4c\x77',
-        '\x6c\x69\x6e\x6b\x54\x6f\x49\x6e\x64\x65\x78',
-        '\x4e\x65\x77\x53\x70\x72\x69\x74\x65',
-        '\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x48\x6f\x76\x65\x72\x65\x64',
-        '\x6c\x69\x6e\x6b',
-        '\x63\x72\x65\x61\x74\x65\x47\x72\x69\x64',
-        '\x33\x38\x36\x32\x32\x31\x61\x66\x42\x6a\x64\x4c',
-        '\x6c\x69\x6e\x6b\x73',
-        '\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x47\x72\x69\x64',
-        '\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61',
-        '\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77',
-        '\x37\x32\x39\x32\x30\x41\x7a\x68\x68\x61\x4e',
-        '\x70\x6c\x61\x79\x4f\x6b',
-        '\x6b\x59\x62\x6a\x76',
-        '\x31\x30\x35\x35\x32\x4c\x78\x51\x78\x52\x64',
-        '\x51\x4a\x4c\x57\x70',
-        '\x70\x75\x73\x68',
-        '\x74\x51\x6a\x72\x76',
-        '\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x45\x64\x69\x74\x6f\x72\x4c\x69\x6e\x6b\x73\x48\x69\x6e\x74',
-        '\x69\x73\x43\x72\x65\x61\x74\x65\x64\x46\x6f\x72\x44\x61\x74\x61',
-        '\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x49\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77',
-        '\x33\x35\x36\x32\x32\x67\x6d\x43\x74\x54\x6e',
-        '\x69\x73\x43\x61\x6e\x43\x6c\x6f\x73\x65\x42\x79\x4b\x65\x79\x62\x6f\x61\x72\x64',
-        '\x63\x6f\x6e\x74\x61\x69\x6e\x73',
-        '\x66\x45\x4c\x78\x50',
-        '\x6f\x54\x73\x59\x56',
-        '\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x44\x61\x74\x61',
-        '\x31\x38\x30\x61\x70\x70\x4f\x6f\x6a',
-        '\x37\x38\x6f\x73\x41\x6b\x46\x4f',
-        '\x62\x45\x71\x66\x41',
-        '\x77\x61\x72\x6e\x69\x6e\x67',
-        '\x6d\x64\x75\x64\x66',
-        '\x55\x74\x69\x6c\x73',
-        '\x72\x65\x66\x72\x65\x73\x68',
-        '\x35\x31\x31\x45\x47\x41\x71\x6b\x66',
-        '\x35\x31\x30\x30\x36\x32\x77\x66\x49\x6a\x58\x71',
-        '\x32\x34\x7a\x68\x6b\x5a\x4a\x67',
-        '\x5f\x5f\x70\x53\x53\x54\x45\x64\x69\x74\x6f\x72\x4c\x69\x6e\x6b\x54\x6f\x49\x6e\x64\x65\x78',
-        '\x74\x74\x58\x45\x4a',
-        '\x31\x34\x37\x31\x34\x35\x53\x77\x7a\x65\x64\x56',
-        '\x70\x6c\x61\x79\x42\x75\x7a\x7a\x65\x72'
-    ];
-    _0x3658 = function () {
-        return _0x2e8de9;
-    };
-    return _0x3658();
-}
-PKD_SST_SkillTreeLinkEditor = class PKD_SST_SkillTreeLinkEditor extends PKD_SST_SkillsTreeBase {
-    constructor() {
-        super(...arguments);
-    }
-    [_0x16e281(0x15e)]() {
-        return !![];
-    }
-    [_0x16e281(0x162)]() {
-        var _0x33988a = _0x16e281;
-        return PKD_SimpleSkillsTree[_0x33988a(0x168)][_0x33988a(0x13a)]();
-    }
-    [_0x16e281(0x148)]() {
-        var _0x38d6fe = _0x16e281;
-        return $gameTemp[_0x38d6fe(0x16d)];
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x43\x68\x69\x6c\x64\x72\x65\x6e\x43\x6f\x6e\x74\x65\x6e\x74']() {
-        return this['\x5f\x63\x72\x65\x61\x74\x65\x47\x72\x69\x64'](), this['\x5f\x63\x72\x65\x61\x74\x65\x48\x69\x6e\x74\x49\x6d\x61\x67\x65']();
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x47\x72\x69\x64']() {
-        var _0x58712c = _0x16e281;
-        return this['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x47\x72\x69\x64'] = new PKD_SST_SkillsGrid(), this[_0x58712c(0x14f)]['\x73\x65\x74\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72'](this['\x5f\x6f\x6e\x53\x6b\x69\x6c\x6c\x43\x65\x6c\x6c\x43\x6c\x69\x63\x6b'][_0x58712c(0x13d)](this)), this[_0x58712c(0x14f)][_0x58712c(0x13f)](this[_0x58712c(0x14a)][_0x58712c(0x13d)](this)), this[_0x58712c(0x14f)][_0x58712c(0x14c)](_0x58712c(0x14b), this['\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x44\x61\x74\x61']()), this['\x61\x64\x64\x54\x6f\x43\x6f\x6e\x74\x65\x6e\x74'](this[_0x58712c(0x14f)]);
-    }
-    [_0x16e281(0x143)]() {
-        var _0x469e1f = _0x16e281;
-        return this['\x61\x64\x64\x43\x68\x69\x6c\x64'](PKD_SimpleSkillsTree[_0x469e1f(0x168)][_0x469e1f(0x149)](_0x469e1f(0x159)));
-    }
-    [_0x16e281(0x171)](_0x411c3f) {
-        var _0xc17706 = _0x16e281, _0x13e6ad, _0x2b8063, _0x2abb18;
-        if (PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73'][_0xc17706(0x175)]()) {
-            if (_0xc17706(0x158) !== _0xc17706(0x158))
-                return !![];
-            else
-                return;
-        }
-        try {
-            if (_0x411c3f == null) {
-                if (_0xc17706(0x160) === '\x53\x65\x62\x75\x4a') {
-                    if (!_0x4faabf['\x6c\x69\x6e\x6b\x73'][_0xc17706(0x15f)](_0x1fd300))
-                        return _0x373f50[_0xc17706(0x14e)][_0xc17706(0x157)](_0x6173fb);
-                } else
-                    return;
-            }
-            return _0x411c3f[_0xc17706(0x146)]() ? _0xc17706(0x154) !== _0xc17706(0x165) ? (SoundManager[_0xc17706(0x153)](), _0x2abb18 = _0x411c3f[_0xc17706(0x172)](), _0x13e6ad = _0x411c3f['\x65\x64\x69\x74\x61\x62\x6c\x65\x49\x6e\x64\x65\x78'](), this[_0xc17706(0x173)](_0x2abb18, _0x13e6ad), this[_0xc17706(0x140)]()) : (_0x4b6aba = _0x47cef5, _0x584f79[_0xc17706(0x166)](_0x44283b)) : SoundManager[_0xc17706(0x170)]();
-        } catch (_0x2035da) {
-            return _0x2b8063 = _0x2035da, KDCore[_0xc17706(0x166)](_0x2b8063);
-        }
-    }
-    [_0x16e281(0x173)](_0x383d80, _0x50630f) {
-        var _0x1a25ce = _0x16e281, _0xe56ec0, _0xa78fb3, _0x1514e5;
-        try {
-            if ('\x6f\x54\x73\x59\x56' !== _0x1a25ce(0x161))
-                return _0x18773f['\x5f\x5f\x70\x53\x53\x54\x45\x64\x69\x74\x6f\x72\x4c\x69\x6e\x6b\x54\x6f\x49\x6e\x64\x65\x78'];
-            else {
-                _0xe56ec0 = PKD_SimpleSkillsTree[_0x1a25ce(0x168)][_0x1a25ce(0x13a)](), _0x1514e5 = _0xe56ec0[_0x383d80];
-                if (_0x1514e5 == null) {
-                    if ('\x74\x74\x58\x45\x4a' === _0x1a25ce(0x16e))
-                        return;
-                    else {
-                        if (this[_0x1a25ce(0x151)] != null) {
-                            if (this[_0x1a25ce(0x151)]['\x69\x73\x43\x72\x65\x61\x74\x65\x64\x46\x6f\x72\x44\x61\x74\x61'](_0x1830d3)) {
-                                this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'][_0x1a25ce(0x169)]();
-                                return;
-                            }
-                        }
-                        return this[_0x1a25ce(0x15c)](_0x2ea9f6);
-                    }
-                }
-                if (_0x1514e5[_0x1a25ce(0x14e)] == null) {
-                    if (_0x1a25ce(0x13e) === _0x1a25ce(0x13e))
-                        return _0x1514e5[_0x1a25ce(0x14e)] = [_0x50630f];
-                    else
-                        return;
-                } else {
-                    if (_0x1a25ce(0x167) !== _0x1a25ce(0x167)) {
-                        this[_0x1a25ce(0x151)]['\x72\x65\x66\x72\x65\x73\x68']();
-                        return;
-                    } else {
-                        if (!_0x1514e5[_0x1a25ce(0x14e)][_0x1a25ce(0x15f)](_0x50630f))
-                            return _0x1514e5['\x6c\x69\x6e\x6b\x73'][_0x1a25ce(0x157)](_0x50630f);
-                    }
-                }
-            }
-        } catch (_0x84fb62) {
-            return _0xa78fb3 = _0x84fb62, KDCore[_0x1a25ce(0x166)](_0xa78fb3);
-        }
-    }
-    [_0x16e281(0x14a)](_0x2f29e7) {
-        var _0x113bb8 = _0x16e281;
-        return this[_0x113bb8(0x137)](_0x2f29e7[_0x113bb8(0x150)]);
-    }
-    ['\x5f\x72\x65\x66\x72\x65\x73\x68\x53\x6b\x69\x6c\x6c\x73\x49\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'](_0x468bdc) {
-        var _0x47d938 = _0x16e281, _0x2775f3;
-        try {
-            if ('\x51\x4a\x4c\x57\x70' !== _0x47d938(0x156))
-                return _0x16aba9[_0x47d938(0x168)][_0x47d938(0x13a)]();
-            else {
-                if (this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'] != null) {
-                    if (_0x47d938(0x139) !== _0x47d938(0x147)) {
-                        if (this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77'][_0x47d938(0x15a)](_0x468bdc)) {
-                            this[_0x47d938(0x151)][_0x47d938(0x169)]();
-                            return;
-                        }
-                    } else
-                        this[_0x47d938(0x151)] != null && (this['\x5f\x69\x6e\x66\x6f\x57\x69\x6e\x64\x6f\x77']['\x76\x69\x73\x69\x62\x6c\x65'] = ![], this[_0x47d938(0x151)]['\x64\x65\x73\x74\x72\x6f\x79\x49\x6e\x66\x6f'](), this[_0x47d938(0x151)][_0x47d938(0x138)]()), this[_0x47d938(0x151)] = new _0x52f734(_0x5ee2e3, '\x65\x64\x69\x74\x6f\x72'), this[_0x47d938(0x15b)](this[_0x47d938(0x151)]);
-                }
-                return this[_0x47d938(0x15c)](_0x468bdc);
-            }
-        } catch (_0xf8f2cb) {
-            return _0x2775f3 = _0xf8f2cb, KDCore[_0x47d938(0x166)](_0x2775f3);
-        }
-    }
-    [_0x16e281(0x15c)](_0x135228) {
-        var _0x2f6afb = _0x16e281, _0x54fe3b;
-        try {
-            if (_0x2f6afb(0x142) !== _0x2f6afb(0x145))
-                this[_0x2f6afb(0x151)] != null && (this[_0x2f6afb(0x151)][_0x2f6afb(0x13c)] = ![], this[_0x2f6afb(0x151)][_0x2f6afb(0x13b)](), this[_0x2f6afb(0x151)][_0x2f6afb(0x138)]()), this[_0x2f6afb(0x151)] = new PKD_SST_SkillInfoWindow(_0x135228, _0x2f6afb(0x141)), this[_0x2f6afb(0x15b)](this[_0x2f6afb(0x151)]);
-            else
-                return _0x2fa272['\x6c\x69\x6e\x6b\x73'][_0x2f6afb(0x157)](_0x3ebecb);
-        } catch (_0x27540d) {
-            if ('\x56\x56\x56\x49\x74' === '\x75\x65\x63\x4f\x53')
-                return _0x1f99ca = _0x30ef2c, _0x4338cd[_0x2f6afb(0x166)](_0x3cea78);
-            else
-                _0x54fe3b = _0x27540d, KDCore[_0x2f6afb(0x166)](_0x54fe3b);
-        }
-    }
-};
 
 // Generated by CoffeeScript 2.6.1
+//$[ENCODE]
+//$[NUI BASED]
+var PKD_SST_SkillsTreeEditor;
+
+PKD_SST_SkillsTreeEditor = class PKD_SST_SkillsTreeEditor extends PKD_SST_SkillsTreeBase {
+  constructor() {
+    super(...arguments);
+  }
+
+  stop() {
+    var e;
+    super.stop();
+    try {
+      // * После редактирования, обновляем данные локальные, чтобы можно было сразу посмотреть
+      return PKD_SimpleSkillsTree.Utils.LoadSkillsTrees();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _createChildrenContent() {
+    var previousCategoryIndex;
+    super._createChildrenContent();
+    previousCategoryIndex = $gameTemp.__pSSTSelectedSkillTreeCategoryIndex;
+    this._prepareClassData();
+    this._createSkillsTreeGrid();
+    this._createSkillsTreeCategories();
+    this._createSkillsTreeCatManageTools();
+    // * Switch to last category
+    setTimeout((() => {
+      if (previousCategoryIndex !== $gameTemp.__pSSTSelectedSkillTreeCategoryIndex) {
+        return this.skillsTreeCategories.selectCategory(previousCategoryIndex);
+      }
+    }), 10);
+  }
+
+  classObject() {
+    return PKD_SimpleSkillsTree.Utils.GetCurrentClass();
+  }
+
+  skillsTreeData() {
+    return PKD_SimpleSkillsTree.Utils.GetCurrentData();
+  }
+
+  _prepareClassData() {
+    PKD_SimpleSkillsTree.Utils.PrepareDataForWork();
+    console.log("Start edit Skills Trees for " + this.classObject().name);
+  }
+
+  _onSkillsTreeCategoryChanged(index) {
+    $gameTemp.__pSSTSelectedSkillTreeCategoryIndex = index;
+    this.skillsTreeGrid.createGrid('editor', this.skillsTreeData()[index]);
+  }
+
+  _createSkillsTreeCategories() {
+    this.skillsTreeCategories = new PKD_SST_TreesCategories();
+    this.skillsTreeCategories.setupCallback(this._onSkillsTreeCategoryChanged.bind(this));
+    this.skillsTreeCategories.setupCategoriesCount(this.skillsTreeData().length);
+    return this.addChild(this.skillsTreeCategories);
+  }
+
+  _createSkillsTreeCatManageTools() {
+    this.skillsTreeCategoriesTool = new PKD_SST_ToolTCManager();
+    this.skillsTreeCategoriesTool.linkToCategories(this.skillsTreeCategories);
+    return this.addChild(this.skillsTreeCategoriesTool);
+  }
+
+  _createSkillsTreeGrid() {
+    this.skillsTreeGrid = new PKD_SST_SkillsGrid();
+    this.skillsTreeGrid.setClickHandler(this._onSkillCellClick.bind(this));
+    this.skillsTreeGrid.setHoverHandler(this._onSkillCellHovered.bind(this));
+    return this.addChild(this.skillsTreeGrid);
+  }
+
+  _onSkillCellClick(cell) {
+    var currentIndex, d, e, skills;
+    if (cell == null) {
+      return;
+    }
+    try {
+      currentIndex = cell.getIndex();
+      if (!PKD_SimpleSkillsTree.isPro()) {
+        d = PKD_SimpleSkillsTree.Utils.GetCurrentCategoryData();
+        skills = d.filter(function(item) {
+          return item != null;
+        });
+        currentIndex = cell.getIndex();
+        if (skills.length >= 14 && !(d[currentIndex] != null)) {
+          SoundManager.playBuzzer();
+          window.alert("BASIC version supports only max 14 skills in tree!");
+          return;
+        }
+      }
+      SoundManager.playCursor();
+      this._startEditSkill(cell.getIndex());
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+  }
+
+  _startEditSkill(index) {
+    var catIndex, categoryItems, e, skillData;
+    try {
+      if ($gameTemp.__pSSTSelectedSkillTreeCategoryIndex == null) {
+        $gameTemp.__pSSTSelectedSkillTreeCategoryIndex = 0;
+      }
+      catIndex = $gameTemp.__pSSTSelectedSkillTreeCategoryIndex;
+      categoryItems = this.skillsTreeData()[catIndex];
+      if (categoryItems == null) {
+        return;
+      }
+      skillData = categoryItems[index];
+      if (skillData == null) {
+        skillData = PKD_SimpleSkillsTree.Utils.NewSkillDataItemContent();
+      }
+      $gameTemp.__pSSTEditableSkillData = [index, catIndex, skillData];
+      return SceneManager.push(PKD_SST_SkillConfiguration);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _onSkillCellHovered(cell) {
+    return this._refreshSkillsInfoWindow(cell.skillData);
+  }
+
+  _refreshSkillsInfoWindow(skillData) {
+    var e;
+    try {
+      if (this._infoWindow != null) {
+        if (this._infoWindow.isCreatedForData(skillData)) {
+          this._infoWindow.refresh();
+          return;
+        }
+      }
+      return this._createSkillInfoWindow(skillData);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _createSkillInfoWindow(skillData) {
+    var e;
+    try {
+      if (this._infoWindow != null) {
+        this._infoWindow.visible = false;
+        this._infoWindow.destroyInfo();
+        this._infoWindow.removeFromParent();
+      }
+      this._infoWindow = new PKD_SST_SkillInfoWindow(skillData, 'editor');
+      this.addChild(this._infoWindow);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
+//$[ENCODE]
+//$[NUI BASED]
+var PKD_SST_SkillsTreeView;
+
+PKD_SST_SkillsTreeView = class PKD_SST_SkillsTreeView extends PKD_SST_SkillsTreeBase {
+  constructor() {
+    super();
+  }
+
+  _createChildrenContent() {
+    this._startInterpreter();
+    PKD_SimpleSkillsTree.Utils.PrepareDataForReadOnly();
+    this._createSkillsTreeGrid();
+    this._createSkillsTreeCategories();
+    this._createAvailableSkillPointsText();
+  }
+
+  classObject() {
+    return PKD_SimpleSkillsTree.Utils.GetCurrentClass();
+  }
+
+  skillsTreeData() {
+    return PKD_SimpleSkillsTree.Utils.GetCurrentData();
+  }
+
+  actor() {
+    return PKD_SimpleSkillsTree.Utils.GetCurrentActor();
+  }
+
+  refresh() {
+    var e, ref;
+    try {
+      this._onSkillsTreeCategoryChanged($gameTemp.__pSSTSelectedSkillTreeCategoryIndex);
+      return (ref = this.playerAvailableSkillPointsAmountSpr) != null ? ref.refreshBindings(this) : void 0;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _onSkillsTreeCategoryChanged(index) {
+    $gameTemp.__pSSTSelectedSkillTreeCategoryIndex = index;
+    this.skillsTreeGrid.createGrid('game', this.skillsTreeData()[index]);
+  }
+
+  _createSkillsTreeCategories() {
+    this.skillsTreeCategories = new PKD_SST_TreesCategories();
+    this.skillsTreeCategories.setupCallback(this._onSkillsTreeCategoryChanged.bind(this));
+    this.skillsTreeCategories.setupCategoriesCount(this.skillsTreeData().length);
+    return this.addChild(this.skillsTreeCategories);
+  }
+
+  _createSkillsTreeGrid() {
+    this.skillsTreeGrid = new PKD_SST_SkillsGrid();
+    this.skillsTreeGrid.setClickHandler(this._onSkillCellClick.bind(this));
+    this.skillsTreeGrid.setHoverHandler(this._onSkillCellHovered.bind(this));
+    return this.addChild(this.skillsTreeGrid);
+  }
+
+  _onSkillCellClick(cell) {
+    var e;
+    if (cell == null) {
+      return;
+    }
+    try {
+      if (cell.isValidForAction()) {
+        SoundManager.playOk();
+        this._activateSkill(cell.getIndex(), cell.skillData);
+      } else {
+        SoundManager.playBuzzer();
+      }
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+  }
+
+  _activateSkill(index, skillData) {
+    var actor, e, eventData, onClickActionMode, onLerningCE, reqSP, skillId;
+    try {
+      if (skillData == null) {
+        return;
+      }
+      actor = this.actor();
+      if (actor == null) {
+        return;
+      }
+      ({onClickActionMode, reqSP, skillId} = skillData);
+      actor.pPaySkillPoints(reqSP);
+      if (onClickActionMode !== 1) {
+        actor.learnSkill(skillId);
+      }
+      if (onClickActionMode !== 0) {
+        //PKD_SimpleSkillsTree.Utils.CallSkillCE(skillData)
+        ({onLerningCE} = skillData);
+        eventData = $dataCommonEvents[onLerningCE];
+        if (eventData != null) {
+          this._startInnerCe(eventData.list);
+        }
+      }
+      // * Refresh
+      return this.refresh();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _onSkillCellHovered(cell) {
+    return this._refreshSkillsInfoWindow(cell.skillData);
+  }
+
+  _refreshSkillsInfoWindow(skillData) {
+    var e;
+    try {
+      if (this._infoWindow != null) {
+        if (this._infoWindow.isCreatedForData(skillData)) {
+          this._infoWindow.refresh();
+          return;
+        }
+      }
+      return this._createSkillInfoWindow(skillData);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _createSkillInfoWindow(skillData) {
+    var e;
+    try {
+      if (this._infoWindow != null) {
+        this._infoWindow.visible = false;
+        this._infoWindow.destroyInfo();
+        this._infoWindow.removeFromParent();
+      }
+      this._infoWindow = new PKD_SST_SkillInfoWindow(skillData, 'game');
+      this.addChild(this._infoWindow);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+  }
+
+  skillPointsAmount() {
+    return this.actor().pGetFreeSkillPoints();
+  }
+
+  _createAvailableSkillPointsText() {
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_CommonElements.playerAvailableSkillPoints, this);
+  }
+
+  _updateContent() {
+    return this._updateInterpreter();
+  }
+
+  _startInterpreter() {
+    this._interpreter = new Game_Interpreter();
+  }
+
+  _updateInterpreter() {
+    this._interpreter.update();
+  }
+
+  _startInnerCe(list) {
+    var e;
+    try {
+      this._interpreter.setup(list);
+      return this._interpreter.update();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
+//$[ENCODE]
+//$[NUI BASED]
+var PKD_SST_SkillTreeLinkEditor;
+
+PKD_SST_SkillTreeLinkEditor = class PKD_SST_SkillTreeLinkEditor extends PKD_SST_SkillsTreeBase {
+  constructor() {
+    super(...arguments);
+  }
+
+  skillsTreeData() {
+    return PKD_SimpleSkillsTree.Utils.GetCurrentCategoryData();
+  }
+
+  linkToIndex() {
+    return $gameTemp.__pSSTEditorLinkToIndex;
+  }
+
+  _createChildrenContent() {
+    this._createGrid();
+    return this._createHintImage();
+  }
+
+  _createGrid() {
+    this.skillsTreeGrid = new PKD_SST_SkillsGrid();
+    this.skillsTreeGrid.setClickHandler(this._onSkillCellClick.bind(this));
+    this.skillsTreeGrid.setHoverHandler(this._onSkillCellHovered.bind(this));
+    this.skillsTreeGrid.createGrid('link', this.skillsTreeData());
+    return this.addChild(this.skillsTreeGrid);
+  }
+
+  _createHintImage() {
+    return KDCore.Sprite_NUI.FromScheme($SST_NUI_CommonElements.linksEditorHint, this);
+  }
+
+  _onSkillCellClick(cell) {
+    var addIndex, e, index;
+    if (PKD_SimpleSkillsTree.Utils.IsGlobalModalState()) {
+      return;
+    }
+    try {
+      if (cell == null) {
+        return;
+      }
+      if (cell.isValidForAction()) {
+        index = cell.myIndex();
+        addIndex = cell.editableIndex();
+        this._addNewLink(index, addIndex);
+        return this.closeSceneProcess();
+      } else {
+        return SoundManager.playBuzzer();
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _addNewLink(linkIndex, addIndex) {
+    var data, e, modifiedItem;
+    try {
+      data = PKD_SimpleSkillsTree.Utils.GetCurrentCategoryData();
+      modifiedItem = data[linkIndex];
+      if (modifiedItem == null) {
+        return;
+      }
+      if (modifiedItem.links == null) {
+        return modifiedItem.links = [addIndex];
+      } else {
+        if (!modifiedItem.links.contains(addIndex)) {
+          return modifiedItem.links.push(addIndex);
+        }
+      }
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _onSkillCellHovered(cell) {
+    return this._refreshSkillsInfoWindow(cell.skillData);
+  }
+
+  _refreshSkillsInfoWindow(skillData) {
+    var e;
+    try {
+      if (this._infoWindow != null) {
+        if (this._infoWindow.isCreatedForData(skillData)) {
+          this._infoWindow.refresh();
+          return;
+        }
+      }
+      return this._createSkillInfoWindow(skillData);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _createSkillInfoWindow(skillData) {
+    var e;
+    try {
+      if (this._infoWindow != null) {
+        this._infoWindow.visible = false;
+        this._infoWindow.destroyInfo();
+        this._infoWindow.removeFromParent();
+      }
+      this._infoWindow = new PKD_SST_SkillInfoWindow(skillData, 'editor');
+      this.addChild(this._infoWindow);
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
+    }
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_ToolArrowsPair;
 
 PKD_SST_ToolArrowsPair = class PKD_SST_ToolArrowsPair extends KDCore.Sprite {
@@ -11208,14 +16769,14 @@ PKD_SST_ToolArrowsPair = class PKD_SST_ToolArrowsPair extends KDCore.Sprite {
   }
 
   _create() {
-    this.btnR = PKD_SimpleSkillsTree.Utils.NewButton("ra2");
-    this.btnR.addClickHandler(this._onNextButtonClick.bind(this));
-    this.addChild(this.btnR);
-    this.btnR.move(this.spaceBetween, 0);
-    this.btnL = PKD_SimpleSkillsTree.Utils.NewButton("la2");
-    this.btnL.addClickHandler(this._onPrevButtonClick.bind(this));
-    this.addChild(this.btnL);
-    this.btnL.move(0, 0);
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_SkillConfigurationElements.prevNextButtonsPair, this);
+    if (this.selectNextButton != null) {
+      this.selectNextButton.addClickHandler(this._onNextButtonClick.bind(this));
+      this.selectNextButton.setPosition(this.spaceBetween, this.selectNextButton.y);
+    }
+    if (this.selectPrevButton != null) {
+      this.selectPrevButton.addClickHandler(this._onPrevButtonClick.bind(this));
+    }
   }
 
   _onNextButtonClick() {
@@ -11224,7 +16785,6 @@ PKD_SST_ToolArrowsPair = class PKD_SST_ToolArrowsPair extends KDCore.Sprite {
       if (!this.isActive()) {
         return;
       }
-      SoundManager.playCursor();
       if (this.onNextClick != null) {
         this.onNextClick();
       }
@@ -11240,7 +16800,6 @@ PKD_SST_ToolArrowsPair = class PKD_SST_ToolArrowsPair extends KDCore.Sprite {
       if (!this.isActive()) {
         return;
       }
-      SoundManager.playCursor();
       if (this.onPrevClick != null) {
         this.onPrevClick();
       }
@@ -11254,6 +16813,7 @@ PKD_SST_ToolArrowsPair = class PKD_SST_ToolArrowsPair extends KDCore.Sprite {
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_ToolEditButton;
 
 PKD_SST_ToolEditButton = class PKD_SST_ToolEditButton extends KDCore.Sprite {
@@ -11281,9 +16841,11 @@ PKD_SST_ToolEditButton = class PKD_SST_ToolEditButton extends KDCore.Sprite {
   }
 
   _create() {
-    this.btnE = PKD_SimpleSkillsTree.Utils.NewButton("btnEdit");
-    this.btnE.addClickHandler(this._onEditClick.bind(this));
-    this.addChild(this.btnE);
+    var ref;
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_SkillConfigurationElements.editButton, this);
+    if ((ref = this._editButton) != null) {
+      ref.addClickHandler(this._onEditClick.bind(this));
+    }
   }
 
   _onEditClick() {
@@ -11292,7 +16854,6 @@ PKD_SST_ToolEditButton = class PKD_SST_ToolEditButton extends KDCore.Sprite {
       if (!this.isActive()) {
         return;
       }
-      SoundManager.playCursor();
       this._editProcess();
     } catch (error) {
       e = error;
@@ -11316,6 +16877,7 @@ PKD_SST_ToolEditButton = class PKD_SST_ToolEditButton extends KDCore.Sprite {
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_ToolItemLink;
 
 PKD_SST_ToolItemLink = class PKD_SST_ToolItemLink extends KDCore.Sprite {
@@ -11346,12 +16908,16 @@ PKD_SST_ToolItemLink = class PKD_SST_ToolItemLink extends KDCore.Sprite {
   }
 
   _create() {
+    var ref;
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_SkillConfigurationElements.linkItem, this);
     this._createSkillImage();
-    return this._createRemoveButton();
+    if ((ref = this.removeSkillLinkButton) != null) {
+      ref.addClickHandler(this._onRemoveClick.bind(this));
+    }
   }
 
   _createSkillImage() {
-    var d, e, skillId, type;
+    var d, e, ref, scale, skillId, type;
     try {
       this.skillImg = new PKD_SST_ToolSkillIcon();
       d = this._getSkillData();
@@ -11360,37 +16926,25 @@ PKD_SST_ToolItemLink = class PKD_SST_ToolItemLink extends KDCore.Sprite {
       }
       ({skillId, type} = d);
       this.skillImg.setup(skillId, type);
-      this.skillImg.scale.set(0.8);
-      return this.addChild(this.skillImg);
+      scale = this.uiConstant('skillIconScale');
+      this.skillImg.scale.set(scale);
+      return (ref = this.skillIconParent) != null ? ref.addChild(this.skillImg) : void 0;
     } catch (error) {
       e = error;
       return KDCore.warning(e);
     }
   }
 
-  _createRemoveButton() {
-    var e;
-    try {
-      this.btnDel = PKD_SimpleSkillsTree.Utils.NewButton("catRem");
-      this.btnDel.addClickHandler(this._onRemoveClick.bind(this));
-      this.btnDel.y = 42;
-      this.btnDel.x = 10;
-      this.addChild(this.btnDel);
-    } catch (error) {
-      e = error;
-      KDCore.warning(e);
-    }
-  }
-
   _onRemoveClick() {
-    var e, index;
+    var e, helpText, index;
     try {
       if (!this.isActive()) {
         return;
       }
       SoundManager.playCursor();
       index = this.skillDataIndex;
-      PKD_SimpleSkillsTree.Utils.RequestModal("Remove link to skill?", this.onClickHandler.bind(this, index));
+      helpText = this.uiConstant('removeLinkHelpText');
+      PKD_SimpleSkillsTree.Utils.RequestModal(helpText, this.onClickHandler.bind(this, index));
     } catch (error) {
       e = error;
       KDCore.warning(e);
@@ -11401,6 +16955,7 @@ PKD_SST_ToolItemLink = class PKD_SST_ToolItemLink extends KDCore.Sprite {
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_ToolItemNumberChoice;
 
 PKD_SST_ToolItemNumberChoice = class PKD_SST_ToolItemNumberChoice extends KDCore.Sprite {
@@ -11416,10 +16971,14 @@ PKD_SST_ToolItemNumberChoice = class PKD_SST_ToolItemNumberChoice extends KDCore
     return !PKD_SimpleSkillsTree.Utils.IsGlobalModalState();
   }
 
+  valueText() {
+    return this.valueGetter();
+  }
+
   refresh() {
     var e;
     try {
-      return this.varTextSpr.draw(this.valueGetter());
+      return this.refreshBindings(this);
     } catch (error) {
       e = error;
       return KDCore.warning(e);
@@ -11427,49 +16986,25 @@ PKD_SST_ToolItemNumberChoice = class PKD_SST_ToolItemNumberChoice extends KDCore
   }
 
   _create() {
-    this._createValueText();
+    var src;
+    src = $SST_NUI_SkillConfigurationElements;
+    KDCore.Sprite_NUI.FromScheme(src.toolItemNumberChoiceInput, this);
     return this._createEditButton();
   }
 
-  _createValueText() {
-    var t;
-    t = new KDCore.UI.Sprite_UIText({
-      visible: true,
-      size: {
-        w: 60,
-        h: 28
-      },
-      alignment: "center",
-      font: {
-        face: null,
-        size: 18,
-        italic: false
-      },
-      margins: {
-        x: 0,
-        y: 0
-      },
-      outline: {
-        color: null,
-        width: 2
-      },
-      textColor: "#e7c788"
-    });
-    this.addChild(t);
-    this.varTextSpr = t;
-  }
-
   _createEditButton() {
-    var editButton;
+    var editButton, ref;
     editButton = new PKD_SST_ToolEditButton(this.choiceType, this.onEditDone);
-    this.addChild(editButton);
-    editButton.move(50, -12);
+    if ((ref = this.editButtonParent) != null) {
+      ref.addChild(editButton);
+    }
   }
 
 };
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_ToolSkillIcon;
 
 PKD_SST_ToolSkillIcon = class PKD_SST_ToolSkillIcon extends KDCore.Sprite {
@@ -11481,6 +17016,10 @@ PKD_SST_ToolSkillIcon = class PKD_SST_ToolSkillIcon extends KDCore.Sprite {
     return PKD_SimpleSkillsTree.Utils.GetSkillIcon(this.skillId);
   }
 
+  skillIconImage() {
+    return "skillCell_" + this.type + "_editor_00";
+  }
+
   setup(skillId, type) {
     this.skillId = skillId;
     this.type = type;
@@ -11488,12 +17027,14 @@ PKD_SST_ToolSkillIcon = class PKD_SST_ToolSkillIcon extends KDCore.Sprite {
   }
 
   _reCreateComponents() {
-    var name, skillIconSpr;
+    var skillIconSpr;
     if (this._cellImage != null) {
       this._destroyComponents();
     }
-    name = "skillCell_" + this.type + "_editor_00";
-    this._cellImage = PKD_SimpleSkillsTree.Utils.NewSprite(name);
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_SkillConfigurationElements.editorSkillIcon, this);
+    if (this._cellImage == null) {
+      return;
+    }
     skillIconSpr = new PKD_SST_SkillCellGraphics(this.type, this.skillIcon());
     this._cellImage.addChild(skillIconSpr);
     this.addChild(this._cellImage);
@@ -11518,6 +17059,7 @@ PKD_SST_ToolSkillIcon = class PKD_SST_ToolSkillIcon extends KDCore.Sprite {
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_ToolItemValueWithArrows;
 
 PKD_SST_ToolItemValueWithArrows = class PKD_SST_ToolItemValueWithArrows extends KDCore.Sprite {
@@ -11533,10 +17075,14 @@ PKD_SST_ToolItemValueWithArrows = class PKD_SST_ToolItemValueWithArrows extends 
     return !PKD_SimpleSkillsTree.Utils.IsGlobalModalState();
   }
 
+  valueText() {
+    return this.valueGetter();
+  }
+
   refresh() {
     var e;
     try {
-      return this.varTextSpr.draw(this.valueGetter());
+      return this.refreshBindings(this);
     } catch (error) {
       e = error;
       return KDCore.warning(e);
@@ -11544,49 +17090,25 @@ PKD_SST_ToolItemValueWithArrows = class PKD_SST_ToolItemValueWithArrows extends 
   }
 
   _create() {
-    this._createValueText();
+    var src;
+    src = $SST_NUI_SkillConfigurationElements;
+    KDCore.Sprite_NUI.FromScheme(src.toolValueWithPrevNextPair, this);
     return this._createArrows();
   }
 
-  _createValueText() {
-    var t;
-    t = new KDCore.UI.Sprite_UIText({
-      visible: true,
-      size: {
-        w: 60,
-        h: 28
-      },
-      alignment: "center",
-      font: {
-        face: null,
-        size: 18,
-        italic: false
-      },
-      margins: {
-        x: 0,
-        y: 0
-      },
-      outline: {
-        color: null,
-        width: 2
-      },
-      textColor: "#e7c788"
-    });
-    this.addChild(t);
-    this.varTextSpr = t;
-  }
-
   _createArrows() {
-    var arrows;
-    arrows = new PKD_SST_ToolArrowsPair(this.onPrevClick.bind(this), this.onNextClick.bind(this), 72);
-    this.addChild(arrows);
-    arrows.move(-16, -2);
+    var arrows, ref;
+    arrows = new PKD_SST_ToolArrowsPair(this.onPrevClick.bind(this), this.onNextClick.bind(this), KDCore.Utils.getValueWithDP(this.uiConstant('spaceBetweenPrevNextButtons')));
+    if ((ref = this.prevNextButtonsPairToolParent) != null) {
+      ref.addChild(arrows);
+    }
   }
 
 };
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_ToolSkillAction;
 
 PKD_SST_ToolSkillAction = class PKD_SST_ToolSkillAction extends KDCore.Sprite {
@@ -11603,13 +17125,12 @@ PKD_SST_ToolSkillAction = class PKD_SST_ToolSkillAction extends KDCore.Sprite {
   refresh() {
     var e, ref, ref1;
     try {
-      this.modTextSpr.draw(this._convertModeToText(this.skillData.onClickActionMode));
+      this.refreshBindings(this);
       if ((ref = this._learnCETool) != null) {
         ref.refresh();
       }
       return (ref1 = this._stateSWTool) != null ? ref1.refresh() : void 0;
     } catch (error) {
-      //$gameTemp.__pSSTSave()
       e = error;
       return KDCore.warning(e);
     }
@@ -11621,6 +17142,10 @@ PKD_SST_ToolSkillAction = class PKD_SST_ToolSkillAction extends KDCore.Sprite {
 
   getStateSW() {
     return this.skillData.learnedSwitchId;
+  }
+
+  selectedModeText() {
+    return this._convertModeToText(this.skillData.onClickActionMode);
   }
 
   _convertModeToText(mode) {
@@ -11641,47 +17166,21 @@ PKD_SST_ToolSkillAction = class PKD_SST_ToolSkillAction extends KDCore.Sprite {
   }
 
   _create() {
-    this._createMain();
+    var src;
+    src = $SST_NUI_SkillConfigurationElements;
+    KDCore.Sprite_NUI.FromScheme(src.toolSkillActionOnLearn, this);
     this._createModeSection();
     this._createLearnCESection();
     this._createSwitchStateSection();
     return this.refresh();
   }
 
-  _createMain() {
-    return this.addChild(PKD_SimpleSkillsTree.Utils.NewSprite('skillsEditToolAction'));
-  }
-
   _createModeSection() {
-    var arrows, t;
-    t = new KDCore.UI.Sprite_UIText({
-      visible: true,
-      size: {
-        w: 120,
-        h: 28
-      },
-      alignment: "center",
-      font: {
-        face: null,
-        size: 14,
-        italic: false
-      },
-      margins: {
-        x: 0,
-        y: 0
-      },
-      outline: {
-        color: null,
-        width: 2
-      },
-      textColor: "#e7c788"
-    });
-    this.addChild(t);
-    t.move(50, 49);
-    this.modTextSpr = t;
-    arrows = new PKD_SST_ToolArrowsPair(this.onPrevMode.bind(this), this.onNextMode.bind(this), 150);
-    arrows.move(20, 44);
-    this.addChild(arrows);
+    var arrows, ref;
+    arrows = new PKD_SST_ToolArrowsPair(this.onPrevMode.bind(this), this.onNextMode.bind(this), this.uiConstant('spaceBetweenPrevNextButtons'));
+    if ((ref = this.modeSelectionButtonsPairParent) != null) {
+      ref.addChild(arrows);
+    }
   }
 
   onPrevMode() {
@@ -11713,9 +17212,9 @@ PKD_SST_ToolSkillAction = class PKD_SST_ToolSkillAction extends KDCore.Sprite {
   }
 
   _createLearnCESection() {
+    var ref;
     this._learnCETool = new PKD_SST_ToolItemNumberChoice(this.getLearnCE.bind(this), this._onLearnCEEditDone.bind(this), 'commonEvents');
-    this._learnCETool.move(26, 116);
-    return this.addChild(this._learnCETool);
+    return (ref = this.commonEventSelectionButtonsParent) != null ? ref.addChild(this._learnCETool) : void 0;
   }
 
   _onLearnCEEditDone(value) {
@@ -11737,9 +17236,9 @@ PKD_SST_ToolSkillAction = class PKD_SST_ToolSkillAction extends KDCore.Sprite {
   }
 
   _createSwitchStateSection() {
+    var ref;
     this._stateSWTool = new PKD_SST_ToolItemNumberChoice(this.getStateSW.bind(this), this._onStateSWEditDone.bind(this), 'switches');
-    this._stateSWTool.move(26, 224);
-    return this.addChild(this._stateSWTool);
+    return (ref = this.switchSelectionButtonsParent) != null ? ref.addChild(this._stateSWTool) : void 0;
   }
 
   _onStateSWEditDone(value) {
@@ -11759,210 +17258,138 @@ PKD_SST_ToolSkillAction = class PKD_SST_ToolSkillAction extends KDCore.Sprite {
 };
 
 
-var _0x2c64b5 = _0x3d99;
-function _0x2bca() {
-    var _0x5aa129 = [
-        '\x34\x35\x34\x33\x39\x35\x30\x4c\x4b\x4c\x51\x46\x41',
-        '\x53\x70\x72\x69\x74\x65',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x4e\x61\x6d\x65\x54\x65\x78\x74',
-        '\x5f\x72\x65\x66\x72\x65\x73\x68\x53\x6b\x69\x6c\x6c\x4e\x61\x6d\x65',
-        '\x44\x6d\x47\x58\x69',
-        '\x73\x65\x74\x44\x65\x73\x63\x72\x69\x70\x74\x69\x6f\x6e\x54\x6f\x6f\x6c',
-        '\x62\x69\x6e\x64',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x49\x63\x6f\x6e',
-        '\x5f\x63\x72\x65\x61\x74\x65',
-        '\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61',
-        '\x35\x30\x75\x41\x59\x75\x6d\x78',
-        '\x61\x64\x64\x43\x68\x69\x6c\x64',
-        '\x5f\x6f\x6e\x45\x64\x69\x74\x44\x6f\x6e\x65',
-        '\x73\x6b\x69\x6c\x6c\x73\x45\x64\x69\x74\x54\x6f\x6f\x6c\x4d\x61\x69\x6e',
-        '\x61\x63\x74\x69\x76\x61\x74\x65',
-        '\x64\x65\x73\x63\x54\x6f\x6f\x6c',
-        '\x74\x79\x70\x65',
-        '\x31\x32\x38\x37\x33\x38\x31\x46\x77\x70\x45\x78\x4d',
-        '\x4a\x46\x4a\x54\x57',
-        '\x5f\x5f\x70\x53\x53\x54\x53\x61\x76\x65',
-        '\x45\x72\x72\x6f\x72',
-        '\x72\x65\x66\x72\x65\x73\x68',
-        '\x32\x33\x32\x39\x38\x34\x7a\x59\x79\x67\x79\x77',
-        '\x31\x36\x4a\x4d\x4f\x79\x4c\x59',
-        '\x55\x74\x69\x6c\x73',
-        '\x32\x31\x38\x35\x31\x36\x39\x59\x55\x5a\x52\x43\x52',
-        '\x31\x30\x31\x32\x32\x38\x38\x30\x48\x6a\x79\x57\x6b\x4e',
-        '\x64\x72\x61\x77',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x54\x79\x70\x65\x43\x68\x61\x6e\x67\x65\x42\x75\x74\x74\x6f\x6e\x73',
-        '\x31\x31\x33\x43\x66\x6c\x49\x62\x5a',
-        '\x5f\x62\x74\x6e\x45\x64\x69\x74',
-        '\x38\x39\x32\x65\x6e\x47\x4b\x6f\x53',
-        '\x4e\x65\x77\x53\x70\x72\x69\x74\x65',
-        '\x6d\x6f\x76\x65',
-        '\x47\x65\x74\x53\x6b\x69\x6c\x6c\x49\x63\x6f\x6e',
-        '\x63\x65\x6e\x74\x65\x72',
-        '\x5f\x6f\x6e\x4e\x65\x78\x74\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b',
-        '\x73\x6b\x69\x6c\x6c\x49\x64',
-        '\x75\x4a\x78\x4a\x51',
-        '\x31\x35\x39\x36\x36\x36\x33\x4b\x69\x4c\x71\x6a\x4f',
-        '\x74\x69\x74\x6c\x65\x54\x65\x78\x74\x53\x70\x72',
-        '\x73\x46\x46\x67\x4e',
-        '\x6e\x61\x6d\x65',
-        '\x23\x65\x37\x63\x37\x38\x38',
-        '\x77\x61\x72\x6e\x69\x6e\x67',
-        '\x5f\x63\x72\x65\x61\x74\x65\x45\x64\x69\x74\x42\x75\x74\x74\x6f\x6e',
-        '\x5f\x73\x6b\x69\x6c\x6c\x49\x63\x6f\x6e',
-        '\x72\x65\x66\x72\x65\x73\x68\x53\x6b\x69\x6c\x6c\x44\x61\x74\x61',
-        '\x53\x70\x72\x69\x74\x65\x5f\x55\x49\x54\x65\x78\x74',
-        '\x5f\x63\x72\x65\x61\x74\x65\x4d\x61\x69\x6e',
-        '\x5f\x6f\x6e\x50\x72\x65\x76\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b'
-    ];
-    _0x2bca = function () {
-        return _0x5aa129;
-    };
-    return _0x2bca();
-}
-(function (_0x58e687, _0x205ab8) {
-    var _0x56b362 = _0x3d99, _0xb1f07a = _0x58e687();
-    while (!![]) {
-        try {
-            var _0x32ebcc = parseInt(_0x56b362(0xf4)) / 0x1 * (-parseInt(_0x56b362(0xf6)) / 0x2) + parseInt(_0x56b362(0xe8)) / 0x3 + -parseInt(_0x56b362(0xed)) / 0x4 * (-parseInt(_0x56b362(0xe1)) / 0x5) + -parseInt(_0x56b362(0x10a)) / 0x6 + parseInt(_0x56b362(0xf0)) / 0x7 * (-parseInt(_0x56b362(0xee)) / 0x8) + -parseInt(_0x56b362(0xfe)) / 0x9 + parseInt(_0x56b362(0xf1)) / 0xa;
-            if (_0x32ebcc === _0x205ab8)
-                break;
-            else
-                _0xb1f07a['push'](_0xb1f07a['shift']());
-        } catch (_0x35143f) {
-            _0xb1f07a['push'](_0xb1f07a['shift']());
-        }
-    }
-}(_0x2bca, 0x652cb));
+// Generated by CoffeeScript 2.6.1
+//$[ENCODE]
+//$[NUI BASED]
 var PKD_SST_ToolSkillChoice;
-function _0x3d99(_0x553cbf, _0x38d502) {
-    var _0x2bca09 = _0x2bca();
-    return _0x3d99 = function (_0x3d9961, _0x27bddc) {
-        _0x3d9961 = _0x3d9961 - 0xde;
-        var _0x405b06 = _0x2bca09[_0x3d9961];
-        return _0x405b06;
-    }, _0x3d99(_0x553cbf, _0x38d502);
-}
-PKD_SST_ToolSkillChoice = class PKD_SST_ToolSkillChoice extends KDCore[_0x2c64b5(0x10b)] {
-    constructor(_0x5d4f8a) {
-        var _0x59355f = _0x2c64b5;
-        super(), this[_0x59355f(0xe0)] = _0x5d4f8a, this[_0x59355f(0xdf)]();
+
+PKD_SST_ToolSkillChoice = class PKD_SST_ToolSkillChoice extends KDCore.Sprite {
+  constructor(skillData) {
+    super();
+    this.skillData = skillData;
+    this._create();
+    this.refresh();
+  }
+
+  setDescriptionTool(descTool) {
+    this.descTool = descTool;
+  }
+
+  activate() {
+    var ref;
+    return (ref = this._btnEdit) != null ? ref.activate() : void 0;
+  }
+
+  refresh() {
+    var e, ref, ref1;
+    try {
+      this.refreshBindings(this);
+      if ((ref = this._skillIcon) != null) {
+        ref.setup(this.skillData.skillId, this.skillData.type);
+      }
+      if ((ref1 = this.descTool) != null) {
+        ref1.refreshSkillData(this.skillData);
+      }
+      $gameTemp.__pSSTSave();
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
     }
-    [_0x2c64b5(0x10f)](_0x52b48c) {
-        var _0x11376f = _0x2c64b5;
-        this[_0x11376f(0xe6)] = _0x52b48c;
+  }
+
+  skillName() {
+    var e, skillId;
+    try {
+      ({skillId} = this.skillData);
+      return $dataSkills[skillId].name + " [" + skillId + "]";
+    } catch (error) {
+      e = error;
+      KDCore.warning(e);
     }
-    [_0x2c64b5(0xe5)]() {
-        var _0x40c783 = _0x2c64b5, _0xeb8382;
-        return (_0xeb8382 = this[_0x40c783(0xf5)]) != null ? _0xeb8382['\x61\x63\x74\x69\x76\x61\x74\x65']() : void 0x0;
+    return "";
+  }
+
+  _create() {
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_SkillConfigurationElements.toolSkillChoice, this);
+    this._createSkillIcon();
+    this._createSkillTypeChangeButtons();
+    this._createEditButton();
+  }
+
+  _skillIcon() {
+    return PKD_SimpleSkillsTree.Utils.GetSkillIcon(this.skillData.skillId);
+  }
+
+  _createSkillIcon() {
+    var ref;
+    this._skillIcon = new PKD_SST_ToolSkillIcon();
+    if ((ref = this.skillIconParent) != null) {
+      ref.addChild(this._skillIcon);
     }
-    [_0x2c64b5(0xec)]() {
-        var _0x2b0440 = _0x2c64b5, _0xe3ff7a, _0x5d2c63, _0x35ebda;
-        try {
-            (_0x5d2c63 = this['\x5f\x73\x6b\x69\x6c\x6c\x49\x63\x6f\x6e']) != null && _0x5d2c63['\x73\x65\x74\x75\x70'](this[_0x2b0440(0xe0)]['\x73\x6b\x69\x6c\x6c\x49\x64'], this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'][_0x2b0440(0xe7)]), this[_0x2b0440(0x10d)](), (_0x35ebda = this['\x64\x65\x73\x63\x54\x6f\x6f\x6c']) != null && ('\x79\x50\x71\x68\x66' !== _0x2b0440(0x100) ? _0x35ebda[_0x2b0440(0x106)](this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61']) : _0x597ec0[_0x2b0440(0x106)](this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'])), $gameTemp[_0x2b0440(0xea)]();
-        } catch (_0x2cb0b0) {
-            _0x2b0440(0xfd) === _0x2b0440(0xfd) ? (_0xe3ff7a = _0x2cb0b0, KDCore[_0x2b0440(0x103)](_0xe3ff7a)) : _0x2e0d32 = 0x1;
-        }
+  }
+
+  _createSkillTypeChangeButtons() {
+    var arrows, ref;
+    arrows = new PKD_SST_ToolArrowsPair(this._onPrevButtonClick.bind(this), this._onNextButtonClick.bind(this), KDCore.Utils.getValueWithDP(this.uiConstant('spaceBetweenPrevNextButtonsForSkillChoice')));
+    if ((ref = this.prevNextSkillButtonsParent) != null) {
+      ref.addChild(arrows);
     }
-    [_0x2c64b5(0x10d)]() {
-        var _0x1c4031 = _0x2c64b5, _0x19f9dd, _0x5aa087;
-        try {
-            ({skillId: _0x5aa087} = this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'], this[_0x1c4031(0xff)][_0x1c4031(0xf2)]($dataSkills[_0x5aa087][_0x1c4031(0x101)] + '\x20\x5b' + _0x5aa087 + '\x5d'));
-        } catch (_0x3fa16d) {
-            _0x1c4031(0x10e) !== _0x1c4031(0x10e) ? _0x4a6117 = 0x1 : (_0x19f9dd = _0x3fa16d, KDCore[_0x1c4031(0x103)](_0x19f9dd), this[_0x1c4031(0xff)][_0x1c4031(0xf2)](_0x1c4031(0xeb)));
-        }
+  }
+
+  _onPrevButtonClick() {
+    var allSkillTypes, index, prevType, type;
+    allSkillTypes = PKD_SimpleSkillsTree.PP.getSkillTypes();
+    ({type} = this.skillData);
+    index = allSkillTypes.indexOf(type) - 1;
+    if (index < 0) {
+      index = allSkillTypes.length - 1;
     }
-    [_0x2c64b5(0xdf)]() {
-        var _0x3bdb51 = _0x2c64b5;
-        this[_0x3bdb51(0x108)](), this[_0x3bdb51(0xde)](), this['\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x4e\x61\x6d\x65\x54\x65\x78\x74'](), this[_0x3bdb51(0xf3)](), this[_0x3bdb51(0x104)](), this[_0x3bdb51(0xec)]();
+    prevType = allSkillTypes[index];
+    if (prevType != null) {
+      this.skillData.type = prevType;
     }
-    [_0x2c64b5(0x108)]() {
-        var _0x5954bb = _0x2c64b5;
-        return this[_0x5954bb(0xe2)](PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73'][_0x5954bb(0xf7)](_0x5954bb(0xe4)));
+    this.refresh();
+  }
+
+  _onNextButtonClick() {
+    var allSkillTypes, index, type;
+    allSkillTypes = PKD_SimpleSkillsTree.PP.getSkillTypes();
+    ({type} = this.skillData);
+    index = allSkillTypes.indexOf(type) + 1;
+    if (index >= allSkillTypes.length) {
+      index = 0;
     }
-    [_0x2c64b5(0x105)]() {
-        var _0x3cec18 = _0x2c64b5;
-        return PKD_SimpleSkillsTree[_0x3cec18(0xef)][_0x3cec18(0xf9)](this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'][_0x3cec18(0xfc)]);
+    type = allSkillTypes[index];
+    if (type != null) {
+      this.skillData.type = type;
     }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x49\x63\x6f\x6e']() {
-        var _0xa49ad5 = _0x2c64b5;
-        this[_0xa49ad5(0x105)] = new PKD_SST_ToolSkillIcon(), this['\x5f\x73\x6b\x69\x6c\x6c\x49\x63\x6f\x6e'][_0xa49ad5(0xf8)](0x2c, 0x24), this[_0xa49ad5(0xe2)](this[_0xa49ad5(0x105)]);
+    this.refresh();
+  }
+
+  _createEditButton() {
+    var ref;
+    this._btnEdit = new PKD_SST_ToolEditButton("skills", this._onEditDone.bind(this));
+    if ((ref = this.editButtonParent) != null) {
+      ref.addChild(this._btnEdit);
     }
-    [_0x2c64b5(0x10c)]() {
-        var _0x2f18e5 = _0x2c64b5, _0x53e430;
-        _0x53e430 = new KDCore['\x55\x49'][(_0x2f18e5(0x107))]({
-            '\x76\x69\x73\x69\x62\x6c\x65': !![],
-            '\x73\x69\x7a\x65': {
-                '\x77': 0xec,
-                '\x68': 0x1c
-            },
-            '\x61\x6c\x69\x67\x6e\x6d\x65\x6e\x74': _0x2f18e5(0xfa),
-            '\x66\x6f\x6e\x74': {
-                '\x66\x61\x63\x65': null,
-                '\x73\x69\x7a\x65': 0xe,
-                '\x69\x74\x61\x6c\x69\x63': ![]
-            },
-            '\x6d\x61\x72\x67\x69\x6e\x73': {
-                '\x78': 0x0,
-                '\x79': 0x0
-            },
-            '\x6f\x75\x74\x6c\x69\x6e\x65': {
-                '\x63\x6f\x6c\x6f\x72': null,
-                '\x77\x69\x64\x74\x68': 0x2
-            },
-            '\x74\x65\x78\x74\x43\x6f\x6c\x6f\x72': _0x2f18e5(0x102)
-        }), _0x53e430['\x78'] = 0x12, _0x53e430['\x79'] = 0x5c, this[_0x2f18e5(0xe2)](_0x53e430), this['\x74\x69\x74\x6c\x65\x54\x65\x78\x74\x53\x70\x72'] = _0x53e430;
+  }
+
+  _onEditDone(skillId) {
+    if (skillId == null) {
+      skillId = 1;
     }
-    [_0x2c64b5(0xf3)]() {
-        var _0xf83288 = _0x2c64b5, _0x25a9c4;
-        return _0x25a9c4 = new PKD_SST_ToolArrowsPair(this[_0xf83288(0x109)][_0xf83288(0x110)](this), this[_0xf83288(0xfb)][_0xf83288(0x110)](this), 0x58), this['\x61\x64\x64\x43\x68\x69\x6c\x64'](_0x25a9c4), _0x25a9c4[_0xf83288(0xf8)](0xc, 0x2a);
+    if (skillId <= 0) {
+      skillId = 1;
     }
-    [_0x2c64b5(0x109)]() {
-        var _0x31a3cd = _0x2c64b5, _0x41109b;
-        ({type: _0x41109b} = this[_0x31a3cd(0xe0)]);
-        switch (_0x41109b) {
-        case '\x41':
-            _0x41109b = '\x43';
-            break;
-        case '\x42':
-            _0x41109b = '\x41';
-            break;
-        case '\x43':
-            _0x41109b = '\x42';
-            break;
-        default:
-            _0x41109b = '\x41';
-        }
-        this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'][_0x31a3cd(0xe7)] = _0x41109b, this[_0x31a3cd(0xec)]();
-    }
-    [_0x2c64b5(0xfb)]() {
-        var _0x854f37 = _0x2c64b5, _0x4ec2f0;
-        ({type: _0x4ec2f0} = this[_0x854f37(0xe0)]);
-        switch (_0x4ec2f0) {
-        case '\x41':
-            _0x4ec2f0 = '\x42';
-            break;
-        case '\x42':
-            _0x4ec2f0 = '\x43';
-            break;
-        case '\x43':
-            _0x4ec2f0 = '\x41';
-            break;
-        default:
-            _0x4ec2f0 = '\x41';
-        }
-        this[_0x854f37(0xe0)][_0x854f37(0xe7)] = _0x4ec2f0, this[_0x854f37(0xec)]();
-    }
-    [_0x2c64b5(0x104)]() {
-        var _0x4ff647 = _0x2c64b5, _0x501bdb;
-        _0x501bdb = new PKD_SST_ToolEditButton('\x73\x6b\x69\x6c\x6c\x73', this[_0x4ff647(0xe3)][_0x4ff647(0x110)](this)), this['\x61\x64\x64\x43\x68\x69\x6c\x64'](_0x501bdb), _0x501bdb[_0x4ff647(0xf8)](0x82, 0x1e), this[_0x4ff647(0xf5)] = _0x501bdb;
-    }
-    [_0x2c64b5(0xe3)](_0x48051a) {
-        var _0x1c4c13 = _0x2c64b5;
-        _0x48051a == null && (_0x48051a = 0x1), _0x48051a <= 0x0 && (_0x1c4c13(0xe9) !== _0x1c4c13(0xe9) ? (this[_0x1c4c13(0x108)](), this[_0x1c4c13(0xde)](), this['\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x4e\x61\x6d\x65\x54\x65\x78\x74'](), this[_0x1c4c13(0xf3)](), this[_0x1c4c13(0x104)](), this[_0x1c4c13(0xec)]()) : _0x48051a = 0x1), this[_0x1c4c13(0xe0)]['\x73\x6b\x69\x6c\x6c\x49\x64'] = _0x48051a, this[_0x1c4c13(0xec)]();
-    }
+    this.skillData.skillId = skillId;
+    this.refresh();
+  }
+
 };
 
+
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_ToolSkillDescription;
 
 PKD_SST_ToolSkillDescription = class PKD_SST_ToolSkillDescription extends KDCore.Sprite {
@@ -11978,14 +17405,15 @@ PKD_SST_ToolSkillDescription = class PKD_SST_ToolSkillDescription extends KDCore
   }
 
   refresh() {
-    var e, ref;
+    var e, ref, ref1;
     try {
-      this._refreshSkillDescriptionText();
-      if ((ref = this.btnE) != null) {
-        ref.setDefaultTextValue(this._getExtraDescription());
+      if ((ref = this.descriptionTextSpr) != null) {
+        ref.refreshBindings(this);
+      }
+      if ((ref1 = this.btnEdit) != null) {
+        ref1.setDefaultTextValue(this._getExtraDescription());
       }
     } catch (error) {
-      //$gameTemp.__pSSTSave()
       e = error;
       KDCore.warning(e);
     }
@@ -12007,55 +17435,54 @@ PKD_SST_ToolSkillDescription = class PKD_SST_ToolSkillDescription extends KDCore
     return this.skillData.extraDescription;
   }
 
-  _refreshSkillDescriptionText() {
+  skillDescription() {
     var descriptionText, e, extraDescText;
     try {
       descriptionText = this._getSkillDescription();
       extraDescText = this._getExtraDescription();
       if (String.any(extraDescText)) {
-        this.descriptionTextSpr.draw(extraDescText);
-        this.descriptionTextSpr.opacity = 255;
+        return extraDescText;
       } else {
-        this.descriptionTextSpr.draw(descriptionText);
-        this.descriptionTextSpr.opacity = 100;
+        return descriptionText;
       }
     } catch (error) {
       e = error;
       KDCore.warning(e);
     }
+    return "";
   }
 
-  _create() {
-    this._createMain();
-    this._createSkillDescText();
-    this._createEditButton();
-    this.refresh();
-  }
-
-  _createMain() {
-    return this.addChild(PKD_SimpleSkillsTree.Utils.NewSprite('skillsEditToolDescription'));
-  }
-
-  _createSkillDescText() {
-    var e, t;
+  skillDescriptionOpacity() {
+    var e;
     try {
-      t = new KDCore.UI.Sprite_UITextExt($sktJson_SkillDescText.text);
-      t.move(13, 42);
-      this.addChild(t);
-      this.descriptionTextSpr = t;
+      if (String.any(this._getExtraDescription())) {
+        return this.uiConstant('extraDescTextOpacity');
+      } else {
+        return this.uiConstant('defaultDescTextOpacity');
+      }
     } catch (error) {
       e = error;
       KDCore.warning(e);
     }
+    return 255;
+  }
+
+  _create() {
+    var src;
+    src = $SST_NUI_SkillConfigurationElements;
+    KDCore.Sprite_NUI.FromScheme(src.toolSkillDescription, this);
+    this._createEditButton();
+    this.refresh();
   }
 
   _createEditButton() {
-    var btnE;
-    btnE = new PKD_SST_ToolEditButton("text", this._onEditDone.bind(this), "Enter extra description (instead one in Database)");
-    btnE.setDefaultTextValue(this._getExtraDescription());
-    this.addChild(btnE);
-    btnE.move(250, -4);
-    this.btnE = btnE;
+    var btnEdit, ref;
+    btnEdit = new PKD_SST_ToolEditButton("text", this._onEditDone.bind(this), this.uiConstant('helpText'));
+    btnEdit.setDefaultTextValue(this._getExtraDescription());
+    if ((ref = this.editButtonParent) != null) {
+      ref.addChild(btnEdit);
+    }
+    this.btnEdit = btnEdit;
   }
 
   _onEditDone(text) {
@@ -12071,18 +17498,18 @@ PKD_SST_ToolSkillDescription = class PKD_SST_ToolSkillDescription extends KDCore
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_ToolSkillImagePreview;
 
 PKD_SST_ToolSkillImagePreview = class PKD_SST_ToolSkillImagePreview extends KDCore.Sprite {
-  constructor(skillData, gifPosition) {
+  constructor(skillData) {
     super();
     this.skillData = skillData;
-    this.gifPosition = gifPosition;
-    this._gifCreated = false;
     this._create();
     return;
   }
 
+  // * GIF Preview crushed the game, so it's disabled
   isActive() {
     return !PKD_SimpleSkillsTree.Utils.IsGlobalModalState();
   }
@@ -12091,69 +17518,37 @@ PKD_SST_ToolSkillImagePreview = class PKD_SST_ToolSkillImagePreview extends KDCo
     return PKD_SimpleSkillsTree.Utils.IsSupportGIF();
   }
 
+  skillPreviewImage() {
+    return this.skillData.previewImage;
+  }
+
   refresh() {
-    var e, previewGif, previewImage;
+    var e;
     try {
-      this._clearCurrentPreview();
-      ({previewImage, previewGif} = this.skillData);
-      //TODO: UPD: If GIF is loaded in Editor Preview first, it crush game here
-      //if String.any(previewGif) && @isCanShowGif()
-      //    @_showGifAnim(previewGif)
-      //else
-      if (String.any(previewImage)) {
-        return this._showImage("preview/" + previewImage);
-      }
+      return this.refreshBindings(this);
     } catch (error) {
-      //$gameTemp.__pSSTSave()
       e = error;
       return KDCore.warning(e);
     }
   }
 
-  _clearCurrentPreview() {
-    if (this._gifCreated === true) {
-      window.DeleteVAnim("skillPreview");
-      this._gifCreated = false;
-    }
-    this._previewContainer.visible = false;
-  }
-
-  _showGifAnim(filename) {
-    this._gifCreated = true;
-    window.ShowVAnim("skillPreview", filename, this.gifPosition.x, this.gifPosition.y, true);
-  }
-
-  _showImage(filename) {
-    this._previewContainer.bitmap = PKD_SimpleSkillsTree.Utils.LoadBitmap(filename);
-    return this._previewContainer.visible = true;
-  }
-
   _create() {
-    this._createMain();
-    this._createPreviewContainer();
+    var src;
+    src = $SST_NUI_SkillConfigurationElements;
+    KDCore.Sprite_NUI.FromScheme(src.toolSkillImagePreview, this);
     this._createButtons();
     this.refresh();
   }
 
-  _createMain() {
-    return this.addChild(PKD_SimpleSkillsTree.Utils.NewSprite('skillsEditToolPreview'));
-  }
-
-  _createPreviewContainer() {
-    this._previewContainer = new Sprite();
-    this._previewContainer.move(12, 67);
-    return this.addChild(this._previewContainer);
-  }
-
   _createButtons() {
+    var ref;
     this.editButton1 = new PKD_SST_ToolEditButton('images', this.onChangeImage.bind(this));
-    this.addChild(this.editButton1);
-    this.editButton1.move(80, 20);
-    this.editButton2 = new PKD_SST_ToolEditButton('gifs', this.onChangeGif.bind(this));
-    this.addChild(this.editButton2);
-    this.editButton2.move(240, 20);
-    if (!this.isCanShowGif()) {
-      this.editButton2.btnE.disable();
+    if ((ref = this.imageChangeButtonParent) != null) {
+      ref.addChild(this.editButton1);
+    }
+    if (this.gifVideoChangeButtonParent != null) {
+      this.editButton2 = new PKD_SST_ToolEditButton('gifs', this.onChangeGif.bind(this));
+      this.gifVideoChangeButtonParent.addChild(this.editButton2);
     }
   }
 
@@ -12171,6 +17566,7 @@ PKD_SST_ToolSkillImagePreview = class PKD_SST_ToolSkillImagePreview extends KDCo
 
 
 // Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_ToolSkillLinks;
 
 PKD_SST_ToolSkillLinks = class PKD_SST_ToolSkillLinks extends KDCore.Sprite {
@@ -12189,13 +17585,6 @@ PKD_SST_ToolSkillLinks = class PKD_SST_ToolSkillLinks extends KDCore.Sprite {
     return PKD_SimpleSkillsTree.Utils.GetSkillDataIndexBySkillId(this.skillData.skillId);
   }
 
-  // * Возвращает передние (в котоыре я показываю)
-  /*_getSkillLinksArray: ->
-  links = @skillData.links
-  if links?
-      return links
-  else
-      return []*/
   // * Возвращает те, которые в меня показывают
   _getSkillLinksArray() {
     var e, myIndex;
@@ -12246,27 +17635,22 @@ PKD_SST_ToolSkillLinks = class PKD_SST_ToolSkillLinks extends KDCore.Sprite {
     }
   }
 
+  isAddLinkButtonVisible() {
+    return this.isCanAddMoreLink();
+  }
+
+  addLinkButtonX() {
+    return this.linksCount() * KDCore.Utils.getValueWithDP(this.uiConstant('spacingBetweenLinksIcons'));
+  }
+
   refresh() {
     var e;
     try {
-      this._refreshAddLinkPlacementAndState();
+      this.refreshBindings(this);
       return this._refreshLinks();
     } catch (error) {
-      //$gameTemp.__pSSTSave()
       e = error;
       return KDCore.warning(e);
-    }
-  }
-
-  _refreshAddLinkPlacementAndState() {
-    var x;
-    if (this.isCanAddMoreLink()) {
-      x = this.linksCount() * 52;
-      this.btnAddLink.x = x + 20;
-      return this.btnAddLink.visible = true;
-    } else {
-      this.btnAddLink.x = -1000;
-      return this.btnAddLink.visible = false;
     }
   }
 
@@ -12275,7 +17659,7 @@ PKD_SST_ToolSkillLinks = class PKD_SST_ToolSkillLinks extends KDCore.Sprite {
   }
 
   _reCreateLinks() {
-    var i, index, len, link, ref;
+    var i, index, len, link, ref, ref1;
     if (this._linksSpr != null) {
       this._destoryLinks();
     }
@@ -12287,15 +17671,13 @@ PKD_SST_ToolSkillLinks = class PKD_SST_ToolSkillLinks extends KDCore.Sprite {
         this._createSingleLinkTool(link, index);
       }
     }
-    this._linksSpr.move(0, 58);
-    return this.addChild(this._linksSpr);
+    return (ref1 = this.skillLinksItemsParent) != null ? ref1.addChild(this._linksSpr) : void 0;
   }
 
   _createSingleLinkTool(skilDataIndex, linkIndex) {
     var link;
     link = new PKD_SST_ToolItemLink(skilDataIndex, this._onRemoveLinkClick.bind(this));
-    link.x = linkIndex * 52;
-    link.x += 20;
+    link.x = linkIndex * KDCore.Utils.getValueWithDP(this.uiConstant('spacingBetweenLinksIcons'));
     this._linksSpr.addChild(link);
   }
 
@@ -12312,8 +17694,6 @@ PKD_SST_ToolSkillLinks = class PKD_SST_ToolSkillLinks extends KDCore.Sprite {
 
   _removeProcess(index) {
     var data, modifiedItem, myIndex;
-    // * Удаляет передние
-    //@skillData.links = @skillData.links.filter (item) -> item != index
     // * Удаление меня из зависимости навыка
     data = PKD_SimpleSkillsTree.Utils.GetCurrentCategoryData();
     modifiedItem = data[index];
@@ -12336,20 +17716,11 @@ PKD_SST_ToolSkillLinks = class PKD_SST_ToolSkillLinks extends KDCore.Sprite {
   }
 
   _create() {
-    this._createMain();
-    this._createAddLinkButton();
-  }
-
-  _createMain() {
-    return this.addChild(PKD_SimpleSkillsTree.Utils.NewSprite('skillsEditToolLinks'));
-  }
-
-  _createAddLinkButton() {
-    this.btnAddLink = PKD_SimpleSkillsTree.Utils.NewButton("linkAdd");
-    this.btnAddLink.addClickHandler(this._onAddLinkClick.bind(this));
-    this.addChild(this.btnAddLink);
-    this.btnAddLink.visible = false;
-    this.btnAddLink.y = 60;
+    var ref;
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_SkillConfigurationElements.toolSkillLinksAddRemove, this);
+    if ((ref = this.btnAddLink) != null) {
+      ref.addClickHandler(this._onAddLinkClick.bind(this));
+    }
   }
 
   _onAddLinkClick() {
@@ -12370,430 +17741,280 @@ PKD_SST_ToolSkillLinks = class PKD_SST_ToolSkillLinks extends KDCore.Sprite {
 };
 
 
-var _0x162e00 = _0x5050;
-(function (_0xa34136, _0x3f2e40) {
-    var _0x27ef0d = _0x5050, _0x275d27 = _0xa34136();
-    while (!![]) {
-        try {
-            var _0x13003a = -parseInt(_0x27ef0d(0x86)) / 0x1 * (parseInt(_0x27ef0d(0x9b)) / 0x2) + parseInt(_0x27ef0d(0xaa)) / 0x3 + -parseInt(_0x27ef0d(0x88)) / 0x4 + parseInt(_0x27ef0d(0x93)) / 0x5 * (parseInt(_0x27ef0d(0xad)) / 0x6) + parseInt(_0x27ef0d(0x7b)) / 0x7 + -parseInt(_0x27ef0d(0x8f)) / 0x8 + parseInt(_0x27ef0d(0x78)) / 0x9 * (parseInt(_0x27ef0d(0x96)) / 0xa);
-            if (_0x13003a === _0x3f2e40)
-                break;
-            else
-                _0x275d27['push'](_0x275d27['shift']());
-        } catch (_0x589707) {
-            _0x275d27['push'](_0x275d27['shift']());
-        }
-    }
-}(_0x2c86, 0xaae15));
-function _0x5050(_0x6c2c44, _0x514f66) {
-    var _0x2c86b8 = _0x2c86();
-    return _0x5050 = function (_0x505073, _0x4039df) {
-        _0x505073 = _0x505073 - 0x6e;
-        var _0x306508 = _0x2c86b8[_0x505073];
-        return _0x306508;
-    }, _0x5050(_0x6c2c44, _0x514f66);
-}
-function _0x2c86() {
-    var _0x20641a = [
-        '\x61\x68\x6d\x69\x67',
-        '\x23\x65\x37\x63\x37\x38\x38',
-        '\x4a\x57\x45\x6e\x50',
-        '\x72\x65\x66\x72\x65\x73\x68',
-        '\x66\x74\x64\x54\x7a',
-        '\x55\x74\x69\x6c\x73',
-        '\x33\x31\x37\x30\x32\x37\x37\x6f\x54\x6a\x50\x4a\x70',
-        '\x64\x72\x61\x77',
-        '\x4e\x6a\x4b\x68\x66',
-        '\x38\x32\x33\x39\x32\x39\x34\x56\x41\x47\x44\x52\x5a',
-        '\x65\x64\x69\x74\x54\x65\x78\x74\x42\x75\x74\x74\x6f\x6e',
-        '\x53\x70\x72\x69\x74\x65\x5f\x55\x49\x54\x65\x78\x74',
-        '\x62\x64\x6f\x71\x44',
-        '\x72\x65\x71\x53\x50',
-        '\x69\x73\x41\x63\x74\x69\x76\x65',
-        '\x74\x65\x78\x74',
-        '\x73\x68\x69\x66\x74',
-        '\x49\x6e\x66\x6f\x72\x6d\x61\x74\x69\x6f\x6e\x20\x61\x62\x6f\x75\x74\x20\x73\x70\x65\x63\x69\x61\x6c\x20\x63\x6f\x6e\x64\x69\x74\x69\x6f\x6e',
-        '\x67\x65\x74\x53\x6b\x69\x6c\x6c\x53\x70\x65\x63\x53\x77\x69\x74\x63\x68',
-        '\x73\x63\x54\x65\x78\x74\x53\x70\x72',
-        '\x36\x39\x34\x36\x38\x30\x71\x71\x5a\x52\x76\x49',
-        '\x72\x65\x71\x4c\x65\x76\x65\x6c',
-        '\x33\x33\x31\x34\x30\x36\x30\x54\x6b\x61\x6a\x68\x78',
-        '\x5f\x6f\x6e\x50\x72\x65\x76\x53\x50\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b',
-        '\x53\x70\x72\x69\x74\x65',
-        '\x5f\x73\x70\x54\x6f\x6f\x6c',
-        '\x5f\x6c\x65\x76\x65\x6c\x54\x6f\x6f\x6c',
-        '\x5f\x6f\x6e\x4e\x65\x78\x74\x4c\x65\x76\x65\x6c\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b',
-        '\x74\x49\x69\x6e\x52',
-        '\x31\x31\x38\x38\x33\x35\x32\x68\x6b\x73\x65\x63\x6e',
-        '\x57\x79\x7a\x6e\x65',
-        '\x6c\x65\x66\x74',
-        '\x7a\x62\x49\x71\x5a',
-        '\x31\x35\x30\x43\x59\x6d\x46\x77\x45',
-        '\x4e\x65\x77\x53\x70\x72\x69\x74\x65',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x53\x70\x65\x63\x43\x6f\x6e\x64\x53\x65\x63\x74\x69\x6f\x6e',
-        '\x31\x30\x79\x76\x78\x66\x4f\x43',
-        '\x73\x70\x65\x63\x69\x61\x6c\x43\x6f\x6e\x64\x69\x74\x69\x6f\x6e\x54\x65\x78\x74',
-        '\x5f\x73\x63\x73\x77\x69\x74\x63\x68\x54\x6f\x6f\x6c',
-        '\x62\x69\x6e\x64',
-        '\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61',
-        '\x32\x56\x4f\x65\x41\x4a\x44',
-        '\x67\x65\x74\x53\x6b\x69\x6c\x6c\x50\x6f\x69\x6e\x74\x73',
-        '\x41\x4e\x53\x4f\x6d',
-        '\x73\x70\x65\x63\x69\x61\x6c\x43\x6f\x6e\x64\x69\x74\x69\x6f\x6e\x53\x77\x69\x74\x63\x68\x49\x64',
-        '\x77\x61\x72\x6e\x69\x6e\x67',
-        '\x6d\x6f\x76\x65',
-        '\x5f\x6f\x6e\x4e\x65\x78\x74\x53\x50\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b',
-        '\x6f\x6e\x45\x64\x69\x74\x53\x43\x54\x65\x78\x74\x44\x6f\x6e\x65',
-        '\x5f\x63\x72\x65\x61\x74\x65',
-        '\x42\x4d\x53\x4c\x44',
-        '\x5f\x6f\x6e\x50\x72\x65\x76\x4c\x65\x76\x65\x6c\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b',
-        '\x61\x64\x64\x43\x68\x69\x6c\x64',
-        '\x73\x6b\x69\x6c\x6c\x73\x45\x64\x69\x74\x54\x6f\x6f\x6c\x52\x65\x71\x75\x69\x72\x65\x6d\x65\x6e\x74\x73',
-        '\x69\x73\x50\x72\x65\x73\x73\x65\x64',
-        '\x67\x65\x74\x53\x6b\x69\x6c\x6c\x4c\x65\x76\x65\x6c',
-        '\x39\x39\x39\x36\x32\x37\x57\x78\x68\x73\x73\x63',
-        '\x4e\x49\x76\x56\x56',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x50\x6f\x69\x6e\x74\x73\x53\x65\x63\x74\x69\x6f\x6e',
-        '\x31\x30\x31\x38\x33\x32\x46\x64\x70\x6e\x6a\x63',
-        '\x5f\x63\x72\x65\x61\x74\x65\x53\x43\x54\x65\x78\x74\x54\x6f\x6f\x6c',
-        '\x5f\x63\x72\x65\x61\x74\x65\x4c\x65\x76\x65\x6c\x53\x65\x63\x74\x69\x6f\x6e',
-        '\x5f\x6f\x6e\x53\x43\x53\x77\x69\x74\x63\x68\x43\x68\x61\x6e\x67\x65',
-        '\x72\x6d\x47\x69\x77',
-        '\x5f\x63\x72\x65\x61\x74\x65\x4d\x61\x69\x6e'
-    ];
-    _0x2c86 = function () {
-        return _0x20641a;
-    };
-    return _0x2c86();
-}
+// Generated by CoffeeScript 2.6.1
+//$[ENCODE]
+//$[NUI BASED]
 var PKD_SST_ToolSkillRequirements;
-PKD_SST_ToolSkillRequirements = class PKD_SST_ToolSkillRequirements extends KDCore[_0x162e00(0x8a)] {
-    constructor(_0x6ee53a) {
-        var _0x2246dc = _0x162e00;
-        super(), this[_0x2246dc(0x9a)] = _0x6ee53a, this['\x5f\x63\x72\x65\x61\x74\x65']();
+
+PKD_SST_ToolSkillRequirements = class PKD_SST_ToolSkillRequirements extends KDCore.Sprite {
+  constructor(skillData) {
+    super();
+    this.skillData = skillData;
+    this._create();
+  }
+
+  refresh() {
+    var e, ref, ref1, ref2, ref3;
+    try {
+      this.refreshBindings(this);
+      if ((ref = this._levelTool) != null) {
+        ref.refresh();
+      }
+      if ((ref1 = this._spTool) != null) {
+        ref1.refresh();
+      }
+      if ((ref2 = this._scswitchTool) != null) {
+        ref2.refresh();
+      }
+      return (ref3 = this.editTextButton) != null ? ref3.setDefaultTextValue(this.specialConditionText()) : void 0;
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
     }
-    [_0x162e00(0x75)]() {
-        var _0x3aec12 = _0x162e00, _0x108afa, _0x2aac91, _0xb79633, _0x26fd24, _0x47bade, _0x10fec1;
-        try {
-            (_0x2aac91 = this[_0x3aec12(0x8c)]) != null && _0x2aac91['\x72\x65\x66\x72\x65\x73\x68']();
-            if ((_0xb79633 = this[_0x3aec12(0x8b)]) != null) {
-                if (_0x3aec12(0x76) !== _0x3aec12(0x76)) {
-                    var _0x4a5bc8;
-                    _0x4a5bc8 = new _0x1f6ef8['\x55\x49'][(_0x3aec12(0x7d))]({
-                        '\x76\x69\x73\x69\x62\x6c\x65': !![],
-                        '\x73\x69\x7a\x65': {
-                            '\x77': 0xec,
-                            '\x68': 0x1c
-                        },
-                        '\x61\x6c\x69\x67\x6e\x6d\x65\x6e\x74': _0x3aec12(0x91),
-                        '\x66\x6f\x6e\x74': {
-                            '\x66\x61\x63\x65': null,
-                            '\x73\x69\x7a\x65': 0xc,
-                            '\x69\x74\x61\x6c\x69\x63': ![]
-                        },
-                        '\x6d\x61\x72\x67\x69\x6e\x73': {
-                            '\x78': 0x0,
-                            '\x79': 0x0
-                        },
-                        '\x6f\x75\x74\x6c\x69\x6e\x65': {
-                            '\x63\x6f\x6c\x6f\x72': null,
-                            '\x77\x69\x64\x74\x68': 0x2
-                        },
-                        '\x74\x65\x78\x74\x43\x6f\x6c\x6f\x72': _0x3aec12(0x73)
-                    }), this[_0x3aec12(0xa6)](_0x4a5bc8), _0x4a5bc8['\x6d\x6f\x76\x65'](0x16, 0xd2), this['\x73\x63\x54\x65\x78\x74\x53\x70\x72'] = _0x4a5bc8, this[_0x3aec12(0x7c)] = new _0x498733(_0x3aec12(0x81), this[_0x3aec12(0xa2)][_0x3aec12(0x99)](this), _0x3aec12(0x83)), this['\x61\x64\x64\x43\x68\x69\x6c\x64'](this[_0x3aec12(0x7c)]), this['\x65\x64\x69\x74\x54\x65\x78\x74\x42\x75\x74\x74\x6f\x6e'][_0x3aec12(0xa0)](0xa6, 0xa8);
-                } else
-                    _0xb79633[_0x3aec12(0x75)]();
-            }
-            if ((_0x26fd24 = this[_0x3aec12(0x98)]) != null) {
-                if (_0x3aec12(0x72) !== _0x3aec12(0x72))
-                    return this[_0x3aec12(0xa6)](_0xbcd26a[_0x3aec12(0x77)]['\x4e\x65\x77\x53\x70\x72\x69\x74\x65'](_0x3aec12(0xa7)));
-                else
-                    _0x26fd24[_0x3aec12(0x75)]();
-            }
-            return (_0x47bade = this[_0x3aec12(0x85)]) != null && _0x47bade[_0x3aec12(0x79)](this[_0x3aec12(0x9a)][_0x3aec12(0x97)]), (_0x10fec1 = this[_0x3aec12(0x7c)]) != null ? _0x10fec1['\x73\x65\x74\x44\x65\x66\x61\x75\x6c\x74\x54\x65\x78\x74\x56\x61\x6c\x75\x65'](this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'][_0x3aec12(0x97)]) : void 0x0;
-        } catch (_0x15fbe8) {
-            return _0x3aec12(0xab) === _0x3aec12(0xab) ? (_0x108afa = _0x15fbe8, KDCore[_0x3aec12(0x9f)](_0x108afa)) : (_0x527678 = _0x165c58, _0x16df8e[_0x3aec12(0x9f)](_0x20b30b));
-        }
+  }
+
+  specialConditionText() {
+    return this.skillData.specialConditionText;
+  }
+
+  getSkillLevel() {
+    return this.skillData.reqLevel;
+  }
+
+  getSkillPoints() {
+    return this.skillData.reqSP;
+  }
+
+  //%[Показывать имя свича тоже]
+  getSkillSpecSwitch() {
+    return this.skillData.specialConditionSwitchId;
+  }
+
+  isActive() {
+    return !PKD_SimpleSkillsTree.Utils.IsGlobalModalState();
+  }
+
+  _create() {
+    var src;
+    src = $SST_NUI_SkillConfigurationElements;
+    KDCore.Sprite_NUI.FromScheme(src.toolSkillRequirements, this);
+    this._createLevelSection();
+    this._createSkillPointsSection();
+    this._createSkillSpecCondSection();
+    this.refresh();
+  }
+
+  _createLevelSection() {
+    var ref;
+    this._levelTool = new PKD_SST_ToolItemValueWithArrows(this.getSkillLevel.bind(this), this._onPrevLevelButtonClick.bind(this), this._onNextLevelButtonClick.bind(this));
+    if ((ref = this.levelRequirementToolParent) != null) {
+      ref.addChild(this._levelTool);
     }
-    [_0x162e00(0xa9)]() {
-        var _0x3413b3 = _0x162e00;
-        return this[_0x3413b3(0x9a)][_0x3413b3(0x87)];
+  }
+
+  _onPrevLevelButtonClick() {
+    if (Input.isPressed('shift')) {
+      this.skillData.reqLevel -= 10;
+    } else {
+      this.skillData.reqLevel -= 1;
     }
-    [_0x162e00(0x9c)]() {
-        var _0x59a1c5 = _0x162e00;
-        return this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'][_0x59a1c5(0x7f)];
+    if (this.skillData.reqLevel < 0) {
+      this.skillData.reqLevel = 0;
     }
-    [_0x162e00(0x84)]() {
-        var _0x47356a = _0x162e00;
-        return this[_0x47356a(0x9a)]['\x73\x70\x65\x63\x69\x61\x6c\x43\x6f\x6e\x64\x69\x74\x69\x6f\x6e\x53\x77\x69\x74\x63\x68\x49\x64'];
+    this.refresh();
+  }
+
+  _onNextLevelButtonClick() {
+    if (Input.isPressed('shift')) {
+      this.skillData.reqLevel += 10;
+    } else {
+      this.skillData.reqLevel += 1;
     }
-    [_0x162e00(0x80)]() {
-        var _0x2a6ba3 = _0x162e00;
-        return !PKD_SimpleSkillsTree[_0x2a6ba3(0x77)]['\x49\x73\x47\x6c\x6f\x62\x61\x6c\x4d\x6f\x64\x61\x6c\x53\x74\x61\x74\x65']();
+    this.refresh();
+  }
+
+  _createSkillPointsSection() {
+    var ref;
+    this._spTool = new PKD_SST_ToolItemValueWithArrows(this.getSkillPoints.bind(this), this._onPrevSPButtonClick.bind(this), this._onNextSPButtonClick.bind(this));
+    if ((ref = this.skillPointsRequirementToolParent) != null) {
+      ref.addChild(this._spTool);
     }
-    [_0x162e00(0xa3)]() {
-        var _0x41d248 = _0x162e00;
-        this[_0x41d248(0x71)](), this[_0x41d248(0x6e)](), this[_0x41d248(0xac)](), this['\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x53\x70\x65\x63\x43\x6f\x6e\x64\x53\x65\x63\x74\x69\x6f\x6e'](), this['\x72\x65\x66\x72\x65\x73\x68']();
+  }
+
+  _onPrevSPButtonClick() {
+    if (Input.isPressed('shift')) {
+      this.skillData.reqSP -= 10;
+    } else {
+      this.skillData.reqSP -= 1;
     }
-    [_0x162e00(0x71)]() {
-        var _0x48e6ab = _0x162e00;
-        return this[_0x48e6ab(0xa6)](PKD_SimpleSkillsTree[_0x48e6ab(0x77)][_0x48e6ab(0x94)](_0x48e6ab(0xa7)));
+    if (this.skillData.reqSP < 0) {
+      this.skillData.reqSP = 0;
     }
-    [_0x162e00(0x6e)]() {
-        var _0x539b3e = _0x162e00;
-        this['\x5f\x6c\x65\x76\x65\x6c\x54\x6f\x6f\x6c'] = new PKD_SST_ToolItemValueWithArrows(this[_0x539b3e(0xa9)]['\x62\x69\x6e\x64'](this), this['\x5f\x6f\x6e\x50\x72\x65\x76\x4c\x65\x76\x65\x6c\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b'][_0x539b3e(0x99)](this), this['\x5f\x6f\x6e\x4e\x65\x78\x74\x4c\x65\x76\x65\x6c\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b'][_0x539b3e(0x99)](this)), this[_0x539b3e(0xa6)](this[_0x539b3e(0x8c)]), this[_0x539b3e(0x8c)][_0x539b3e(0xa0)](0x60, 0x2a);
+    this.refresh();
+  }
+
+  _onNextSPButtonClick() {
+    if (Input.isPressed('shift')) {
+      this.skillData.reqSP += 10;
+    } else {
+      this.skillData.reqSP += 1;
     }
-    [_0x162e00(0xa5)]() {
-        var _0x410728 = _0x162e00;
-        Input[_0x410728(0xa8)](_0x410728(0x82)) ? _0x410728(0x92) !== '\x7a\x62\x49\x71\x5a' ? _0xa1b402['\x72\x65\x66\x72\x65\x73\x68']() : this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'][_0x410728(0x87)] -= 0xa : _0x410728(0x90) !== '\x57\x79\x7a\x6e\x65' ? (this['\x5f\x73\x70\x54\x6f\x6f\x6c'] = new _0x2e599a(this[_0x410728(0x9c)]['\x62\x69\x6e\x64'](this), this[_0x410728(0x89)]['\x62\x69\x6e\x64'](this), this[_0x410728(0xa1)][_0x410728(0x99)](this)), this[_0x410728(0xa6)](this[_0x410728(0x8b)]), this[_0x410728(0x8b)][_0x410728(0xa0)](0x84, 0x5a)) : this[_0x410728(0x9a)][_0x410728(0x87)] -= 0x1, this[_0x410728(0x9a)]['\x72\x65\x71\x4c\x65\x76\x65\x6c'] < 0x0 && (_0x410728(0x74) === _0x410728(0x7e) ? (_0x334c50[_0x410728(0xa8)](_0x410728(0x82)) ? this[_0x410728(0x9a)]['\x72\x65\x71\x4c\x65\x76\x65\x6c'] += 0xa : this[_0x410728(0x9a)][_0x410728(0x87)] += 0x1, this[_0x410728(0x75)]()) : this[_0x410728(0x9a)][_0x410728(0x87)] = 0x0), this[_0x410728(0x75)]();
+    this.refresh();
+  }
+
+  _createSkillSpecCondSection() {
+    this._createSCSwitchSelectTool();
+    return this._createSCTextTool();
+  }
+
+  _createSCSwitchSelectTool() {
+    var ref;
+    this._scswitchTool = new PKD_SST_ToolItemNumberChoice(this.getSkillSpecSwitch.bind(this), this._onSCSwitchChange.bind(this), 'switches');
+    return (ref = this.numberChoiceToolParent) != null ? ref.addChild(this._scswitchTool) : void 0;
+  }
+
+  _onSCSwitchChange(value) {
+    var e;
+    try {
+      this.skillData.specialConditionSwitchId = value;
+      return this.refresh();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
     }
-    [_0x162e00(0x8d)]() {
-        var _0x413bc9 = _0x162e00;
-        Input['\x69\x73\x50\x72\x65\x73\x73\x65\x64'](_0x413bc9(0x82)) ? _0x413bc9(0x70) !== _0x413bc9(0x70) ? this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'][_0x413bc9(0x7f)] -= 0xa : this[_0x413bc9(0x9a)][_0x413bc9(0x87)] += 0xa : this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'][_0x413bc9(0x87)] += 0x1, this[_0x413bc9(0x75)]();
+  }
+
+  _createSCTextTool() {
+    var ref;
+    this.editTextButton = new PKD_SST_ToolEditButton('text', this.onEditSCTextDone.bind(this), this.uiConstant('helpText'));
+    if ((ref = this.editButtonParent) != null) {
+      ref.addChild(this.editTextButton);
     }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x53\x6b\x69\x6c\x6c\x50\x6f\x69\x6e\x74\x73\x53\x65\x63\x74\x69\x6f\x6e']() {
-        var _0x5d0e92 = _0x162e00;
-        this['\x5f\x73\x70\x54\x6f\x6f\x6c'] = new PKD_SST_ToolItemValueWithArrows(this[_0x5d0e92(0x9c)][_0x5d0e92(0x99)](this), this[_0x5d0e92(0x89)][_0x5d0e92(0x99)](this), this['\x5f\x6f\x6e\x4e\x65\x78\x74\x53\x50\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b'][_0x5d0e92(0x99)](this)), this[_0x5d0e92(0xa6)](this[_0x5d0e92(0x8b)]), this['\x5f\x73\x70\x54\x6f\x6f\x6c'][_0x5d0e92(0xa0)](0x84, 0x5a);
+  }
+
+  onEditSCTextDone(text) {
+    var e;
+    try {
+      if (text != null) {
+        this.skillData.specialConditionText = text;
+      }
+      return this.refresh();
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
     }
-    ['\x5f\x6f\x6e\x50\x72\x65\x76\x53\x50\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b']() {
-        var _0x510d8d = _0x162e00;
-        if (Input[_0x510d8d(0xa8)](_0x510d8d(0x82)))
-            this[_0x510d8d(0x9a)][_0x510d8d(0x7f)] -= 0xa;
-        else {
-            if (_0x510d8d(0x9d) !== _0x510d8d(0x9d))
-                return this[_0x510d8d(0x9a)]['\x72\x65\x71\x4c\x65\x76\x65\x6c'];
-            else
-                this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'][_0x510d8d(0x7f)] -= 0x1;
-        }
-        if (this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'][_0x510d8d(0x7f)] < 0x0) {
-            if (_0x510d8d(0x7a) !== '\x5a\x6e\x4d\x6e\x48')
-                this[_0x510d8d(0x9a)][_0x510d8d(0x7f)] = 0x0;
-            else
-                return _0x903ba4 != null && (this['\x73\x6b\x69\x6c\x6c\x44\x61\x74\x61'][_0x510d8d(0x97)] = _0x4b163d), this['\x72\x65\x66\x72\x65\x73\x68']();
-        }
-        this[_0x510d8d(0x75)]();
-    }
-    [_0x162e00(0xa1)]() {
-        var _0x27c071 = _0x162e00;
-        Input[_0x27c071(0xa8)](_0x27c071(0x82)) ? this[_0x27c071(0x9a)][_0x27c071(0x7f)] += 0xa : this[_0x27c071(0x9a)][_0x27c071(0x7f)] += 0x1, this[_0x27c071(0x75)]();
-    }
-    [_0x162e00(0x95)]() {
-        var _0x30f916 = _0x162e00;
-        return this['\x5f\x63\x72\x65\x61\x74\x65\x53\x43\x53\x77\x69\x74\x63\x68\x53\x65\x6c\x65\x63\x74\x54\x6f\x6f\x6c'](), this[_0x30f916(0xae)]();
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x53\x43\x53\x77\x69\x74\x63\x68\x53\x65\x6c\x65\x63\x74\x54\x6f\x6f\x6c']() {
-        var _0x14df95 = _0x162e00;
-        return this[_0x14df95(0x98)] = new PKD_SST_ToolItemNumberChoice(this[_0x14df95(0x84)][_0x14df95(0x99)](this), this['\x5f\x6f\x6e\x53\x43\x53\x77\x69\x74\x63\x68\x43\x68\x61\x6e\x67\x65'][_0x14df95(0x99)](this), '\x73\x77\x69\x74\x63\x68\x65\x73'), this['\x5f\x73\x63\x73\x77\x69\x74\x63\x68\x54\x6f\x6f\x6c']['\x6d\x6f\x76\x65'](0x6a, 0x86), this[_0x14df95(0xa6)](this[_0x14df95(0x98)]);
-    }
-    [_0x162e00(0x6f)](_0x3ba1a4) {
-        var _0x350a5b = _0x162e00, _0x160152;
-        try {
-            return this[_0x350a5b(0x9a)][_0x350a5b(0x9e)] = _0x3ba1a4, this['\x72\x65\x66\x72\x65\x73\x68']();
-        } catch (_0x1b46de) {
-            if (_0x350a5b(0xa4) === _0x350a5b(0x8e))
-                this[_0x350a5b(0x9a)][_0x350a5b(0x7f)] -= 0x1;
-            else
-                return _0x160152 = _0x1b46de, KDCore[_0x350a5b(0x9f)](_0x160152);
-        }
-    }
-    [_0x162e00(0xae)]() {
-        var _0x370dd1 = _0x162e00, _0x3c5863;
-        _0x3c5863 = new KDCore['\x55\x49'][(_0x370dd1(0x7d))]({
-            '\x76\x69\x73\x69\x62\x6c\x65': !![],
-            '\x73\x69\x7a\x65': {
-                '\x77': 0xec,
-                '\x68': 0x1c
-            },
-            '\x61\x6c\x69\x67\x6e\x6d\x65\x6e\x74': _0x370dd1(0x91),
-            '\x66\x6f\x6e\x74': {
-                '\x66\x61\x63\x65': null,
-                '\x73\x69\x7a\x65': 0xc,
-                '\x69\x74\x61\x6c\x69\x63': ![]
-            },
-            '\x6d\x61\x72\x67\x69\x6e\x73': {
-                '\x78': 0x0,
-                '\x79': 0x0
-            },
-            '\x6f\x75\x74\x6c\x69\x6e\x65': {
-                '\x63\x6f\x6c\x6f\x72': null,
-                '\x77\x69\x64\x74\x68': 0x2
-            },
-            '\x74\x65\x78\x74\x43\x6f\x6c\x6f\x72': _0x370dd1(0x73)
-        }), this[_0x370dd1(0xa6)](_0x3c5863), _0x3c5863['\x6d\x6f\x76\x65'](0x16, 0xd2), this[_0x370dd1(0x85)] = _0x3c5863, this[_0x370dd1(0x7c)] = new PKD_SST_ToolEditButton(_0x370dd1(0x81), this[_0x370dd1(0xa2)][_0x370dd1(0x99)](this), _0x370dd1(0x83)), this[_0x370dd1(0xa6)](this[_0x370dd1(0x7c)]), this['\x65\x64\x69\x74\x54\x65\x78\x74\x42\x75\x74\x74\x6f\x6e'][_0x370dd1(0xa0)](0xa6, 0xa8);
-    }
-    [_0x162e00(0xa2)](_0x504396) {
-        var _0x285aa2 = _0x162e00, _0x2c83e3;
-        try {
-            return _0x504396 != null && (this[_0x285aa2(0x9a)][_0x285aa2(0x97)] = _0x504396), this[_0x285aa2(0x75)]();
-        } catch (_0x5c7213) {
-            return _0x2c83e3 = _0x5c7213, KDCore[_0x285aa2(0x9f)](_0x2c83e3);
-        }
-    }
+  }
+
 };
 
-function _0x3af1(_0x2d824f, _0x1334d1) {
-    var _0x444f30 = _0x444f();
-    return _0x3af1 = function (_0x3af1ba, _0x5b671f) {
-        _0x3af1ba = _0x3af1ba - 0x14a;
-        var _0x47eb77 = _0x444f30[_0x3af1ba];
-        return _0x47eb77;
-    }, _0x3af1(_0x2d824f, _0x1334d1);
-}
-var _0x4d2d61 = _0x3af1;
-(function (_0x2f3821, _0x24c44e) {
-    var _0x44358f = _0x3af1, _0x3cb886 = _0x2f3821();
-    while (!![]) {
-        try {
-            var _0x29ec10 = -parseInt(_0x44358f(0x175)) / 0x1 * (-parseInt(_0x44358f(0x154)) / 0x2) + -parseInt(_0x44358f(0x163)) / 0x3 * (parseInt(_0x44358f(0x152)) / 0x4) + -parseInt(_0x44358f(0x156)) / 0x5 + -parseInt(_0x44358f(0x166)) / 0x6 * (-parseInt(_0x44358f(0x150)) / 0x7) + parseInt(_0x44358f(0x164)) / 0x8 + -parseInt(_0x44358f(0x16d)) / 0x9 * (parseInt(_0x44358f(0x17c)) / 0xa) + parseInt(_0x44358f(0x151)) / 0xb * (parseInt(_0x44358f(0x17a)) / 0xc);
-            if (_0x29ec10 === _0x24c44e)
-                break;
-            else
-                _0x3cb886['push'](_0x3cb886['shift']());
-        } catch (_0x5cef85) {
-            _0x3cb886['push'](_0x3cb886['shift']());
-        }
-    }
-}(_0x444f, 0x7e408));
-var PKD_SST_ToolTCManager;
-function _0x444f() {
-    var _0x473bf8 = [
-        '\x5f\x63\x72\x65\x61\x74\x65\x4d\x61\x69\x6e',
-        '\x49\x73\x47\x6c\x6f\x62\x61\x6c\x4d\x6f\x64\x61\x6c\x53\x74\x61\x74\x65',
-        '\x31\x34\x30\x39\x38\x35\x77\x4b\x63\x56\x41\x71',
-        '\x6c\x69\x6e\x6b\x54\x6f\x43\x61\x74\x65\x67\x6f\x72\x69\x65\x73',
-        '\x70\x6c\x61\x79\x43\x75\x72\x73\x6f\x72',
-        '\x5f\x6f\x6e\x4d\x69\x6e\x75\x73\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b',
-        '\x5f\x62\x75\x74\x74\x6f\x6e\x73',
-        '\x63\x61\x74\x52\x65\x6d',
-        '\x63\x61\x74\x65\x67\x6f\x72\x69\x65\x73\x43\x6f\x75\x6e\x74',
-        '\x69\x73\x50\x72\x6f',
-        '\x31\x45\x62\x47\x6c\x76\x6c',
-        '\x62\x74\x6e\x52',
-        '\x5f\x63\x61\x74\x65\x67\x6f\x72\x69\x65\x73\x53\x70\x72',
-        '\x6c\x65\x6e\x67\x74\x68',
-        '\x4e\x65\x77\x53\x70\x72\x69\x74\x65',
-        '\x32\x34\x71\x6f\x75\x57\x78\x6f',
-        '\x54\x69\x6d\x65\x64\x55\x70\x64\x61\x74\x65',
-        '\x35\x33\x30\x59\x57\x6c\x6e\x78\x61',
-        '\x62\x74\x6e\x4c',
-        '\x44\x65\x6c\x65\x74\x65\x20\x74\x68\x65\x20\x63\x75\x72\x72\x65\x6e\x74\x20\x63\x61\x74\x65\x67\x6f\x72\x79\x3f',
-        '\x75\x70\x64\x61\x74\x65',
-        '\x5f\x73\x65\x6c\x65\x63\x74\x65\x64\x49\x6e\x64\x65\x78',
-        '\x61\x64\x64\x43\x68\x69\x6c\x64',
-        '\x61\x6c\x65\x72\x74',
-        '\x73\x65\x6c\x65\x63\x74\x43\x61\x74\x65\x67\x6f\x72\x79',
-        '\x52\x65\x71\x75\x65\x73\x74\x4d\x6f\x64\x61\x6c',
-        '\x70\x6c\x61\x79\x42\x75\x7a\x7a\x65\x72',
-        '\x73\x70\x6c\x69\x63\x65',
-        '\x5f\x72\x65\x66\x72\x65\x73\x68\x54\x68\x72\x65\x61\x64',
-        '\x77\x4a\x44\x4b\x6e',
-        '\x71\x76\x6d\x42\x72',
-        '\x34\x39\x68\x4d\x68\x75\x59\x47',
-        '\x32\x37\x32\x36\x36\x30\x33\x4e\x71\x47\x68\x75\x4e',
-        '\x34\x41\x6d\x6d\x52\x71\x48',
-        '\x5f\x63\x72\x65\x61\x74\x65\x42\x75\x74\x74\x6f\x6e\x73',
-        '\x31\x34\x33\x34\x34\x33\x30\x75\x4b\x7a\x76\x63\x58',
-        '\x72\x65\x66\x72\x65\x73\x68',
-        '\x34\x30\x31\x31\x38\x30\x4f\x47\x68\x68\x47\x52',
-        '\x5f\x63\x72\x65\x61\x74\x65',
-        '\x6d\x6f\x76\x65',
-        '\x4e\x65\x77\x42\x75\x74\x74\x6f\x6e',
-        '\x70\x75\x73\x68',
-        '\x53\x70\x72\x69\x74\x65',
-        '\x63\x61\x74\x41\x64\x64',
-        '\x6a\x79\x76\x4b\x46',
-        '\x73\x6b\x69\x6c\x6c\x73\x54\x72\x65\x65\x43\x61\x74\x65\x67\x6f\x72\x79\x54\x6f\x6f\x6c\x73',
-        '\x76\x69\x73\x69\x62\x6c\x65',
-        '\x62\x69\x6e\x64',
-        '\x42\x41\x53\x49\x43\x20\x76\x65\x72\x73\x69\x6f\x6e\x20\x73\x75\x70\x70\x6f\x72\x74\x73\x20\x6f\x6e\x6c\x79\x20\x6d\x61\x78\x20\x32\x20\x63\x61\x74\x65\x67\x6f\x72\x69\x65\x73\x21',
-        '\x5f\x5f\x70\x53\x53\x54\x45\x64\x69\x74\x6f\x72\x53\x65\x6c\x65\x63\x74\x65\x64\x43\x6c\x61\x73\x73\x49\x64',
-        '\x32\x37\x34\x32\x39\x36\x39\x4e\x79\x50\x4f\x4d\x6f',
-        '\x33\x36\x36\x38\x34\x38\x30\x69\x75\x61\x4b\x55\x7a',
-        '\x53\x61\x76\x65\x44\x61\x74\x61\x46\x69\x6c\x65\x46\x6f\x72\x43\x6c\x61\x73\x73',
-        '\x35\x37\x34\x36\x33\x38\x68\x44\x6b\x71\x73\x61',
-        '\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x44\x61\x74\x61',
-        '\x5f\x72\x65\x6d\x6f\x76\x65\x43\x61\x74\x65\x67\x6f\x72\x79',
-        '\x5f\x6f\x6e\x50\x6c\x75\x73\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b',
-        '\x55\x74\x69\x6c\x73'
-    ];
-    _0x444f = function () {
-        return _0x473bf8;
-    };
-    return _0x444f();
-}
-PKD_SST_ToolTCManager = class PKD_SST_ToolTCManager extends KDCore[_0x4d2d61(0x15b)] {
-    constructor() {
-        var _0x49b77f = _0x4d2d61;
-        super(), this[_0x49b77f(0x157)](), this['\x61\x70\x70\x65\x61\x72'](0x28);
-    }
-    [_0x4d2d61(0x16e)](_0x14cf92) {
-        var _0x6e26fb = _0x4d2d61;
-        this[_0x6e26fb(0x177)] = _0x14cf92;
-    }
-    [_0x4d2d61(0x157)]() {
-        var _0xf44e74 = _0x4d2d61;
-        this[_0xf44e74(0x14d)] = new KDCore[(_0xf44e74(0x17b))](0xa, this['\x5f\x72\x65\x66\x72\x65\x73\x68'][_0xf44e74(0x160)](this)), this[_0xf44e74(0x16b)](), this[_0xf44e74(0x153)]();
-    }
-    ['\x5f\x63\x72\x65\x61\x74\x65\x4d\x61\x69\x6e']() {
-        var _0x460771 = _0x4d2d61;
-        return this[_0x460771(0x181)](PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73'][_0x460771(0x179)](_0x460771(0x15e)));
-    }
-    [_0x4d2d61(0x153)]() {
-        var _0x39d2f1 = _0x4d2d61;
-        this[_0x39d2f1(0x171)] = new Sprite(), this[_0x39d2f1(0x176)] = PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73']['\x4e\x65\x77\x42\x75\x74\x74\x6f\x6e'](_0x39d2f1(0x172)), this[_0x39d2f1(0x176)]['\x61\x64\x64\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72'](this[_0x39d2f1(0x170)]['\x62\x69\x6e\x64'](this)), this['\x5f\x62\x75\x74\x74\x6f\x6e\x73']['\x61\x64\x64\x43\x68\x69\x6c\x64'](this[_0x39d2f1(0x176)]), this[_0x39d2f1(0x176)][_0x39d2f1(0x158)](0x1a9, 0x42), this[_0x39d2f1(0x176)][_0x39d2f1(0x15f)] = ![], this[_0x39d2f1(0x17d)] = PKD_SimpleSkillsTree[_0x39d2f1(0x16a)][_0x39d2f1(0x159)](_0x39d2f1(0x15c)), this['\x62\x74\x6e\x4c']['\x61\x64\x64\x43\x6c\x69\x63\x6b\x48\x61\x6e\x64\x6c\x65\x72'](this[_0x39d2f1(0x169)][_0x39d2f1(0x160)](this)), this[_0x39d2f1(0x171)][_0x39d2f1(0x181)](this['\x62\x74\x6e\x4c']), this[_0x39d2f1(0x17d)][_0x39d2f1(0x158)](0x176, 0x42), this[_0x39d2f1(0x181)](this[_0x39d2f1(0x171)]);
-    }
-    [_0x4d2d61(0x169)]() {
-        var _0x1776a2 = _0x4d2d61, _0x1783ef;
-        if (PKD_SimpleSkillsTree[_0x1776a2(0x16a)][_0x1776a2(0x16c)]())
-            return;
-        _0x1783ef = PKD_SimpleSkillsTree[_0x1776a2(0x16a)][_0x1776a2(0x167)]();
-        if (_0x1783ef == null)
-            return;
-        _0x1783ef[_0x1776a2(0x178)] > 0x1 && !PKD_SimpleSkillsTree[_0x1776a2(0x174)]() ? (SoundManager[_0x1776a2(0x14b)](), window[_0x1776a2(0x182)](_0x1776a2(0x161))) : (SoundManager[_0x1776a2(0x16f)](), _0x1783ef[_0x1776a2(0x15a)]([]), this['\x5f\x63\x61\x74\x65\x67\x6f\x72\x69\x65\x73\x53\x70\x72'][_0x1776a2(0x155)](), this['\x5f\x63\x61\x74\x65\x67\x6f\x72\x69\x65\x73\x53\x70\x72']['\x73\x65\x6c\x65\x63\x74\x4c\x61\x73\x74']());
-    }
-    ['\x5f\x6f\x6e\x4d\x69\x6e\x75\x73\x42\x75\x74\x74\x6f\x6e\x43\x6c\x69\x63\x6b']() {
-        var _0x1d7c07 = _0x4d2d61, _0xb06be3, _0x536c9e;
-        if (PKD_SimpleSkillsTree[_0x1d7c07(0x16a)][_0x1d7c07(0x16c)]())
-            return;
-        _0xb06be3 = PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73'][_0x1d7c07(0x167)]();
-        if (_0xb06be3 == null) {
-            if ('\x42\x69\x51\x49\x7a' === _0x1d7c07(0x15d))
-                return;
-            else
-                return;
-        }
-        _0x536c9e = this[_0x1d7c07(0x177)][_0x1d7c07(0x180)];
-        if (_0x536c9e === 0x0)
-            return;
-        if (_0xb06be3[_0x536c9e] == null)
-            return;
-        SoundManager[_0x1d7c07(0x16f)](), _0xb06be3[_0x536c9e][_0x1d7c07(0x178)] > 0x0 ? PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73'][_0x1d7c07(0x14a)](_0x1d7c07(0x17e), this[_0x1d7c07(0x168)]['\x62\x69\x6e\x64'](this, _0x536c9e)) : this[_0x1d7c07(0x168)](_0x536c9e);
-    }
-    [_0x4d2d61(0x168)](_0x52f903) {
-        var _0x48dc4f = _0x4d2d61, _0x3a49a3, _0x6b34fb;
-        try {
-            return PKD_SimpleSkillsTree[_0x48dc4f(0x16a)]['\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x44\x61\x74\x61']()[_0x48dc4f(0x14c)](_0x52f903, 0x1), this['\x5f\x63\x61\x74\x65\x67\x6f\x72\x69\x65\x73\x53\x70\x72'][_0x48dc4f(0x155)](), this[_0x48dc4f(0x177)][_0x48dc4f(0x183)](_0x52f903 - 0x1), _0x3a49a3 = PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73']['\x47\x65\x74\x43\x75\x72\x72\x65\x6e\x74\x44\x61\x74\x61'](), PKD_SimpleSkillsTree['\x55\x74\x69\x6c\x73'][_0x48dc4f(0x165)]($gameTemp[_0x48dc4f(0x162)], _0x3a49a3);
-        } catch (_0x478e2d) {
-            return _0x6b34fb = _0x478e2d, KDCore['\x77\x61\x72\x6e\x69\x6e\x67'](_0x6b34fb);
-        }
-    }
-    ['\x5f\x72\x65\x66\x72\x65\x73\x68']() {
-        var _0x1839b7 = _0x4d2d61;
-        if (this[_0x1839b7(0x177)] == null) {
-            if (_0x1839b7(0x14e) === _0x1839b7(0x14f))
-                return;
-            else
-                return;
-        }
-        this[_0x1839b7(0x176)][_0x1839b7(0x15f)] = this[_0x1839b7(0x177)][_0x1839b7(0x173)] > 0x1, this[_0x1839b7(0x176)]['\x76\x69\x73\x69\x62\x6c\x65'] === !![] && (this['\x62\x74\x6e\x52'][_0x1839b7(0x15f)] = this[_0x1839b7(0x177)][_0x1839b7(0x180)] > 0x0);
-    }
-    [_0x4d2d61(0x17f)]() {
-        var _0x13677c = _0x4d2d61, _0x54dba1;
-        super[_0x13677c(0x17f)](), (_0x54dba1 = this[_0x13677c(0x14d)]) != null && _0x54dba1[_0x13677c(0x17f)]();
-    }
-};
 
 // Generated by CoffeeScript 2.6.1
+//$[ENCODE]
+//$[NUI BASED]
+var PKD_SST_ToolTCManager;
+
+PKD_SST_ToolTCManager = class PKD_SST_ToolTCManager extends KDCore.Sprite {
+  constructor() {
+    super();
+    this._create();
+  }
+
+  linkToCategories(_categoriesSpr) {
+    this._categoriesSpr = _categoriesSpr;
+  }
+
+  isCanRemoveCategory() {
+    return (this._categoriesSpr != null) && this._categoriesSpr.categoriesCount > 1 && this._categoriesSpr._selectedIndex > 0;
+  }
+
+  _create() {
+    var ref, ref1;
+    this._refreshThread = new KDCore.TimedUpdate(10, this._refresh.bind(this));
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_AddRemoveCategoryToolBar, this);
+    if ((ref = this.addCategoryButton) != null) {
+      ref.addClickHandler(this._onPlusButtonClick.bind(this));
+    }
+    if ((ref1 = this.removeCategoryButton) != null) {
+      ref1.addClickHandler(this._onMinusButtonClick.bind(this));
+    }
+  }
+
+  _onPlusButtonClick() {
+    var d;
+    if (PKD_SimpleSkillsTree.Utils.IsGlobalModalState()) {
+      return;
+    }
+    d = PKD_SimpleSkillsTree.Utils.GetCurrentData();
+    if (d == null) {
+      return;
+    }
+    if (d.length > 1 && !PKD_SimpleSkillsTree.isPro()) {
+      SoundManager.playBuzzer();
+      window.alert("BASIC version supports only max 2 categories!");
+    } else {
+      d.push([]);
+      this._categoriesSpr.refresh();
+      this._categoriesSpr.selectLast();
+    }
+  }
+
+  _onMinusButtonClick() {
+    var d, index;
+    if (PKD_SimpleSkillsTree.Utils.IsGlobalModalState()) {
+      return;
+    }
+    d = PKD_SimpleSkillsTree.Utils.GetCurrentData();
+    if (d == null) {
+      return;
+    }
+    index = this._categoriesSpr._selectedIndex;
+    if (index === 0) {
+      return;
+    }
+    if (d[index] == null) {
+      return;
+    }
+    if (d[index].length > 0) {
+      PKD_SimpleSkillsTree.Utils.RequestModal(this.uiConstant('deleteCategoryHelpText'), this._removeCategory.bind(this, index));
+    } else {
+      this._removeCategory(index);
+    }
+  }
+
+  _removeCategory(index) {
+    var data, e;
+    try {
+      PKD_SimpleSkillsTree.Utils.GetCurrentData().splice(index, 1);
+      this._categoriesSpr.refresh();
+      this._categoriesSpr.selectCategory(index - 1);
+      data = PKD_SimpleSkillsTree.Utils.GetCurrentData();
+      return PKD_SimpleSkillsTree.Utils.SaveDataFileForClass($gameTemp.__pSSTEditorSelectedClassId, data);
+    } catch (error) {
+      e = error;
+      return KDCore.warning(e);
+    }
+  }
+
+  _refresh() {
+    var ref;
+    if ((ref = this.removeCategoryButton) != null) {
+      ref.refreshBindings(this);
+    }
+  }
+
+  update() {
+    var ref;
+    super.update();
+    if ((ref = this._refreshThread) != null) {
+      ref.update();
+    }
+  }
+
+};
+
+
+// Generated by CoffeeScript 2.6.1
+//$[NUI BASED]
 var PKD_SST_TreesCategories;
 
 PKD_SST_TreesCategories = class PKD_SST_TreesCategories extends KDCore.Sprite {
@@ -12818,81 +18039,30 @@ PKD_SST_TreesCategories = class PKD_SST_TreesCategories extends KDCore.Sprite {
   _create() {
     this._selectedIndex = 0;
     this.categoriesCount = 1;
-    this._createMain();
-    this._createHelpButtons();
-    this._createArrowButtons();
-    this._createCategoryTitleText();
-  }
-
-  _createMain() {
-    return this.addChild(PKD_SimpleSkillsTree.Utils.NewSprite('skillsTreeCategoryMain'));
-  }
-
-  _createHelpButtons() {
-    this.helpButtonsSpr = PKD_SimpleSkillsTree.Utils.NewSprite('skillsTreeCategoryHelpButtons');
-    this.helpButtonsSpr.visible = false;
-    return this.addChild(this.helpButtonsSpr);
-  }
-
-  _createArrowButtons() {
-    this._buttons = new Sprite();
-    this.btnR = PKD_SimpleSkillsTree.Utils.NewButton("ra2");
-    this.btnR.addClickHandler(this.nextCategoryClick.bind(this));
-    this._buttons.addChild(this.btnR);
-    this.btnR.move(570, 20);
-    this.btnL = PKD_SimpleSkillsTree.Utils.NewButton("la2");
-    this.btnL.addClickHandler(this.prevCategoryClick.bind(this));
-    this._buttons.addChild(this.btnL);
-    this.btnL.move(220, 20);
-    this.addChild(this._buttons);
-    this._buttons.visible = false;
-  }
-
-  _createCategoryTitleText() {
-    var t;
-    t = new KDCore.UI.Sprite_UIText({
-      visible: true,
-      size: {
-        w: 260,
-        h: 34
-      },
-      alignment: "center",
-      font: {
-        face: null,
-        size: 20,
-        italic: false
-      },
-      margins: {
-        x: 0,
-        y: 0
-      },
-      outline: {
-        color: null,
-        width: 2
-      },
-      textColor: "#e7c788",
-      // ? can be Null or not exists
-      shadow: {
-        color: "#000",
-        opacity: 200,
-        margins: {
-          x: 1,
-          y: 1
-        }
-      }
-    });
-    t.x = 280;
-    t.y = 18;
-    this.addChild(t);
-    this.titleTextSpr = t;
+    KDCore.Sprite_NUI.FromScheme($SST_NUI_ClassCategoriesNavigator, this);
+    if (this.selectNextCategoryButton != null) {
+      this.selectNextCategoryButton.addClickHandler(this.nextCategoryClick.bind(this));
+    }
+    if (this.selectPrevCategoryButton != null) {
+      this.selectPrevCategoryButton.addClickHandler(this.prevCategoryClick.bind(this));
+    }
+    this._refreshCategory();
   }
 
   _refreshCategory() {
-    this._refreshHelpIcons();
-    this.titleTextSpr.draw(this._getCategotyTitle());
+    var ref, ref1, ref2;
+    if ((ref = this.categoryTitleText) != null) {
+      ref.refreshBindings(this);
+    }
+    if ((ref1 = this.selectNextCategoryButton) != null) {
+      ref1.refreshBindings(this);
+    }
+    if ((ref2 = this.selectPrevCategoryButton) != null) {
+      ref2.refreshBindings(this);
+    }
   }
 
-  _getCategotyTitle() {
+  categotyTitle() {
     var categoryNameNote, classData;
     classData = PKD_SimpleSkillsTree.Utils.GetCurrentClass();
     if (classData != null) {
@@ -12911,9 +18081,8 @@ PKD_SST_TreesCategories = class PKD_SST_TreesCategories extends KDCore.Sprite {
     }
   }
 
-  _refreshHelpIcons() {
-    this.helpButtonsSpr.visible = this.categoriesCount > 1;
-    this._buttons.visible = this.helpButtonsSpr.visible;
+  isMoreThenOneCategory() {
+    return this.categoriesCount > 1;
   }
 
   setupCallback(callback) {
@@ -12945,7 +18114,6 @@ PKD_SST_TreesCategories = class PKD_SST_TreesCategories extends KDCore.Sprite {
     if (PKD_SimpleSkillsTree.Utils.IsGlobalModalState()) {
       return;
     }
-    SoundManager.playCursor();
     return this.selectCategory(this._selectedIndex + 1);
   }
 
@@ -12953,7 +18121,6 @@ PKD_SST_TreesCategories = class PKD_SST_TreesCategories extends KDCore.Sprite {
     if (PKD_SimpleSkillsTree.Utils.IsGlobalModalState()) {
       return;
     }
-    SoundManager.playCursor();
     return this.selectCategory(this._selectedIndex - 1);
   }
 
@@ -12965,16 +18132,18 @@ PKD_SST_TreesCategories = class PKD_SST_TreesCategories extends KDCore.Sprite {
   }
 
   _updateKeyboardGamepadControls() {
-    if (this.categoriesCount < 2) {
+    if (!this.isMoreThenOneCategory()) {
       return;
     }
     if (PKD_SimpleSkillsTree.Utils.IsGlobalModalState()) {
       return;
     }
-    if (Input.isTriggered('pageup')) {
+    if (Input.isTriggered(this.uiConstant('nextCategoryButton'))) {
+      KDCore.Utils.playSE(this.uiConstant('categoryChangeSound'));
       this.nextCategoryClick();
       return Input.clear();
-    } else if (Input.isTriggered('pagedown')) {
+    } else if (Input.isTriggered(this.uiConstant('prevCategoryButton'))) {
+      KDCore.Utils.playSE(this.uiConstant('categoryChangeSound'));
       this.prevCategoryClick();
       return Input.clear();
     }
@@ -13156,6 +18325,9 @@ PKD_SST_UniversalChoiceListWindow = class PKD_SST_UniversalChoiceListWindow exte
       } else {
         actor = this._statusWindow.actor(this._statusWindow.index());
       }
+      if (actor == null) {
+        actor = $gameParty.leader();
+      }
       if (actor != null) {
         window.OpenSkillTreeForActor(actor.actorId());
       } else {
@@ -13226,4 +18398,4 @@ PKD_SST_UniversalChoiceListWindow = class PKD_SST_UniversalChoiceListWindow exte
 // ■ END Window_MenuCommand.coffee
 //---------------------------------------------------------------------------
 
-//Plugin PKD_SimpleSkillsTree builded by PKD PluginBuilder 2.2 - 07.06.2023
+//Plugin PKD_SimpleSkillsTree builded by PKD PluginBuilder 2.2.1 - 31.07.2024

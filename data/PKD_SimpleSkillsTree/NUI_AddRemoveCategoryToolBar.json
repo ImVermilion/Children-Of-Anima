@@ -1,0 +1,41 @@
+{
+    "type": "screen",
+    "id": "addRemoveCategoryToolsBarRoot",
+    "constants": {
+        "deleteCategoryHelpText": "Delete the current category?"
+    },
+    "childrens": [{
+        "type": "rect",
+        "parameters": {
+            "corners": 12,
+            "fillColor": "#231f20",
+            "fillAlpha": 1,
+            "strokeWidth": 0
+        },
+        "bindings": {
+            "size": { "width": "84hdp", "height": "22hdp" },
+            "position": { "x": "center", "y": "58hdp" }
+        },
+        "childrens": [
+            {
+                "type": "button",
+                "id": "addCategoryButton",
+                "parameters": "folderName:pSimpleSkillsTree;imageName:addCategoryButton;imageMargins:0;overTint:#eac98a;tintAlpha:0.32",
+                "bindings": {
+                    "position": { "x": "begin + 10dp", "y": "center" },
+                    "size": { "width": "22dp", "height": "22dp" }
+                }
+            },
+            {
+                "type": "button",
+                "id": "removeCategoryButton",
+                "parameters": "folderName:pSimpleSkillsTree;imageName:removeCategoryButton;imageMargins:0;overTint:#eac98a;tintAlpha:0.32",
+                "bindings": {
+                    "position": { "x": "end - 10dp", "y": "center" },
+                    "size": { "width": "22dp", "height": "22dp" },
+                    "visible": "$isCanRemoveCategory"
+                }
+            }
+        ]
+    }]
+}

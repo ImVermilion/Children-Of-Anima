@@ -13,10 +13,10 @@
  * Become a Patron to get access to beta/alpha plugins plus other goodies!
  * https://www.patreon.com/CasperGamingRPGM
  * ============================================================================
- * Version: 1.2.1
+ * Version: 1.3.2
  * ----------------------------------------------------------------------------
  * Compatibility: Only tested with my CGMZ plugins.
- * Made for RPG Maker MZ 1.6.0
+ * Made for RPG Maker MZ 1.8.0
  * ----------------------------------------------------------------------------
  * Description: This plugin creates up to 3 toast windows in each scene (some
  * exceptions) which will display brief information or images to the player
@@ -25,44 +25,68 @@
  * ----------------------------------------------------------------------------
  * Documentation:
  * ----------------------------Plugin Commands---------------------------------
- * Create Text Toast: Creates a new text toast with options, adds it to queue
- * Create Image Toast: Creates a new image toast with options, adds it to
- *                     queue
- *
+ * This plugin supports the following plugin commands:
+ * • Create Text Toast
+ * Creates a new text toast with options, adds it to the toast queue.
+ * 
+ * • Create Image Toast
+ * Creates a new image toast with options, adds it to the toast queue.
  * Image dimensions should be 336x72 by default (if changing width,
  * subtract 24 from width value).
- * ----------------------------Version History---------------------------------
- * Version 1.0.0 - Initial Release
+ * ------------------------------Saved Games-----------------------------------
+ * This plugin is fully compatible with saved games. This means you can:
  *
- * Version 1.0.1:
+ * ✓ Add this plugin to a saved game and it will work as expected
+ * ✓ Change any plugin params and changes will be reflected in saved games
+ * ✓ Remove the plugin with no issue to save data
+ * -----------------------------Filename---------------------------------------
+ * The filename for this plugin MUST remain CGMZ_ToastManager.js
+ * This is what it comes as when downloaded. The filename is used to load
+ * parameters and execute plugin commands. If you change it, things will begin
+ * behaving incorrectly and your game will probably crash. Please do not
+ * rename the js file.
+ * ----------------------------Version History---------------------------------
+ * Version 1.0.1
  * - SE are no longer mandatory on toasts
  *
- * Version 1.0.2:
+ * Version 1.0.2
  * - Toast windows no longer update if they are not visible
  * - Fix crash with VS Debugger (hopefully)
  *
- * Version 1.0.3:
+ * Version 1.0.3
  * - Fix bug with toast window custom widths not being centered
  *
- * Version 1.1.0:
+ * Version 1.1.0
  * - Added parameter for changing the display time of the toast
  *
- * Version 1.2.0:
+ * Version 1.2.0
  * - Added parameter for Window/Dim/Transparent appearance of window
  * - Added parameter to change window color
  *
- * Version 1.2.1:
+ * Version 1.2.1
  * - Update color parameter to use RMMZ 1.6.0 new color picker UI
+ *
+ * Version 1.3.0
+ * - Added option to use a different windowskin for each toast
+ * - Added option to set the toast window's height
+ * - Fixed bug when using same custom width twice in a row
+ * - Optimized image loading for image toasts
+ *
+ * Version 1.3.1
+ * - Added Spanish help language documentation
+ * - Now warns instead of crash when invalid JSON detected
+ *
+ * Version 1.3.2
+ * - The default text toast now supports all text codes
+ * - Toast sound effects can now have volume/pitch/pan customized
  *
  * @command Create Text Toast
  * @text Create Text Toast
  * @desc Creates a text-based toast window
  *
  * @arg lineOne
- * @type text
  * @text Line 1
- * @desc Text to display in Line 1 of the toast. \v, \n, \p, and \g text codes supported.
- * @default 
+ * @desc Text to display in Line 1 of the toast.
  *
  * @arg lineOneAlignment
  * @type combo
@@ -80,10 +104,8 @@
  * @default 0
  *
  * @arg lineTwo
- * @type text
  * @text Line 2
- * @desc Text to display in Line 2 of the toast. \v, \n, \p, and \g text codes supported.
- * @default 
+ * @desc Text to display in Line 2 of the toast.
  *
  * @arg lineTwoAlignment
  * @type combo
@@ -100,19 +122,24 @@
  * @desc The color of line 2's text (same as in show text event command)
  * @default 0
  *
+ * @arg height
+ * @type number
+ * @min 1
+ * @desc Height (in text lines) to make the toast window if not using fixed height parameter
+ * @default 2
+ *
  * @arg width
  * @type number
  * @min 1
  * @text Width
- * @desc Width (in pixels) to make the toast window if not using fixed width plugin parameter
+ * @desc Width (in pixels) to make the toast window if not using fixed width parameter
  * @default 360
  *
  * @arg SE
- * @type file
- * @dir audio/se
+ * @type struct<SoundEffect>
+ * @default {"File":"","Volume":"90","Pitch":"100","Pan":"0"}
  * @text Sound Effect
  * @desc Sound effect to play when the toast appears
- * @default 
  *
  * @arg Display Time
  * @type number
@@ -134,6 +161,11 @@
  * @text Windowskin Tone
  * @desc Windowskin tone (color)
  *
+ * @arg windowskin
+ * @type file
+ * @dir img/
+ * @desc The windowskin file to use for the toast window.
+ *
  * @command Create Image Toast
  * @text Create Image Toast
  * @desc Creates an image-based toast window
@@ -143,7 +175,6 @@
  * @dir img/pictures
  * @text Image
  * @desc Image to display in the toast
- * @default 
  *
  * @arg showBackground
  * @type boolean
@@ -158,12 +189,17 @@
  * @desc Width (in pixels) to make the toast window if not using fixed width plugin parameter
  * @default 360
  *
+ * @arg height
+ * @type number
+ * @min 1
+ * @desc Height (in text lines) to make the toast window if not using fixed height parameter
+ * @default 2
+ *
  * @arg SE
- * @type file
- * @dir audio/se
+ * @type struct<SoundEffect>
+ * @default {"File":"","Volume":"90","Pitch":"100","Pan":"0"}
  * @text Sound Effect
  * @desc Sound effect to play when the toast appears
- * @default 
  *
  * @arg Display Time
  * @type number
@@ -175,6 +211,11 @@
  * @type struct<Tone>
  * @text Windowskin Tone
  * @desc Windowskin tone (color)
+ *
+ * @arg windowskin
+ * @type file
+ * @dir img/
+ * @desc The windowskin file to use for the toast window.
  * 
  * @param Max Window Count
  * @type number
@@ -199,6 +240,17 @@
  * @type boolean
  * @desc Determines if toasts should adjust width or not. If true, toasts always use the above width parameter.
  * @default false
+ *
+ * @param Height
+ * @type number
+ * @min 1
+ * @desc Determines default height (in text lines) of the toast windows
+ * @default 2
+ *
+ * @param Fixed Height
+ * @type boolean
+ * @desc Determines if toasts should adjust height or not. If true, toasts always use the above height parameter.
+ * @default true
  *
  * @param Display Time
  * @type number
@@ -233,6 +285,33 @@
  * @desc Amount of blue in the tone
  * @default 0
 */
+/*~struct~SoundEffect:
+ * @param Name
+ * @type file
+ * @dir audio/se
+ * @desc The sound effect file to play
+ *
+ * @param Volume
+ * @type number
+ * @min 0
+ * @max 100
+ * @default 90
+ * @desc The volume of the sound effect
+ *
+ * @param Pitch
+ * @type number
+ * @min 50
+ * @max 150
+ * @default 100
+ * @desc The pitch of the sound effect
+ *
+ * @param Pan
+ * @type number
+ * @min -100
+ * @max 100
+ * @default 0
+ * @desc The pitch of the sound effect
+*/
 /*:zh-CN
  * @author Casper Gaming
  * @url https://www.caspergaming.com/plugins/cgmz/toastmanager/
@@ -253,10 +332,10 @@
  * 然后获得作者和其插件的最新资讯，以及测试版插件的试用。
  * https://www.patreon.com/CasperGamingRPGM
  * ============================================================================
- * 【插件版本】V 1.2.1
+ * 【插件版本】V 1.3.2
  * ----------------------------------------------------------------------------
  * 【兼容性】仅测试作者所制作的插件
- * 【RM版本】RPG Maker MZ 1.6.0
+ * 【RM版本】RPG Maker MZ 1.8.0
  * ----------------------------------------------------------------------------
  * 【插件描述】
  * 在游戏中可以跳出弹窗，来提示玩家获得成就、专业升级、习得配方等。
@@ -283,31 +362,39 @@
  *
  * ---------------------------------------------------------------------------
  *【版本更新历史】
- * Version 1.0.0 - Initial Release
- * Version 1.0.1:
+ * Version 1.0.1
  * - SE are no longer mandatory on toasts
- * Version 1.0.2:
+ * Version 1.0.2
  * - Toast windows no longer update if they are not visible
  * - Fix crash with VS Debugger (hopefully)
- * Version 1.0.3:
+ * Version 1.0.3
  * - Fix bug with toast window custom widths not being centered
- * Version 1.1.0:
+ * Version 1.1.0
  * - Added parameter for changing the display time of the toast
- * Version 1.2.0:
+ * Version 1.2.0
  * - Added parameter for Window/Dim/Transparent appearance of window
  * - Added parameter to change window color
- * Version 1.2.1:
+ * Version 1.2.1
  * - Update color parameter to use RMMZ 1.6.0 new color picker UI
+ * Version 1.3.0
+ * - Added option to use a different windowskin for each toast
+ * - Added option to set the toast window's height
+ * - Fixed bug when using same custom width twice in a row
+ * - Optimized image loading for image toasts
+ * Version 1.3.1
+ * - Added Spanish help language documentation
+ * - Now warns instead of crash when invalid JSON detected
+ * Version 1.3.2
+ * - The default text toast now supports all text codes
+ * - Toast sound effects can now have volume/pitch/pan customized
  *
  * @command Create Text Toast
  * @text 制作文字弹窗
  * @desc 制作一个只有文字描述的弹窗。
  *
  * @arg lineOne
- * @type text
  * @text 第一行描述
  * @desc 设置弹窗第一行文字的内容。支持变量\v，角色名\n，队友序号\p和货币单位\g的文本指令。
- * @default 
  *
  * @arg lineOneAlignment
  * @type combo
@@ -325,10 +412,8 @@
  * @default 0
  *
  * @arg lineTwo
- * @type text
  * @text 第二行描述
  * @desc 设置弹窗第二行文字的内容。支持变量\v，角色名\n，队友序号\p和货币单位\g的文本指令。
- * @default 
  *
  * @arg lineTwoAlignment
  * @type combo
@@ -352,12 +437,17 @@
  * @desc 设置提示弹窗的宽度，默认为360像素。
  * @default 360
  *
+ * @arg height
+ * @type number
+ * @min 1
+ * @desc Height (in text lines) to make the toast window if not using fixed height parameter
+ * @default 2
+ *
  * @arg SE
- * @type file
- * @dir audio/se
+ * @type struct<SoundEffect>
+ * @default {"File":"","Volume":"90","Pitch":"100","Pan":"0"}
  * @text 音效
  * @desc 设置一个弹窗提示时的音效。
- * @default 
  *
  * @arg Display Time
  * @type number
@@ -379,6 +469,12 @@
  * @text Windowskin Tone
  * @desc Windowskin tone (color)
  *
+ * @arg windowskin
+ * @text windowskin
+ * @type file
+ * @dir img/
+ * @desc The windowskin file to use for the toast window.
+ *
  * @command Create Image Toast
  * @text 制作图片弹窗
  * @desc 制作一个只有图片的弹窗。（默认尺寸建议：336×72像素）
@@ -387,8 +483,7 @@
  * @type file
  * @dir img/pictures
  * @text 图片
- * @desc 选择一张作为提示用的图片。（默认尺寸建议：336×72像素）
- * @default 
+ * @desc 选择一张作为提示用的图片。（默认尺寸建议：336×72像素
  *
  * @arg showBackground
  * @type boolean
@@ -403,12 +498,17 @@
  * @desc 设置提示弹窗的宽度，默认为360像素。
  * @default 360
  *
+ * @arg height
+ * @type number
+ * @min 1
+ * @desc Height (in text lines) to make the toast window if not using fixed height parameter
+ * @default 2
+ *
  * @arg SE
- * @type file
- * @dir audio/se
+ * @type struct<SoundEffect>
+ * @default {"File":"","Volume":"90","Pitch":"100","Pan":"0"}
  * @text 音效
  * @desc 选择一个弹窗提示时的音效。
- * @default 
  *
  * @arg Display Time
  * @type number
@@ -420,6 +520,12 @@
  * @type struct<Tone>
  * @text Windowskin Tone
  * @desc Windowskin tone (color)
+ *
+ * @arg windowskin
+ * @text windowskin
+ * @type file
+ * @dir img/
+ * @desc The windowskin file to use for the toast window.
  * 
  * @param Max Window Count
  * @type number
@@ -448,6 +554,17 @@
  * @text 统一宽度
  * @desc 是否统一调整弹窗宽度？Ture-统一使用"弹窗宽度"设置的宽度。
  * @default false
+ *
+ * @param Height
+ * @type number
+ * @min 1
+ * @desc Determines default height (in text lines) of the toast windows
+ * @default 2
+ *
+ * @param Fixed Height
+ * @type boolean
+ * @desc Determines if toasts should adjust height or not. If true, toasts always use the above height parameter.
+ * @default true
  *
  * @param Display Time
  * @type number
@@ -484,18 +601,372 @@
  * @desc Amount of blue in the tone
  * @default 0
 */
-var Imported = Imported || {};
+/*~struct~SoundEffect:zh-CN
+ * @param Name
+ * @type file
+ * @dir audio/se
+ * @desc The sound effect file to play
+ *
+ * @param Volume
+ * @type number
+ * @min 0
+ * @max 100
+ * @default 90
+ * @desc The volume of the sound effect
+ *
+ * @param Pitch
+ * @type number
+ * @min 50
+ * @max 150
+ * @default 100
+ * @desc The pitch of the sound effect
+ *
+ * @param Pan
+ * @type number
+ * @min -100
+ * @max 100
+ * @default 0
+ * @desc The pitch of the sound effect
+*/
+/*:es
+ * @author Casper Gaming
+ * @url https://www.caspergaming.com/plugins/cgmz/toastmanager/
+ * @target MZ
+ * @base CGMZ_Core
+ * @orderAfter CGMZ_Core
+ * @plugindesc Administra las ventanas emergentes de CGMZ para tu juego
+ * @help
+ * ============================================================================
+ * Para términos y condiciones de uso de este pluging en tu juego, por favor
+ * visita:
+ * https://www.caspergaming.com/terms-of-use/
+ * ============================================================================
+ * ¡Conviértete en un Patrocinador para obtener acceso a los plugings beta y
+ * alfa, ademas de otras cosas geniales!
+ * https://www.patreon.com/CasperGamingRPGM
+ * ============================================================================
+ * Versión: 1.3.2
+ * ----------------------------------------------------------------------------
+ * Compatibilidad: Sólo probado con mis CGMZ plugins.
+ * Hecho para RPG Maker MZ 1.8.0
+ * ----------------------------------------------------------------------------
+ * Descripción: Este plugin crea hasta 3 ventanas emergentes en cada escena
+ * (hay algunas excepciones) que mostrará información breve o imágenes al
+ * jugador por un corto período de tiempo. Las ventanas se mostrarán a medida
+ * que se liberan en el caso de una cola de mas de 3 mensajes/avisos. 
+ * ----------------------------------------------------------------------------
+ * Documentación:
+ * ---------------------------Comandos de Plugin-------------------------------
+ * • Crear notificación de texto
+ * Crea una nueva notificación de texto con opciones, que se agrega a la cola
+ * 
+ * • Crear notificación de imagen
+ * Crea una nueva notificación de imagen con opciones, que se agrega a la cola
+ *
+ * Las dimensiones de la imagen deben ser 336x72 por defecto (si cambia el 
+ * ancho, restar 24 del valor del ancho).
+ * ------------------------------Saved Games-----------------------------------
+ * This plugin is fully compatible with saved games. This means you can:
+ *
+ * ✓ Add this plugin to a saved game and it will work as expected
+ * ✓ Change any plugin params and changes will be reflected in saved games
+ * ✓ Remove the plugin with no issue to save data
+ * -----------------------------Filename---------------------------------------
+ * The filename for this plugin MUST remain CGMZ_ToastManager.js
+ * This is what it comes as when downloaded. The filename is used to load
+ * parameters and execute plugin commands. If you change it, things will begin
+ * behaving incorrectly and your game will probably crash. Please do not
+ * rename the js file.
+ * ------------------------Historial de Versiones------------------------------
+ * Versión 1.0.1:
+ * - Los efectos de sonido ya no son obligatorios en los mensajes
+ *
+ * Versión 1.0.2:
+ * - Las ventanas de mensajes ya no se actualizan si no están visibles
+ * - Solución del bloqueo con VS Debugger (con suerte)
+ *
+ * Versión 1.0.3:
+ * - Solución del error con los anchos personalizados de la ventana de mensajes
+ *   que no están centrados
+ *
+ * Versión 1.1.0:
+ * - Parámetro agregado para cambiar el tiempo de visualización del mensaje
+ *
+ * Versión 1.2.0:
+ * - Parámetro agregado para la apariencia de Ventana/Dim/Transparente de la
+ *   ventana
+ * - Parámetro agregado para cambiar el color de la ventana
+ * 
+ * Versión 1.3.0:
+ * - Added option to use a different windowskin for each toast
+ * - Added option to set the toast window's height
+ * - Fixed bug when using same custom width twice in a row
+ * - Optimized image loading for image toasts
+ *
+ * Versión 1.3.1:
+ * - Added Spanish help language documentation
+ * - Now warns instead of crash when invalid JSON detected
+ *
+ * Versión 1.3.2
+ * - The default text toast now supports all text codes
+ * - Toast sound effects can now have volume/pitch/pan customized
+ *
+ * @command Create Text Toast
+ * @text Crear Mensaje de respuesta
+ * @desc Crea una ventana de mensaje basada en texto
+ *
+ * @arg lineOne
+ * @text Línea 1
+ * @desc Texto para mostrar en la Línea 1 del mensaje.
+ *
+ * @arg lineOneAlignment
+ * @type combo
+ * @text Alineación de la línea 1
+ * @option left
+ * @option center
+ * @option right
+ * @desc Alinear el texto en la línea 1 a la izquierda, al centro o a la derecha.
+ * @default center
+ *
+ * @arg lineOneColor
+ * @type number
+ * @min 0
+ * @text Color del texto de la primera línea
+ * @desc El color del texto de la línea 1 (igual que en el comando Mostrar evento de texto)
+ * @default 0
+ *
+ * @arg lineTwo
+ * @text Línea 2
+ * @desc Texto para mostrar en la Línea 2 del mensaje.
+ *
+ * @arg lineTwoAlignment
+ * @type combo
+ * @text Alineación de la línea 2
+ * @option left
+ * @option center
+ * @option right
+ * @desc Alinear el texto en la línea 2 a la izquierda, al centro o a la derecha.
+ * @default center
+ *
+ * @arg lineTwoColor
+ * @type number
+ * @min 0
+ * @text Color del texto de la segunda línea
+ * @desc El color del texto de la línea 2 (igual que en el comando Mostrar evento de texto).
+ * @default 0
+ *
+ * @arg width
+ * @type number
+ * @min 1
+ * @text Ancho
+ * @desc Ancho (en píxeles) para hacer la ventana del mensaje si no se usa el parámetro de plugin de ancho fijo.
+ * @default 360
+ *
+ * @arg height
+ * @type number
+ * @min 1
+ * @desc Height (in text lines) to make the toast window if not using fixed height parameter
+ * @default 2
+ *
+ * @arg SE
+ * @type struct<SoundEffect>
+ * @default {"File":"","Volume":"90","Pitch":"100","Pan":"0"}
+ * @text Efecto de sonido
+ * @desc Efecto de sonido para reproducir cuando aparece el mensaje.
+ *
+ * @arg Display Time
+ * @type number
+ * @min 0
+ * @text Tiempo de visualización
+ * @desc Tiempo de visualización para mostrar el mensaje (en fotogramas). Si es 0, vuelve al parámetro de tiempo de visualización global.
+ * @default 0
+ *
+ * @arg backgroundStyle
+ * @type select
+ * @option Window
+ * @option Dim
+ * @option Transparent
+ * @text Estilo de fondo
+ * @desc Estilo de fondo de ventana. Igual que el comando de evento Mostrar texto.
+ * @default Window
+ *
+ * @arg windowskinTone
+ * @type struct<Tone>
+ * @text Tono de piel de ventana
+ * @desc Tono de piel de ventana (color).
+ *
+ * @arg windowskin
+ * @type file
+ * @dir img/
+ * @desc The windowskin file to use for the toast window.
+ *
+ * @command Create Image Toast
+ * @text Crear mensaje de imagen
+ * @desc Crea una ventana de mensaje basada en imágenes.
+ *
+ * @arg image
+ * @type file
+ * @dir img/pictures
+ * @text Imagen
+ * @desc Imagen para mostrar en el mensaje.
+ *
+ * @arg showBackground
+ * @type boolean
+ * @text Mostrar fondo
+ * @desc Mostrar o no el fondo de la ventana.
+ * @default false
+ *
+ * @arg width
+ * @type number
+ * @min 1
+ * @text Ancho
+ * @desc Ancho (en píxeles) para hacer la ventana del mensaje si no se usa el parámetro de plugin de ancho fijo.
+ * @default 360
+ *
+ * @arg height
+ * @type number
+ * @min 1
+ * @desc Height (in text lines) to make the toast window if not using fixed height parameter
+ * @default 2
+ *
+ * @arg SE
+ * @type struct<SoundEffect>
+ * @default {"File":"","Volume":"90","Pitch":"100","Pan":"0"}
+ * @text Efecto de sonido
+ * @desc Efecto de sonido para reproducir cuando aparece el mensaje.
+ *
+ * @arg Display Time
+ * @type number
+ * @min 0
+ * @text Tiempo de visualización
+ * @desc Tiempo de visualización para mostrar el mensaje (en fotogramas). Si es 0, vuelve al parámetro de tiempo de visualización global.
+ * @default 0
+ *
+ * @arg windowskinTone
+ * @type struct<Tone>
+ * @text Tono de piel de ventana
+ * @desc Tono de piel de ventana (color).
+ *
+ * @arg windowskin
+ * @type file
+ * @dir img/
+ * @desc The windowskin file to use for the toast window.
+ * 
+ * @param Max Window Count
+ * @type number
+ * @min 1
+ * @max 3
+ * @text Recuento máximo de ventanas
+ * @desc Determina la cantidad máxima de ventanas de mensaje que se muestran a la vez.
+ * @default 1
+ *
+ * @param Spacing
+ * @type number
+ * @min 0
+ * @text Espaciado
+ * @desc Determina los píxeles entre cada ventana de mensaje si se muestran varias.
+ * @default 12
+ *
+ * @param Width
+ * @type number
+ * @min 0
+ * @text Ancho
+ * @desc Determina el ancho predeterminado (en píxeles) de las ventanas de mensaje.
+ * @default 360
+ *
+ * @param Fixed Width
+ * @type boolean
+ * @text Ancho fijo
+ * @desc Determina si los mensajes deben ajustar el ancho o no. Si es verdadero, los mensajes siempre usan el parámetro de ancho anterior.
+ * @default false
+ *
+ * @param Height
+ * @type number
+ * @min 1
+ * @desc Determines default height (in text lines) of the toast windows
+ * @default 2
+ *
+ * @param Fixed Height
+ * @type boolean
+ * @desc Determines if toasts should adjust height or not. If true, toasts always use the above height parameter.
+ * @default true
+ *
+ * @param Display Time
+ * @type number
+ * @min 0
+ * @text Tiempo de visualización
+ * @desc Duración del tiempo que se muestra el mensaje (en fotogramas)
+ * @default 240
+ *
+ * @param Display From Bottom
+ * @type boolean
+ * @text Mostrar desde abajo
+ * @desc Determina si los mensajes deben mostrarse desde la parte inferior de la pantalla hacia arriba o desde arriba hacia abajo.
+ * @default true
+*/
+/*~struct~Tone:es
+ * @param Red
+ * @text Rojo
+ * @type number
+ * @min -255
+ * @max 255
+ * @desc Cantidad de rojo en el tono.
+ * @default 0
+ *
+ * @param Green
+ * @text Verde
+ * @type number
+ * @min -255
+ * @max 255
+ * @desc Cantidad de verde en el tono.
+ * @default 0
+ *
+ * @param Blue
+ * @text Azul
+ * @type number
+ * @min -255
+ * @max 255
+ * @desc Cantidad de azul en el tono.
+ * @default 0
+*/
+/*~struct~SoundEffect:es
+ * @param Name
+ * @type file
+ * @dir audio/se
+ * @desc The sound effect file to play
+ *
+ * @param Volume
+ * @type number
+ * @min 0
+ * @max 100
+ * @default 90
+ * @desc The volume of the sound effect
+ *
+ * @param Pitch
+ * @type number
+ * @min 50
+ * @max 150
+ * @default 100
+ * @desc The pitch of the sound effect
+ *
+ * @param Pan
+ * @type number
+ * @min -100
+ * @max 100
+ * @default 0
+ * @desc The pitch of the sound effect
+*/
 Imported.CGMZ_ToastManager = true;
-var CGMZ = CGMZ || {};
-CGMZ.Versions = CGMZ.Versions || {};
-CGMZ.Versions["Toast Manager"] = "1.2.1";
-CGMZ.ToastManager = CGMZ.ToastManager || {};
+CGMZ.Versions["Toast Manager"] = "1.3.2";
+CGMZ.ToastManager = {};
 CGMZ.ToastManager.parameters = PluginManager.parameters('CGMZ_ToastManager');
 CGMZ.ToastManager.MaxWindowCount = Number(CGMZ.ToastManager.parameters["Max Window Count"]);
 CGMZ.ToastManager.Spacing = Number(CGMZ.ToastManager.parameters["Spacing"]);
 CGMZ.ToastManager.Width = Number(CGMZ.ToastManager.parameters["Width"]);
+CGMZ.ToastManager.Height = Number(CGMZ.ToastManager.parameters["Height"]);
 CGMZ.ToastManager.DisplayTime = Number(CGMZ.ToastManager.parameters["Display Time"]);
 CGMZ.ToastManager.FixedWidth = (CGMZ.ToastManager.parameters["Fixed Width"] === "true");
+CGMZ.ToastManager.FixedHeight = (CGMZ.ToastManager.parameters["Fixed Height"] === "true");
 CGMZ.ToastManager.DisplayFromBottom = (CGMZ.ToastManager.parameters["Display From Bottom"] === "true");
 //=============================================================================
 // CGMZ_Temp
@@ -523,10 +994,15 @@ CGMZ_Temp.prototype.registerPluginCommands = function() {
 // Creates a text-based toast object from a plugin command
 //-----------------------------------------------------------------------------
 CGMZ_Temp.prototype.pluginCommandCreateTextToast = function(args) {
-	let toast = {};
+	const toast = {};
 	toast.isText = true;
 	toast.width = Number(args.width);
-	toast.SE = {name: args.SE, pan: 0, pitch: 100, volume: 100};
+	if(args.height) toast.height = Number(args.height);
+	if(args.SE.includes('{')) {
+		toast.SE = CGMZ_Utils.parseSoundEffectJSON(args.SE, "CGMZ Toast Manager");
+	} else { // legacy SE toast commands
+		toast.SE = {name: args.SE, pan: 0, pitch: 100, volume: 90};
+	}
 	toast.lineOne = args.lineOne;
 	toast.lineOneColor = Number(args.lineOneColor);
 	toast.lineOneAlignment = args.lineOneAlignment;
@@ -536,20 +1012,27 @@ CGMZ_Temp.prototype.pluginCommandCreateTextToast = function(args) {
 	toast.displayTime = Number(args["Display Time"]);
 	toast.backgroundStyle = args.backgroundStyle;
 	toast.windowskinTone = args.windowskinTone;
+	if(args.windowskin) toast.windowskin = CGMZ_Utils.getImageData(args.windowskin, "img");
 	$cgmzTemp.createNewToast(toast);
 };
 //-----------------------------------------------------------------------------
 // Creates an image-based toast object from a plugin command
 //-----------------------------------------------------------------------------
 CGMZ_Temp.prototype.pluginCommandCreateImageToast = function(args) {
-	let toast = {};
+	const toast = {};
 	toast.isImage = true;
 	toast.width = Number(args.width);
-	toast.SE = {name: args.SE, pan: 0, pitch: 100, volume: 100};
-	toast.showBackground = (args.showBackground === "true") ? true : false;
+	if(args.height) toast.height = Number(args.height);
+	if(args.SE.includes('{')) {
+		toast.SE = CGMZ_Utils.parseSoundEffectJSON(args.SE, "CGMZ Toast Manager");
+	} else { // legacy SE toast commands
+		toast.SE = {name: args.SE, pan: 0, pitch: 100, volume: 90};
+	}
+	toast.showBackground = (args.showBackground === "true");
 	toast.picture = args.image
 	toast.displayTime = Number(args["Display Time"]);
 	toast.windowskinTone = args.windowskinTone;
+	if(args.windowskin) toast.windowskin = CGMZ_Utils.getImageData(args.windowskin, "img");
 	$cgmzTemp.createNewToast(toast);
 };
 //-----------------------------------------------------------------------------
@@ -563,6 +1046,12 @@ CGMZ_Temp.prototype.createNewToast = function(toastObject) {
 //-----------------------------------------------------------------------------
 CGMZ_Temp.prototype.getToast = function() {
 	return this._toastWindows.shift();
+};
+//-----------------------------------------------------------------------------
+// Look at the first toast object without removing from queue
+//-----------------------------------------------------------------------------
+CGMZ_Temp.prototype.peekToast = function() {
+	return this._toastWindows[0];
 };
 //-----------------------------------------------------------------------------
 // Determine if toast waiting for display exists
@@ -641,33 +1130,98 @@ Scene_Base.prototype.update = function() {
 // Create amount of toast windows depending on need.
 //-----------------------------------------------------------------------------
 Scene_Base.prototype.CGMZ_ToastManager_createToastWindows = function() {
-    this._cgmz_toastWindow1 = new CGMZ_Window_Toast(0);
+	const rect1 = this.CGMZ_ToastManager_toastWindowRect();
+    this._cgmz_toastWindow1 = new CGMZ_Window_Toast(rect1);
     this.CGMZ_ToastManager_addToast(this._cgmz_toastWindow1);
 	if(CGMZ.ToastManager.MaxWindowCount > 1) {
-		this._cgmz_toastWindow2 = new CGMZ_Window_Toast(1);
+		const rect2 = this.CGMZ_ToastManager_toastWindowRect();
+		this._cgmz_toastWindow2 = new CGMZ_Window_Toast(rect2);
 		this.CGMZ_ToastManager_addToast(this._cgmz_toastWindow2);
 	}
 	if(CGMZ.ToastManager.MaxWindowCount > 2) {
-		this._cgmz_toastWindow3 = new CGMZ_Window_Toast(2);
+		const rect3 = this.CGMZ_ToastManager_toastWindowRect();
+		this._cgmz_toastWindow3 = new CGMZ_Window_Toast(rect3);
 		this.CGMZ_ToastManager_addToast(this._cgmz_toastWindow3);
 	}
 	this._cgmz_hasToastWindows = true;
 };
 //-----------------------------------------------------------------------------
-// Create amount of toast windows depending on need.
+// Get the toast window's starting rect. All values set to 0 because toast
+// window properties are set for each toast window.
+//-----------------------------------------------------------------------------
+Scene_Base.prototype.CGMZ_ToastManager_toastWindowRect = function() {
+	return new Rectangle(0, 0, 0, 0);
+};
+//-----------------------------------------------------------------------------
+// Update toast windows. Determine which ones can open and their y value.
 //-----------------------------------------------------------------------------
 Scene_Base.prototype.CGMZ_ToastManager_updateToastWindows = function() {
 	if($cgmzTemp.hasToast()) {
-		if(!this._cgmz_toastWindow1.isDisplaying()) {
+		if(!this._cgmz_toastWindow1.isDisplaying() && this.CGMZ_ToastManager_canDisplayToast(1, $cgmzTemp.peekToast())) {
+			const y = (CGMZ.ToastManager.DisplayFromBottom) ? Graphics.boxHeight : 0;
+			this._cgmz_toastWindow1.y = y;
 			this._cgmz_toastWindow1.open($cgmzTemp.getToast());
 		}
-		else if(CGMZ.ToastManager.MaxWindowCount > 1 && !this._cgmz_toastWindow2.isDisplaying()) {
+		else if(CGMZ.ToastManager.MaxWindowCount > 1 && !this._cgmz_toastWindow2.isDisplaying() && this.CGMZ_ToastManager_canDisplayToast(2, $cgmzTemp.peekToast())) {
+			if(CGMZ.ToastManager.DisplayFromBottom) {
+				this._cgmz_toastWindow2.y = this._cgmz_toastWindow1.y - CGMZ.ToastManager.Spacing;
+			} else {
+				this._cgmz_toastWindow2.y = this._cgmz_toastWindow1.y + this._cgmz_toastWindow1.height + CGMZ.ToastManager.Spacing;
+			}
 			this._cgmz_toastWindow2.open($cgmzTemp.getToast());
 		}
 		else if(CGMZ.ToastManager.MaxWindowCount > 2 && !this._cgmz_toastWindow3.isDisplaying()) {
+			if(CGMZ.ToastManager.DisplayFromBottom) {
+				this._cgmz_toastWindow3.y = this._cgmz_toastWindow2.y - CGMZ.ToastManager.Spacing;
+			} else {
+				this._cgmz_toastWindow3.y = this._cgmz_toastWindow2.y + this._cgmz_toastWindow2.height + CGMZ.ToastManager.Spacing;
+			}
 			this._cgmz_toastWindow3.open($cgmzTemp.getToast());
 		}
 	}
+};
+//-----------------------------------------------------------------------------
+// Determine if there is enough space for the toast to display
+// Always true if fixed height, always true if window is 1 and max is 1,
+// always true if window is 2 and max is 2. Method not called for third window
+// as third window can always display.
+//-----------------------------------------------------------------------------
+Scene_Base.prototype.CGMZ_ToastManager_canDisplayToast = function(toastNum, toastObject) {
+	if(CGMZ.ToastManager.FixedHeight) return true;
+	if(toastNum === 1 && CGMZ.ToastManager.MaxWindowCount === 1) return true;
+	if(toastNum === 2 && (CGMZ.ToastManager.MaxWindowCount === 2 || !this._cgmz_toastWindow3._isDisplaying)) return true;
+	if(!this._cgmz_toastWindow2._isDisplaying && !this._cgmz_toastWindow3._isDisplaying) return true;
+	const neededHeight = (toastObject.height) ? this.calcWindowHeight(toastObject.height, false) : this.calcWindowHeight(CGMZ.ToastManager.Height, false);
+	let y = (CGMZ.ToastManager.DisplayFromBottom) ? Graphics.boxHeight : 0;
+	if(toastNum === 2 && CGMZ.ToastManager.DisplayFromBottom) y = this._cgmz_toastWindow1.y - CGMZ.ToastManager.Spacing;
+	if(toastNum === 2 && !CGMZ.ToastManager.DisplayFromBottom) y = this._cgmz_toastWindow1.y + this._cgmz_toastWindow1.height + CGMZ.ToastManager.Spacing;
+	const line2 = (CGMZ.ToastManager.MaxWindowCount > 1) ? {y:this._cgmz_toastWindow2.y,height:this._cgmz_toastWindow2.height} : {y:0,height:0};
+	const line3 = (CGMZ.ToastManager.MaxWindowCount > 2) ? {y:this._cgmz_toastWindow3.y,height:this._cgmz_toastWindow3.height} : {y:0,height:0};
+	if(toastNum === 1) {
+		if(CGMZ.ToastManager.MaxWindowCount > 2 && this._cgmz_toastWindow3._isDisplaying) {
+			if((CGMZ.ToastManager.DisplayFromBottom)) {
+				if(y > (line3.y + line3.height) && (y - neededHeight) < (line3.y + line3.height)) return false;
+			} else {
+				if(y < (line3.y) && (y + neededHeight) > (line3.y)) return false;
+			}
+		}
+		if(CGMZ.ToastManager.MaxWindowCount > 1) {
+			if((CGMZ.ToastManager.DisplayFromBottom)) {
+				if(y > (line2.y + line2.height) && (y - neededHeight) < (line2.y + line2.height)) return false;
+			} else {
+				if(y < (line2.y) && (y + neededHeight) > (line2.y)) return false;
+			}
+		}
+	}
+	if(toastNum === 2 && CGMZ.ToastManager.MaxWindowCount > 2 && this._cgmz_toastWindow3._isDisplaying) {
+		if(!this._cgmz_toastWindow1._isDisplaying) return false;
+		if((CGMZ.ToastManager.DisplayFromBottom)) {
+			if(y > (line3.y + line3.height) && (y - neededHeight) < (line3.y + line3.height)) return false;
+		} else {
+			if(y < (line3.y) && (y + neededHeight) > (line3.y)) return false;
+		}
+	}
+	return true;
 };
 //=============================================================================
 // CGMZ_Window_Toast
@@ -682,8 +1236,7 @@ CGMZ_Window_Toast.prototype.constructor = CGMZ_Window_Toast;
 //-----------------------------------------------------------------------------
 // Initialize
 //-----------------------------------------------------------------------------
-CGMZ_Window_Toast.prototype.initialize = function(winNum) {
-	const rect = this.getWindowRect(winNum);
+CGMZ_Window_Toast.prototype.initialize = function(rect) {
     Window_Base.prototype.initialize.call(this, rect);
     this.opacity = 0;
     this.contentsOpacity = 0;
@@ -699,33 +1252,6 @@ CGMZ_Window_Toast.prototype.initialize = function(winNum) {
 	this._dimmerSprite.opacity = 0;
 };
 //-----------------------------------------------------------------------------
-// Get the window's rect
-//-----------------------------------------------------------------------------
-CGMZ_Window_Toast.prototype.getWindowRect = function(winNum) {
-    const width = this.windowWidth();
-    const height = this.windowHeight();
-	const x = Graphics.boxWidth/2 - width/2;
-	let y = 0;
-	if(CGMZ.ToastManager.DisplayFromBottom) {
-		y = Graphics.boxHeight - height - winNum*(height + CGMZ.ToastManager.Spacing);
-	} else {
-		y = 0 + winNum*(height + CGMZ.ToastManager.Spacing);
-	}
-	return new Rectangle(x, y, width, height);
-};
-//-----------------------------------------------------------------------------
-// Default Window Width
-//-----------------------------------------------------------------------------
-CGMZ_Window_Toast.prototype.windowWidth = function() {
-    return CGMZ.ToastManager.Width;
-};
-//-----------------------------------------------------------------------------
-// Default Window height
-//-----------------------------------------------------------------------------
-CGMZ_Window_Toast.prototype.windowHeight = function() {
-    return this.fittingHeight(2);
-};
-//-----------------------------------------------------------------------------
 // Update for fade in/out
 //-----------------------------------------------------------------------------
 CGMZ_Window_Toast.prototype.update = function() {
@@ -737,7 +1263,9 @@ CGMZ_Window_Toast.prototype.update = function() {
 		} else {
 			this.updateFadeOut();
 		}
-		if(this.contentsOpacity <= 0 && !this._bitmapLoading) {
+		if(this.contentsOpacity <= 0 && this._showCount <= 0) {
+			this.y = 0;
+			this.height = 0;
 			this._isDisplaying = false;
 		}
 	}
@@ -746,7 +1274,7 @@ CGMZ_Window_Toast.prototype.update = function() {
 // Check if everything is ready for displaying the toast.
 //-----------------------------------------------------------------------------
 CGMZ_Window_Toast.prototype.canDisplay = function() {
-	return this.isBitmapReady();
+	return !this._bitmapLoading;
 };
 //-----------------------------------------------------------------------------
 // Check if this is currently displaying
@@ -755,31 +1283,20 @@ CGMZ_Window_Toast.prototype.isDisplaying = function() {
 	return this._isDisplaying
 };
 //-----------------------------------------------------------------------------
-// Check if the bitmap is loaded. Perform a blt if so.
+// Load listener for after bitmap is done loading.
 //-----------------------------------------------------------------------------
-CGMZ_Window_Toast.prototype.isBitmapReady = function() {
-	if(!this._bitmapLoading) {
-		return true;
-	}
-	else {
-		if(this._bitmap.width === 0) {
-			return false;
-		}
-		else {
-			this._bitmapLoading = false;
-			const sx = 0;
-			const sy = 0;
-			const sw = this._bitmap.width;
-			const sh = this._bitmap.height;
-			const dx = 0;
-			const dy = 0;
-			const dw = this.contents.width;
-			const dh = this.contents.height;
-			this.contents.blt(this._bitmap, sx, sy, sw, sh, dx, dy, dw, dh);
-			this._bitmap = ImageManager._emptyBitmap;
-			return true;
-		}
-	}
+CGMZ_Window_Toast.prototype.onBitmapLoaded = function() {
+	this._bitmapLoading = false;
+	const sx = 0;
+	const sy = 0;
+	const sw = this._bitmap.width;
+	const sh = this._bitmap.height;
+	const dx = 0;
+	const dy = 0;
+	const dw = this.contents.width;
+	const dh = this.contents.height;
+	this.contents.blt(this._bitmap, sx, sy, sw, sh, dx, dy, dw, dh);
+	this._bitmap = ImageManager._emptyBitmap;
 };
 //-----------------------------------------------------------------------------
 // Fade in
@@ -825,34 +1342,41 @@ CGMZ_Window_Toast.prototype.refresh = function(toastObject) {
 	this.resetTextColor();
 	//Default text toast
 	if(toastObject.isText) {
-		const x = 0;
-		let y = 0;
-		const width = this.contents.width;
-		this.changeTextColor(ColorManager.textColor(toastObject.lineOneColor));
-		this.drawText(this.convertEscapeCharacters(toastObject.lineOne), x, y, width, toastObject.lineOneAlignment);
-		y += this.lineHeight();
-		this.resetTextColor();
-		this.changeTextColor(ColorManager.textColor(toastObject.lineTwoColor));
-		this.drawText(this.convertEscapeCharacters(toastObject.lineTwo), x, y, width, toastObject.lineTwoAlignment);
+		const line1 = `\\c[${toastObject.lineOneColor}]${toastObject.lineOne}\\c[0]`;
+		const line2 = `\\c[${toastObject.lineTwoColor}]${toastObject.lineTwo}\\c[0]`;
+		this.CGMZ_drawTextLine(line1, 0, 0, this.contents.width, toastObject.lineOneAlignment);
+		this.CGMZ_drawTextLine(line2, 0, this.lineHeight(), this.contents.width, toastObject.lineOneAlignment);
 	}
 	//Default image toast
 	if(toastObject.isImage) {
+		this._bitmapLoading = true;
 		this._showBG = toastObject.showBackground;
 		this._bitmap = ImageManager.loadPicture(toastObject.picture);
-		this._bitmapLoading = true;
+		this._bitmap.addLoadListener(this.onBitmapLoaded.bind(this));
 	}
 	this.processCustomToast(toastObject);
 };
 //-----------------------------------------------------------------------------
-// Perform common effects for all toast types (resize Width and play SE)
+// Perform common effects for all toast types
+// 1. Resize width
+// 2. Resize height
+// 3. Play se
+// 4. Change background style
+// 5. Change windowskin Tone
+// 6. Change windowskin
 //-----------------------------------------------------------------------------
 CGMZ_Window_Toast.prototype.doCommonEffects = function(toastObject) {
-	if(toastObject.hasOwnProperty('width') && !CGMZ.ToastManager.FixedWidth && toastObject.width != this.width) {
+	if(toastObject.hasOwnProperty('width') && !CGMZ.ToastManager.FixedWidth) {
 		this.updateWidth(toastObject.width);
-	}
-	else {
+	} else {
 		this.updateWidth(CGMZ.ToastManager.Width);
 	}
+	if(toastObject.hasOwnProperty('height') && !CGMZ.ToastManager.FixedHeight) {
+		this.updateHeight(toastObject.height);
+	} else {
+		this.updateHeight(CGMZ.ToastManager.Height);
+	}
+	this.createContents();
 	if(toastObject.hasOwnProperty('SE')) {
 		AudioManager.playSe(toastObject.SE);
 	}
@@ -862,19 +1386,29 @@ CGMZ_Window_Toast.prototype.doCommonEffects = function(toastObject) {
 		this._showBG = (this._bgType === 2);
 	}
 	if(toastObject.hasOwnProperty('windowskinTone') && toastObject.windowskinTone) {
-		const tone = JSON.parse(toastObject.windowskinTone);
+		const tone = CGMZ_Utils.parseJSON(toastObject.windowskinTone, {Red: 0, Blue: 0, Green: 0}, "CGMZ Toast Manager", "Your windowskinTone argument had invalid JSON and could not be read.");
 		this._tone = [Number(tone.Red), Number(tone.Green), Number(tone.Blue)];
+	}
+	if(toastObject.hasOwnProperty('windowskin')) {
+		this.windowskin = ImageManager.loadBitmap(toastObject.windowskin.folder, toastObject.windowskin.filename);
+	} else {
+		this.windowskin = ImageManager.loadSystem("Window");
 	}
 };
 //-----------------------------------------------------------------------------
 // Change window width. Also changes x value to re-center based on custom width
 //-----------------------------------------------------------------------------
 CGMZ_Window_Toast.prototype.updateWidth = function(width) {
-	if(width != this.width) {
-		this.width = width;
-		this.x = Graphics.boxWidth/2 - width/2;
-		this.createContents();
-	}
+	this.width = width;
+	this.x = Graphics.boxWidth/2 - width/2;
+};
+//-----------------------------------------------------------------------------
+// Change window height. Also changes y value based on height
+//-----------------------------------------------------------------------------
+CGMZ_Window_Toast.prototype.updateHeight = function(height) {
+	const neededHeight = this.fittingHeight(height);
+	this.height = neededHeight;
+	this.y -= neededHeight * CGMZ.ToastManager.DisplayFromBottom;
 };
 //-----------------------------------------------------------------------------
 // Update the tone of the windowskin. If tone property no exist, use default

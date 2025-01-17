@@ -1,0 +1,152 @@
+{
+    "type": "group",
+    "id": "_root",
+    "bindings": {
+        "width": "100%",
+        "height": "100%"
+    },
+    "constants": {
+        "inputStyle": {
+            "left": "58px",
+            "bottom": "16px",
+            "height": "38px",
+            "width": "414px",
+            "fontSize": "24px"
+        }
+    },
+    "childrens": [
+        {
+            "type": "text",
+            "effects": ["shadow"],
+            "parameters": {
+                "alignment": "left",
+                "textColor": "#ECDFCC",
+                "outline": {
+                    "color": "#000000",
+                    "width": 2
+                }
+            },
+            "bindings": {
+                "width": "100%",
+                "height": "30hdp",
+                "fontSize": "24hdp",
+                "text": ["Group: %1", "$layerIndex"]
+            }
+        },
+        {
+            "type": "group",
+            "bindings": {
+                "width": "90%",
+                "height": "100% - prevEndY - 10hdp",
+                "position": {
+                    "x": "5%",
+                    "y": "prevEndY + 10hdp"
+                }
+            },
+            "childrens": [
+                {
+                    "type": "text",
+                    "parameters": {
+                        "alignment": "left"
+                    },
+                    "bindings": {
+                        "width": "100%",
+                        "height": "24hdp",
+                        "fontSize": "19hdp",
+                        "text": ["Objects: %1", "$layerObjectsCount"]
+                    }
+                },
+                {
+                    "type": "text",
+                    "parameters": {
+                        "alignment": "left"
+                    },
+                    "bindings": {
+                        "position": {
+                            "x": 0,
+                            "y": "prevEndY + 4hdp"
+                        },
+                        "width": "100%",
+                        "height": "24hdp",
+                        "fontSize": "19hdp",
+                        "text": ["Colliders: %1", "$layerCollidersCount"]
+                    }
+                },
+                {
+                    "type": "text",
+                    "parameters": {
+                        "alignment": "left"
+                    },
+                    "bindings": {
+                        "position": {
+                            "x": 0,
+                            "y": "prevEndY + 4hdp"
+                        },
+                        "width": "100%",
+                        "height": "24hdp",
+                        "fontSize": "19hdp",
+                        "text": ["Regions: %1", "$layerRegionsCount"]
+                    }
+                }
+            ]
+        },
+        {
+            "type": "group",
+            "bindings": {
+                "width": "100%",
+                "height": "80hdp",
+                "position": {
+                    "x": 0,
+                    "y": "bottom"
+                }
+            },
+            "childrens": [
+                {
+                    "type": "text",
+                    "effects": ["shadow"],
+                    "parameters": {
+                        "alignment": "left",
+                        "textColor": "#ECDFCC",
+                        "outline": {
+                            "color": "#000000",
+                            "width": 2
+                        }
+                    },
+                    "bindings": {
+                        "width": "100%",
+                        "height": "30hdp",
+                        "fontSize": "24hdp",
+                        "text": "Condition:"
+                    }
+                },
+                {
+                    "type": "rect",
+                    "parameters": {
+                        "strokeWidth": 2,
+                        "fill": "#697565"
+                    },
+                    "bindings": {
+                        "width": "80%",
+                        "height": "96% - prevHeight - 2hdp",
+                        "x": "center",
+                        "y": "prevEndY + 6hdp"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "group",
+            "id": "_deleteAllButtonContainer",
+            "bindings": {
+                "size": {
+                    "width": "90%",
+                    "height": "42hdp"
+                },
+                "position": {
+                    "x": "center",
+                    "y": "prevY - height - 10hdp"
+                }
+            }
+        }
+    ]
+}

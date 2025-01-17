@@ -1,0 +1,243 @@
+{
+    "type": "screen",
+    "constants": {
+        "isZoneIsVertical": false,
+        "zoneColor": "#ad189a",
+        "zoneOpacity": 125,
+        "zonePadding": {
+            "x": 0,
+            "y": 4
+        },
+        "zoneMinSize": 6
+    },
+    "childrens": [
+        {
+            "type": "group",
+            "id": "_mainGroup",
+            "bindings": {
+                "position": {
+                    "x": "center",
+                    "y": "20hdp"
+                }
+            },
+            "childrens": [
+                {
+                    "type": "image",
+                    "id": "_rodSprite",
+                    "parameters": {
+                        "imageName": "rodBackground",
+                        "folderName": "pSimpleFishing",
+                        "keepAspect": false,
+                        "useAspectSize": false
+                    },
+                    "bindings": {
+                        "size": {
+                            "width": "130hdp",
+                            "height": "114hdp"
+                        },
+                        "position": {
+                            "x": 0,
+                            "y": 0
+                        }
+                    },
+                    "childrens": [
+                        {
+                            "type": "image",
+                            "id": "_rodIcon",
+                            "parameters": {
+                                "imageName": "rod1",
+                                "folderName": "pSimpleFishing",
+                                "keepAspect": false,
+                                "useAspectSize": false
+                            },
+                            "bindings": {
+                                "image": "$rodImage",
+                                "size": {
+                                    "width": "100%",
+                                    "height": "100%"
+                                },
+                                "position": {
+                                    "x": "center",
+                                    "y": "center"
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "image",
+                    "id": "_baitSprite",
+                    "parameters": {
+                        "imageName": "baitBackground",
+                        "folderName": "pSimpleFishing",
+                        "keepAspect": false,
+                        "useAspectSize": false
+                    },
+                    "bindings": {
+                        "size": {
+                            "width": "130hdp",
+                            "height": "114hdp"
+                        },
+                        "position": {
+                            "x": "prevX + 24hdp",
+                            "y": "prevEndY - 36hdp"
+                        }
+                    },
+                    "childrens": [
+                        {
+                            "type": "image",
+                            "id": "_baitIcon",
+                            "parameters": {
+                                "imageName": "worm",
+                                "folderName": "pSimpleFishing",
+                                "keepAspect": false,
+                                "useAspectSize": false
+                            },
+                            "bindings": {
+                                "image": "$baitImage",
+                                "size": {
+                                    "width": "100%",
+                                    "height": "100%"
+                                },
+                                "position": {
+                                    "x": "center",
+                                    "y": "center"
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "group",
+                    "id": "_gameBarGroup",
+                    "bindings": {
+                        "position": {
+                            "x": "110hdp",
+                            "y": "30hdp"
+                        }
+                    },
+                    "childrens": [
+                        {
+                            "type": "image",
+                            "id": "_gameBarMainImage",
+                            "parameters": {
+                                "imageName": "gameBarBack",
+                                "folderName": "pSimpleFishing",
+                                "keepAspect": false,
+                                "useAspectSize": false
+                            },
+                            "bindings": {
+                                "size": {
+                                    "width": "456hdp",
+                                    "height": "70hdp"
+                                },
+                                "position": {
+                                    "x": 0,
+                                    "y": 0
+                                }
+                            },
+                            "childrens": [
+                                {
+                                    "type": "group",
+                                    "id": "_gameProccessGaugeContainer",
+                                    "bindings": {
+                                        "size": {
+                                            "width": "100%",
+                                            "height": "100%"
+                                        }
+                                    },
+                                    "childrens": [{
+                                        "type": "group",
+                                        "id": "_gameCursorContainer",
+                                        "bindings": {
+                                            "size": {
+                                                "width": "94%",
+                                                "height": "80%"
+                                            },
+                                            "position": {
+                                                "x": "center",
+                                                "y": "center"
+                                            }
+                                        }
+                                    }]
+                                },
+                                {
+                                    "type": "image",
+                                    "parameters": {
+                                        "imageName": "gameBarFore",
+                                        "folderName": "pSimpleFishing",
+                                        "keepAspect": false,
+                                        "useAspectSize": false
+                                    },
+                                    "bindings": {
+                                        "size": {
+                                            "width": "100%",
+                                            "height": "100%"
+                                        },
+                                        "position": {
+                                            "x": 0,
+                                            "y": 0
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "group",
+                            "id": "_gameProgressGaugeContainer",
+                            "bindings": {
+                                "position": {
+                                    "x": "24hdp",
+                                    "y": "prevEndY + 8hdp"
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "image",
+                    "id": "_fishSprite",
+                    "parameters": {
+                        "imageName": "fishBackground",
+                        "folderName": "pSimpleFishing",
+                        "keepAspect": false,
+                        "useAspectSize": false
+                    },
+                    "bindings": {
+                        "size": {
+                            "width": "114hdp",
+                            "height": "108hdp"
+                        },
+                        "position": {
+                            "x": "prevEndX - width + 4hdp",
+                            "y": "prevEndY - 24hdp"
+                        }
+                    },
+                    "childrens": [
+                        {
+                            "type": "image",
+                            "id": "_fishIcon",
+                            "parameters": {
+                                "imageName": "fish1",
+                                "folderName": "pSimpleFishing",
+                                "keepAspect": false,
+                                "useAspectSize": false
+                            },
+                            "bindings": {
+                                "image": "$fishImage",
+                                "size": {
+                                    "width": "100%",
+                                    "height": "100%"
+                                },
+                                "position": {
+                                    "x": "center",
+                                    "y": "center"
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
