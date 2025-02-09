@@ -105,48 +105,49 @@
     const thirstRate = parseFloat(parameters['ThirstRate'] || 0.1);
     const sleepRate = parseFloat(parameters['SleepRate'] || 0.1);
     const hungerThreshold = parseInt(parameters['HungerThreshold'] || 20);
-    const thirstThreshold = parseInt(parameters['ThirstThreshold'] || 20);
-    const sleepThreshold = parseInt(parameters['SleepThreshold'] || 20);
-    const hungerIcon = parseInt(parameters['HungerIcon'] || 64);
-    const thirstIcon = parseInt(parameters['ThirstIcon'] || 65);
-    const sleepIcon = parseInt(parameters['SleepIcon'] || 66);
     const hungerHpReduction = parseFloat(parameters['HungerHpReduction'] || 10);
-    const thirstHitRateReduction = parseFloat(parameters['ThirstHitRateReduction'] || 10);
 
     let hunger = 100;
-    let thirst = 100;
-    let sleep = 100;
 
     const updateNeeds = () => {
         const deltaTime = 1 / 60;
         hunger = Math.max(hunger - hungerRate * deltaTime, 0);
-        thirst = Math.max(thirst - thirstRate * deltaTime, 0);
-        sleep = Math.max(sleep - sleepRate * deltaTime, 0);
 
         $gameParty.members().forEach(actor => {
+            // Si el hambre está por debajo del umbral, reducir la vida máxima
             if (hunger < hungerThreshold) {
-                actor.addState(11); // ID de estado negativo de hambre
-                actor._paramPlus[0] -= (actor.paramBase(0) * (hungerHpReduction / 100));
+                actor.addState(11); // Añadir estado de hambre
+
+                // Si no se ha aplicado todavía la reducción de vida máxima
+                if (!actor._originalMaxHp) {
+                    actor._originalMaxHp = actor.mhp; // Guardar la vida máxima original
+                    const reduction = Math.floor(actor._originalMaxHp * (hungerHpReduction / 100));
+                    actor._paramPlus[0] -= reduction; // Reducir la vida máxima
+                }
             } else {
-                actor.removeState(11);
-                actor._paramPlus[0] = 0; // Resetear la reducción de HP
-            }
-            if (thirst < thirstThreshold) {
-                actor.addState(14); // ID de estado negativo de sed
-                actor._hitRate = 1 - (thirstHitRateReduction / 100);
-            } else {
-                actor.removeState(14);
-                actor._hitRate = 1; // Resetear la tasa de golpe
-            }
-            if (sleep < sleepThreshold) {
-                actor.addState(10); // ID de estado negativo de sueño
-                $gamePlayer.setMoveSpeed(3); // Velocidad reducida
-            } else {
-                actor.removeState(10);
-                $gamePlayer.setMoveSpeed(4); // Velocidad normal
+                actor.removeState(11); // Eliminar el estado de hambre
+
+                // Restaurar la vida máxima si estaba reducida
+                if (actor._originalMaxHp) {
+                    actor._paramPlus[0] = 0; // Restaurar la vida máxima original
+                    actor._originalMaxHp = null; // Limpiar el registro
+                }
             }
         });
     };
+
+    const _Scene_Map_prototype_update = Scene_Map.prototype.update;
+    Scene_Map.prototype.update = function () {
+        _Scene_Map_prototype_update.call(this);
+        updateNeeds();
+    };
+
+    PluginManager.registerCommand('Vermilion_Hunger and Sleep System', 'adjustHunger', args => {
+        hunger = Math.min(hunger + parseInt(args.value), 100);
+    });
+})();
+
+
 
     const _Scene_Map_prototype_update = Scene_Map.prototype.update;
     Scene_Map.prototype.update = function() {
@@ -212,3 +213,4 @@
         sleep = Math.min(sleep + parseInt(args.value), 100);
     });
 })();
+

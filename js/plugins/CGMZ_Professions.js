@@ -4,7 +4,6 @@
  * @target MZ
  * @base CGMZ_Core
  * @orderAfter CGMZ_Core
- * @orderAfter CGMZ_ToastManager
  * @plugindesc Creates a profession system for your game
  * @help
  * ============================================================================
@@ -14,10 +13,10 @@
  * Become a Patron to get access to beta/alpha plugins plus other goodies!
  * https://www.patreon.com/CasperGamingRPGM
  * ============================================================================
- * Version: 1.5.0
+ * Version: 1.6.0
  * ----------------------------------------------------------------------------
  * Compatibility: Only tested with my CGMZ plugins.
- * Made for RPG Maker MZ 1.8.0
+ * Made for RPG Maker MZ 1.8.1
  * ----------------------------------------------------------------------------
  * Description: Creates a profession system for your game. Discover
  * professions, gain experience, and level up. Profession data is easily
@@ -103,19 +102,37 @@
  * This plugin has special functionality when used with certain other CGMZ
  * plugins:
  *
- * • CGMZ Crafting
+ * [CGMZ] Crafting
  * CGMZ Professions comes with the option to display known recipes from CGMZ
  * Crafting in the Profession Display window.
  *
- * • CGMZ Toast Manager
+ * [CGMZ] Toast Manager
  * CGMZ Professions has the option to display toasts via CGMZ Toast Manager
  * when certain actions occur. These actions are when leveling up, and when
  * discovering a profession.
  *
- * • CGMZ Screenshots
+ * [CGMZ] Screenshots
  * CGMZ Professions comes with the option to take a screenshot of the game
  * screen upon level up. You can also set the filename of the screenshot. When
  * changing the filename, please do not use any spaces in the filename.
+ *
+ * [CGMZ] Infinite Colors
+ * If you would like to use custom colors not present on the windowskin for
+ * your professions, you can set the custom color up via [CGMZ] Infinite Colors
+ * and then input the color id into the profession color tab. To do so, click
+ * the text tab to turn the color parameter into a text field instead of the 
+ * built-in color select ui which is limited to windowskin colors.
+ *
+ * [CGMZ] Scene Backgrounds
+ * Set up a scene background preset and then enter the preset id into the
+ * background image parameter here. This allows you to have a lot more options
+ * when setting up your background image, including scrolling backgrounds.
+ *
+ * [CGMZ] Controls Window
+ * Set up a controls window preset and then enter the preset id into the
+ * controls window parameter here. This allows you to easily show keyboard or
+ * gamepad controls for the Profession scene, depending on player's last input
+ * type.
  * ------------------------------Saved Games-----------------------------------
  * This plugin partially supports saved games.
  *
@@ -196,6 +213,18 @@
  * - Fix bug with Level Up toast first line not being centered
  * - Fix bug with invalid JSON in Call Scene default parameters
  * - Moved some previously saved data out of save data (such as prof icon)
+ *
+ * Version 1.6.0
+ * - Added option for floating text on map when receiving exp
+ * - Added balloon icon on level up (map scene only)
+ * - Added animation on level up (map scene only)
+ * - Added window tone, padding, back opacity options for each window
+ * - Added header divider options
+ * - Added [CGMZ] Controls Window integration
+ * - Background image parameter now uses [CGMZ] Scene Backgrounds
+ * - Color converted to text code parameter
+ * - Order with [CGMZ] Toast Manager no longer important
+ * - All text should now support text codes
  *
  * @command Reinitialize
  * @desc Reinitializes all profession data. Use this if your saved game does not recognize new profession data.
@@ -441,12 +470,6 @@
  * @desc Whether the profession scene windows are transparent or not
  * @default false
  *
- * @param Background Image
- * @parent Window Options
- * @type file
- * @dir img/pictures
- * @desc Image to show in the background of the scene. Default blurry map used if none provided.
- *
  * @param Disable Touch UI Space
  * @parent Window Options
  * @type boolean
@@ -531,6 +554,114 @@
  * @dir img/
  * @desc The windowskin to use for the Professions category window. Leave blank to use default.
  *
+ * @param List Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param Display Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param Total Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param Category Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param List Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param Display Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param Total Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param Category Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param List Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ *
+ * @param Display Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ *
+ * @param Total Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ *
+ * @param Category Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ *
+ * @param Floating Text Options
+ *
+ * @param Show Float Text
+ * @parent Floating Text Options
+ * @type boolean
+ * @desc If true, will show floating text above the player sprite when exp is gained
+ * @default true
+ *
+ * @param Float Pre Text
+ * @parent Floating Text Options
+ * @desc Text to put before the exp string
+ * @default +
+ *
+ * @param Float Post Text
+ * @parent Floating Text Options
+ * @desc Text to put at the end of the exp string
+ * @default  exp
+ *
+ * @param Float Font Size
+ * @parent Floating Text Options
+ * @type number
+ * @desc Font size to make the floating exp text
+ * @default 12
+ *
+ * @param Float Duration
+ * @parent Floating Text Options
+ * @type number
+ * @desc Duration to show the floating text
+ * @default 180
+ *
+ * @param Float Height Gain
+ * @parent Floating Text Options
+ * @type number
+ * @desc Total height gain for the floating text
+ * @default 100
+ *
  * @param Text Options
  *
  * @param Label Color
@@ -550,6 +681,18 @@
  * @type color
  * @desc Color 2 for the header line gradient color
  * @default 0
+ *
+ * @param Draw Dividers
+ * @parent Text Options
+ * @type boolean
+ * @desc If true, headers will draw the divider line
+ * @default true
+ *
+ * @param Divider Padding
+ * @parent Text Options
+ * @type number
+ * @desc Padding to use for the header divider lines. Set to -1 for game default padding.
+ * @default -1
  *
  * @param Party Category Text
  * @parent Text Options
@@ -594,59 +737,66 @@
  * @default Description: 
  * @desc Text to describe the profession description
  *
- * @param Other CGMZ Plugin Options
+ * @param Integrations
  *
  * @param Show Level Up Toast
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @type boolean
  * @default true
  * @desc Show a toast window upon level up (requires CGMZ Toast)
  *
  * @param Level Up Text
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default has leveled up!
  * @desc Text to describe a level up in the toast window (requires CGMZ Toast)
  *
  * @param Show Discover Toast
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @type boolean
  * @default true
  * @desc Show a toast window upon profession discover (requires CGMZ Toast)
  *
  * @param Discover Text
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default Discovered Profession
  * @desc Text to describe a discovered profession in the toast window (requires CGMZ Toast)
  *
  * @param Recipe Header Text
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default Learned Recipes
  * @desc Text to show in Learned Recipes header element (requires CGMZ Crafting)
  *
  * @param Unlearned Recipe Header Text
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default Unknown Recipes
  * @desc Text to show in Unlearned Recipes header element (requires CGMZ Crafting)
  *
  * @param No Recipes Text
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default None
  * @desc Text to show in Learned Recipes element if no recipes for profession are known (requires CGMZ Crafting)
  *
  * @param Level Up Screenshot
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @type boolean
  * @default false
  * @desc Take a Screenshot on Level Up if true. Requires CGMZ Screenshots
  *
  * @param Screenshot Filename
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default %name_Level_%lvl
  * @desc Take a Screenshot on Level Up if true. Requires CGMZ Screenshots
+ *
+ * @param Background Image
+ * @parent Integrations
+ * @desc [CGMZ] Scene Backgrounds preset to use for the Professions scene
+ *
+ * @param Controls Window
+ * @parent Integrations
+ * @desc [CGMZ] Controls Window preset to use for the Professions scene
 */
 /*~struct~Profession:
  * @param Name
- * @type text
  * @desc The name of the profession.
  * 
  * @param Actors
@@ -692,9 +842,9 @@
  * @desc The image to use for the profession in place of the big icon (recommended size: 64x64). Leave blank to not use.
  *
  * @param Color
- * @type text
- * @default #ffffff
- * @desc rgb or hex values accepted. Hex format: #ffffff RGB format: rgb(255, 255, 255)
+ * @type color
+ * @default 0
+ * @desc Color to make the profession. Use [CGMZ] Infinite Colors and text tab to use any color here (see documentation).
  *
  * @param Description
  * @type note
@@ -714,6 +864,25 @@
  * @type text[]
  * @desc Custom info headers
  * @default []
+ *
+ * @param Level Up Options
+ *
+ * @param Balloon Id
+ * @parent Level Up Options
+ * @desc Balloon id to show on level up
+ * @default 0
+ *
+ * @param Balloon Icon
+ * @parent Level Up Options
+ * @type icon
+ * @desc Icon Balloon to show on level up (requires [CGMZ] Infinite Balloons)
+ * @default 0
+ *
+ * @param Animation Id
+ * @parent Level Up Options
+ * @type animation
+ * @desc Animation to show on level up
+ * @default 0
  */
 /*~struct~SE:
  * @param name
@@ -742,13 +911,34 @@
  * @default 0
  * @desc The pan of the sound
 */
+/*~struct~Tone:
+ * @param Red
+ * @type number
+ * @min -256
+ * @max 255
+ * @desc Amount of Red in the tone. -256 = custom tone will be ignored
+ * @default 0
+ *
+ * @param Blue
+ * @type number
+ * @min -255
+ * @max 255
+ * @desc Amount of Blue in the tone.
+ * @default 0
+ *
+ * @param Green
+ * @type number
+ * @min -255
+ * @max 255
+ * @desc Amount of Green in the tone.
+ * @default 0
+*/
 /*:zh-CN
  * @author Casper Gaming
  * @url https://www.caspergaming.com/plugins/cgmz/professions/
  * @target MZ
  * @base CGMZ_Core
  * @orderAfter CGMZ_Core
- * @orderAfter CGMZ_ToastManager
  * @plugindesc 专业技能系统（设置可以升级的专业技能，可以关联合成插件，或作为变量使用。）
  * @help
  * ============================================================================
@@ -763,10 +953,10 @@
  * 然后获得作者和其插件的最新资讯，以及测试版插件的试用。
  * https://www.patreon.com/CasperGamingRPGM
  * ============================================================================
- * 【插件版本】 1.5.0
+ * 【插件版本】 1.6.0
  * ----------------------------------------------------------------------------
  * 【兼容性】仅测试作者所制作的插件
- * 【RM版本】RPG Maker MZ 1.8.0
+ * 【RM版本】RPG Maker MZ 1.8.1
  * ----------------------------------------------------------------------------
  * 【插件描述】
  * 1、建立一个专业技能和等级的系统。
@@ -807,6 +997,41 @@
  * 增加增幅效果：为某个专业增加一个临时的等级增幅效果。
  * 移除增幅效果：移除某个专业的临时等级增幅效果。
  *               使增幅效果不需等待到持续时间结束就可以移除
+ * ------------------------------Integrations----------------------------------
+ * This plugin has special functionality when used with certain other CGMZ
+ * plugins:
+ *
+ * [CGMZ] Crafting
+ * CGMZ Professions comes with the option to display known recipes from CGMZ
+ * Crafting in the Profession Display window.
+ *
+ * [CGMZ] Toast Manager
+ * CGMZ Professions has the option to display toasts via CGMZ Toast Manager
+ * when certain actions occur. These actions are when leveling up, and when
+ * discovering a profession.
+ *
+ * [CGMZ] Screenshots
+ * CGMZ Professions comes with the option to take a screenshot of the game
+ * screen upon level up. You can also set the filename of the screenshot. When
+ * changing the filename, please do not use any spaces in the filename.
+ *
+ * [CGMZ] Infinite Colors
+ * If you would like to use custom colors not present on the windowskin for
+ * your professions, you can set the custom color up via [CGMZ] Infinite Colors
+ * and then input the color id into the profession color tab. To do so, click
+ * the text tab to turn the color parameter into a text field instead of the 
+ * built-in color select ui which is limited to windowskin colors.
+ *
+ * [CGMZ] Scene Backgrounds
+ * Set up a scene background preset and then enter the preset id into the
+ * background image parameter here. This allows you to have a lot more options
+ * when setting up your background image, including scrolling backgrounds.
+ *
+ * [CGMZ] Controls Window
+ * Set up a controls window preset and then enter the preset id into the
+ * controls window parameter here. This allows you to easily show keyboard or
+ * gamepad controls for the Profession scene, depending on player's last input
+ * type.
  *
  * 【版本历史】:
  * V 1.0.1
@@ -866,6 +1091,17 @@
  * - Fix bug with Level Up toast first line not being centered
  * - Fix bug with invalid JSON in Call Scene default parameters
  * - Moved some previously saved data out of save data (such as prof icon)
+ * Version 1.6.0
+ * - Added option for floating text on map when receiving exp
+ * - Added balloon icon on level up (map scene only)
+ * - Added animation on level up (map scene only)
+ * - Added window tone, padding, back opacity options for each window
+ * - Added header divider options
+ * - Added [CGMZ] Controls Window integration
+ * - Background image parameter now uses [CGMZ] Scene Backgrounds
+ * - Color converted to text code parameter
+ * - Order with [CGMZ] Toast Manager no longer important
+ * - All text should now support text codes
  *
  * @command Reinitialize
  * @text 重置
@@ -1120,13 +1356,6 @@
  * @desc 是否将专业技能菜单界面的边框透明化。
  * @default false
  *
- * @param Background Image
- * @text 背景图片
- * @parent Window Options
- * @type file
- * @dir img/pictures
- * @desc 设置一张图片作为界面的背景图。不设置则模糊化处理。
- *
  * @param Disable Touch UI Space
  * @parent Window Options
  * @type boolean
@@ -1216,6 +1445,113 @@
  * @dir img/
  * @desc The windowskin to use for the Professions category window. Leave blank to use default.
  *
+ * @param List Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param Display Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param Total Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param Category Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param List Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param Display Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param Total Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param Category Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param List Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ *
+ * @param Display Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ *
+ * @param Total Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ *
+ * @param Category Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ * @param Floating Text Options
+ *
+ * @param Show Float Text
+ * @parent Floating Text Options
+ * @type boolean
+ * @desc If true, will show floating text above the player sprite when exp is gained
+ * @default true
+ *
+ * @param Float Pre Text
+ * @parent Floating Text Options
+ * @desc Text to put before the exp string
+ * @default +
+ *
+ * @param Float Post Text
+ * @parent Floating Text Options
+ * @desc Text to put at the end of the exp string
+ * @default  exp
+ *
+ * @param Float Font Size
+ * @parent Floating Text Options
+ * @type number
+ * @desc Font size to make the floating exp text
+ * @default 12
+ *
+ * @param Float Duration
+ * @parent Floating Text Options
+ * @type number
+ * @desc Duration to show the floating text
+ * @default 180
+ *
+ * @param Float Height Gain
+ * @parent Floating Text Options
+ * @type number
+ * @desc Total height gain for the floating text
+ * @default 100
+ *
  * @param Text Options
  * @text 文本设置
  *
@@ -1237,6 +1573,18 @@
  * @type color
  * @desc Color 2 for the header line gradient color
  * @default 0
+ *
+ * @param Draw Dividers
+ * @parent Text Options
+ * @type boolean
+ * @desc If true, headers will draw the divider line
+ * @default true
+ *
+ * @param Divider Padding
+ * @parent Text Options
+ * @type number
+ * @desc Padding to use for the header divider lines. Set to -1 for game default padding.
+ * @default -1
  *
  * @param Party Category Text
  * @parent Text Options
@@ -1286,65 +1634,72 @@
  * @default 专业简介：
  * @desc 设置介绍专业技能的描述文字标签。
  *
- * @param Other CGMZ Plugin Options
+ * @param Integrations
  * @text 关联插件的描述
  *
  * @param Show Level Up Toast
  * @text 升级提示弹窗
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @type boolean
  * @default false
  * @desc 显示专业技能升级的弹窗。（需要使用CGMZ Toast Manager插件，否则会报错）
  *
  * @param Level Up Text
  * @text 升级提示的描述
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default 专业技能升级了!
  * @desc 设置专业技能升级弹窗的文本描述。（需要使用CGMZ Toast Manager插件，否则会报错）
  *
  * @param Show Discover Toast
  * @text 获得专业弹窗
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @type boolean
  * @default false
  * @desc 显示获得专业技能的弹窗。（需要使用CGMZ Toast Manager插件，否则会报错）
  *
  * @param Discover Text
  * @text 获得专业技能的描述
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default 学会专业技能
  * @desc 设置获得专业技能弹窗的文本描述。（需要使用CGMZ Toast Manager插件，否则会报错）
  *
  * @param Recipe Header Text
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default Learned Recipes
  * @desc Text to show in Learned Recipes header element (requires CGMZ Crafting)
  *
  * @param Unlearned Recipe Header Text
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default Unknown Recipes
  * @desc Text to show in Unlearned Recipes header element (requires CGMZ Crafting)
  *
  * @param No Recipes Text
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default None
  * @desc Text to show in Learned Recipes element if no recipes for profession are known (requires CGMZ Crafting)
  *
  * @param Level Up Screenshot
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @type boolean
  * @default false
  * @desc Take a Screenshot on Level Up if true. Requires CGMZ Screenshots
  *
  * @param Screenshot Filename
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default %name_Level_%lvl
  * @desc Take a Screenshot on Level Up if true. Requires CGMZ Screenshots
+ *
+ * @param Background Image
+ * @parent Integrations
+ * @desc [CGMZ] Scene Backgrounds preset to use for the Professions scene
+ *
+ * @param Controls Window
+ * @parent Integrations
+ * @desc [CGMZ] Controls Window preset to use for the Professions scene
 */
 /*~struct~Profession:zh-CN
  * @param Name
  * @text 专业技能
- * @type text
  * @desc 设置专业技能的名称。
  * 
  * @param Actors
@@ -1398,9 +1753,9 @@
  *
  * @param Color
  * @text 颜色
- * @type text
- * @default #ffffff
- * @desc 设置专业技能标签的颜色。颜色格式可以是#ffffff 或 rgb(255, 255, 255)
+ * @type color
+ * @default 0
+ * @desc Color to make the profession. Use [CGMZ] Infinite Colors and text tab to use any color here (see documentation).
  *
  * @param Description
  * @text 描述内容
@@ -1422,6 +1777,25 @@
  * @type text[]
  * @desc Custom info headers
  * @default []
+ *
+ * @param Level Up Options
+ *
+ * @param Balloon Id
+ * @parent Level Up Options
+ * @desc Balloon id to show on level up
+ * @default 0
+ *
+ * @param Balloon Icon
+ * @parent Level Up Options
+ * @type icon
+ * @desc Icon Balloon to show on level up (requires [CGMZ] Infinite Balloons)
+ * @default 0
+ *
+ * @param Animation Id
+ * @parent Level Up Options
+ * @type animation
+ * @desc Animation to show on level up
+ * @default 0
 */
 /*~struct~SE:zh-CN
  * @param name
@@ -1450,13 +1824,34 @@
  * @default 0
  * @desc The pan of the sound
 */
+/*~struct~Tone:zh-CN
+ * @param Red
+ * @type number
+ * @min -256
+ * @max 255
+ * @desc Amount of Red in the tone. -256 = custom tone will be ignored
+ * @default 0
+ *
+ * @param Blue
+ * @type number
+ * @min -255
+ * @max 255
+ * @desc Amount of Blue in the tone.
+ * @default 0
+ *
+ * @param Green
+ * @type number
+ * @min -255
+ * @max 255
+ * @desc Amount of Green in the tone.
+ * @default 0
+*/
 /*:es
  * @author Casper Gaming
  * @url https://www.caspergaming.com/plugins/cgmz/professions/
  * @target MZ
  * @base CGMZ_Core
  * @orderAfter CGMZ_Core
- * @orderAfter CGMZ_ToastManager
  * @plugindesc Crea un sistema de profesiones para tu juego.
  * @help
  * ============================================================================
@@ -1468,10 +1863,10 @@
  * alfa, ademas de otras cosas geniales!
  * https://www.patreon.com/CasperGamingRPGM
  * ============================================================================
- * Versión: 1.5.0
+ * Versión: 1.6.0
  * ----------------------------------------------------------------------------
  * Compatibilidad: Sólo probado con mis CGMZ plugins.
- * Hecho para RPG Maker MZ 1.8.0
+ * Hecho para RPG Maker MZ 1.8.1
  * ----------------------------------------------------------------------------
  * Descripción: Crea un sistema de profesiones para tu juego. Descubrir
  * profesiones, gana experiencia y sube de nivel. Se puede acceder a los datos 
@@ -1566,19 +1961,37 @@
  * This plugin has special functionality when used with certain other CGMZ
  * plugins:
  *
- * • CGMZ Crafting
+ * [CGMZ] Crafting
  * CGMZ Professions comes with the option to display known recipes from CGMZ
  * Crafting in the Profession Display window.
  *
- * • CGMZ Toast Manager
+ * [CGMZ] Toast Manager
  * CGMZ Professions has the option to display toasts via CGMZ Toast Manager
  * when certain actions occur. These actions are when leveling up, and when
  * discovering a profession.
  *
- * • CGMZ Screenshots
+ * [CGMZ] Screenshots
  * CGMZ Professions comes with the option to take a screenshot of the game
  * screen upon level up. You can also set the filename of the screenshot. When
  * changing the filename, please do not use any spaces in the filename.
+ *
+ * [CGMZ] Infinite Colors
+ * If you would like to use custom colors not present on the windowskin for
+ * your professions, you can set the custom color up via [CGMZ] Infinite Colors
+ * and then input the color id into the profession color tab. To do so, click
+ * the text tab to turn the color parameter into a text field instead of the 
+ * built-in color select ui which is limited to windowskin colors.
+ *
+ * [CGMZ] Scene Backgrounds
+ * Set up a scene background preset and then enter the preset id into the
+ * background image parameter here. This allows you to have a lot more options
+ * when setting up your background image, including scrolling backgrounds.
+ *
+ * [CGMZ] Controls Window
+ * Set up a controls window preset and then enter the preset id into the
+ * controls window parameter here. This allows you to easily show keyboard or
+ * gamepad controls for the Profession scene, depending on player's last input
+ * type.
  * ---------------------------Juego guardado----------------------------------
  * Este complemento admite parcialmente juegos guardados.
  *
@@ -1666,6 +2079,18 @@
  * - Fix bug with Level Up toast first line not being centered
  * - Fix bug with invalid JSON in Call Scene default parameters
  * - Moved some previously saved data out of save data (such as prof icon)
+ *
+ * Versión 1.6.0
+ * - Added option for floating text on map when receiving exp
+ * - Added balloon icon on level up (map scene only)
+ * - Added animation on level up (map scene only)
+ * - Added window tone, padding, back opacity options for each window
+ * - Added header divider options
+ * - Added [CGMZ] Controls Window integration
+ * - Background image parameter now uses [CGMZ] Scene Backgrounds
+ * - Color converted to text code parameter
+ * - Order with [CGMZ] Toast Manager no longer important
+ * - All text should now support text codes
  *
  * @command Reinitialize
  * @text Reinicializar
@@ -1921,13 +2346,6 @@
  * @desc Si las ventanas de la escena de la profesión son transparentes o no.
  * @default false
  *
- * @param Background Image
- * @text Imagen de fondo
- * @parent Window Options
- * @type file
- * @dir img/pictures
- * @desc Imagen para mostrar en el fondo de la escena. Mapa borroso predeterminado utilizado si no se proporciona ninguno.
- *
  * @param Disable Touch UI Space
  * @parent Window Options
  * @type boolean
@@ -2017,6 +2435,113 @@
  * @dir img/
  * @desc The windowskin to use for the Professions category window. Leave blank to use default.
  *
+ * @param List Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param Display Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param Total Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param Category Padding
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window padding. Set to -1 to use default.
+ *
+ * @param List Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param Display Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param Total Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param Category Back Opacity
+ * @parent Window Options
+ * @type number
+ * @default -1
+ * @desc The window back opacity. Set to -1 to use default.
+ *
+ * @param List Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ *
+ * @param Display Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ *
+ * @param Total Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ *
+ * @param Category Tone
+ * @parent Window Options
+ * @type struct<Tone>
+ * @desc Window tone. -256 for Red = default tone
+ * @default {"Red":"-256","Blue":"0","Green":"0"}
+ * @param Floating Text Options
+ *
+ * @param Show Float Text
+ * @parent Floating Text Options
+ * @type boolean
+ * @desc If true, will show floating text above the player sprite when exp is gained
+ * @default true
+ *
+ * @param Float Pre Text
+ * @parent Floating Text Options
+ * @desc Text to put before the exp string
+ * @default +
+ *
+ * @param Float Post Text
+ * @parent Floating Text Options
+ * @desc Text to put at the end of the exp string
+ * @default  exp
+ *
+ * @param Float Font Size
+ * @parent Floating Text Options
+ * @type number
+ * @desc Font size to make the floating exp text
+ * @default 12
+ *
+ * @param Float Duration
+ * @parent Floating Text Options
+ * @type number
+ * @desc Duration to show the floating text
+ * @default 180
+ *
+ * @param Float Height Gain
+ * @parent Floating Text Options
+ * @type number
+ * @desc Total height gain for the floating text
+ * @default 100
+ *
  * @param Text Options
  * @text Opciones de texto
  *
@@ -2038,6 +2563,18 @@
  * @type color
  * @desc Color 2 for the header line gradient color
  * @default 0
+ *
+ * @param Draw Dividers
+ * @parent Text Options
+ * @type boolean
+ * @desc If true, headers will draw the divider line
+ * @default true
+ *
+ * @param Divider Padding
+ * @parent Text Options
+ * @type number
+ * @desc Padding to use for the header divider lines. Set to -1 for game default padding.
+ * @default -1
  *
  * @param Party Category Text
  * @parent Text Options
@@ -2087,65 +2624,72 @@
  * @default Description: 
  * @desc Texto para describir la descripción de la profesión.
  *
- * @param Other CGMZ Plugin Options
+ * @param Integrations
  * @text Otras opciones del plugin CGMZ
  *
  * @param Show Level Up Toast
  * @text Mostrar mensaje por subir de nivel
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @type boolean
  * @default true
  * @desc Mostrar una ventana de mensaje al subir de nivel (requiere CGMZ Toast).
  *
  * @param Level Up Text
  * @text Texto Subir de nivel
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default has leveled up!
  * @desc Texto para describir un nivel superior en la ventana del mensaje (requiere CGMZ Toast).
  *
  * @param Show Discover Toast
  * @text Mostrar descubrir mensaje
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @type boolean
  * @default true
  * @desc Mostrar una ventana de mensajes al descubrir la profesión (requiere CGMZ Toast).
  *
  * @param Discover Text
  * @text Descubrir texto
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default Discovered Profession
  * @desc Texto para describir una profesión descubierta en la ventana del mensaje (requiere CGMZ Toast)
  *
  * @param Recipe Header Text
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default Learned Recipes
  * @desc Text to show in Learned Recipes header element (requiere CGMZ Crafting)
  *
  * @param Unlearned Recipe Header Text
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default Unknown Recipes
  * @desc Text to show in Unlearned Recipes header element (requires CGMZ Crafting)
  *
  * @param No Recipes Text
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default None
  * @desc Text to show in Learned Recipes element if no recipes for profession are known (requiere CGMZ Crafting)
  *
  * @param Level Up Screenshot
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @type boolean
  * @default false
  * @desc Take a Screenshot on Level Up if true. Requiere CGMZ Screenshots
  *
  * @param Screenshot Filename
- * @parent Other CGMZ Plugin Options
+ * @parent Integrations
  * @default %name_Level_%lvl
  * @desc Take a Screenshot on Level Up if true. Requiere CGMZ Screenshots
+ *
+ * @param Background Image
+ * @parent Integrations
+ * @desc [CGMZ] Scene Backgrounds preset to use for the Professions scene
+ *
+ * @param Controls Window
+ * @parent Integrations
+ * @desc [CGMZ] Controls Window preset to use for the Professions scene
 */
 /*~struct~Profession:es
  * @param Name
  * @text Nombre
- * @type text
  * @desc El nombre de la profesión.
  * 
  * @param Actors
@@ -2198,10 +2742,9 @@
  * @desc La imagen a utilizar para la profesión en lugar del icono grande (tamaño recomendado: 64x64). Dejar en blanco para no usar.
  *
  * @param Color
- * @text Color
- * @type text
- * @default #ffffff
- * @desc Se aceptan valores rgb o hexadecimales. Formato hexadecimal: #ffffff Formato RGB: rgb(255, 255, 255).
+ * @type color
+ * @default 0
+ * @desc Color to make the profession. Use [CGMZ] Infinite Colors and text tab to use any color here (see documentation).
  *
  * @param Description
  * @text Descripción
@@ -2223,6 +2766,25 @@
  * @type text[]
  * @desc Custom info headers
  * @default []
+ *
+ * @param Level Up Options
+ *
+ * @param Balloon Id
+ * @parent Level Up Options
+ * @desc Balloon id to show on level up
+ * @default 0
+ *
+ * @param Balloon Icon
+ * @parent Level Up Options
+ * @type icon
+ * @desc Icon Balloon to show on level up (requires [CGMZ] Infinite Balloons)
+ * @default 0
+ *
+ * @param Animation Id
+ * @parent Level Up Options
+ * @type animation
+ * @desc Animation to show on level up
+ * @default 0
 */
 /*~struct~SE:es
  * @param name
@@ -2251,8 +2813,30 @@
  * @default 0
  * @desc The pan of the sound
 */
+/*~struct~Tone:es
+ * @param Red
+ * @type number
+ * @min -256
+ * @max 255
+ * @desc Amount of Red in the tone. -256 = custom tone will be ignored
+ * @default 0
+ *
+ * @param Blue
+ * @type number
+ * @min -255
+ * @max 255
+ * @desc Amount of Blue in the tone.
+ * @default 0
+ *
+ * @param Green
+ * @type number
+ * @min -255
+ * @max 255
+ * @desc Amount of Green in the tone.
+ * @default 0
+*/
 Imported.CGMZ_Professions = true;
-CGMZ.Versions["Professions"] = "1.5.0";
+CGMZ.Versions["Professions"] = "1.6.0";
 CGMZ.Professions = {};
 CGMZ.Professions.parameters = PluginManager.parameters('CGMZ_Professions');
 CGMZ.Professions.SceneTitle = CGMZ.Professions.parameters["Scene Title"];
@@ -2275,6 +2859,9 @@ CGMZ.Professions.ListWindowskin = CGMZ.Professions.parameters["List Windowskin"]
 CGMZ.Professions.DisplayWindowskin = CGMZ.Professions.parameters["Display Windowskin"];
 CGMZ.Professions.TotalWindowskin = CGMZ.Professions.parameters["Total Windowskin"];
 CGMZ.Professions.CategoryWindowskin = CGMZ.Professions.parameters["Category Windowskin"];
+CGMZ.Professions.ControlsWindow = CGMZ.Professions.parameters["Controls Window"];
+CGMZ.Professions.FloatPreText = CGMZ.Professions.parameters["Float Pre Text"];
+CGMZ.Professions.FloatPostText = CGMZ.Professions.parameters["Float Post Text"];
 CGMZ.Professions.AutoScroll = (CGMZ.Professions.parameters["Auto Scroll"] === "true");
 CGMZ.Professions.ActorSpecificTotals = (CGMZ.Professions.parameters["Actor Specific Total Lv"] === "true");
 CGMZ.Professions.ShowLevelUpToast = (CGMZ.Professions.parameters["Show Level Up Toast"] === "true");
@@ -2283,15 +2870,33 @@ CGMZ.Professions.LevelUpScreenshot = (CGMZ.Professions.parameters["Level Up Scre
 CGMZ.Professions.WindowTransparency = (CGMZ.Professions.parameters["Transparent Windows"] === "true");
 CGMZ.Professions.DisableTouchUISpace = (CGMZ.Professions.parameters["Disable Touch UI Space"] === "true");
 CGMZ.Professions.ListWindowOnRight = (CGMZ.Professions.parameters["List Window On Right"] === "true");
+CGMZ.Professions.DrawDividers = (CGMZ.Professions.parameters["Draw Dividers"] === "true");
+CGMZ.Professions.ShowFloatText = (CGMZ.Professions.parameters["Show Float Text"] === "true");
 CGMZ.Professions.LabelColor = Number(CGMZ.Professions.parameters["Label Color"]);
 CGMZ.Professions.ListWindowWidth = Number(CGMZ.Professions.parameters["List Window Width"]);
 CGMZ.Professions.ScrollSpeed = Number(CGMZ.Professions.parameters["ScrollSpeed"]);
 CGMZ.Professions.ScrollWait = Number(CGMZ.Professions.parameters["ScrollWait"]);
 CGMZ.Professions.HeaderColor1 = Number(CGMZ.Professions.parameters["Header Color 1"]);
 CGMZ.Professions.HeaderColor2 = Number(CGMZ.Professions.parameters["Header Color 2"]);
+CGMZ.Professions.ListPadding = Number(CGMZ.Professions.parameters["List Padding"]);
+CGMZ.Professions.DisplayPadding = Number(CGMZ.Professions.parameters["Display Padding"]);
+CGMZ.Professions.TotalPadding = Number(CGMZ.Professions.parameters["Total Padding"]);
+CGMZ.Professions.CategoryPadding = Number(CGMZ.Professions.parameters["Category Padding"]);
+CGMZ.Professions.ListBackOpacity = Number(CGMZ.Professions.parameters["List Back Opacity"]);
+CGMZ.Professions.DisplayBackOpacity = Number(CGMZ.Professions.parameters["Display Back Opacity"]);
+CGMZ.Professions.TotalBackOpacity = Number(CGMZ.Professions.parameters["Total Back Opacity"]);
+CGMZ.Professions.CategoryBackOpacity = Number(CGMZ.Professions.parameters["Category Back Opacity"]);
+CGMZ.Professions.DividerPadding = Number(CGMZ.Professions.parameters["Divider Padding"]);
+CGMZ.Professions.FloatFontSize = Number(CGMZ.Professions.parameters["Float Font Size"]);
+CGMZ.Professions.FloatDuration = Number(CGMZ.Professions.parameters["Float Duration"]);
+CGMZ.Professions.FloatHeightGain = Number(CGMZ.Professions.parameters["Float Height Gain"]);
 CGMZ.Professions.ScrollDeceleration = parseFloat(CGMZ.Professions.parameters["Scroll Deceleration"]);
-CGMZ.Professions.DisplayInfo = CGMZ_Utils.parseJSON(CGMZ.Professions.parameters["Display Info"], [], "CGMZ Professions", "Your Display Info parameter had invalid JSON. Professions will display incorrectly until fixed.");
-CGMZ.Professions.Entries = CGMZ_Utils.parseJSON(CGMZ.Professions.parameters["Professions"], [], "CGMZ Professions", "Your Professions parameter had invalid JSON. No professions could be loaded. Please check your Professions parameter.");
+CGMZ.Professions.DisplayInfo = CGMZ_Utils.parseJSON(CGMZ.Professions.parameters["Display Info"], [], "[CGMZ] Professions", "Your Display Info parameter had invalid JSON. Professions will display incorrectly until fixed.");
+CGMZ.Professions.Entries = CGMZ_Utils.parseJSON(CGMZ.Professions.parameters["Professions"], [], "[CGMZ] Professions", "Your Professions parameter had invalid JSON. No professions could be loaded. Please check your Professions parameter.");
+CGMZ.Professions.ListTone = CGMZ_Utils.parseToneJSON(CGMZ.Professions.parameters["List Tone"], "[CGMZ] Professions");
+CGMZ.Professions.DisplayTone = CGMZ_Utils.parseToneJSON(CGMZ.Professions.parameters["Display Tone"], "[CGMZ] Professions");
+CGMZ.Professions.TotalTone = CGMZ_Utils.parseToneJSON(CGMZ.Professions.parameters["Total Tone"], "[CGMZ] Professions");
+CGMZ.Professions.CategoryTone = CGMZ_Utils.parseToneJSON(CGMZ.Professions.parameters["Category Tone"], "[CGMZ] Professions");
 //=============================================================================
 // CGMZ_Profession
 //-----------------------------------------------------------------------------
@@ -2312,7 +2917,7 @@ CGMZ_Profession.prototype.initialize = function(profession, actorId = "") {
 	this._usingExpCurve = (profession["Use Experience Curve?"] === 'true');
 	this._image = profession.Picture;
 	this._description = JSON.parse(profession.Description);
-	this._expArray = CGMZ_Utils.parseJSON(profession["Experience Curve"], [30,20,30,30], "CGMZ Professions", `Your profession with ${this._name} had invalid JSON for the Experience Curve parameter.`).map(x => Number(x));
+	this._expArray = CGMZ_Utils.parseJSON(profession["Experience Curve"], [30,20,30,30], "[CGMZ] Professions", `Your profession with ${this._name} had invalid JSON for the Experience Curve parameter.`).map(x => Number(x));
 	this._exp = 0;
 	this._buffs = {};
 	this._needRefreshForBuff = false;
@@ -2392,13 +2997,16 @@ CGMZ_Profession.prototype.isDiscovered = function() {
 CGMZ_Profession.prototype.changeExp = function(mode, amount) {
 	switch(mode) {
 		case '=': this._exp = amount; break;
-		case '+': this._exp += amount; break;
+		case '+':
+			this._exp += amount;
+			this.tryShowExpSprite(amount);
+			break;
 		case '-': this._exp -= amount; break;
 		default:
-			const script = "CGMZ Professions";
+			const script = "[CGMZ] Professions";
 			const error = "Malformed 'Experience' command received";
 			const suggestion = "Check for proper plugin command usage in events";
-			$cgmzTemp.reportError(error, script, suggestion);
+			CGMZ_Utils.reportError(error, script, suggestion);
 	}
 	if(this._exp < 0) this._exp = 0;
 	this.checkProfessionForLevel();
@@ -2428,6 +3036,35 @@ CGMZ_Profession.prototype.levelUp = function() {
 	if(Imported.CGMZ_Screenshots && CGMZ.Professions.LevelUpScreenshot) {
 		const filename = CGMZ.Professions.ScreenshotFilename.replace("%name", this.getDisplayName()).replace("%lvl", this._level);
 		$cgmzTemp.takeScreenshot(filename);
+	}
+	this.doLevelUpEffects();
+};
+//-----------------------------------------------------------------------------
+// Perform effects for level up
+//-----------------------------------------------------------------------------
+CGMZ_Profession.prototype.doLevelUpEffects = function() {
+	const professionTemp = $cgmzTemp.getProfessionTempData(this.getId());
+	if(professionTemp && SceneManager._scene.constructor.name === "Scene_Map") {
+		this.showLevelUpBalloon(professionTemp);
+		this.showLevelUpAnimation(professionTemp);
+	}
+};
+//-----------------------------------------------------------------------------
+// Show balloon icon on level up
+//-----------------------------------------------------------------------------
+CGMZ_Profession.prototype.showLevelUpBalloon = function(professionTemp) {
+	if(Imported.CGMZ_InfiniteBalloons && professionTemp.balloonIcon > 0 && professionTemp.balloonId > 0) {
+		$gameTemp.requestBalloon($gamePlayer, professionTemp.balloonId, professionTemp.balloonIcon);
+	} else if(professionTemp.balloonId > 0) {
+		$gameTemp.requestBalloon($gamePlayer, professionTemp.balloonId);
+	}
+};
+//-----------------------------------------------------------------------------
+// Show animation on level up
+//-----------------------------------------------------------------------------
+CGMZ_Profession.prototype.showLevelUpAnimation = function(professionTemp) {
+	if(professionTemp.animationId) {
+		$gameTemp.requestAnimation([$gamePlayer], professionTemp.animationId);
 	}
 };
 //-----------------------------------------------------------------------------
@@ -2461,10 +3098,10 @@ CGMZ_Profession.prototype.changeLevel = function(mode, amount) {
 			levelExp = this.expForLevel(totalLevel);
 			break;
 		default:
-			const script = "CGMZ Professions";
+			const script = "[CGMZ] Professions";
 			const error = "Malformed 'Level' command received";
 			const suggestion = "Check for proper plugin command usage in events";
-			$cgmzTemp.reportError(error, script, suggestion);
+			CGMZ_Utils.reportError(error, script, suggestion);
 	}
 	const neededExp = levelExp - this._exp;
 	this.gainExp(neededExp);
@@ -2572,10 +3209,13 @@ CGMZ_Profession.prototype.getNameSeparator = function(separator = ": ") {
 CGMZ_Profession.prototype.setupLevelUpToast = function() {
 	const professionTemp = $cgmzTemp.getProfessionTempData(this.getId());
 	const toast = {};
-	toast.CGMZProfessionToast = true;
-	toast.color = professionTemp._color;
-	toast.name = this.getActorName() + this.getNameSeparator() + this.getDisplayName();
-	toast.level = this._level;
+	toast.isText = true;
+	toast.lineOneAlignment = 'center';
+	toast.lineTwoAlignment = 'center';
+	toast.lineOneColor = professionTemp.color;
+	toast.lineTwoColor = 0;
+	toast.lineOne = `${this.getActorName()}${this.getNameSeparator()}\\c[${professionTemp.color}]${this.getDisplayName()}\\c[0]${CGMZ.Professions.LevelUpText}`
+	toast.lineTwo = CGMZ.Professions.LevelText + this._level;
 	if(professionTemp && professionTemp.hasToastSoundEffect()) toast.SE = professionTemp.getToastSoundEffect();
 	$cgmzTemp.createNewToast(toast);
 };
@@ -2585,11 +3225,27 @@ CGMZ_Profession.prototype.setupLevelUpToast = function() {
 CGMZ_Profession.prototype.setupDiscoverToast = function() {
 	const professionTemp = $cgmzTemp.getProfessionTempData(this.getId());
 	const toast = {};
-	toast.CGMZProfessionToastDiscover = true;
-	toast.color = professionTemp._color;
-	toast.name = this.getActorName() + this.getNameSeparator() + this.getDisplayName();
+	toast.isText = true;
+	toast.lineOne = CGMZ.Professions.DiscoverText;
+	toast.lineTwo = `${this.getActorName()}${this.getNameSeparator()}\\c[${professionTemp.color}]${this.getDisplayName()}\\c[0]`;
+	toast.lineOneColor = 0;
+	toast.lineTwoColor = professionTemp.color;
+	toast.lineOneAlignment = 'center';
+	toast.lineTwoAlignment = 'center';
 	if(professionTemp && professionTemp.hasToastSoundEffect()) toast.SE = professionTemp.getToastSoundEffect();
 	$cgmzTemp.createNewToast(toast);
+};
+//-----------------------------------------------------------------------------
+// Try to show the exp sprite
+//-----------------------------------------------------------------------------
+CGMZ_Profession.prototype.tryShowExpSprite = function(expAmount) {
+	if(!CGMZ.Professions.ShowFloatText || SceneManager._scene.constructor.name !== 'Scene_Map') return;
+	const professionTemp = $cgmzTemp.getProfessionTempData(this.getId());
+	let string = `\\fs[${CGMZ.Professions.FloatFontSize}]${CGMZ.Professions.FloatPreText}${CGMZ_Utils.numberSplit(expAmount)}`;
+	if(professionTemp._iconIndex) string += `\\i[${professionTemp._iconIndex}]`;
+	string += `\\c[${professionTemp.color}]${this.getDisplayName()}\\c[0]${CGMZ.Professions.FloatPostText}`;
+	const request = {string: string};
+	$cgmzTemp.requestProfessionExpSprite(request);
 };
 //-----------------------------------------------------------------------------
 // Processing after game load, add buff object if not exists
@@ -2611,17 +3267,20 @@ function CGMZ_ProfessionTemp() {
 CGMZ_ProfessionTemp.prototype.initialize = function(profession) {
 	this._toastSE = null;
 	if(profession["Toast Sound Effect"]) {
-		this._toastSE = CGMZ_Utils.parseJSON(profession["Toast Sound Effect"], null, "CGMZ Professions", "Your profession '" + profession.Name + "' has invalid JSON for it's Toast Sound Effect parameter.");
+		this._toastSE = CGMZ_Utils.parseJSON(profession["Toast Sound Effect"], null, "[CGMZ] Professions", "Your profession '" + profession.Name + "' has invalid JSON for it's Toast Sound Effect parameter.");
 		if(this._toastSE) {
 			this._toastSE.volume = Number(this._toastSE.volume);
 			this._toastSE.pitch = Number(this._toastSE.pitch);
 			this._toastSE.pan = Number(this._toastSE.pan);
 		}
 	}
-	this._color = profession.Color;
+	this.color = Number(profession.Color);
 	this._iconIndex = Number(profession.Icon);
-	this._customHeaders = CGMZ_Utils.parseJSON(profession["Custom Headers"], [], "CGMZ professions", "Your profession '" + profession.Name + "' has invalid JSON for it's Custom Headers parameter.");
-	this._customInfo = CGMZ_Utils.parseJSON(profession["Custom Info"], [], "CGMZ professions", "Your profession '" + profession.Name + "' has invalid JSON for it's Custom Info parameter.");
+	this.animationId = Number(profession["Animation Id"]);
+	this.balloonId = Number(profession["Balloon Id"]);
+	this.balloonIcon = Number(profession["Balloon Icon"]);
+	this._customHeaders = CGMZ_Utils.parseJSON(profession["Custom Headers"], [], "[CGMZ] professions", `Your profession '${profession.Name}' has invalid JSON for it's Custom Headers parameter.`);
+	this._customInfo = CGMZ_Utils.parseJSON(profession["Custom Info"], [], "[CGMZ] professions", `Your profession '${profession.Name}' has invalid JSON for it's Custom Info parameter.`);
 };
 //-----------------------------------------------------------------------------
 // Get the toast sound effect
@@ -2656,9 +3315,9 @@ CGMZ_Core.prototype.initializeProfessionData = function(reinitialize) {
 		this.setupProfessionVariables();
 	}
 	for(const professionJSON of CGMZ.Professions.Entries) {
-		const professionParsed = CGMZ_Utils.parseJSON(professionJSON, null, "CGMZ Professions", "Could not parse profession. Error in JSON: " + professionJSON);
+		const professionParsed = CGMZ_Utils.parseJSON(professionJSON, null, "[CGMZ] Professions", `Could not parse profession. Error in JSON: ${professionJSON}`);
 		if(!professionParsed) continue;
-		const actors = CGMZ_Utils.parseJSON(professionParsed.Actors, [], "CGMZ Professions", "Could not parse profession Actors parameter, making profession party-wide: " + professionParsed.Name);
+		const actors = CGMZ_Utils.parseJSON(professionParsed.Actors, [], "[CGMZ] Professions", `Could not parse profession Actors parameter, making profession party-wide: ${professionParsed.Name}`);
 		if(actors.length > 0) {
 			for(const actor of actors) {
 				const prof = new CGMZ_Profession(professionParsed, actor);
@@ -2830,10 +3489,11 @@ CGMZ_Temp.prototype.createPluginData = function() {
 	alias_CGMZ_Professions_CGMZ_Temp_createPluginData.call(this);
 	this._professionBuffRemoved = false;
 	this._professionTempData = {};
+	this._professionExpSpriteRequests = [];
 	for(const professionJSON of CGMZ.Professions.Entries) {
-		const professionParsed = CGMZ_Utils.parseJSON(professionJSON, null, "CGMZ Professions", "Error parsing profession JSON.");
+		const professionParsed = CGMZ_Utils.parseJSON(professionJSON, null, "[CGMZ] Professions", "Error parsing profession JSON.");
 		if(!professionParsed) continue;
-		const actors = CGMZ_Utils.parseJSON(professionParsed.Actors, [], "CGMZ Professions", "Could not parse profession Actors parameter, making profession party-wide: " + professionParsed.Name);
+		const actors = CGMZ_Utils.parseJSON(professionParsed.Actors, [], "[CGMZ] Professions", `Could not parse profession Actors parameter, making profession party-wide: ${professionParsed.Name}`);
 		if(actors.length > 0) {
 			for(const actor of actors) {
 				const prof = new CGMZ_ProfessionTemp(professionParsed);
@@ -2852,6 +3512,20 @@ CGMZ_Temp.prototype.createPluginData = function() {
 //-----------------------------------------------------------------------------
 CGMZ_Temp.prototype.getProfessionTempData = function(name) {
 	return this._professionTempData[name];
+};
+//-----------------------------------------------------------------------------
+// Request a new profession exp sprite
+// data should be an object with the following parameters:
+// string: the string to show in the exp sprite, supports text codes
+//-----------------------------------------------------------------------------
+CGMZ_Temp.prototype.requestProfessionExpSprite = function(data) {
+	this._professionExpSpriteRequests.push(data);
+};
+//-----------------------------------------------------------------------------
+// Retrieve a profession exp sprite request
+//-----------------------------------------------------------------------------
+CGMZ_Temp.prototype.retrieveProfessionExpSpriteRequest = function() {
+	return this._professionExpSpriteRequests.shift();
 };
 //-----------------------------------------------------------------------------
 // Register Plugin Commands
@@ -2878,7 +3552,7 @@ CGMZ_Temp.prototype.pluginCommandProfessionsCallScene = function(args) {
 	let actors = actorIdsWithProfessions;
 	let party = true;
 	if(args.actors) {
-		actors = CGMZ_Utils.parseJSON(args.actors, [], "CGMZ Professions", "Your Call Scene had invalid info for the Actor parameter").map(actorId => Number(actorId)).filter(actorId => actorIdsWithProfessions.includes(actorId));
+		actors = CGMZ_Utils.parseJSON(args.actors, [], "[CGMZ] Professions", "Your Call Scene had invalid info for the Actor parameter").map(actorId => Number(actorId)).filter(actorId => actorIdsWithProfessions.includes(actorId));
 		party = (args.party === 'true');
 	}
 	SceneManager.push(CGMZ_Scene_Professions);
@@ -3176,15 +3850,19 @@ CGMZ_Scene_Professions.prototype.hasTouchUI = function() {
 	return !CGMZ.Professions.DisableTouchUISpace || ConfigManager.touchUI;
 };
 //-----------------------------------------------------------------------------
-// Add background image
+// Get the item popup scene's custom scene background
+// No need to check if Scene Backgrounds is installed because this custom func
+// is only called by that plugin
 //-----------------------------------------------------------------------------
-CGMZ_Scene_Professions.prototype.createBackground = function() {
-	Scene_MenuBase.prototype.createBackground.call(this);
-	if(CGMZ.Professions.SceneBackgroundImage) {
-		this._backgroundCustomSprite = new Sprite();
-		this._backgroundCustomSprite.bitmap = ImageManager.loadPicture(CGMZ.Professions.SceneBackgroundImage);
-		this.addChild(this._backgroundCustomSprite);
-	}
+CGMZ_Scene_Professions.prototype.CGMZ_getCustomSceneBackground = function() {
+	return $cgmzTemp.sceneBackgroundPresets[CGMZ.Professions.SceneBackgroundImage];
+};
+//-----------------------------------------------------------------------------
+// Get controls window preset for [CGMZ] Controls Window
+// No need to check if plugin is installed because this custom func is only called by that plugin
+//-----------------------------------------------------------------------------
+CGMZ_Scene_Professions.prototype.CGMZ_getControlsWindowOtherPreset = function() {
+	return $cgmzTemp.getControlWindowPresetOther(CGMZ.Professions.ControlsWindow);
 };
 //=============================================================================
 // CGMZ_Window_ProfessionTotal
@@ -3197,6 +3875,16 @@ function CGMZ_Window_ProfessionTotal(rect) {
 CGMZ_Window_ProfessionTotal.prototype = Object.create(Window_Base.prototype);
 CGMZ_Window_ProfessionTotal.prototype.constructor = CGMZ_Window_ProfessionTotal;
 //-----------------------------------------------------------------------------
+// Create cgmz window options object
+//-----------------------------------------------------------------------------
+CGMZ_Window_ProfessionTotal.prototype.CGMZ_createWindowOptions = function() {
+	Window_Base.prototype.CGMZ_createWindowOptions.call(this);
+	if(CGMZ.Professions.TotalWindowskin) this.cgmzOpts.windowskin = CGMZ.Professions.TotalWindowskin;
+	if(CGMZ.Professions.TotalPadding >= 0) this.cgmzOpts.padding = CGMZ.Professions.TotalPadding;
+	if(CGMZ.Professions.TotalBackOpacity >= 0) this.cgmzOpts.backOpacity = CGMZ.Professions.TotalBackOpacity;
+	if(CGMZ.Professions.TotalTone?.Red >= -255) this.cgmzOpts.tone = [CGMZ.Professions.TotalTone.Red, CGMZ.Professions.TotalTone.Green, CGMZ.Professions.TotalTone.Blue];
+};
+//-----------------------------------------------------------------------------
 // Initialize
 //-----------------------------------------------------------------------------
 CGMZ_Window_ProfessionTotal.prototype.initialize = function(rect) {
@@ -3204,17 +3892,6 @@ CGMZ_Window_ProfessionTotal.prototype.initialize = function(rect) {
 	this.setBackgroundType(2 * (CGMZ.Professions.WindowTransparency));
 	this._actorId = 0;
 	this.refresh();
-};
-//-----------------------------------------------------------------------------
-// Load Proper Windowskin
-//-----------------------------------------------------------------------------
-CGMZ_Window_ProfessionTotal.prototype.loadWindowskin = function() {
-	if(CGMZ.Professions.TotalWindowskin) {
-		const windowskin = CGMZ_Utils.getImageData(CGMZ.Professions.TotalWindowskin, "img");
-		this.windowskin = ImageManager.loadBitmap(windowskin.folder, windowskin.filename);
-	} else {
-		Window_Base.prototype.loadWindowskin.call(this);
-	}
 };
 //-----------------------------------------------------------------------------
 // Change in actor
@@ -3237,7 +3914,7 @@ CGMZ_Window_ProfessionTotal.prototype.refresh = function() {
 CGMZ_Window_ProfessionTotal.prototype.drawTotalLevel = function() {
 	const totalLevels = (CGMZ.Professions.ActorSpecificTotals && this._actorId) ? $cgmz.totalProfessionLevelsDiscoveredForActor(this._actorId) : $cgmz.totalProfessionLevelsDiscovered();
 	const earnedLevels = (CGMZ.Professions.ActorSpecificTotals && this._actorId) ? $cgmz.professionLevelsEarnedDiscoveredForActor(this._actorId) : $cgmz.professionLevelsEarnedDiscovered();
-	const string = '\\c[' + CGMZ.Professions.LabelColor + ']' + CGMZ.Professions.TotalLevelText + '\\c[0]' + earnedLevels + " / " + totalLevels;
+	const string = `\\c[${CGMZ.Professions.LabelColor}]${CGMZ.Professions.TotalLevelText}\\c[0]'${earnedLevels} / ${totalLevels}`;
 	this.CGMZ_drawTextLine(string, 0, 0, this.contents.width, CGMZ.Professions.TotalWindowAlignment);
 };
 //=============================================================================
@@ -3251,6 +3928,16 @@ function CGMZ_Window_ProfessionCategory(rect) {
 CGMZ_Window_ProfessionCategory.prototype = Object.create(Window_Selectable.prototype);
 CGMZ_Window_ProfessionCategory.prototype.constructor = CGMZ_Window_ProfessionCategory;
 //-----------------------------------------------------------------------------
+// Create cgmz window options object
+//-----------------------------------------------------------------------------
+CGMZ_Window_ProfessionCategory.prototype.CGMZ_createWindowOptions = function() {
+	Window_Selectable.prototype.CGMZ_createWindowOptions.call(this);
+	if(CGMZ.Professions.CategoryWindowskin) this.cgmzOpts.windowskin = CGMZ.Professions.CategoryWindowskin;
+	if(CGMZ.Professions.CategoryPadding >= 0) this.cgmzOpts.padding = CGMZ.Professions.CategoryPadding;
+	if(CGMZ.Professions.CategoryBackOpacity >= 0) this.cgmzOpts.backOpacity = CGMZ.Professions.CategoryBackOpacity;
+	if(CGMZ.Professions.CategoryTone?.Red >= -255) this.cgmzOpts.tone = [CGMZ.Professions.CategoryTone.Red, CGMZ.Professions.CategoryTone.Green, CGMZ.Professions.CategoryTone.Blue];
+};
+//-----------------------------------------------------------------------------
 // Initialize
 //-----------------------------------------------------------------------------
 CGMZ_Window_ProfessionCategory.prototype.initialize = function(rect, actorIds, includePartyWide) {
@@ -3258,17 +3945,6 @@ CGMZ_Window_ProfessionCategory.prototype.initialize = function(rect, actorIds, i
 	this.setBackgroundType(2 * (CGMZ.Professions.WindowTransparency));
 	this._actorIds = actorIds;
 	this._includePartyWide = includePartyWide;
-};
-//-----------------------------------------------------------------------------
-// Load Proper Windowskin
-//-----------------------------------------------------------------------------
-CGMZ_Window_ProfessionCategory.prototype.loadWindowskin = function() {
-	if(CGMZ.Professions.CategoryWindowskin) {
-		const windowskin = CGMZ_Utils.getImageData(CGMZ.Professions.CategoryWindowskin, "img");
-		this.windowskin = ImageManager.loadBitmap(windowskin.folder, windowskin.filename);
-	} else {
-		Window_Selectable.prototype.loadWindowskin.call(this);
-	}
 };
 //-----------------------------------------------------------------------------
 // Change window columns
@@ -3352,23 +4028,22 @@ function CGMZ_Window_ProfessionList(rect) {
 CGMZ_Window_ProfessionList.prototype = Object.create(Window_Selectable.prototype);
 CGMZ_Window_ProfessionList.prototype.constructor = CGMZ_Window_ProfessionList;
 //-----------------------------------------------------------------------------
+// Create cgmz window options object
+//-----------------------------------------------------------------------------
+CGMZ_Window_ProfessionList.prototype.CGMZ_createWindowOptions = function() {
+	Window_Selectable.prototype.CGMZ_createWindowOptions.call(this);
+	if(CGMZ.Professions.ListWindowskin) this.cgmzOpts.windowskin = CGMZ.Professions.ListWindowskin;
+	if(CGMZ.Professions.ListPadding >= 0) this.cgmzOpts.padding = CGMZ.Professions.ListPadding;
+	if(CGMZ.Professions.ListBackOpacity >= 0) this.cgmzOpts.backOpacity = CGMZ.Professions.ListBackOpacity;
+	if(CGMZ.Professions.ListTone?.Red >= -255) this.cgmzOpts.tone = [CGMZ.Professions.ListTone.Red, CGMZ.Professions.ListTone.Green, CGMZ.Professions.ListTone.Blue];
+};
+//-----------------------------------------------------------------------------
 // Initialize
 //-----------------------------------------------------------------------------
 CGMZ_Window_ProfessionList.prototype.initialize = function(rect) {
 	Window_Selectable.prototype.initialize.call(this, rect);
 	this.setBackgroundType(2 * (CGMZ.Professions.WindowTransparency));
 	this._actorId = 0;
-};
-//-----------------------------------------------------------------------------
-// Load Proper Windowskin
-//-----------------------------------------------------------------------------
-CGMZ_Window_ProfessionList.prototype.loadWindowskin = function() {
-	if(CGMZ.Professions.ListWindowskin) {
-		const windowskin = CGMZ_Utils.getImageData(CGMZ.Professions.ListWindowskin, "img");
-		this.windowskin = ImageManager.loadBitmap(windowskin.folder, windowskin.filename);
-	} else {
-		Window_Selectable.prototype.loadWindowskin.call(this);
-	}
 };
 //-----------------------------------------------------------------------------
 // Max items
@@ -3403,14 +4078,13 @@ CGMZ_Window_ProfessionList.prototype.drawItem = function(index) {
 	const item = this._data[index];
 	const profTemp = $cgmzTemp.getProfessionTempData(item._name);
 	const rect = this.itemRectWithPadding(index);
-	this.changeTextColor(profTemp._color);
 	let iconBoxWidth = 0;
 	if(profTemp._iconIndex > 0) {
 		this.drawIcon(profTemp._iconIndex, rect.x, rect.y + 4);
 		iconBoxWidth = ImageManager.iconWidth + 4;
 	}
-	this.drawText(item.getDisplayName(), rect.x + iconBoxWidth, rect.y, rect.width - iconBoxWidth, 'left');
-	this.changeTextColor(ColorManager.normalColor());
+	const string = `\\c[${profTemp.color}]${item.getDisplayName()}\\c[0]`;
+	this.CGMZ_drawTextLine(string, rect.x + iconBoxWidth, rect.y, rect.width - iconBoxWidth, 'left');
 };
 //-----------------------------------------------------------------------------
 // Change in actor
@@ -3446,6 +4120,16 @@ function CGMZ_Window_ProfessionDisplay(rect) {
 CGMZ_Window_ProfessionDisplay.prototype = Object.create(CGMZ_Window_Scrollable.prototype);
 CGMZ_Window_ProfessionDisplay.prototype.constructor = CGMZ_Window_ProfessionDisplay;
 //-----------------------------------------------------------------------------
+// Create cgmz window options object
+//-----------------------------------------------------------------------------
+CGMZ_Window_ProfessionDisplay.prototype.CGMZ_createWindowOptions = function() {
+	CGMZ_Window_Scrollable.prototype.CGMZ_createWindowOptions.call(this);
+	if(CGMZ.Professions.DisplayWindowskin) this.cgmzOpts.windowskin = CGMZ.Professions.DisplayWindowskin;
+	if(CGMZ.Professions.DisplayPadding >= 0) this.cgmzOpts.padding = CGMZ.Professions.DisplayPadding;
+	if(CGMZ.Professions.DisplayBackOpacity >= 0) this.cgmzOpts.backOpacity = CGMZ.Professions.DisplayBackOpacity;
+	if(CGMZ.Professions.DisplayTone?.Red >= -255) this.cgmzOpts.tone = [CGMZ.Professions.DisplayTone.Red, CGMZ.Professions.DisplayTone.Green, CGMZ.Professions.DisplayTone.Blue];
+};
+//-----------------------------------------------------------------------------
 // Initialize
 //-----------------------------------------------------------------------------
 CGMZ_Window_ProfessionDisplay.prototype.initialize = function(rect) {
@@ -3459,17 +4143,6 @@ CGMZ_Window_ProfessionDisplay.prototype.initialize = function(rect) {
 	this._iconBitmap = ImageManager.loadSystem("IconSet");
 	this._iconSprite = new Sprite();
 	this.addInnerChild(this._iconSprite);
-};
-//-----------------------------------------------------------------------------
-// Load Proper Windowskin
-//-----------------------------------------------------------------------------
-CGMZ_Window_ProfessionDisplay.prototype.loadWindowskin = function() {
-	if(CGMZ.Professions.DisplayWindowskin) {
-		const windowskin = CGMZ_Utils.getImageData(CGMZ.Professions.DisplayWindowskin, "img");
-		this.windowskin = ImageManager.loadBitmap(windowskin.folder, windowskin.filename);
-	} else {
-		CGMZ_Window_Scrollable.prototype.loadWindowskin.call(this);
-	}
 };
 //-----------------------------------------------------------------------------
 // Update. Check if a buff falls off and refresh accordingly
@@ -3509,6 +4182,7 @@ CGMZ_Window_ProfessionDisplay.prototype.drawProfessionInfo = function() {
 	const professionTemp = $cgmzTemp.getProfessionTempData(this._profession._name);
 	let customInfoCount = 0;
 	let customHeaderCount = 0;
+	const headerOptions = {drawDividers: CGMZ.Professions.DrawDividers, padding: (CGMZ.Professions.DividerPadding >= 0) ? CGMZ.Professions.DividerPadding : null}
 	for(const infoType of CGMZ.Professions.DisplayInfo) {
 		switch(infoType) {
 			case "Name":
@@ -3606,7 +4280,7 @@ CGMZ_Window_ProfessionDisplay.prototype.drawProfessionInfo = function() {
 //-----------------------------------------------------------------------------
 CGMZ_Window_ProfessionDisplay.prototype.drawProfessionName = function() {
 	this.contents.fontBold = true;
-	this.drawText(this._profession.getDisplayName(), 0, this._neededHeight, this.contents.width, 'center');
+	this.CGMZ_drawTextLine(this._profession.getDisplayName(), 0, this._neededHeight, this.contents.width, 'center');
 	this.contents.fontBold = false;
 };
 //-----------------------------------------------------------------------------
@@ -3646,7 +4320,7 @@ CGMZ_Window_ProfessionDisplay.prototype.drawProfessionExperience = function() {
 	const profession = this._profession;
 	const exp = profession._exp;
 	const descriptor1 = CGMZ.Professions.ExpText;
-	const descriptor2 = $cgmzTemp.numberSplit(exp);
+	const descriptor2 = CGMZ_Utils.numberSplit(exp);
 	const x = this._imageOffsetInfo.width * this.needsOffset();
 	this.drawProfessionStandardLine(descriptor1, descriptor2, x, this.contents.width-x);
 };
@@ -3656,7 +4330,7 @@ CGMZ_Window_ProfessionDisplay.prototype.drawProfessionExperience = function() {
 CGMZ_Window_ProfessionDisplay.prototype.drawProfessionExperienceToLevel = function() {
 	const profession = this._profession;
 	const descriptor1 = CGMZ.Professions.ExpToLevelText;
-	const descriptor2 = $cgmzTemp.numberSplit(profession.expNeededToNextLevel());
+	const descriptor2 = CGMZ_Utils.numberSplit(profession.expNeededToNextLevel());
 	const x = this._imageOffsetInfo.width * this.needsOffset();
 	this.drawProfessionStandardLine(descriptor1, descriptor2, x, this.contents.width-x);
 };
@@ -3681,7 +4355,7 @@ CGMZ_Window_ProfessionDisplay.prototype.drawProfessionRecipes = function(recipes
 			this.drawIcon(recipe._iconIndex, 0, this._neededHeight + 4);
 			x += ImageManager.iconWidth + 4;
 		}
-		this.drawText(recipe._name, x, this._neededHeight, this.contents.width - x, 'left');
+		this.CGMZ_drawTextLine(recipe._name, x, this._neededHeight, this.contents.width - x, 'left');
 		this._neededHeight += this.lineHeight();
 	}
 };
@@ -3689,7 +4363,7 @@ CGMZ_Window_ProfessionDisplay.prototype.drawProfessionRecipes = function(recipes
 // Draws a standard line
 //-----------------------------------------------------------------------------
 CGMZ_Window_ProfessionDisplay.prototype.drawProfessionStandardLine = function(descriptor1, descriptor2, x, width) {
-	const string = '\\c[' + CGMZ.Professions.LabelColor + ']' + descriptor1 + '\\c[0]' + descriptor2;
+	const string = `\\c[${CGMZ.Professions.LabelColor}]${descriptor1}\\c[0]${descriptor2}`;
 	this.CGMZ_drawTextLine(string, x, this._neededHeight, width, 'left');
 };
 //-----------------------------------------------------------------------------
@@ -3725,6 +4399,131 @@ CGMZ_Window_ProfessionDisplay.prototype.needsOffset = function() {
 	);
 };
 //=============================================================================
+// Spriteset_Map
+//-----------------------------------------------------------------------------
+// Show bitmap for exp gain above player if needed
+//=============================================================================
+//-----------------------------------------------------------------------------
+// Also initialize profession exp sprite array
+//-----------------------------------------------------------------------------
+const alias_CGMZProfessions_SpritesetMap_initialize = Spriteset_Map.prototype.initialize;
+Spriteset_Map.prototype.initialize = function() {
+    alias_CGMZProfessions_SpritesetMap_initialize.call(this);
+    this._cgmz_professionExps = [];
+};
+//-----------------------------------------------------------------------------
+// Also update profession exp sprites
+//-----------------------------------------------------------------------------
+const alias_CGMZProfessions_SpritesetMap_update = Spriteset_Map.prototype.update;
+Spriteset_Map.prototype.update = function() {
+    alias_CGMZProfessions_SpritesetMap_update.call(this);
+	this.CGMZ_updateProfessionExpSprites();
+};
+//-----------------------------------------------------------------------------
+// Update profession exp sprites
+//-----------------------------------------------------------------------------
+Spriteset_Map.prototype.CGMZ_updateProfessionExpSprites = function() {
+    for (const sprite of this._cgmz_professionExps) {
+        if (!sprite.isPlaying()) {
+            this.CGMZ_removeProfessionExp(sprite);
+        }
+    }
+    this.CGMZ_processProfessionExpRequests();
+};
+//-----------------------------------------------------------------------------
+// Process profession exp requests. This only allows one request per update cycle
+//-----------------------------------------------------------------------------
+Spriteset_Map.prototype.CGMZ_processProfessionExpRequests = function() {
+    const request = $cgmzTemp.retrieveProfessionExpSpriteRequest();
+    if(request) {
+        this.CGMZ_createProfessionExpSprite(request);
+    }
+};
+//-----------------------------------------------------------------------------
+// Create the sprite for profession exp
+//-----------------------------------------------------------------------------
+Spriteset_Map.prototype.CGMZ_createProfessionExpSprite = function(request) {
+    const sprite = new CGMZ_Sprite_ProfessionExp(request);
+    this._effectsContainer.addChild(sprite);
+    this._cgmz_professionExps.push(sprite);
+};
+//-----------------------------------------------------------------------------
+// Remove a profession exp sprite
+//-----------------------------------------------------------------------------
+Spriteset_Map.prototype.CGMZ_removeProfessionExp = function(sprite) {
+    this._cgmz_professionExps.remove(sprite);
+    this._effectsContainer.removeChild(sprite);
+    sprite.destroy();
+};
+//-----------------------------------------------------------------------------
+// Remove all profession exp sprites
+//-----------------------------------------------------------------------------
+Spriteset_Map.prototype.CGMZ_removeAllProfessionExpSprites = function() {
+    for(const sprite of this._cgmz_professionExps.clone()) {
+        this.CGMZ_removeProfessionExp(sprite);
+    }
+};
+//=============================================================================
+// Spriteset_Map
+//-----------------------------------------------------------------------------
+// Show bitmap for exp gain above player if needed
+//=============================================================================
+function CGMZ_Sprite_ProfessionExp() {
+    this.initialize(...arguments);
+}
+CGMZ_Sprite_ProfessionExp.prototype = Object.create(Sprite.prototype);
+CGMZ_Sprite_ProfessionExp.prototype.constructor = CGMZ_Sprite_ProfessionExp;
+//-----------------------------------------------------------------------------
+// Also initialize profession exp sprite array
+//-----------------------------------------------------------------------------
+CGMZ_Sprite_ProfessionExp.prototype.initialize = function(data) {
+    Sprite.prototype.initialize.call(this);
+	this._totalDuration = CGMZ.Professions.FloatDuration;
+	this._duration = 0;
+    this.anchor.x = 0.5;
+    this.anchor.y = 1;
+    this.z = 7;
+	const w = new CGMZ_Window_BitmapDummy();
+	this.bitmap = w.getTextCodeBitmap(data.string);
+};
+//-----------------------------------------------------------------------------
+// Update sprite
+//-----------------------------------------------------------------------------
+CGMZ_Sprite_ProfessionExp.prototype.update = function() {
+    Sprite.prototype.update.call(this);
+	this.updatePosition();
+	this.updateOpacity();
+	this._duration++;
+};
+//-----------------------------------------------------------------------------
+// Update sprite position
+//-----------------------------------------------------------------------------
+CGMZ_Sprite_ProfessionExp.prototype.updatePosition = function() {
+    this.x = $gamePlayer.screenX();
+    this.y = $gamePlayer.screenY() - this.getPositionChange();
+};
+//-----------------------------------------------------------------------------
+// Update sprite position
+//-----------------------------------------------------------------------------
+CGMZ_Sprite_ProfessionExp.prototype.getPositionChange = function() {
+    return CGMZ_Utils.lerp(0, CGMZ.Professions.FloatHeightGain, (this._duration/this._totalDuration));
+};
+//-----------------------------------------------------------------------------
+// Update sprite position
+//-----------------------------------------------------------------------------
+CGMZ_Sprite_ProfessionExp.prototype.updateOpacity = function() {
+	const start = this._totalDuration / 2;
+    if(this._duration >= start) {
+		this.opacity = 255 - CGMZ_Utils.lerp(0, 255, (this._duration-start)/(this._totalDuration-start));
+	}
+};
+//-----------------------------------------------------------------------------
+// Check if sprite is currently playing
+//-----------------------------------------------------------------------------
+CGMZ_Sprite_ProfessionExp.prototype.isPlaying = function() {
+    return this._duration < this._totalDuration;
+};
+//=============================================================================
 // Game_Battler
 //-----------------------------------------------------------------------------
 // Use buff item processing
@@ -3739,33 +4538,3 @@ Game_Battler.prototype.useItem = function(item) {
 		$cgmzTemp.checkItemForProfessionBuff(item);
 	}
 };
-//=============================================================================
-// CGMZ_Window_Toast
-//-----------------------------------------------------------------------------
-// Handle CGMZ Profession Toasts
-//=============================================================================
-//-----------------------------------------------------------------------------
-// Processing for custom toasts. Alias
-//-----------------------------------------------------------------------------
-if(Imported.CGMZ_ToastManager) {
-const alias_CGMZ_Professions_processCustomToast = CGMZ_Window_Toast.prototype.processCustomToast;
-CGMZ_Window_Toast.prototype.processCustomToast = function(toastObject) {
-	alias_CGMZ_Professions_processCustomToast.call(this, toastObject);
-	if(toastObject.hasOwnProperty('CGMZProfessionToast')) {
-		this.changeTextColor(toastObject.color);
-		const totalWidth = this.textWidth(toastObject.name + " " + CGMZ.Professions.LevelUpText);
-		const startX = this.contents.width / 2 - totalWidth / 2;
-		this.drawText(toastObject.name, startX, 0, this.contents.width, 'left');
-		this.changeTextColor(ColorManager.normalColor());
-		const x = this.textWidth(toastObject.name + " ") + startX;
-		this.drawText(CGMZ.Professions.LevelUpText, x, 0, this.contents.width-x, 'left');
-		this.drawText(CGMZ.Professions.LevelText + toastObject.level, 0, this.lineHeight(), this.contents.width, 'center');
-	}
-	if(toastObject.hasOwnProperty('CGMZProfessionToastDiscover')) {
-		this.drawText(CGMZ.Professions.DiscoverText, 0, 0, this.contents.width, 'center');
-		this.changeTextColor(toastObject.color);
-		this.drawText(toastObject.name, 0, this.lineHeight(), this.contents.width, 'center');
-		this.changeTextColor(ColorManager.normalColor());
-	}
-};
-}

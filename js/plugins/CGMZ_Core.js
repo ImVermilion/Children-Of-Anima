@@ -11,10 +11,10 @@
  * Become a Patron to get access to beta/alpha plugins plus other goodies!
  * https://www.patreon.com/CasperGamingRPGM
  * ============================================================================
- * Version: 1.18.0
+ * Version: 1.24.0
  * ----------------------------------------------------------------------------
  * Compatibility: Only tested with my CGMZ plugins.
- * Made for RPG Maker MZ 1.8.0
+ * Made for RPG Maker MZ 1.8.1
  * ----------------------------------------------------------------------------
  * Description: This is the core CGMZ plugin which is used extensively
  * by other CGMZ plugins and is likely to be required.
@@ -45,153 +45,16 @@
  * parameters and execute plugin commands. If you change it, things will begin
  * behaving incorrectly and your game will probably crash. Please do not
  * rename the js file.
- * -------------------------Version History------------------------------------
- * Version 1.1
- * - Added function to automatically check if any CGMZ plugin is out of date
- * - Added function to split a string into multiple lines if the string is too
- * long for a window to handle without reducing font size (text wrap).
- * - Added class CGMZ_Window_Scrollable which can scroll vertically with
- * handlers but no visible cursor. A mix between Window_Base,
- * Window_Scrollable, and Window_Selectable
- * - Added CGMZ map name meta access
+ * --------------------------Latest Version------------------------------------
+ * Hi all, this latest version adds some default parameters for [CGMZ] windows
+ * that can scroll. Most [CGMZ] plugins also allow you to customize these
+ * parameters individually, but this can be tedious if you want to adjust
+ * the scrolling in multiple plugin windows. These new Core parameters will be
+ * used as a default in case these parameters are not set in other plugins,
+ * allowing a consistent scrolling experience across all windows in your game.
  *
- * Version 1.2
- * - Removed unused code for a title window as this no longer fits with MZ
- * touch buttons.
- * - Added draw gauge functionality to windows that do not need sprite gauges
- *
- * Version 1.2.1
- * - Updated api call for version check to use semantic versioning
- * - Added link to update directly from console
- * - Cut down on outdated CGMZ plugin warnings in console
- *
- * Version 1.3.0
- * - Added basic input processing for all keys on keyboard
- * - Added option to open dev tools on game start
- *
- * Version 1.4.0
- * - Added option to show fps on game start
- * - Added option to go fullscreen on game start
- * - Bugfix to add cap to scrollable window size
- *
- * Version 1.5.0
- * - Added new draw text function for text codes with automatic line breaks
- * - Added update behavior
- * - Added behavior after load in CGMZ classes
- * - Added new timer class
- * - Optimized existing code
- *
- * Version 1.5.1
- * - Added parameter to simulate deployed environment during playtest
- * - Added new draw text function for drawing for a single line of text
- *   with text codes
- *
- * Version 1.5.2
- * - More concise error reporting
- * - Bugfix for font size changes throwing off line wrap when drawing text
- *   with text codes
- *
- * Version 1.5.3
- * - Added function for getting file info
- * - Removed deprecated code (if getting crash after update, update crashing
- *   plugin)
- *
- * Version 1.6.0
- * - Added support for subfolders for images
- * - Added more customizable selectable window with categories
- * - Added function to draw a divider on windows
- * - Added support for spritesheet animations on map
- * - Various bug fixes for text code drawing in unusual cases
- *
- * Version 1.7.0
- * - Added horizontally scrolling windows
- * - Added filesystem functions
- *
- * Version 1.7.1
- * - Changed some CGMZ draw text functions to adjust width of text if too wide
- * - Documentation should no longer horizontally scroll
- *
- * Version 1.8.0
- * - Added gamepad meta info detection
- * - Added idle detection
- * - Added CGMZ_Utils to replace some CGMZ_Temp utility functions
- * - Added JSON parse helper function to better report errors
- * - Added functions to help change data after saved game loaded
- * - Fixed bug with centered text drawing when scaled into a small area with
- *   an offset
- * - Out of date plugin checker should now only check once at boot
- * - Documentation updated
- *
- * Version 1.8.1
- * - Add gamepad release function
- * - Add Spanish language support
- * - Bug fix for scaled left-align text drawing
- *
- * Version 1.9.0
- * - Added utility function for easier compare of numbers
- * - Added utility function to draw background rectangle
- * - Added utility function to draw input styles for checkbox, radio, and
- *   toggle switch
- * - Added utility function to draw N-gons
- * - Added utility function for opening URLs
- * - Fix outdated plugin message for alpha/beta plugins
- *
- * Version 1.10.0
- * - Expanded function for getting item data objects to include skill/states
- * - Added locale options
- * - Moved date functions to CGMZ_Utils from CGMZ_Temp
- *
- * Version 1.11.0
- * - Added function to draw step animation on windows
- * - Added sprite layer above/below windows in menus
- * - Fix crash when using Event Test
- *
- * Version 1.12.0
- * - Added tracking for last input type
- * - Added function to parse JSON SE parameters
- *
- * Version 1.13.0
- * - Added function to draw a gradient filled rect
- * - Added function to parse JSON Tone parameters
- * - Added function to setup common toast parameters
- *
- * Version 1.14.0
- * - Added selectable window that can show a tilemap
- * - Added lerp functions
- * - Fix gradient rect function to clear with contents
- *
- * Version 1.14.1
- * - Fix issue with idle timer when many keys pressed at same time
- * - Removed deprecated $cgmzTemp.timeSplit
- *
- * Version 1.15.0
- * - Added common CGMZ window options to window classes
- * - Added report dimensions utility function
- * - Bug fix for some numbers not taking locale into account
- * - Bug fix for toast parser crash when toast object was undefined
- * - Bug fix for some rare cases where gamepad input could crash game
- * - Bug fix for CGMZ Selectable Window not tracking top row properly
- *
- * Version 1.16.0
- * - Added window class to get various window parts as bitmaps
- * - Added animated regions to windows
- * - Added more customizable gauge class
- * - Added tracking for last used gamepad index
- *
- * Version 1.16.1
- * - Added more options to header function, and text code support
- * - Added easier lookup for actor/class/map/event/enemy/troop data
- * - Fixed bug with scrolling height calculations when padding was changed
- *
- * Version 1.17.0
- * - Added utility function to check for any truthy values on an object
- * - Added utility function for performing some math operations
- * - Added utility function for reading meta parameters
- * - Added function to get distance between characters
- *
- * Version 1.18.0
- * - Added function to draw sv actor sprite
- * - Added function for basic event comment parsing
+ * Version 1.24.0
+ * - Added defaults for scrolling windows
  *
  * @command Initialize
  * @desc Re-initializes some CGMZ Classes. Only call this if you know what you
@@ -228,6 +91,37 @@
  * @param Fallback Locale
  * @desc The locale type to fall back to for use in locale strings.
  * @default en-US
+ *
+ * @param CGMZ Defaults
+ *
+ * @param Scroll Speed
+ * @parent CGMZ Defaults
+ * @type number
+ * @min 0
+ * @desc Speed at which [CGMZ] windows scroll (if needed)
+ * @default 1
+ *
+ * @param Scroll Wait
+ * @parent CGMZ Defaults
+ * @type number
+ * @min 0
+ * @desc Amount of time (in frames) to wait before beginning to scroll [CGMZ] windows
+ * @default 300
+ *
+ * @param Scroll Deceleration
+ * @parent CGMZ Defaults
+ * @type number
+ * @min 0.01
+ * @max 0.99
+ * @decimals 2
+ * @desc Rate of deceleration after letting go of touch for [CGMZ] windows
+ * @default 0.92
+ *
+ * @param Auto Scroll
+ * @parent CGMZ Defaults
+ * @type boolean
+ * @desc Determine if [CGMZ] windows should automatically scroll after so long of no user input
+ * @default true
 */
 /*:es
  * @author Casper Gaming
@@ -244,10 +138,10 @@
  * alfa, ademas de otras cosas geniales!
  * https://www.patreon.com/CasperGamingRPGM
  * ============================================================================
- * Versión: 1.18.0
+ * Versión: 1.24.0
  * ----------------------------------------------------------------------------
  * Compatibilidad: Sólo probado con mis CGMZ plugins.
- * Hecho para RPG Maker MZ 1.8.0
+ * Hecho para RPG Maker MZ 1.8.1
  * ----------------------------------------------------------------------------
  * Descripción: Este es el plugin principal de CGMZ que otros plugin de CGMZ 
  * utilizan ampliamente y es probable que sea necesario.
@@ -274,162 +168,16 @@
  * parameters and execute plugin commands. If you change it, things will begin
  * behaving incorrectly and your game will probably crash. Please do not
  * rename the js file.
- * -------------------------Historial de versiones-----------------------------
- * Versión 1.1
- * - Función agregada para verificar automáticamente si algún complemento CGMZ 
- *   está desactualizado
- * - Función agregada para dividir una cadena en varias líneas si la cadena es 
- *   demasiado larga para que la maneje una ventana sin reducir el tamaño de 
- *   fuente (ajuste de texto).
- * - Clase agregada CGMZ_Window_Scrollable que puede desplazarse verticalmente 
- *   con controladores pero sin cursor visible. Una mezcla entre Window_Base,
- *   Window_Scrollable y Window_Selectable
- * - Se agregó el metaacceso al nombre del mapa CGMZ
+ * --------------------------Latest Version------------------------------------
+ * Hi all, this latest version adds some default parameters for [CGMZ] windows
+ * that can scroll. Most [CGMZ] plugins also allow you to customize these
+ * parameters individually, but this can be tedious if you want to adjust
+ * the scrolling in multiple plugin windows. These new Core parameters will be
+ * used as a default in case these parameters are not set in other plugins,
+ * allowing a consistent scrolling experience across all windows in your game.
  *
- * Versión 1.2
- * - Se eliminó el código no utilizado para una ventana de título, ya que ya 
- *   no se ajusta a los botones táctiles MZ.
- * - Se agregó la funcionalidad de indicador de dibujo a las ventanas que no 
- *   necesitan indicadores de sprites.
- *
- * Versión 1.2.1
- * - Llamada api actualizada para verificación de versión para usar control de 
- *   versiones semántico
- * - Enlace agregado para actualizar directamente desde la consola
- * - Reduzca las advertencias obsoletas del complemento CGMZ en la consola
- *
- * Versión 1.3.0
- * - Procesamiento de entrada básico agregado para todas las teclas del teclado
- * - Opción agregada para abrir herramientas de desarrollo al inicio del juego
- *
- * Versión 1.4.0
- * - Opción agregada para mostrar fps al inicio del juego
- * - Opción agregada para ir a pantalla completa al inicio del juego
- * - Corrección de errores para agregar un límite al tamaño de la ventana
- *   desplazable
- *
- * Versión 1.5.0
- * - Se agregó una nueva función de dibujar texto para códigos de texto con 
- *   saltos de línea automáticos
- * - Comportamiento de actualización agregado
- * - Comportamiento agregado después de la carga en clases CGMZ
- * - Se agregó una nueva clase de temporizador
- * - Código existente optimizado
- *
- * Versión 1.5.1
- * - Parámetro agregado para simular el entorno desplegado durante la prueba de
- *   juego
- * - Se agregó una nueva función de dibujo de texto para dibujar una sola línea 
- *   de texto con códigos de texto
- *
- * Versión 1.5.2
- * - Informe de errores más conciso
- * - Corrección de errores para los cambios de tamaño de fuente que arrojan el 
- *   ajuste de línea al dibujar texto con códigos de texto
- *
- * Versión 1.5.3
- * - Función agregada para obtener información del archivo
- * - Se eliminó el código obsoleto (si se bloquea después de la actualización, 
- *   actualice el complemento de bloqueo)
- *
- * Versión 1.6.0
- * - Se agregó soporte para subcarpetas para imágenes.
- * - Se agregó una ventana seleccionable más personalizable con categorías
- * - Función agregada para dibujar un divisor en las ventanas
- * - Soporte agregado para animaciones de hojas de sprites en el mapa
- * - Varias correcciones de errores para el dibujo de código de texto en casos 
- *   inusuales
- *
- * Versión 1.7.0
- * - Se agregaron ventanas de desplazamiento horizontal
- * - Funciones de sistema de archivos añadidas
- *
- * Versión 1.7.1
- * - Se cambiaron algunas funciones de dibujo de texto CGMZ para ajustar el ancho 
- *   del texto si es demasiado ancho
- * - La documentación ya no debería desplazarse horizontalmente
- *
- * Versión 1.8.0
- * - Added gamepad meta info detection
- * - Added idle detection
- * - Added CGMZ_Utils to replace some CGMZ_Temp utility functions
- * - Added JSON parse helper function to better report errors
- * - Added functions to help change data after saved game loaded
- * - Fixed bug with centered text drawing when scaled into a small area with
- *   an offset
- * - Out of date plugin checker should now only check once at boot
- * - Documentation updated
- *
- * Versión 1.8.1
- * - Add gamepad release function
- * - Add Spanish language support
- * - Bug fix for scaled left-align text drawing
- *
- * Versión 1.9.0
- * - Added utility function for easier compare of numbers
- * - Added utility function to draw background rectangle
- * - Added utility function to draw input styles for checkbox, radio, and
- *   toggle switch
- * - Added utility function to draw N-gons
- * - Added utility function for opening URLs
- * - Fix outdated plugin message for alpha/beta plugins
- *
- * Versión 1.10.0
- * - Expanded function for getting item data objects to include skill/states
- * - Added locale options
- * - Moved date functions to CGMZ_Utils from CGMZ_Temp
- *
- * Versión 1.11.0
- * - Added function to draw step animation on windows
- * - Added sprite layer above/below windows in menus
- * - Fix crash when using Event Test
- *
- * Versión 1.12.0
- * - Added tracking for last input type
- * - Added function to parse JSON SE parameters
- *
- * Versión 1.13.0
- * - Added function to draw a gradient filled rect
- * - Added function to parse JSON Tone parameters
- * - Added function to setup common toast parameters
- *
- * Versión 1.14.0
- * - Added selectable window that can show a tilemap
- * - Added lerp functions
- * - Fix gradient rect function to clear with contents
- *
- * Versión 1.14.1
- * - Fix issue with idle timer when many keys pressed at same time
- * - Removed deprecated $cgmzTemp.timeSplit
- *
- * Versión 1.15.0
- * - Add common CGMZ window options to window classes
- * - Add report dimensions utility function
- * - Bug fix for some numbers not taking locale into account
- * - Bug fix for toast parser crash when toast object was undefined
- * - Bug fix for some rare cases where gamepad input could crash game
- * - Bug fix for CGMZ Selectable Window not tracking top row properly
- *
- * Versión 1.16.0
- * - Added window class to get various window parts as bitmaps
- * - Added animated regions to windows
- * - Added more customizable gauge class
- * - Added tracking for last used gamepad index
- *
- * Versión 1.16.1
- * - Added text code support to header function
- * - Added easier lookup for actor/class/map/event/enemy/troop data
- * - Fixed bug with scrolling height calculations when padding was changed
- *
- * Versión 1.17.0
- * - Added utility function to check for any truthy values on an object
- * - Added utility function for performing some math operations
- * - Added utility function for reading meta parameters
- * - Added function to get distance between characters
- *
- * Versión 1.18.0
- * - Added function to draw sv actor sprite
- * - Added function for basic event comment parsing
+ * Version 1.24.0
+ * - Added defaults for scrolling windows
  *
  * @command Initialize
  * @text Inicializar 
@@ -472,12 +220,43 @@
  * @param Fallback Locale
  * @desc The locale type to fall back to for use in locale strings.
  * @default es
+ *
+ * @param CGMZ Defaults
+ *
+ * @param Scroll Speed
+ * @parent CGMZ Defaults
+ * @type number
+ * @min 0
+ * @desc Speed at which [CGMZ] windows scroll (if needed)
+ * @default 1
+ *
+ * @param Scroll Wait
+ * @parent CGMZ Defaults
+ * @type number
+ * @min 0
+ * @desc Amount of time (in frames) to wait before beginning to scroll [CGMZ] windows
+ * @default 300
+ *
+ * @param Scroll Deceleration
+ * @parent CGMZ Defaults
+ * @type number
+ * @min 0.01
+ * @max 0.99
+ * @decimals 2
+ * @desc Rate of deceleration after letting go of touch for [CGMZ] windows
+ * @default 0.92
+ *
+ * @param Auto Scroll
+ * @parent CGMZ Defaults
+ * @type boolean
+ * @desc Determine if [CGMZ] windows should automatically scroll after so long of no user input
+ * @default true
 */
 var Imported = Imported || {};
 Imported.CGMZ_Core = true;
 var CGMZ = {};
 CGMZ.Versions = {};
-CGMZ.Versions["CGMZ Core"] = "1.18.0";
+CGMZ.Versions["CGMZ Core"] = "1.24.0";
 CGMZ.Core = {};
 CGMZ.Core.parameters = PluginManager.parameters('CGMZ_Core');
 CGMZ.Core.CheckForUpdates = (CGMZ.Core.parameters["Check for Updates"] === "true");
@@ -485,6 +264,10 @@ CGMZ.Core.ShowDevTools = (CGMZ.Core.parameters["Dev Tools on Start"] === "true")
 CGMZ.Core.StartFullscreen = (CGMZ.Core.parameters["Fullscreen"] === "true");
 CGMZ.Core.ShowFPSCounter = (CGMZ.Core.parameters["Show FPS Counter"] === "true");
 CGMZ.Core.SimulateProductionEnv = (CGMZ.Core.parameters["Simulate Production Env"] === "true");
+CGMZ.Core.AutoScroll = (CGMZ.Core.parameters["Auto Scroll"] === "true");
+CGMZ.Core.ScrollSpeed = Number(CGMZ.Core.parameters["Scroll Speed"]);
+CGMZ.Core.ScrollWait = Number(CGMZ.Core.parameters["Scroll Wait"]);
+CGMZ.Core.ScrollDeceleration = parseFloat(CGMZ.Core.parameters["Scroll Deceleration"]);
 CGMZ.Core.ForceLanguage = CGMZ.Core.parameters["Force Locale"];
 CGMZ.Core.FallbackLanguage = CGMZ.Core.parameters["Fallback Locale"];
 //=============================================================================
@@ -502,6 +285,18 @@ CGMZ_Utils.calcAvgPartyLevel = function() {
 	let avgLevel = 0;
 	let totalActors = 0;
 	for(const actor of $gameParty.members()) {
+		avgLevel += actor._level;
+		totalActors++;
+	}
+	return Math.max(0, Math.round(avgLevel / totalActors));
+};
+//-----------------------------------------------------------------------------
+// Calculate the average battler level
+//-----------------------------------------------------------------------------
+CGMZ_Utils.calcAvgBattlerLevel = function() {
+	let avgLevel = 0;
+	let totalActors = 0;
+	for(const actor of $gameParty.battleMembers()) {
 		avgLevel += actor._level;
 		totalActors++;
 	}
@@ -531,7 +326,7 @@ CGMZ_Utils.reportDimensions = function(width, height, groupName) {
 // If error, reports to console and returns the returnObjWhenError.
 // If no error, returns the parsed JSON object.
 //-----------------------------------------------------------------------------
-CGMZ_Utils.parseJSON = function(jsonString, returnObjWhenError = null, errorPlugin = "CGMZ Core", suggestion = "Check JSON parameters.") {
+CGMZ_Utils.parseJSON = function(jsonString, returnObjWhenError = null, errorPlugin = "[CGMZ] Core", suggestion = "Check JSON parameters.") {
 	try {
 		const obj = JSON.parse(jsonString);
 		return obj;
@@ -544,7 +339,7 @@ CGMZ_Utils.parseJSON = function(jsonString, returnObjWhenError = null, errorPlug
 // Takes a JSON parameter with "Name", "Volume", "Pitch" and "Pan" and returns
 // a sound effect object
 //-----------------------------------------------------------------------------
-CGMZ_Utils.parseSoundEffectJSON = function(seJSON, callingPlugin = "CGMZ Core") {
+CGMZ_Utils.parseSoundEffectJSON = function(seJSON, callingPlugin = "[CGMZ] Core") {
 	const defaultSE = {Name:"",Volume:90,Pitch:100,Pan:0};
 	const parsedSE = this.parseJSON(seJSON, defaultSE, callingPlugin, "You had a Sound Effect parameter with invalid JSON. It could not be read.");
 	const se = {};
@@ -560,7 +355,7 @@ CGMZ_Utils.parseSoundEffectJSON = function(seJSON, callingPlugin = "CGMZ Core") 
 //
 // In CGMZ plugins, tones with a -256 value for Red are ignored
 //-----------------------------------------------------------------------------
-CGMZ_Utils.parseToneJSON = function(toneJSON, callingPlugin = "CGMZ Core") {
+CGMZ_Utils.parseToneJSON = function(toneJSON, callingPlugin = "[CGMZ] Core") {
 	const defaultTone = {Red:-256,Green:0,Blue:0};
 	const parseTone = this.parseJSON(toneJSON, defaultTone, callingPlugin, "You had a Tone parameter with invalid JSON. It could not be read.");
 	const tone = {};
@@ -568,6 +363,35 @@ CGMZ_Utils.parseToneJSON = function(toneJSON, callingPlugin = "CGMZ Core") {
 	tone.Blue = Number(parseTone.Blue);
 	tone.Green = Number(parseTone.Green);
 	return tone;
+};
+//-----------------------------------------------------------------------------
+// Takes a JSON parameter with "Duration" "Weak Magnitude" "Strong Magnitude" "Start Delay"
+//
+// In CGMZ plugins, Duration of 0 is ignored
+//-----------------------------------------------------------------------------
+CGMZ_Utils.parseRumbleJSON = function(rumbleJSON, callingPlugin = "[CGMZ] Core") {
+	const defaultRumble = {startDelay:0,duration:0,weakMagnitude:0.0,strongMagnitude:0.0};
+	const parseRumble = this.parseJSON(rumbleJSON, defaultRumble, callingPlugin, "You had a Rumble parameter with invalid JSON. It could not be read.");
+	const rumble = {};
+	rumble.startDelay = Number(parseRumble["Start Delay"]) || 0;
+	rumble.duration = Number(parseRumble.Duration) || 0;
+	rumble.weakMagnitude = parseFloat(parseRumble["Weak Magnitude"]) || 0.0;
+	rumble.strongMagnitude = parseFloat(parseRumble["Strong Magnitude"]) || 0.0;
+	return rumble;
+};
+//-----------------------------------------------------------------------------
+// Parses a toast object from json
+//-----------------------------------------------------------------------------
+CGMZ_Utils.parseToast = function(json, callingPlugin = "[CGMZ] Core") {
+	if(!json) return null;
+	const ignored = ["Display","Sound Effect","Tone","Background Style","Windowskin","Width","Height"];
+	const parsed = this.parseJSON(json, null, callingPlugin, "A toast parameter had invalid json and could not be read.");
+	const toast = this.setupToast(parsed, callingPlugin);
+	if(!toast) return null;
+	for(const param of Object.keys(parsed)) {
+		if(!ignored.includes(param)) toast[param] = parsed[param];
+	}
+	return toast;
 };
 //-----------------------------------------------------------------------------
 // Takes a Parsed Toast parameter with possible toast common params and returns
@@ -582,12 +406,12 @@ CGMZ_Utils.parseToneJSON = function(toneJSON, callingPlugin = "CGMZ Core") {
 // Height - Number - The number of text lines that can fit in the window
 // Any extra parameters will not be touched.
 //-----------------------------------------------------------------------------
-CGMZ_Utils.setupToast = function(parseToast, callingPlugin = "CGMZ Core") {
+CGMZ_Utils.setupToast = function(parseToast, callingPlugin = "[CGMZ] Core") {
 	if(!parseToast) return null;
 	if(parseToast.Display === "false") return null; // If the toast object is not going to be used anyways, no need to continue parsing object
 	const toast = {};
 	if(parseToast.hasOwnProperty("Sound Effect")) toast.SE = this.parseSoundEffectJSON(parseToast["Sound Effect"], callingPlugin);
-	if(parseToast.hasOwnProperty("Tone") && !parseToast.Tone.includes("-256")) {
+	if(parseToast.hasOwnProperty("Tone") && parseToast.Tone && !parseToast.Tone.includes("-256")) {
 		toast.windowskinTone = parseToast.Tone;
 	}
 	if(parseToast.hasOwnProperty("Background Style")) toast.backgroundStyle = parseToast["Background Style"];
@@ -698,6 +522,34 @@ CGMZ_Utils.applyAddVariance = function(originalNum, varianceAmt) {
 	return originalNum + Math.randomInt(varianceAmt);
 };
 //-----------------------------------------------------------------------------
+// Return a random integer within the given range
+//-----------------------------------------------------------------------------
+CGMZ_Utils.randomNumberInRange = function(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+//-----------------------------------------------------------------------------
+// Returns a weighted result. Options should be an array of objects in the form:
+// {result: object, weight: number}
+// It will sum the weights together and return a result from within the weights
+//
+// It can optionally provide a separate return if the array is empty or there
+// were no weights provided.
+//-----------------------------------------------------------------------------
+CGMZ_Utils.pickWeightedResult = function(options, exceptionReturn = null) {
+    let totalWeight = 0;
+	for(const ow of options) {
+		totalWeight += ow.weight;
+	}
+	if(totalWeight === 0) return exceptionReturn;
+	let resultWeight = Math.randomInt(totalWeight + 1);
+	for(const opt of options) {
+		resultWeight -= opt.weight;
+		if(resultWeight <= 0) return opt.result;
+	}
+	this.reportError("Could not find weighted result from CGMZ_Utils.pickWeightedResult", "[CGMZ] Core", "This warning indicates a bug somewhere - please report this warning to the developer.");
+	return options[options.length - 1].result;
+};
+//-----------------------------------------------------------------------------
 // Takes a number and returns it's toLocaleString value
 //-----------------------------------------------------------------------------
 CGMZ_Utils.numberSplit = function(num) {
@@ -709,7 +561,7 @@ CGMZ_Utils.numberSplit = function(num) {
 //-----------------------------------------------------------------------------
 CGMZ_Utils.timeSplit = function(frameCount) {
 	const temp = frameCount/60;
-	const seconds = temp%60;
+	const seconds = Math.floor(temp%60);
 	const minutes = Math.floor(temp/60) % 60;
 	const hours = Math.floor(temp/60/60) % 60;
 	return hours.padZero(2) + ':' + minutes.padZero(2) + ':' + seconds.padZero(2);
@@ -733,7 +585,7 @@ CGMZ_Utils.lookupItem = function(type, id) {
 		case 'tileset': return $dataTilesets[id];
 		case 'mapInfo': return $dataMapInfos[id];
 	}
-	this.reportError("Item type setup incorrectly", "CGMZ Core", "Check item parameters set up through CGMZ plugins");
+	this.reportError("Item type setup incorrectly", "[CGMZ] Core", "Check item parameters set up through [CGMZ] plugins");
 	return null;
 };
 //-----------------------------------------------------------------------------
@@ -748,7 +600,7 @@ CGMZ_Utils.numberValueCompare = function(value1, value2, comparator) {
 		case '<': return value1 < value2;
 		case '<=': return value1 <= value2;
 	}
-	this.reportError(`Unknown comparator: ${comparator}`, "CGMZ Core", "Check number comparisons set up through CGMZ plugins");
+	this.reportError(`Unknown comparator: ${comparator}`, "[CGMZ] Core", "Check number comparisons set up through [CGMZ] plugins");
 	return false;
 };
 //-----------------------------------------------------------------------------
@@ -762,9 +614,10 @@ CGMZ_Utils.performNumberOperation = function(value1, value2, operator) {
 			case '/': return value1 / value2;
 			case '*': return value1 * value2;
 			case '%': return value1 % value2;
+			case '=': return value2;
 		}
 	} catch(e) {
-		this.reportError(`Math error in statement: ${value1} ${operator} ${$value2}`, "CGMZ Core", "Check number operations set up through CGMZ plugins");
+		this.reportError(`Math error in statement: ${value1} ${operator} ${$value2}`, "[CGMZ] Core", "Check number operations set up through CGMZ plugins");
 	}
 	return 0;
 };
@@ -868,6 +721,25 @@ CGMZ_Utils.fsWriteFile = function(path, data, encoding) {
 	fs.writeFileSync(path, data, encoding);
 };
 //-----------------------------------------------------------------------------
+// Get the bitmap from a sprite (with any sprite effects applied to bitmap)
+//-----------------------------------------------------------------------------
+CGMZ_Utils.getSpriteBitmapWithEffects = function(sprite, width, height) {
+    const bitmap = new Bitmap(width, height);
+    const renderTexture = PIXI.RenderTexture.create(width, height);
+    if(sprite) {
+        const renderer = Graphics.app.renderer;
+        renderer.render(sprite, renderTexture);
+        sprite.worldTransform.identity();
+        const canvas = renderer.extract.canvas(renderTexture);
+        bitmap.context.drawImage(canvas, 0, 0);
+        canvas.width = 0;
+        canvas.height = 0;
+    }
+    renderTexture.destroy({ destroyBase: true });
+    bitmap.baseTexture.update();
+    return bitmap;
+};
+//-----------------------------------------------------------------------------
 // Linear Interpolation between 2 values
 //-----------------------------------------------------------------------------
 CGMZ_Utils.lerp = function(start, end, percent) {
@@ -956,7 +828,7 @@ CGMZ_Temp.prototype.checkCGMZPluginVersions = function(jsonData) {
 	jsonData.versions.forEach((version) => {
 		if(CGMZ.Versions[version.name] && CGMZ.Versions[version.name].toString() !== version.version.toString()) {
 			if(!warned) {
-				console.warn("Warning! Out of date CGMZ Plugin(s) found:");
+				console.warn("Warning! Out of date [CGMZ] Plugin(s) found:");
 				warned = true;
 			}
 			pluginName = version.name;
@@ -1034,13 +906,6 @@ CGMZ_Temp.prototype.getImageData = function(imageLoc) {
 	return {folder: "img/" + path + "/", filename: file};
 };
 //-----------------------------------------------------------------------------
-// Takes a number and returns it's toLocaleString value
-// Deprecated. Use CGMZ_Utils.numberSplit instead.
-//-----------------------------------------------------------------------------
-CGMZ_Temp.prototype.numberSplit = function(num) {
-	return num.toLocaleString();
-};
-//-----------------------------------------------------------------------------
 // Takes an amount of seconds and tries to approximate it to Hours, Minutes, or Seconds
 // Does not go above days as a time unit.
 // For example, 30 seconds would return [30, "seconds"]
@@ -1086,84 +951,10 @@ CGMZ_Temp.prototype.approximateTimeValueToUnit = function(seconds, unitString) {
 		case "Minutes": return Math.floor(seconds/60);
 		case "Seconds": return seconds;
 	}
-	const script = "CGMZ Core";
+	const script = "[CGMZ] Core";
 	const error = "Unrecognized unitString in approximateTimeValueToUnit()";
 	CGMZ_Utils.reportError(error, script);
 	return 0;
-};
-//-----------------------------------------------------------------------------
-// Take javascript getDate, getMonth, and getFullYear and return formatted date text
-// Valid formats (using / as delim):
-// 0: MM/DD/YYYY     (ex: 1/20/2001)
-// 1: DD/MM/YYYY     (ex: 20/1/2001)
-// 2: YYYY/MM/DD     (ex: 2001/1/20)
-// 3: Month DD, YYYY (ex: January 20, 2001)
-// 4: DD Month YYYY  (ex: 20 January 2001)
-// 5: Mon. DD, YYYY  (ex: Jan 20, 2001)
-// 6: DD Mon. YYYY   (ex: 20 Jan 2001)
-// 7: MM/DD          (ex: 1/20)
-// 8: DD/MM          (ex: 20/1)
-// Deprecated. Use CGMZ_Utils.createDateText instead. Please be aware of 
-// changes to function arguments and usage
-//-----------------------------------------------------------------------------
-CGMZ_Temp.prototype.createDateText = function(day, month, year, format, delim) {
-	switch(format) {
-		case 0: return (month+1).toString() + delim + day.toString() + delim + year.toString();
-		case 1: return day.toString() + delim + (month+1).toString() + delim + year.toString();
-		case 2: return year.toString() + delim + (month+1).toString() + delim + day.toString();
-		case 3: return this.getFullMonthName(month) + " " + day.toString() + ", " + year.toString();
-		case 4: return day.toString() + " " + this.getFullMonthName(month) + " " + year.toString();
-		case 5: return this.getShortMonthName(month) + " " + day.toString() + ", " + year.toString();
-		case 6: return day.toString() + " " + this.getShortMonthName(month) + " " + year.toString();
-		case 7: return (month+1).toString() + delim + day.toString();
-		case 8: return day.toString() + delim + (month+1).toString();
-	}
-	CGMZ_Utils.reportError("createDateText: Out of range", "CGMZ Core");
-	return "Unknown Date";
-};
-//-----------------------------------------------------------------------------
-// Convert javascript getMonth int to full name of month string
-// Deprecated. See CGMZ_Temp.createDateText for more info
-//-----------------------------------------------------------------------------
-CGMZ_Temp.prototype.getFullMonthName = function(month) {
-	switch(month) {
-		case 0: return "January";
-		case 1: return "February";
-		case 2: return "March";
-		case 3: return "April";
-		case 4: return "May";
-		case 5: return "June";
-		case 6: return "July";
-		case 7: return "August";
-		case 8: return "September";
-		case 9: return "October";
-		case 10: return "November";
-		case 11: return "December";
-	}
-	CGMZ_Utils.reportError("getFullMonthName: Out of range", "CGMZ Core");
-	return "Unknown";
-};
-//-----------------------------------------------------------------------------
-// Convert javascript getMonth int to abbreviated name of month string
-// Deprecated. See CGMZ_Temp.createDateText for more info
-//-----------------------------------------------------------------------------
-CGMZ_Temp.prototype.getShortMonthName = function(month) {
-	switch(month) {
-		case 0: return "Jan";
-		case 1: return "Feb";
-		case 2: return "Mar";
-		case 3: return "Apr";
-		case 4: return "May";
-		case 5: return "Jun";
-		case 6: return "Jul";
-		case 7: return "Aug";
-		case 8: return "Sep";
-		case 9: return "Oct";
-		case 10: return "Nov";
-		case 11: return "Dec";
-	}
-	CGMZ_Utils.reportError("getShortMonthName: Out of range", "CGMZ Core", "Update CGMZ Plugins");
-	return "Unknown";
 };
 //-----------------------------------------------------------------------------
 // Look up item given type and id
@@ -1241,6 +1032,16 @@ CGMZ_Temp.prototype.updateLastGamepad = function(gamepad) {
 	this._lastGamePadIndex = gamepad.index;
 	this.onAnyInput(gamepad);
 	this._lastInputType = "gamepad";
+};
+//-----------------------------------------------------------------------------
+// Gets the last gamepad that input was detected for
+//-----------------------------------------------------------------------------
+CGMZ_Temp.prototype.getLastGamepad = function() {
+	if(navigator.getGamepads) {
+        const gamepads = navigator.getGamepads();
+        if(gamepads) return gamepads[this._lastGamePadIndex];
+    }
+	return null;
 };
 //-----------------------------------------------------------------------------
 // Update gamepad release - called when no gamepad input detected
@@ -1329,95 +1130,6 @@ CGMZ_Temp.prototype.requestMapAnimation = function(imageData, x, y, frameWidth, 
 //-----------------------------------------------------------------------------
 CGMZ_Temp.prototype.retrieveMapAnimationRequest = function() {
 	return this._animationQueue.shift();
-};
-//-----------------------------------------------------------------------------
-// Save file to filesystem
-// This will cause web hosted games to crash
-// Deprecated. Use CGMZ_Utils.saveToLocalFile instead.
-//-----------------------------------------------------------------------------
-CGMZ_Temp.prototype.saveToLocalFile = function(folder, filename, ext, data, encoding = 'base64') {
-	const dirPath = this.fileDirectoryPath(folder);
-	const filePath = this.filePath(folder, filename, ext);
-	const backupFilePath = filePath + "_";
-	return new Promise((resolve, reject) => {
-		this.fsMkdir(dirPath);
-		this.fsUnlink(backupFilePath);
-		this.fsRename(filePath, backupFilePath);
-		try {
-			this.fsWriteFile(filePath, data, encoding);
-			this.fsUnlink(backupFilePath);
-			resolve();
-		} catch (e) {
-			try {
-				this.fsUnlink(filePath);
-				this.fsRename(backupFilePath, filePath);
-			} catch (e2) {
-				//
-			}
-			reject(e);
-		}
-	});
-};
-//-----------------------------------------------------------------------------
-// Get directory path
-// This will cause web hosted games to crash
-// Deprecated. Use CGMZ_Utils.fileDirectoryPath instead.
-//-----------------------------------------------------------------------------
-CGMZ_Temp.prototype.fileDirectoryPath = function(folder) {
-	const path = require("path");
-	const base = path.dirname(process.mainModule.filename);
-	return path.join(base, folder);
-};
-//-----------------------------------------------------------------------------
-// Get file path
-// This will cause web hosted games to crash
-// Deprecated. Use CGMZ_Utils.filePath instead.
-//-----------------------------------------------------------------------------
-CGMZ_Temp.prototype.filePath = function(folder, filename, ext) {
-	const dir = this.fileDirectoryPath(folder);
-	return dir + filename + ext;
-};
-//-----------------------------------------------------------------------------
-// Make directory (if no exists)
-// This will cause web hosted games to crash
-// Deprecated. Use CGMZ_Utils.fsMkdir instead.
-//-----------------------------------------------------------------------------
-CGMZ_Temp.prototype.fsMkdir = function(path) {
-	const fs = require("fs");
-	if (!fs.existsSync(path)) {
-		fs.mkdirSync(path);
-	}
-};
-//-----------------------------------------------------------------------------
-// Rename file if exists
-// This will cause web hosted games to crash
-// Deprecated. Use CGMZ_Utils.fsRename instead.
-//-----------------------------------------------------------------------------
-CGMZ_Temp.prototype.fsRename = function(oldPath, newPath) {
-	const fs = require("fs");
-	if (fs.existsSync(oldPath)) {
-		fs.renameSync(oldPath, newPath);
-	}
-};
-//-----------------------------------------------------------------------------
-// Unlink file
-// This will cause web hosted games to crash
-// Deprecated. Use CGMZ_Utils.fsUnlink instead.
-//-----------------------------------------------------------------------------
-CGMZ_Temp.prototype.fsUnlink = function(path) {
-	const fs = require("fs");
-	if (fs.existsSync(path)) {
-		fs.unlinkSync(path);
-	}
-};
-//-----------------------------------------------------------------------------
-// Write file
-// This will cause web hosted games to crash
-// Deprecated. Use CGMZ_Utils.fsWriteFile instead.
-//-----------------------------------------------------------------------------
-CGMZ_Temp.prototype.fsWriteFile = function(path, data, encoding) {
-	const fs = require("fs");
-	fs.writeFileSync(path, data, encoding);
 };
 //=============================================================================
 // CGMZ_Core
@@ -1560,7 +1272,7 @@ Game_Map.prototype.CGMZ_getMapName = function() {
 // Add call to CGMZ_Core after load
 //=============================================================================
 //-----------------------------------------------------------------------------
-// Alias. Also check if CGMZ_Core needs to do anything after load
+// Also check if CGMZ_Core needs to do anything after load
 //-----------------------------------------------------------------------------
 const alias_CGMZ_Core_GameSystem_onAfterLoad = Game_System.prototype.onAfterLoad;
 Game_System.prototype.onAfterLoad = function() {
@@ -1571,8 +1283,6 @@ Game_System.prototype.onAfterLoad = function() {
 // DataManager
 //-----------------------------------------------------------------------------
 // Saving and loading CGMZ data. Also checks for out of date plugins
-// modified functions: createGameObjects, makeSaveContents, extractSaveContents
-// 					   setupNewGame
 //=============================================================================
 $cgmz = null;
 $cgmzTemp = null;
@@ -1606,7 +1316,6 @@ DataManager.extractSaveContents = function(contents) {
 // SceneManager
 //-----------------------------------------------------------------------------
 // Update CGMZ_Core every frame
-// modified functions: updateMain
 //=============================================================================
 //-----------------------------------------------------------------------------
 // Update CGMZ_Core
@@ -1657,8 +1366,8 @@ CGMZ_Window_Scrollable.prototype.constructor = CGMZ_Window_Scrollable;
 //-----------------------------------------------------------------------------
 // Initialize
 //-----------------------------------------------------------------------------
-CGMZ_Window_Scrollable.prototype.initialize = function(rect, heightMultiplier, scrollWait = 300, scrollSpeed = 1,
-													   autoscroll = true, deceleration = 0.92) {
+CGMZ_Window_Scrollable.prototype.initialize = function(rect, heightMultiplier, scrollWait = CGMZ.Core.ScrollWait, scrollSpeed = CGMZ.Core.ScrollSpeed,
+													   autoscroll = CGMZ.Core.AutoScroll, deceleration = CGMZ.Core.ScrollDeceleration) {
 	Window_Base.prototype.initialize.call(this, rect);
 	this._handlers = {};
 	this._scroll = false;
@@ -1691,7 +1400,7 @@ CGMZ_Window_Scrollable.prototype.contentsHeight = function() {
 //-----------------------------------------------------------------------------
 CGMZ_Window_Scrollable.prototype.requestRefresh = function() {
 	this.refresh();
-	this._neededHeight += this.padding*2;
+	this._neededHeight += this.padding * 2;
 	this.checkForScroll();
 };
 //-----------------------------------------------------------------------------
@@ -1734,6 +1443,7 @@ CGMZ_Window_Scrollable.prototype.update = function() {
 	this.processHandling();
 	this.updateArrows();
 	if(this._scroll) {
+		this.processGamepad();
 		this.processArrowKeys();
 		this.processWheel();
 		this.processTouch();
@@ -1778,8 +1488,25 @@ CGMZ_Window_Scrollable.prototype.processArrowKeys = function() {
 		if(Input.isPressed('down')) {
 			this.processScroll(this._scrollSpeed*5);
 			this._scrollTimer = 0;
+		} else if(Input.isPressed('up')) {
+			this.processScroll(-this._scrollSpeed*5);
+			this._scrollTimer = 0;
 		}
-		if(Input.isPressed('up')) {
+	}
+};
+//-----------------------------------------------------------------------------
+// Process Gamepad right stick inputs
+//-----------------------------------------------------------------------------
+CGMZ_Window_Scrollable.prototype.processGamepad = function() {
+	const gamepad = $cgmzTemp?.getLastGamepad();
+	if(gamepad && gamepad.axes && gamepad.axes.length > 3) {
+		const threshold = 0.5;
+		const down = (gamepad.axes[3] > threshold);
+		const up = (gamepad.axes[3] < -threshold);
+		if(down) {
+			this.processScroll(this._scrollSpeed*5);
+			this._scrollTimer = 0;
+		} else if(up) {
 			this.processScroll(-this._scrollSpeed*5);
 			this._scrollTimer = 0;
 		}
@@ -1954,8 +1681,8 @@ CGMZ_Window_HorzScrollable.prototype.constructor = CGMZ_Window_HorzScrollable;
 //-----------------------------------------------------------------------------
 // Initialize
 //-----------------------------------------------------------------------------
-CGMZ_Window_HorzScrollable.prototype.initialize = function(rect, widthMultiplier, scrollWait = 300, scrollSpeed = 1,
-													   autoscroll = true, deceleration = 0.92) {
+CGMZ_Window_HorzScrollable.prototype.initialize = function(rect, widthMultiplier, scrollWait = CGMZ.Core.ScrollWait, scrollSpeed = CGMZ.Core.ScrollSpeed,
+													   autoscroll = CGMZ.Core.AutoScroll, deceleration = CGMZ.Core.ScrollDeceleration) {
 	CGMZ_Window_Scrollable.prototype.initialize.call(this, rect, 1, scrollWait, scrollSpeed, autoscroll, deceleration);
 	this._scrollLastTouchX = 0;
 	this._scrollAccelX = 0;
@@ -1979,7 +1706,7 @@ CGMZ_Window_HorzScrollable.prototype.contentsWidth = function() {
 //-----------------------------------------------------------------------------
 CGMZ_Window_HorzScrollable.prototype.requestRefresh = function() {
 	this.refresh();
-	this._neededWidth += $gameSystem.windowPadding()*2;
+	this._neededWidth += this.padding * 2;
 	this.checkForScroll();
 };
 //-----------------------------------------------------------------------------
@@ -2016,6 +1743,24 @@ CGMZ_Window_HorzScrollable.prototype.processArrowKeys = function() {
 			this._scrollTimer = 0;
 		}
 		if(Input.isPressed('left')) {
+			this.processScroll(-this._scrollSpeed*5);
+			this._scrollTimer = 0;
+		}
+	}
+};
+//-----------------------------------------------------------------------------
+// Process Gamepad right stick inputs
+//-----------------------------------------------------------------------------
+CGMZ_Window_HorzScrollable.prototype.processGamepad = function() {
+	const gamepad = $cgmzTemp?.getLastGamepad();
+	if(gamepad && gamepad.axes && gamepad.axes.length > 3) {
+		const threshold = 0.5;
+		const left = (gamepad.axes[2] > threshold);
+		const right = (gamepad.axes[2] < -threshold);
+		if(left) {
+			this.processScroll(this._scrollSpeed*5);
+			this._scrollTimer = 0;
+		} else if(right) {
 			this.processScroll(-this._scrollSpeed*5);
 			this._scrollTimer = 0;
 		}
@@ -2600,6 +2345,13 @@ Window_Base.prototype.CGMZ_drawShape = function(rect, fill, numSides, lineWidth 
 	}
 };
 //-----------------------------------------------------------------------------
+// Load a face before calling the default draw function
+//-----------------------------------------------------------------------------
+Window_Base.prototype.CGMZ_loadFace = function(faceName, faceIndex, x, y, width, height) {
+	const bitmap = ImageManager.loadFace(faceName);
+	bitmap.addLoadListener(this.drawFace.bind(this, faceName, faceIndex, x, y, width, height));
+};
+//-----------------------------------------------------------------------------
 // Draw a character with specific frame in step animation
 //-----------------------------------------------------------------------------
 Window_Base.prototype.CGMZ_drawCharacter = function(characterName, characterIndex, x, y, frameXOffset = 0, frameYOffset = 0) {
@@ -2746,12 +2498,56 @@ Window_Base.prototype.CGMZ_textSizeEx = function(text) {
 	return { width: textState.outputWidth, height: textState.outputHeight };
 };
 //=============================================================================
+// Window_Selectable
+//-----------------------------------------------------------------------------
+// Add cgmz option handling for custom backgrounds for selectable items
+//=============================================================================
+//-----------------------------------------------------------------------------
+// Get selectable cgmz options for the given index
+// This is separate from the static window options as it should be calculated
+// for each index.
+//-----------------------------------------------------------------------------
+Window_Selectable.prototype.CGMZ_getSelectableCGMZOptions = function(index) {
+	return null; // The plugin still needs to implement this.
+};
+//-----------------------------------------------------------------------------
+// Check if command has cgmz background info
+//-----------------------------------------------------------------------------
+const alias_CGMZCore_WindowSelectable_drawItemBackground = Window_Selectable.prototype.drawItemBackground;
+Window_Selectable.prototype.drawItemBackground = function(index) {
+	const cgmz = this.CGMZ_getSelectableCGMZOptions(index);
+	if(cgmz && cgmz.bg && cgmz.bg.img) {
+		const path = cgmz.bg.img;
+		const opts = {x: cgmz.bg.imgX, y: cgmz.bg.imgY};
+		const rect = this.itemRect(index);
+		const imgData = CGMZ_Utils.getImageData(path, "img");
+		const bitmap = ImageManager.loadBitmap(imgData.folder, imgData.filename);
+		bitmap.addLoadListener(this.CGMZ_bltCommandBackground.bind(this, bitmap, rect, opts));
+	} else {
+		alias_CGMZCore_WindowSelectable_drawItemBackground.call(this, index);
+	}
+};
+//-----------------------------------------------------------------------------
+// Draw command background image
+//-----------------------------------------------------------------------------
+Window_Selectable.prototype.CGMZ_bltCommandBackground = function(bitmap, rect, opts) {
+	const sw = rect.width;
+    const sh = rect.height;
+    const sx = opts.x;
+	const sy = opts.y;
+	const dw = rect.width;
+	const dh = rect.height;
+	const dx = rect.x;
+	const dy = rect.y;
+    this.contentsBack.blt(bitmap, sx, sy, sw, sh, dx, dy, dw, dh);
+};
+//=============================================================================
 // Spriteset_Map
 //-----------------------------------------------------------------------------
 // Add cgmz animations
 //=============================================================================
 //-----------------------------------------------------------------------------
-// Alias. Also init cgmz animation array
+// Also init cgmz animation array
 //-----------------------------------------------------------------------------
 const alias_CGMZ_Core_Spriteset_Map_initialize = Spriteset_Map.prototype.initialize;
 Spriteset_Map.prototype.initialize = function() {
@@ -2759,7 +2555,7 @@ Spriteset_Map.prototype.initialize = function() {
 	this._cgmzAnimations = [];
 };
 //-----------------------------------------------------------------------------
-// Alias. Also Update cgmz animations
+// Also Update cgmz animations
 //-----------------------------------------------------------------------------
 const alias_CGMZ_Core_Spriteset_Map_update = Spriteset_Map.prototype.update;
 Spriteset_Map.prototype.update = function() {
@@ -2767,7 +2563,7 @@ Spriteset_Map.prototype.update = function() {
 	this.updateCGMZAnimations();
 };
 //-----------------------------------------------------------------------------
-// Alias. Also remove all cgmz animations
+// Also remove all cgmz animations
 //-----------------------------------------------------------------------------
 const alias_CGMZ_Core_Spriteset_Map_destroy = Spriteset_Map.prototype.destroy;
 Spriteset_Map.prototype.destroy = function(options) {
@@ -2971,7 +2767,7 @@ Input._updateGamepadState = function(gamepad) {
 // Simulate production environment parameter
 //=============================================================================
 //-----------------------------------------------------------------------------
-// Alias. Always pass false if simulating production
+// Always pass false if simulating production
 //-----------------------------------------------------------------------------
 const CGMZ_Core_GameTemp_isPlaytest = Game_Temp.prototype.isPlaytest;
 Game_Temp.prototype.isPlaytest = function() {
@@ -3114,7 +2910,7 @@ Bitmap.prototype.CGMZ_strokeCurvedRectangle = function(rect, radius, color, line
 // Add sprites below windows and above windows
 //=============================================================================
 //-----------------------------------------------------------------------------
-// Alias. Also add sprites above everything else
+// Also add sprites above everything else
 //-----------------------------------------------------------------------------
 const CGMZCore_SceneMenuBase_create = Scene_MenuBase.prototype.create;
 Scene_MenuBase.prototype.create = function() {
@@ -3122,7 +2918,7 @@ Scene_MenuBase.prototype.create = function() {
 	this.CGMZ_createUpperSprites();
 };
 //-----------------------------------------------------------------------------
-// Alias. Also add sprites below everything else (besides background)
+// Also add sprites below everything else (besides background)
 //-----------------------------------------------------------------------------
 const CGMZCore_SceneMenuBase_createBackground = Scene_MenuBase.prototype.createBackground;
 Scene_MenuBase.prototype.createBackground = function() {
@@ -3140,6 +2936,13 @@ Scene_MenuBase.prototype.CGMZ_createLowerSprites = function() {
 //-----------------------------------------------------------------------------
 Scene_MenuBase.prototype.CGMZ_createUpperSprites = function() {
 	// Used by CGMZ plugins
+};
+//-----------------------------------------------------------------------------
+// Calculate a mixed window height (some selectable, some non-selectable lines)
+//-----------------------------------------------------------------------------
+Scene_MenuBase.prototype.CGMZ_calcMixedHeight = function(selectableLines, staticLines, padding) {
+	if(padding < 0) padding = $gameSystem.windowPadding();
+	return this.calcWindowHeight(selectableLines, true) + this.calcWindowHeight(staticLines, false) - padding * 2;
 };
 //=============================================================================
 // CGMZ_Window_Map

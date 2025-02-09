@@ -1,0 +1,274 @@
+{
+    "type": "screen",
+    "animations": [
+        {
+            "field": "opacity",
+            "func": "linear",
+            "repeats": 0,
+            "duration": 0.25,
+            "relative": false,
+            "delay": 0,
+            "keyframes": {
+                "0": 0,
+                "30": 0,
+                "100": 255
+            }
+        }
+    ],
+    "childrens": [
+        {
+            "type": "image",
+            "id": "_backgroundImage",
+            "parameters": {
+                "folderName": "PKD_TreasureChest",
+                "keepAspect": true,
+                "useAspectSize": true
+            },
+            "bindings": {
+                "size": {
+                    "width": "816hdp",
+                    "height": "624hdp"
+                },
+                "position": {
+                    "x": "center",
+                    "y": "center"
+                },
+                "image": "$backgroundImageName"
+            },
+            "childrens": [
+                {
+                    "type": "image",
+                    "parameters": {
+                        "folderName": "PKD_TreasureChest",
+                        "imageName": "bg",
+                        "keepAspect": false,
+                        "useAspectSize": false
+                    },
+                    "bindings": {
+                        "size": {
+                            "width": "300hdp",
+                            "height": "200hdp"
+                        },
+                        "position": {
+                            "x": "center",
+                            "y": "center"
+                        }
+                    },
+                    "childrens": [
+                        {
+                            "type": "list",
+                            "id": "_itemsList",
+                            "constants": {
+                                "minVisibleCelsCount": 15
+                            },
+                            "parameters": {
+                                "maxCols": 5,
+                                "isHaveSelectionEffect": false,
+                                "selectionEffects": ["glow;distance:12;outerStrength:3"],
+                                "scaleItemsWidth": false,
+                                "scaleItemsHeight": false,
+                                "isDrawDefaultItemBack": false,
+                                "defaultItemHeight": 0,
+                                "backgroundType": 2,
+                                "itemsPadding": 6,
+                                "isHaveInOutAnimation": false,
+                                "isHorizontal": false,
+                                "inAnimation": "field:x;duration:0.15;keyframes:0=0,100=4",
+                                "outAnimation": "field:x;duration:0.15;keyframes:0=4,100=0",
+                                "isPlayOkSound": false,
+                                "isPlayCursorSound": true
+                            },
+                            "bindings": {
+                                "size": {
+                                    "width": "98%",
+                                    "height": "96%"
+                                },
+                                "position": {
+                                    "x": "center + 4hdp",
+                                    "y": "center + 10hdp"
+                                }
+                            }
+                        },
+                        {
+                            "type": "plane",
+                            "parameters": {
+                                "folderName": "PKD_TreasureChest",
+                                "imageName": "frame",
+                                "margins": 50
+                            },
+                            "bindings": {
+                                "size": {
+                                    "width": "108%",
+                                    "height": "108%"
+                                },
+                                "position": {
+                                    "x": "center",
+                                    "y": "center"
+                                }
+                            }
+                        },
+                        {
+                            "type": "image",
+                            "parameters": {
+                                "folderName": "PKD_TreasureChest",
+                                "imageName": "itemNameBackground",
+                                "keepAspect": true,
+                                "useAspectSize": true
+                            },
+                            "bindings": {
+                                "size": {
+                                    "width": "120%",
+                                    "height": "68hdp"
+                                },
+                                "position": {
+                                    "x": "center",
+                                    "y": "top - height - 10hdp"
+                                }
+                            },
+                            "childrens": [
+                                {
+                                    "type": "textPro",
+                                    "id": "_itemNameText",
+                                    "parameters": {
+                                        "alignment": "center",
+                                        "font": {
+                                            "face": null,
+                                            "size": 18,
+                                            "italic": false,
+                                            "bold": false,
+                                            "weight": 0
+                                        },
+                                        "margins": { "x": 0, "y": 0 },
+                                        "outline": { "color": "#000", "width": 2 },
+                                        "textColor": "#FFFFFF",
+                                        "shadow": {
+                                            "color": "#000",
+                                            "opacity": 0,
+                                            "margins": { "x": 1, "y": 1 }
+                                        },
+                                        "text": "",
+                                        "multiline": false,
+                                        "verticalCentered": true,
+                                        "verticalAlignment": "center",
+                                        "verticalSpacing": 4,
+                                        "actualWidth": false,
+                                        "actualHeight": false,
+                                        "trimWidth": false,
+                                        "trimHeight": false,
+                                        "iconPadding": {
+                                            "left": 2,
+                                            "right": 2,
+                                            "top": 0,
+                                            "bottom": 0
+                                        },
+                                        "iconSize": 1,
+                                        "isStaticIconSize": false,
+                                        "isLoadFontFromFile": false
+                                    },
+                                    "bindings": {
+                                        "size": {
+                                            "width": "100%",
+                                            "height": "24hdp"
+                                        },
+                                        "position": {
+                                            "x": "center",
+                                            "y": "center"
+                                        },
+                                        "fontSize": "18hdp"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "imageButton",
+                            "id": "_takeAllButton",
+                            "createIf": "$isTakeAllButtonAvailable",
+                            "parameters": {
+                                "imageName": "takeAllButton_00",
+                                "folderName": "PKD_TreasureChest",
+                                "hoverImageName": "takeAllButton_01",
+                                "pressedImageName": "takeAllButton_00",
+                                "disabledImageName": "",
+
+                                "isCheckAlpha": false,
+
+                                "clickSe": "Cursor1",
+
+                                "desaturateWhenDisabled": false,
+
+                                "tint": "",
+                                "tintAlpha": 0.5,
+                                
+                                "overTint": "",
+                                "overTintAlpha": 0.5,
+
+                                "activeTint": "",
+                                "activeTintAlpha": 0.5,
+
+                                "disabledTint": "",
+                                "disabledTintAlpha": 0.5,
+
+                                "keyboardKey": "",
+                                "keyboardHandled": true,
+                                "enabled": true
+                            },
+                            "bindings": {
+                                "size": {
+                                    "width": "64hdp",
+                                    "height": "64hdp"
+                                },
+                                "position": {
+                                    "x": "-16hdp",
+                                    "y": "end + 10hdp"
+                                }
+                            }
+                        },
+                        {
+                            "type": "imageButton",
+                            "id": "_closeButton",
+                            "parameters": {
+                                "imageName": "closeButton_00",
+                                "folderName": "PKD_TreasureChest",
+                                "hoverImageName": "closeButton_01",
+                                "pressedImageName": "closeButton_00",
+                                "disabledImageName": "",
+
+                                "isCheckAlpha": false,
+
+                                "clickSe": "Cursor1",
+
+                                "desaturateWhenDisabled": false,
+
+                                "tint": "",
+                                "tintAlpha": 0.5,
+                                
+                                "overTint": "",
+                                "overTintAlpha": 0.5,
+
+                                "activeTint": "",
+                                "activeTintAlpha": 0.5,
+
+                                "disabledTint": "",
+                                "disabledTintAlpha": 0.5,
+
+                                "keyboardKey": "",
+                                "keyboardHandled": true,
+                                "enabled": true
+                            },
+                            "bindings": {
+                                "size": {
+                                    "width": "64hdp",
+                                    "height": "64hdp"
+                                },
+                                "position": {
+                                    "x": "right + 16hdp",
+                                    "y": "end + 10hdp"
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

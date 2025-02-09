@@ -5,7 +5,7 @@
             "type": "plane",
             "id": "_backgroundSprite",
             "parameters": {
-                "imageName": "backgroundFrame",
+                "imageName": null,
                 "folderName": "pSQSystem",
                 "margins": 44
             },

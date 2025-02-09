@@ -103,7 +103,7 @@
                             "x": 5,
                             "y": 0
                         },
-                        "text": ["You caught a \\C[1]%1", "$fishName"]
+                        "text": ["Has atrapado \\C[1]%1", "$fishName"]
                     }
                 },
                 {
