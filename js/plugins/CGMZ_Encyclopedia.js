@@ -8564,9 +8564,9 @@ CGMZ_Scene_Encyclopedia.prototype.createCategoryWindow = function() {
 // Category Window Rect
 //-----------------------------------------------------------------------------
 CGMZ_Scene_Encyclopedia.prototype.categoryWindowRect = function() {
-	const x = 500;
+	const x = 200;
 	const y = this.hasTouchUI() ? this.buttonAreaHeight() : 0;
-	const width = 854;
+	const width = 720;
 	const height = this.calcWindowHeight(CGMZ.Encyclopedia.CategoryLines, true);
 	return new Rectangle(x, y, width, height);
 };
@@ -8584,7 +8584,7 @@ CGMZ_Scene_Encyclopedia.prototype.createSubcategoryWindow = function() {
 // Subcategory Window Rect
 //-----------------------------------------------------------------------------
 CGMZ_Scene_Encyclopedia.prototype.subcategoryWindowRect = function() {
-	const x = 0;
+	const x = 200;
 	const y = this._categoryWindow.y + this._categoryWindow.height;
 	const width = this._categoryWindow.width;
 	const height = this.calcWindowHeight(1, true);
@@ -8604,7 +8604,7 @@ CGMZ_Scene_Encyclopedia.prototype.createTotalsWindow = function() {
 CGMZ_Scene_Encyclopedia.prototype.totalsWindowRect = function() {
 	const width = Graphics.boxWidth * (CGMZ.Encyclopedia.ListWindowWidth / 100.0);
 	const height = this.calcWindowHeight(2, false);
-	const x = CGMZ.Encyclopedia.ListWindowRight ? Graphics.boxWidth - width : 0 ;
+	const x = 150 ;
 	const y = Graphics.boxHeight - this.calcWindowHeight(2, false);
 	return new Rectangle(x, y, width, height);
 };
@@ -8624,8 +8624,8 @@ CGMZ_Scene_Encyclopedia.prototype.createListWindow = function() {
 CGMZ_Scene_Encyclopedia.prototype.listWindowRect = function() {
 	const width = this._totalsWindow.width;
 	const height = 480;
-	const y = this._categoryWindow.y + this._categoryWindow.height;
-	const x = this._totalsWindow.x;
+	const y = this._categoryWindow.y + this._categoryWindow.height + 50;
+	const x = this._totalsWindow.x + 50;
 	return new Rectangle(x, y, width, height);
 };
 //-----------------------------------------------------------------------------
@@ -8649,9 +8649,9 @@ CGMZ_Scene_Encyclopedia.prototype.createDisplayWindow = function() {
 // Display window (and dummy window) rect
 //-----------------------------------------------------------------------------
 CGMZ_Scene_Encyclopedia.prototype.displayWindowRect = function() {
-	const x = CGMZ.Encyclopedia.ListWindowRight ? 0 : this._listWindow.width;
+	const x = CGMZ.Encyclopedia.ListWindowRight ? 0 : this._listWindow.width + 300;
 	const y = this._listWindow.y;
-	const width = Graphics.boxWidth - this._listWindow.width;
+	const width = Graphics.boxWidth - this._listWindow.width - 200;
 	const height = Graphics.boxHeight - y;
 	return new Rectangle(x, y, width, height);
 };
