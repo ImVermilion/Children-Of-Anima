@@ -1563,15 +1563,31 @@ PKD_AlterEquipMenu.isPro = function() {
   };
   //$[OVER]
   _.drawItem = function(index) {
-    // * Не отрисовываем спрятанные слоты
     if (this.pIsHiddenSlot(index)) {
-      return;
+        return;
     }
+
     if (PKD_AlterEquipMenu.Utils.isMV()) {
-      this.pDrawItemSlotBack(index);
+        this.pDrawItemSlotBack(index);
     }
+
+    // 🔽 Dibujar el nombre del slot
+    const rect = this.itemRect(index);
+    const slotName = this.slotName(index); // obtiene el nombre según base de datos
+    const textX = rect.x;
+    const textY = rect.y - 28; // 18 píxeles encima del slot
+    const textW = rect.width;
+
+    this.contents.fontSize = 16;
+    this.changeTextColor("#FFFFFF"); // blanco puro
+
+    this.drawText(slotName, textX, textY, textW, 'center');
+    this.resetFontSettings();
+
     return this.pDrawSlotItem(index);
-  };
+};
+
+
   //$[OVER]
   _.drawItemBackground = function(index) {
     var bitmap, width, x, y;
