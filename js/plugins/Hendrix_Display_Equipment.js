@@ -201,13 +201,15 @@ Imported.Hendrix_Display_Equipment = true;
     }
 
     Sprite_Character.prototype.createArmorSprite = function (imageName) {
-        const sprite = new Sprite();
-        sprite.bitmap = ImageManager.loadPicture(imageName);
-        sprite.anchor.set(0.5, 1);
-        sprite.visible = false;
-        this.addChild(sprite);
-        return sprite;
-    };
+    const sprite = new Sprite();
+    sprite.bitmap = ImageManager.loadPicture(imageName);
+    sprite.anchor.set(0.5, 1);
+    sprite.visible = false;
+    sprite.z = 3; // Asegura que quede encima del personaje, pero por debajo de overhead tiles
+    sprite._isArmorSprite = true; // Opcional para debug o lógica futura
+    this.addChild(sprite);
+    return sprite;
+};
 
     const _Sprite_Character_update = Sprite_Character.prototype.update;
     Sprite_Character.prototype.update = function () {
@@ -336,8 +338,17 @@ Imported.Hendrix_Display_Equipment = true;
             z = Number(item.meta['fashion z']);
         }
 
-        fashionItems.push({
+        let displayId = null;
+            if (item.note) {
+                const idMatch = item.note.match(/<DisplayId:\s*([\w\s]+)>/i);
+                if (idMatch) {
+                    displayId = idMatch[1].trim();
+                }
+            }
+
+            fashionItems.push({
             identifier: item.meta['fashion image'].trim(),
+            displayId: displayId,
             offsetX: offsetX,
             offsetY: offsetY,
             z: z
@@ -359,7 +370,7 @@ fashionItems.sort((a, b) => a.z - b.z);
 
             this._fashionSprites = []; // <-- Añade esto antes del forEach
 fashionItems.forEach(item => {
-    const sprite = this.createNotetagFashionSprite(item.identifier, item.offsetX, item.offsetY);
+    const sprite = this.createNotetagFashionSprite(item.identifier, item.offsetX, item.offsetY, item.displayId);
     if (sprite) this._fashionSprites.push(sprite); // <-- Añade cada sprite al array
 });
         }
@@ -393,7 +404,7 @@ fashionItems.forEach(item => {
 this._fashionSprites = [];
     };
 
-    Sprite_Character.prototype.createNotetagFashionSprite = function (identifier, offsetX, offsetY) {
+    Sprite_Character.prototype.createNotetagFashionSprite = function (identifier, offsetX, offsetY, displayId = null) {
         const characterName = this._character.characterName();
 
         const charNameParts = characterName.split('/');
@@ -407,6 +418,7 @@ this._fashionSprites = [];
         sprite.identifier = identifier;
         sprite.offsetX = offsetX;
         sprite.offsetY = offsetY;
+    sprite._displayId = displayId;
         sprite.visible = false;
 
         const imageOptions = [
@@ -424,7 +436,7 @@ this._fashionSprites = [];
                 sprite.bitmap = ImageManager.loadBitmap('img/', folderPath + '/' + imgName);
                 sprite.imageName = imgName;
                 imageFound = true;
-                //console.log(`Found fashion image: ${folderPath}/${imgName}`);
+                //
                 NotetagImageCache[imgName] = true;
                 break;
             } catch (e) {
@@ -443,13 +455,32 @@ this._fashionSprites = [];
     };
 
     Sprite_Character.prototype.updateAllNotetagFashionSprites = function () {
-        const direction = this._character.direction();
-    
-        this._fashionSprites.forEach(sprite => {
-            if (sprite.bitmap.isReady()) {
-                this.updateActiveSpriteFrame(sprite, sprite.offsetX, sprite.offsetY, direction);
-                sprite.visible = true;
-            }
-        });
-    };
+    const direction = this._character.direction();
+    const actor = $gameParty.leader();
+    if (!actor) return;
+
+    const equippedItems = actor.equips().filter(Boolean);
+    const hideIds = new Set();
+
+    equippedItems.forEach(item => {
+        if (!item || !item.note) return;
+        const matches = item.note.match(/<Hide:\s*([\w\s]+)>/gi);
+        if (matches) {
+            matches.forEach(match => {
+                const tag = match.match(/<Hide:\s*([\w\s]+)>/i)[1].trim();
+                hideIds.add(tag);
+            });
+        }
+    });
+
+    this._fashionSprites.forEach(sprite => {
+        const shouldHide = sprite._displayId && hideIds.has(sprite._displayId);
+        if (!shouldHide && sprite.bitmap.isReady()) {
+            this.updateActiveSpriteFrame(sprite, sprite.offsetX, sprite.offsetY, direction);
+            sprite.visible = true;
+        } else {
+            sprite.visible = false;
+        }
+    });
+};
 })();
