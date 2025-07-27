@@ -1,7 +1,46 @@
 /*:
  * @target MZ
- * @plugindesc Plugin para gestionar hambre, sed y sueño en RPG Maker MZ con efectos negativos. 
- * @author Vermilion Games
+ * @plugindesc Gestiona hambre, sed y sueño con estados, penalizaciones e iconos graduales en el HUD. Versión 2.3.
+ * @author Vermilion Games (Modificado por Gemini AI de Google)
+ *
+ * @help
+ * Vermilion_HungerAndSleepSystem.js
+ * Version: 2.3
+ *
+ * Este plugin gestiona las necesidades de hambre, sed y sueño.
+ * Los valores disminuyen con el tiempo. Si una necesidad cae por
+ * debajo de su umbral, se aplica un estado negativo al personaje.
+ *
+ * --- FUNCIÓN DEL HUD ---
+ * Los iconos para hambre, sed y sueño aparecen en la parte superior
+ * central de la pantalla y su opacidad cambia gradualmente.
+ * - Necesidad al 100%: Icono transparente.
+ * - Necesidad al 0%: Icono opaco.
+ *
+ * Los iconos utilizados son los definidos en los estados de Hambre,
+ * Sed y Sueño. La posición del HUD es siempre centrada horizontalmente.
+ *
+ * --- REQUISITOS ---
+ * Debes configurar tres 'Estados' en la base de datos y poner sus IDs
+ * en los parámetros del plugin.
+ *
+ * @param HungerStateId
+ * @text ID del Estado de Hambre
+ * @desc El ID del estado que se aplica cuando el hambre es baja.
+ * @type state
+ * @default 11
+ *
+ * @param ThirstStateId
+ * @text ID del Estado de Sed
+ * @desc El ID del estado que se aplica cuando la sed es baja.
+ * @type state
+ * @default 14
+ *
+ * @param SleepStateId
+ * @text ID del Estado de Sueño
+ * @desc El ID del estado que se aplica cuando el sueño es bajo.
+ * @type state
+ * @default 10
  *
  * @param HungerRate
  * @text Tasa de Hambre
@@ -26,191 +65,254 @@
  *
  * @param HungerThreshold
  * @text Umbral de Hambre
- * @desc El nivel de hambre por debajo del cual se muestra el icono y se aplica el efecto negativo.
+ * @desc El nivel de hambre por debajo del cual se aplica el estado negativo.
  * @type number
  * @default 20
  *
  * @param ThirstThreshold
  * @text Umbral de Sed
- * @desc El nivel de sed por debajo del cual se muestra el icono y se aplica el efecto negativo.
+ * @desc El nivel de sed por debajo del cual se aplica el estado negativo.
  * @type number
  * @default 20
  *
  * @param SleepThreshold
  * @text Umbral de Sueño
- * @desc El nivel de sueño por debajo del cual se muestra el icono y se aplica el efecto negativo.
+ * @desc El nivel de sueño por debajo del cual se aplica el estado negativo.
  * @type number
  * @default 20
  *
- * @param HungerIcon
- * @text Icono de Hambre
- * @desc Icono que se muestra cuando el hambre es baja.
- * @type number
- * @default 64
- *
- * @param ThirstIcon
- * @text Icono de Sed
- * @desc Icono que se muestra cuando la sed es baja.
- * @type number
- * @default 65
- *
- * @param SleepIcon
- * @text Icono de Sueño
- * @desc Icono que se muestra cuando el sueño es bajo.
- * @type number
- * @default 66
- *
- * @param HungerHpReduction
- * @text Reducción de Vida por Hambre
- * @desc El porcentaje de reducción de vida máxima cuando el hambre es baja.
- * @type number
- * @default 10
- *
- * @param ThirstHitRateReduction
- * @text Reducción de Tasa de Golpe por Sed
- * @desc El porcentaje de reducción de la tasa de golpe cuando la sed es baja.
- * @type number
- * @default 10
- *
- * @help
- * Este plugin gestiona las necesidades de hambre, sed y sueño de los personajes.
- * Las variables disminuyen con el paso del tiempo. 
- * Si alguna de las necesidades es baja, se muestra un icono en la pantalla y se aplican efectos negativos.
- *
  * @command adjustHunger
  * @text Ajustar Hambre
- * @desc Ajusta el nivel de hambre del jugador.
+ * @desc Ajusta el nivel de hambre del grupo. Usa valores positivos para rellenar.
  * @arg value
+ * @text Valor
  * @type number
+ * @min -100
  * @default 10
  *
  * @command adjustThirst
  * @text Ajustar Sed
- * @desc Ajusta el nivel de sed del jugador.
+ * @desc Ajusta el nivel de sed del grupo. Usa valores positivos para rellenar.
  * @arg value
+ * @text Valor
  * @type number
+ * @min -100
  * @default 10
  *
  * @command adjustSleep
  * @text Ajustar Sueño
- * @desc Ajusta el nivel de sueño del jugador.
+ * @desc Ajusta el nivel de sueño del grupo. Usa valores positivos para rellenar.
  * @arg value
+ * @text Valor
+ * @type number
+ * @min -100
+ * @default 10
+ *
+ * @param ---Configuración del HUD---
+ * @default
+ *
+ * @param HudY
+ * @text Posición Y del HUD
+ * @desc La coordenada Y (vertical) en la pantalla para los iconos de necesidad.
  * @type number
  * @default 10
+ *
+ * @param HudIconSpacing
+ * @text Espaciado de Iconos
+ * @desc El espacio en píxeles entre cada icono de necesidad.
+ * @type number
+ * @default 36
  */
 
 (() => {
-    const parameters = PluginManager.parameters('Vermilion_Hunger and Sleep System');
+    const PLUGIN_NAME = 'Vermilion_Hunger and Sleep System';
+    const parameters = PluginManager.parameters(PLUGIN_NAME);
+
+    // --- Parámetros de Estados (Respetando la configuración original del usuario) ---
+    const hungerStateId = parseInt(parameters['HungerStateId'] || 11);
+    const thirstStateId = parseInt(parameters['ThirstStateId'] || 14);
+    const sleepStateId = parseInt(parameters['SleepStateId'] || 10);
+    
+    // --- Parámetros de Tasas ---
     const hungerRate = parseFloat(parameters['HungerRate'] || 0.1);
     const thirstRate = parseFloat(parameters['ThirstRate'] || 0.1);
     const sleepRate = parseFloat(parameters['SleepRate'] || 0.1);
+
+    // --- Parámetros de Umbrales ---
     const hungerThreshold = parseInt(parameters['HungerThreshold'] || 20);
-    const hungerHpReduction = parseFloat(parameters['HungerHpReduction'] || 10);
+    const thirstThreshold = parseInt(parameters['ThirstThreshold'] || 20);
+    const sleepThreshold = parseInt(parameters['SleepThreshold'] || 20);
 
-    let hunger = 100;
+    // --- Parámetros del HUD ---
+    const hudY = parseInt(parameters['HudY'] || 10);
+    const hudIconSpacing = parseInt(parameters['HudIconSpacing'] || 36);
 
+    // --- Inicialización de variables del sistema (para persistencia) ---
+    const _Game_System_initialize = Game_System.prototype.initialize;
+    Game_System.prototype.initialize = function() {
+        _Game_System_initialize.call(this);
+        this.initNeeds();
+    };
+
+    Game_System.prototype.initNeeds = function() {
+        this._hunger = 100;
+        this._thirst = 100;
+        this._sleep = 100;
+    };
+    
+    // --- Función principal de actualización ---
     const updateNeeds = () => {
-        const deltaTime = 1 / 60;
-        hunger = Math.max(hunger - hungerRate * deltaTime, 0);
+        if ($gameSystem._hunger === undefined) {
+            $gameSystem.initNeeds();
+        }
+        
+        if (SceneManager.isSceneChanging() || $gameParty.inBattle() || SceneManager._scene instanceof Scene_MenuBase || $gameMessage.isBusy()) {
+            return;
+        }
 
-        $gameParty.members().forEach(actor => {
-            // Si el hambre está por debajo del umbral, reducir la vida máxima
-            if (hunger < hungerThreshold) {
-                actor.addState(11); // Añadir estado de hambre
+        const deltaTime = 1 / 60.0;
+        $gameSystem._hunger = Math.max(0, $gameSystem._hunger - hungerRate * deltaTime);
+        $gameSystem._thirst = Math.max(0, $gameSystem._thirst - thirstRate * deltaTime);
+        $gameSystem._sleep = Math.max(0, $gameSystem._sleep - sleepRate * deltaTime);
 
-                // Si no se ha aplicado todavía la reducción de vida máxima
-                if (!actor._originalMaxHp) {
-                    actor._originalMaxHp = actor.mhp; // Guardar la vida máxima original
-                    const reduction = Math.floor(actor._originalMaxHp * (hungerHpReduction / 100));
-                    actor._paramPlus[0] -= reduction; // Reducir la vida máxima
-                }
+        for (const actor of $gameParty.members()) {
+            // Gestión del Hambre
+            if ($gameSystem._hunger < hungerThreshold) {
+                if (!actor.isStateAffected(hungerStateId)) actor.addState(hungerStateId);
             } else {
-                actor.removeState(11); // Eliminar el estado de hambre
-
-                // Restaurar la vida máxima si estaba reducida
-                if (actor._originalMaxHp) {
-                    actor._paramPlus[0] = 0; // Restaurar la vida máxima original
-                    actor._originalMaxHp = null; // Limpiar el registro
-                }
+                if (actor.isStateAffected(hungerStateId)) actor.removeState(hungerStateId);
             }
-        });
+            // Gestión de la Sed
+            if ($gameSystem._thirst < thirstThreshold) {
+                if (!actor.isStateAffected(thirstStateId)) actor.addState(thirstStateId);
+            } else {
+                if (actor.isStateAffected(thirstStateId)) actor.removeState(thirstStateId);
+            }
+            // Gestión del Sueño
+            if ($gameSystem._sleep < sleepThreshold) {
+                if (!actor.isStateAffected(sleepStateId)) actor.addState(sleepStateId);
+            } else {
+                if (actor.isStateAffected(sleepStateId)) actor.removeState(sleepStateId);
+            }
+        }
     };
 
-    const _Scene_Map_prototype_update = Scene_Map.prototype.update;
-    Scene_Map.prototype.update = function () {
-        _Scene_Map_prototype_update.call(this);
-        updateNeeds();
-    };
-
-    PluginManager.registerCommand('Vermilion_Hunger and Sleep System', 'adjustHunger', args => {
-        hunger = Math.min(hunger + parseInt(args.value), 100);
-    });
-})();
-
-
-
+    // --- Actualización en el mapa ---
     const _Scene_Map_prototype_update = Scene_Map.prototype.update;
     Scene_Map.prototype.update = function() {
         _Scene_Map_prototype_update.call(this);
-        updateNeeds();
-        this.updateNeedsIcons();
+        if ($gameParty.members().length > 0) {
+            updateNeeds();
+        }
     };
 
-    Scene_Map.prototype.updateNeedsIcons = function() {
-        const icons = [];
-        if (hunger < hungerThreshold) {
-            icons.push(hungerIcon);
-        }
-        if (thirst < thirstThreshold) {
-            icons.push(thirstIcon);
-        }
-        if (sleep < sleepThreshold) {
-            icons.push(sleepIcon);
-        }
+    // --- Comandos del Plugin ---
+    PluginManager.registerCommand(PLUGIN_NAME, 'adjustHunger', args => {
+        const value = parseInt(args.value);
+        if ($gameSystem._hunger === undefined) $gameSystem.initNeeds();
+        $gameSystem._hunger = ($gameSystem._hunger + value).clamp(0, 100);
+    });
 
-        this.clearIcons();
-        icons.forEach((icon, index) => {
-            const x = Graphics.width / 2 + index * 40 - (icons.length - 1) * 20;
-            const y = 20;
-            this.showIcon(x, y, icon);
-        });
+    PluginManager.registerCommand(PLUGIN_NAME, 'adjustThirst', args => {
+        const value = parseInt(args.value);
+        if ($gameSystem._thirst === undefined) $gameSystem.initNeeds();
+        $gameSystem._thirst = ($gameSystem._thirst + value).clamp(0, 100);
+    });
+
+    PluginManager.registerCommand(PLUGIN_NAME, 'adjustSleep', args => {
+        const value = parseInt(args.value);
+        if ($gameSystem._sleep === undefined) $gameSystem.initNeeds();
+        $gameSystem._sleep = ($gameSystem._sleep + value).clamp(0, 100);
+    });
+
+    // --- LÓGICA DEL HUD DE NECESIDADES ---
+
+    function Sprite_NeedsHud() {
+        this.initialize(...arguments);
+    }
+
+    Sprite_NeedsHud.prototype = Object.create(Sprite.prototype);
+    Sprite_NeedsHud.prototype.constructor = Sprite_NeedsHud;
+
+    Sprite_NeedsHud.prototype.initialize = function() {
+        Sprite.prototype.initialize.call(this);
+        this.y = hudY;
+        this._iconBitmap = ImageManager.loadSystem('IconSet');
+        this.createIcons();
+        this.centerHorizontally();
+    };
+    
+    Sprite_NeedsHud.prototype.centerHorizontally = function() {
+        const iconWidth = ImageManager.iconWidth;
+        const totalWidth = (2 * hudIconSpacing) + iconWidth;
+        this.x = (Graphics.boxWidth - totalWidth) / 2;
     };
 
-    Scene_Map.prototype.showIcon = function(x, y, iconIndex) {
-        const bitmap = ImageManager.loadSystem('IconSet');
-        const pw = 32;
-        const ph = 32;
-        const sx = iconIndex % 16 * pw;
+    Sprite_NeedsHud.prototype.createIcons = function() {
+        // Hambre
+        this._hungerIcon = new Sprite(this._iconBitmap);
+        const hungerIconIndex = $dataStates[hungerStateId] ? $dataStates[hungerStateId].iconIndex : 0;
+        this.drawIcon(this._hungerIcon, hungerIconIndex, 0);
+        this.addChild(this._hungerIcon);
+
+        // Sed
+        this._thirstIcon = new Sprite(this._iconBitmap);
+        const thirstIconIndex = $dataStates[thirstStateId] ? $dataStates[thirstStateId].iconIndex : 0;
+        this.drawIcon(this._thirstIcon, thirstIconIndex, 1);
+        this.addChild(this._thirstIcon);
+
+        // Sueño
+        this._sleepIcon = new Sprite(this._iconBitmap);
+        const sleepIconIndex = $dataStates[sleepStateId] ? $dataStates[sleepStateId].iconIndex : 0;
+        this.drawIcon(this._sleepIcon, sleepIconIndex, 2);
+        this.addChild(this._sleepIcon);
+    };
+    
+    Sprite_NeedsHud.prototype.drawIcon = function(sprite, iconIndex, positionIndex) {
+        const pw = ImageManager.iconWidth;
+        const ph = ImageManager.iconHeight;
+        const sx = (iconIndex % 16) * pw;
         const sy = Math.floor(iconIndex / 16) * ph;
-        const iconSprite = new Sprite();
-        iconSprite.bitmap = new Bitmap(pw, ph);
-        iconSprite.bitmap.blt(bitmap, sx, sy, pw, ph, 0, 0);
-        iconSprite.x = x;
-        iconSprite.y = y;
-        this.addChild(iconSprite);
-        this._needIcons = this._needIcons || [];
-        this._needIcons.push(iconSprite);
+        sprite.setFrame(sx, sy, pw, ph);
+        sprite.x = positionIndex * hudIconSpacing;
     };
 
-    Scene_Map.prototype.clearIcons = function() {
-        if (this._needIcons) {
-            this._needIcons.forEach(icon => {
-                this.removeChild(icon);
-            });
+    Sprite_NeedsHud.prototype.update = function() {
+        Sprite.prototype.update.call(this);
+        this.updateVisibility();
+        if (this.visible) {
+            this.updateOpacity();
         }
-        this._needIcons = [];
     };
 
-    PluginManager.registerCommand('Vermilion_Hunger and Sleep System', 'adjustHunger', args => {
-        hunger = Math.min(hunger + parseInt(args.value), 100);
-    });
+    Sprite_NeedsHud.prototype.updateVisibility = function() {
+        const isSceneMap = SceneManager._scene instanceof Scene_Map;
+        const noMenusOpen = !$gameMessage.isBusy() && !(SceneManager._scene instanceof Scene_MenuBase);
+        this.visible = isSceneMap && noMenusOpen && $gameParty.members().length > 0;
+    };
 
-    PluginManager.registerCommand('Vermilion_Hunger and Sleep System', 'adjustThirst', args => {
-        thirst = Math.min(thirst + parseInt(args.value), 100);
-    });
+    Sprite_NeedsHud.prototype.updateOpacity = function() {
+        if ($gameSystem._hunger === undefined) $gameSystem.initNeeds();
+        
+        const hungerOpacity = 255 * (100 - $gameSystem._hunger) / 100;
+        const thirstOpacity = 255 * (100 - $gameSystem._thirst) / 100;
+        const sleepOpacity = 255 * (100 - $gameSystem._sleep) / 100;
 
-    PluginManager.registerCommand('Vermilion_Hunger and Sleep System', 'adjustSleep', args => {
-        sleep = Math.min(sleep + parseInt(args.value), 100);
-    });
+        this._hungerIcon.opacity = hungerOpacity;
+        this._thirstIcon.opacity = thirstOpacity;
+        this._sleepIcon.opacity = sleepOpacity;
+    };
+
+    // --- Integración con la Escena del Mapa ---
+    const _Scene_Map_createDisplayObjects = Scene_Map.prototype.createDisplayObjects;
+    Scene_Map.prototype.createDisplayObjects = function() {
+        _Scene_Map_createDisplayObjects.call(this);
+        this.createNeedsHud();
+    };
+
+    Scene_Map.prototype.createNeedsHud = function() {
+        this._needsHud = new Sprite_NeedsHud();
+        this.addChild(this._needsHud);
+    };
+
 })();
-

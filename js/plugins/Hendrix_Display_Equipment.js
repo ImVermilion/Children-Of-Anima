@@ -133,8 +133,57 @@
 
 var Imported = Imported || {};
 Imported.Hendrix_Display_Equipment = true;
+const HAIR_COLOR_MAP = {
+  // === Humanos y Govlards: Tonos basados en tus ejemplos ===
+  6:  { shadow: [48, 43, 88],  highlight: [149, 94, 64] },  // Castaño (Extraído de tu imagen $RJX3KW4.png)
+  7:  { shadow: [100, 56, 45],  highlight: [247, 233, 167] },  // Rubio (Extraído de tu imagen $R7F1875.png)
+  8:  { shadow: [191, 0, 0],   highlight: [113, 15, 88] },  // Pelirrojo (Extraído de tu imagen $RNVVUWZ.png)
+  9:  { shadow: [0, 0, 0],      highlight: [90, 90, 90] },      // Negro (Tono oscuro que conserva detalle)
+  251:{ shadow: [95, 90, 85],   highlight: [225, 220, 205] },  // Rubio Ceniza (Frío y desaturado)
+  252:{ shadow: [70, 55, 45],   highlight: [200, 160, 120] },  // Castaño Claro (Tono de madera natural)
+  253:{ shadow: [65, 30, 35],   highlight: [180, 80, 80] },    // Caoba (Rojo oscuro y profundo)
+  254:{ shadow: [160, 160, 175],highlight: [255, 250, 245] },  // Rubio Platino (Casi blanco con sombra fría)
+
+  // === Siverett: Tonos Etéreos y Metálicos ===
+  150:{ shadow: [200, 210, 220],highlight: [255, 255, 255] },  // Blanco Níveo (Blanco puro con sombra celeste)
+  151:{ shadow: [90, 100, 115], highlight: [220, 225, 230] },  // Plateado Pulido (Gris metálico con alto contraste)
+  255:{ shadow: [129, 39, 79],  highlight: [136, 192, 255] },  // Hielo Glacial (Extraído de tu imagen $R8464C3.png)
+  256:{ shadow: [95, 80, 110],  highlight: [245, 220, 230] },  // Perla Lunar (Tono rosado iridiscente)
+
+  // === Elvemir: Tonos Místicos y de Joya ===
+  71: { shadow: [40, 24, 88],   highlight: [227, 148, 243] },  // Amatista (Extraído de tu imagen $RDZ96FH.png)
+  70: { shadow: [129, 39, 79],  highlight: [136, 192, 255] },  // Zafiro (Replicando el estilo de $R8464C3.png)
+  69: { shadow: [30, 40, 90],   highlight: [100, 240, 160] },  // Esmeralda (Verde vibrante con sombra índigo)
+  68: { shadow: [14, 60, 89],   highlight: [255, 238, 137] },  // Dorado (Extraído de tu imagen $RCS8OFB.png)
+  257:{ shadow: [45, 70, 50],   highlight: [130, 170, 100] },  // Verde Musgo (Tonos de bosque encantado)
+  258:{ shadow: [10, 10, 40],   highlight: [90, 90, 200] },    // Cielo Nocturno (Azul profundo con reflejos)
+  259:{ shadow: [100, 85, 115], highlight: [215, 190, 230] },  // Flor de Lavanda (Púrpura pálido y suave)
+  260:{ shadow: [150, 80, 95],  highlight: [255, 190, 200] }   // Cuarzo Rosa (Rosa suave con sombra magenta)
+};
+
+function getActiveHairColor() {
+  for (const switchId in HAIR_COLOR_MAP) {
+    if ($gameSwitches.value(Number(switchId))) {
+      // En cuanto encuentra un interruptor activo, devuelve su color y termina.
+      return HAIR_COLOR_MAP[switchId];
+    }
+  }
+  // Si termina el bucle y no encontró ninguno, no devuelve ningún color.
+  return null;
+}
 
 (function () {
+    // ========================================================================
+    // DICCIONARIO DE ALIAS DE PERSONAJES
+    // Aquí puedes definir qué gráficos de personaje deben usar los mismos
+    // archivos de equipamiento.
+    // "Personaje_Nuevo": "Personaje_Original_Con_Graficos"
+    // ========================================================================
+    const CHARACTER_GRAPHIC_ALIASES = {
+        "BasePJ2": "BasePJ",
+        // "BasePJ3": "BasePJ", // <-- Ejemplo: si tuvieras un tercero.
+        // "HeroeElfo": "HeroeHumano" // <-- Otro ejemplo
+    };
     const pluginName = "Hendrix_Display_Equipment";
     const parameters = PluginManager.parameters(pluginName);
     const armorList = JSON.parse(parameters['armorList'] || '[]').map(set => JSON.parse(set));
@@ -406,62 +455,57 @@ this._fashionSprites = [];
 
     Sprite_Character.prototype.createNotetagFashionSprite = function (identifier, offsetX, offsetY, displayId = null) {
         const characterName = this._character.characterName();
+const charNameParts = characterName.split('/');
+let baseName = charNameParts[charNameParts.length - 1].replace(/^[$]/, '');
 
-        const charNameParts = characterName.split('/');
-        const baseName = charNameParts[charNameParts.length - 1].replace(/^[$]/, ''); // Remove $ if exists
+// ¡NUEVA LÓGICA! Comprobamos si el personaje actual tiene un alias definido.
+if (CHARACTER_GRAPHIC_ALIASES[baseName]) {
+    // Si lo tiene (ej: "BasePJ2"), usamos el valor del alias (ej: "BasePJ").
+    baseName = CHARACTER_GRAPHIC_ALIASES[baseName];
+}
 
-        const playerSpecificName = `${baseName}_${identifier}`;
-        const playerSpecificNameWith$ = `$${baseName}_${identifier}`;
+const playerSpecificName = `${baseName}_${identifier}`;
+        const imageOptions = [playerSpecificName, `$${playerSpecificName}`, identifier];
+        let finalImageName = null;
 
-        const sprite = new Sprite();
+        for (const imgName of imageOptions) {
+            try {
+                // Esta es una forma segura de comprobar si el archivo existe sin crashear
+                const bitmap = ImageManager.loadBitmap(imageFolder, imgName);
+                if (bitmap) {
+                    finalImageName = imgName;
+                    break;
+                }
+            } catch (e) { /* El archivo no existe, continúa */ }
+        }
+
+        if (!finalImageName) return null;
+
+        const sprite = new Sprite(ImageManager.loadBitmap(imageFolder, finalImageName));
         sprite.anchor.set(0.5, 1);
         sprite.identifier = identifier;
         sprite.offsetX = offsetX;
         sprite.offsetY = offsetY;
-    sprite._displayId = displayId;
+        sprite._displayId = displayId;
         sprite.visible = false;
-
-        const imageOptions = [
-            playerSpecificName,         // Hero_Idle_BaseballHat
-            playerSpecificNameWith$,    // $Hero_Idle_BaseballHat
-            identifier                  // Just BaseballHat
-        ];
-
-        let imageFound = false;
-        for (const imgName of imageOptions) {
-            if (NotetagImageCache[imgName] === false) continue;
-
-            try {
-                const folderPath = imageFolder.replace('img/', '').replace(/\/$/, '');
-                sprite.bitmap = ImageManager.loadBitmap('img/', folderPath + '/' + imgName);
-                sprite.imageName = imgName;
-                imageFound = true;
-                //
-                NotetagImageCache[imgName] = true;
-                break;
-            } catch (e) {
-                NotetagImageCache[imgName] = false;
-            }
-        }
-
-        if (!imageFound) {
-            //console.warn(`Fashion image for ${identifier} not found for character ${characterName}`);
-            return;
+        
+        // APLICAMOS NUESTRO FILTRO PERSONALIZADO
+        if (identifier.toLowerCase().includes("pelo")) {
+            sprite.gradientFilter = new GradientMapFilter();
+            sprite.filters = [sprite.gradientFilter];
         }
 
         this.addChild(sprite);
-        // No uses push aquí, porque el orden de _fashionSprites no importa para el display, solo para limpiar
         return sprite;
     };
 
-    Sprite_Character.prototype.updateAllNotetagFashionSprites = function () {
+   Sprite_Character.prototype.updateAllNotetagFashionSprites = function () {
     const direction = this._character.direction();
     const actor = $gameParty.leader();
     if (!actor) return;
 
     const equippedItems = actor.equips().filter(Boolean);
     const hideIds = new Set();
-
     equippedItems.forEach(item => {
         if (!item || !item.note) return;
         const matches = item.note.match(/<Hide:\s*([\w\s]+)>/gi);
@@ -473,7 +517,25 @@ this._fashionSprites = [];
         }
     });
 
+    const activeColor = getActiveHairColor();
+
     this._fashionSprites.forEach(sprite => {
+        const isHair = sprite.identifier && sprite.identifier.toLowerCase().includes("pelo");
+
+        // Aplicamos nuestra lógica de coloreado con el filtro
+        if (isHair && sprite.gradientFilter) {
+            if (activeColor) {
+                // Si hay un color activo, actualizamos los colores del filtro
+                sprite.gradientFilter.shadowColor = activeColor.shadow;
+                // LÍNEA CORREGIDA: 'active' ha sido cambiado a 'activeColor'
+                sprite.gradientFilter.highlightColor = activeColor.highlight;
+            } else {
+                // Si no hay color, lo dejamos en escala de grises
+                sprite.gradientFilter.shadowColor = [0, 0, 0];
+                sprite.gradientFilter.highlightColor = [255, 255, 255];
+            }
+        }
+
         const shouldHide = sprite._displayId && hideIds.has(sprite._displayId);
         if (!shouldHide && sprite.bitmap.isReady()) {
             this.updateActiveSpriteFrame(sprite, sprite.offsetX, sprite.offsetY, direction);
