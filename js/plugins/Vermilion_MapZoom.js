@@ -1,9 +1,22 @@
 /*:
- * @plugindesc [v1.0] Zoom por mapa, solo acercar y sin afectar al HUD.
+ * @plugindesc [v1.3] Zoom por mapa, con persistencia inteligente y compatible con HUD y luces.
  * @author Vermilion Games
  * @target MZ
  * @url https://google.com
  * @help Vermilion_MapZoom.js
+ *
+ * [v1.3] por Gemini
+ * - La persistencia de zoom ahora es inteligente. Si sales de un mapa con zoom
+ * forzado, se restaurará el zoom que tenías antes de entrar, en lugar de
+ * mantener el zoom forzado.
+ *
+ * [v1.2] por Gemini
+ * - Corregido un error que afectaba a elementos del HUD (minimapas, etc.).
+ * - El zoom ahora solo se aplica a la capa del mapa y a la de OcRam_Lights.
+ *
+ * [v1.1] por Gemini
+ * - Solucionada incompatibilidad con plugins de luces (ej. OcRam_Lights).
+ * - Añadido parámetro 'persistZoom' para mantener el zoom entre mapas.
  *
  * Este plugin permite al jugador acercar la vista en el mapa
  * usando la rueda del ratón. El zoom no afecta a los elementos del HUD.
@@ -13,12 +26,9 @@
  *
  * <MapZoom: X>
  *
- * Reemplaza X por el nivel de zoom que desees (ej. <MapZoom: 2.5>).
- * En los mapas con esta etiqueta, la rueda del ratón se desactivará.
- *
  * @param maxZoom
  * @text Zoom Máximo
- * @desc El nivel máximo de zoom que se puede alcanzar (un número más alto significa más cerca).
+ * @desc El nivel máximo de zoom que se puede alcanzar.
  * @type number
  * @default 3
  * @min 1
@@ -30,6 +40,12 @@
  * @default 0.125
  * @min 0.01
  * @decimals 3
+ *
+ * @param persistZoom
+ * @text Persistencia del Zoom
+ * @desc Mantener el nivel de zoom actual al cambiar de mapa.
+ * @type boolean
+ * @default false
  */
 
 (() => {
@@ -37,22 +53,34 @@
     const parameters = PluginManager.parameters(pluginName);
     const maxZoom = Number(parameters['maxZoom'] || 3);
     const zoomSpeed = Number(parameters['zoomSpeed'] || 0.125);
+    const persistZoom = parameters['persistZoom'] === 'true';
     const minZoom = 1.0;
 
     let currentZoom = 1.0;
-    let forcedMapZoom = 0; 
+    let userPersistedZoom = 1.0; // NUEVA VARIABLE: Guarda el zoom del usuario.
+    let forcedMapZoom = 0;
 
     // --- DataManager ---
+    // MODIFICADO: Lógica de carga de zoom mejorada.
     const _DataManager_onLoad = DataManager.onLoad;
     DataManager.onLoad = function(object) {
         _DataManager_onLoad.call(this, object);
         if (object === $dataMap) {
             const note = $dataMap.note.match(/<MapZoom:\s*(\d+\.?\d*)>/i);
             forcedMapZoom = note ? parseFloat(note[1]) : 0;
+
             if (forcedMapZoom > 0) {
+                // Si el mapa tiene un zoom forzado, lo aplicamos.
                 currentZoom = forcedMapZoom;
             } else {
-                currentZoom = 1.0; 
+                // Si no hay zoom forzado, decidimos cuál restaurar.
+                if (persistZoom) {
+                    // Restauramos el zoom que el usuario había establecido.
+                    currentZoom = userPersistedZoom;
+                } else {
+                    // O restablecemos el zoom por defecto.
+                    currentZoom = 1.0;
+                }
             }
         }
     };
@@ -66,6 +94,7 @@
 
     Spriteset_Map.prototype.updateVermilionZoom = function() {
         if (SceneManager._scene instanceof Scene_Map) {
+            // Lógica para cambiar el zoom con la rueda del ratón
             if (forcedMapZoom <= 0 && TouchInput.wheelY !== 0) {
                 const wheelY = TouchInput.wheelY;
                 if (wheelY < 0) {
@@ -74,24 +103,27 @@
                     currentZoom -= zoomSpeed;
                 }
                 currentZoom = currentZoom.clamp(minZoom, maxZoom);
+
+                // MODIFICADO: Actualizamos la memoria del zoom del usuario solo cuando lo cambia manualmente.
+                userPersistedZoom = currentZoom;
             }
 
+            const targetX = -((($gamePlayer.screenX()) * (currentZoom - 1)));
+            const targetY = -((($gamePlayer.screenY()) * (currentZoom - 1)));
+
+            // Aplicar escala y posición al contenedor principal del mapa (_baseSprite)
             this._baseSprite.scale.x = currentZoom;
             this._baseSprite.scale.y = currentZoom;
+            this._baseSprite.x = targetX;
+            this._baseSprite.y = targetY;
 
-            const player = $gamePlayer;
-            this._baseSprite.x = -((player.screenX() * (currentZoom - 1)));
-            this._baseSprite.y = -((player.screenY() * (currentZoom - 1)));
+            // Si la capa de OcRam_Lights existe, aplicarle LA MISMA transformación.
+            if (this._lights) {
+                this._lights.scale.x = currentZoom;
+                this._lights.scale.y = currentZoom;
+                this._lights.x = targetX;
+                this._lights.y = targetY;
+            }
         }
     };
-
-    // --- Game_Player ---
-    const _Game_Player_performTransfer = Game_Player.prototype.performTransfer;
-    Game_Player.prototype.performTransfer = function() {
-        if (this.isTransferring()) {
-            
-        }
-        _Game_Player_performTransfer.call(this);
-    };
-
 })();

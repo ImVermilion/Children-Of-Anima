@@ -26,8 +26,8 @@
             },
             "bindings": {
                 "size": {
-                    "width": "816hdp",
-                    "height": "624hdp"
+                    "width": "612hdp",
+                    "height": "468hdp"
                 },
                 "position": {
                     "x": "center",
@@ -46,8 +46,8 @@
                     },
                     "bindings": {
                         "size": {
-                            "width": "300hdp",
-                            "height": "200hdp"
+                            "width": "255hdp",
+                            "height": "185hdp"
                         },
                         "position": {
                             "x": "center",
@@ -59,18 +59,18 @@
                             "type": "list",
                             "id": "_itemsList",
                             "constants": {
-                                "minVisibleCelsCount": 15
+                                "minVisibleCelsCount": 9
                             },
                             "parameters": {
-                                "maxCols": 5,
+                                "maxCols": 3,
                                 "isHaveSelectionEffect": false,
-                                "selectionEffects": ["glow;distance:12;outerStrength:3"],
+                                "selectionEffects": ["glow;distance:10;outerStrength:3"],
                                 "scaleItemsWidth": false,
                                 "scaleItemsHeight": false,
                                 "isDrawDefaultItemBack": false,
                                 "defaultItemHeight": 0,
                                 "backgroundType": 2,
-                                "itemsPadding": 6,
+                                "itemsPadding": 5,
                                 "isHaveInOutAnimation": false,
                                 "isHorizontal": false,
                                 "inAnimation": "field:x;duration:0.15;keyframes:0=0,100=4",
@@ -84,8 +84,8 @@
                                     "height": "96%"
                                 },
                                 "position": {
-                                    "x": "center + 4hdp",
-                                    "y": "center + 10hdp"
+                                    "x": "center + 5hdp",
+                                    "y": "center + 8hdp"
                                 }
                             }
                         },
@@ -94,7 +94,7 @@
                             "parameters": {
                                 "folderName": "PKD_TreasureChest",
                                 "imageName": "frame",
-                                "margins": 50
+                                "margins": 42
                             },
                             "bindings": {
                                 "size": {
@@ -118,11 +118,11 @@
                             "bindings": {
                                 "size": {
                                     "width": "120%",
-                                    "height": "68hdp"
+                                    "height": "58hdp"
                                 },
                                 "position": {
                                     "x": "center",
-                                    "y": "top - height - 10hdp"
+                                    "y": "top - height - 8hdp"
                                 }
                             },
                             "childrens": [
@@ -131,50 +131,24 @@
                                     "id": "_itemNameText",
                                     "parameters": {
                                         "alignment": "center",
-                                        "font": {
-                                            "face": null,
-                                            "size": 18,
-                                            "italic": false,
-                                            "bold": false,
-                                            "weight": 0
-                                        },
-                                        "margins": { "x": 0, "y": 0 },
+                                        "font": { "size": 15 },
                                         "outline": { "color": "#000", "width": 2 },
                                         "textColor": "#FFFFFF",
-                                        "shadow": {
-                                            "color": "#000",
-                                            "opacity": 0,
-                                            "margins": { "x": 1, "y": 1 }
-                                        },
                                         "text": "",
                                         "multiline": false,
                                         "verticalCentered": true,
-                                        "verticalAlignment": "center",
-                                        "verticalSpacing": 4,
-                                        "actualWidth": false,
-                                        "actualHeight": false,
-                                        "trimWidth": false,
-                                        "trimHeight": false,
-                                        "iconPadding": {
-                                            "left": 2,
-                                            "right": 2,
-                                            "top": 0,
-                                            "bottom": 0
-                                        },
-                                        "iconSize": 1,
-                                        "isStaticIconSize": false,
-                                        "isLoadFontFromFile": false
+                                        "verticalAlignment": "center"
                                     },
                                     "bindings": {
                                         "size": {
                                             "width": "100%",
-                                            "height": "24hdp"
+                                            "height": "20hdp"
                                         },
                                         "position": {
                                             "x": "center",
                                             "y": "center"
                                         },
-                                        "fontSize": "18hdp"
+                                        "fontSize": "15hdp"
                                     }
                                 }
                             ]
@@ -187,39 +161,16 @@
                                 "imageName": "takeAllButton_00",
                                 "folderName": "PKD_TreasureChest",
                                 "hoverImageName": "takeAllButton_01",
-                                "pressedImageName": "takeAllButton_00",
-                                "disabledImageName": "",
-
-                                "isCheckAlpha": false,
-
-                                "clickSe": "Cursor1",
-
-                                "desaturateWhenDisabled": false,
-
-                                "tint": "",
-                                "tintAlpha": 0.5,
-                                
-                                "overTint": "",
-                                "overTintAlpha": 0.5,
-
-                                "activeTint": "",
-                                "activeTintAlpha": 0.5,
-
-                                "disabledTint": "",
-                                "disabledTintAlpha": 0.5,
-
-                                "keyboardKey": "",
-                                "keyboardHandled": true,
-                                "enabled": true
+                                "clickSe": "Cursor1"
                             },
                             "bindings": {
                                 "size": {
-                                    "width": "64hdp",
-                                    "height": "64hdp"
+                                    "width": "54hdp",
+                                    "height": "54hdp"
                                 },
                                 "position": {
-                                    "x": "-16hdp",
-                                    "y": "end + 10hdp"
+                                    "x": "-14hdp",
+                                    "y": "end + 8hdp"
                                 }
                             }
                         },
@@ -230,39 +181,16 @@
                                 "imageName": "closeButton_00",
                                 "folderName": "PKD_TreasureChest",
                                 "hoverImageName": "closeButton_01",
-                                "pressedImageName": "closeButton_00",
-                                "disabledImageName": "",
-
-                                "isCheckAlpha": false,
-
-                                "clickSe": "Cursor1",
-
-                                "desaturateWhenDisabled": false,
-
-                                "tint": "",
-                                "tintAlpha": 0.5,
-                                
-                                "overTint": "",
-                                "overTintAlpha": 0.5,
-
-                                "activeTint": "",
-                                "activeTintAlpha": 0.5,
-
-                                "disabledTint": "",
-                                "disabledTintAlpha": 0.5,
-
-                                "keyboardKey": "",
-                                "keyboardHandled": true,
-                                "enabled": true
+                                "clickSe": "Cursor1"
                             },
                             "bindings": {
                                 "size": {
-                                    "width": "64hdp",
-                                    "height": "64hdp"
+                                    "width": "54hdp",
+                                    "height": "54hdp"
                                 },
                                 "position": {
-                                    "x": "right + 16hdp",
-                                    "y": "end + 10hdp"
+                                    "x": "right + 14hdp",
+                                    "y": "end + 8hdp"
                                 }
                             }
                         }
